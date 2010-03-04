@@ -1,0 +1,222 @@
+iounmap
+iounmap may sleep while holding vmlist_lock, causing a deadlock.
+deadlock
+https://bugzilla.redhat.com/show_bug.cgi?id=361931
+=======================================================================
+
+netdump
+netdump fails when bnx2 has remote copper PHY - Badness in local_bh_enable at kernel/softirq.c:141
+deadlock
+https://bugzilla.redhat.com/show_bug.cgi?id=461014
+=======================================================================
+
+dlm_recv
+dlm_recv deadlock under memory pressure while processing GFP_KERNEL locks.
+deadlock
+https://bugzilla.redhat.com/show_bug.cgi?id=530537
+=======================================================================
+
+usbdev_read
+kernel NULL pointer dereference at usbdev_read
+NULL pointer dereference, deadlock
+https://bugzilla.redhat.com/show_bug.cgi?id=450786
+=======================================================================
+
+bnx2_*
+bonding: scheduling while atomic: ifdown-eth/0x00000100/21775
+scheduling while atomic
+https://bugzilla.redhat.com/show_bug.cgi?id=554706
+=======================================================================
+
+hald-addon-stor
+kernel: BUG: soft lockup - CPU#3 stuck for 10s! [hald-addon-stor:4330]
+soft lockup
+https://bugzilla.redhat.com/show_bug.cgi?id=468027
+=======================================================================
+
+X server/client
+Black screen when trying to run X by executing startx command after init 3.
+deadlock commands queue
+https://bugzilla.redhat.com/show_bug.cgi?id=509410
+=======================================================================
+
+khubd
+USB: khubd deadlock on error path
+deadlock
+https://bugzilla.redhat.com/show_bug.cgi?id=171220
+=======================================================================
+
+iSCSI
+Memory deadlock when creating large file on iSCSI based ext3 filesystem and machine with 1GB ram
+memory deadlock
+https://bugzilla.redhat.com/show_bug.cgi?id=145818
+=======================================================================
+
+lpfc module
+System hung: module load/unload
+deadlock
+https://bugzilla.redhat.com/show_bug.cgi?id=180641
+=======================================================================
+
+usb hid driver
+kernel hid-input.c divide error crash
+kernel crash
+https://bugzilla.redhat.com/show_bug.cgi?id=483783
+=======================================================================
+
+SCSI driver
+Write barrier operations not working for libata and general SCSI disks
+fs crach
+https://bugzilla.redhat.com/show_bug.cgi?id=537475
+=======================================================================
+
+TTY driver
+Write operation with O_NONBLOCK flag to TTY terminal is blocked
+incorrect block
+https://bugzilla.redhat.com/show_bug.cgi?id=523930
+=======================================================================
+
+igb driver
+igb driver doesn't allocate enough buffer for ethtool_get_strings()
+memory corruption
+https://bugzilla.redhat.com/show_bug.cgi?id=517329
+=======================================================================
+
+lpfc driver
+DMA zone exhaustion from lpfc driver memory leak
+memory leak
+https://bugzilla.redhat.com/show_bug.cgi?id=513192
+=======================================================================
+
+nVidia driver
+ifdown on nVidia CK804 (rev f3) NIC doesn't work
+ip-connection dead
+https://bugzilla.redhat.com/show_bug.cgi?id=492199
+=======================================================================
+
+mpt driver
+mpt 3.12.19.00rh on RHEL4.7 causes panic if a RAID 1 is configured.
+NULL pointer dereference
+https://bugzilla.redhat.com/show_bug.cgi?id=465265
+=======================================================================
+
+bond_enslave
+bonding: incorrect backport creates possible incorrect interface flags
+incorrect functionality
+https://bugzilla.redhat.com/show_bug.cgi?id=442124
+=======================================================================
+
+Broadcom driver
+For Broadcom(r) BMC57710, modprobe bnx2* fails citing memory allocation failures
+insufficient memory
+https://bugzilla.redhat.com/show_bug.cgi?id=491752
+=======================================================================
+
+lpfc driver
+[Emulex 4.9 bug] lpfc driver doesn't acquire lock when searching hba for target
+insufficient sync
+https://bugzilla.redhat.com/show_bug.cgi?id=548496
+=======================================================================
+
+ohci_stop
+kernel failed to boot and dropped to xmon
+double free
+https://bugzilla.redhat.com/show_bug.cgi?id=443052
+=======================================================================
+
+shrink_zone
+lockup in shrink_zone when node out of memory
+deadlock
+lockup in shrink_zone when node out of memory
+=======================================================================
+
+?
+Keyboard not functional after plug out usb 1.1 speaker
+touch another driver's functionality
+https://bugzilla.redhat.com/show_bug.cgi?id=460100
+=======================================================================
+
+cciss driver
+Watchdog Timeout while waiting for q->queue_lock in __make_request
+lock(?) corruption
+https://bugzilla.redhat.com/show_bug.cgi?id=493429
+=======================================================================
+
+bond driver(?)
+vconfig rem causes unregister_netdevice messages when HWADDR was used on base interface
+?
+https://bugzilla.redhat.com/show_bug.cgi?id=160340
+=======================================================================
+
+drivers/md/kcopyd.c
+Random crashing in dm snapshots because of a race condition
+race condition
+https://bugzilla.redhat.com/show_bug.cgi?id=484319
+=======================================================================
+
+?
+kernel panic in gnttab_map when booting RHEL4 x86_64 FV xen guest
+?
+https://bugzilla.redhat.com/show_bug.cgi?id=442538
+=======================================================================
+
+drivers/pci/hotplug/ibmphp_core.c
+Kernel BUG at include/linux/module.h:397
+incorrect __unload mechanism
+https://bugzilla.redhat.com/show_bug.cgi?id=467714
+=======================================================================
+
+net/sctp
+kernel panic in sctp module
+incorrect cleanup
+https://bugzilla.redhat.com/show_bug.cgi?id=223818
+=======================================================================
+
+drivers/usb/serial/
+Kernel panic using USB serial I/O
+NULL pointer dereference, race condition
+https://bugzilla.redhat.com/show_bug.cgi?id=243067
+=======================================================================
+
+mouse driver
+Console graphic problem when mouse is moved
+unrecognized mouse commands
+https://bugzilla.redhat.com/show_bug.cgi?id=450918
+=======================================================================
+
+drivers/message/fusion/mptbase.c
+mpt driver fails to bring up device
+assuming 64-bit address as 32-bit one
+https://bugzilla.redhat.com/show_bug.cgi?id=480158
+=======================================================================
+
+ip protocol
+oopses when multicasting with connection oriented socket
+incorrect protocol and implementation
+https://bugzilla.redhat.com/show_bug.cgi?id=250842
+=======================================================================
+
+drivers/cpufreq/cpufreq.c
+when booted with P-state limit, limit can never be increased
+power managment
+https://bugzilla.redhat.com/show_bug.cgi?id=489580
+=======================================================================
+
+usb driver
+Loss of USB HID devices when switching with a KVM
+?
+https://bugzilla.redhat.com/show_bug.cgi?id=476700
+=======================================================================
+
+tg3 driver
+bug in tg3 3.52 driver - both RHES 3 2.4.X kernel and RHES 4 2.6.X kernel
+warm reboot problem
+https://bugzilla.redhat.com/show_bug.cgi?id=216246
+=======================================================================
+
+samba driver
+Samba I/O(?) causes kernel Oops/Panic/Fatal Exception in 2.6.9-67.ELsmp
+?
+https://bugzilla.redhat.com/show_bug.cgi?id=471278
+=======================================================================
+
