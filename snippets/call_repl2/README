@@ -1,0 +1,112 @@
+﻿Ещё один пример для демонстрации перехвата (подмены) вызовов функций в 
+данном модуле ядра в runtime - на сей раз анализатор подключается к уже 
+загруженному (и работающему) модулю.
+
+Пример работает только на x86 и x86_64, на системах с ядром не ниже 2.6.30.
+=======================================================================
+
+Имя анализируемого модуля передаётся модулю cr_watcher при загрузке через 
+параметр target, например:
+
+/sbin/insmod cr_watcher.ko target="vboxvfs"
+
+Если анализируемый модуль ещё не загружен, cr_watcher не загрузится (выдаст 
+соотв. ошибку + сообщение о том, что такой-то модуль не найден).
+
+Перехватываются вызовы след функций:
+
+- __kmalloc
+- kfree
+- kmem_cache_alloc
+- kmem_cache_free
+- copy_from_user
+- copy_to_user
+
+Вызовы заменяются прямо в памяти на вызовы соотв. replacement-функций, 
+каждая из которых просто выводят в лог сообщение о том, что функция была 
+вызвана с такими-то параметрами и выдала такой-то результат.
+
+Эти replacement-функции определены в том же модуле cr_watcher.
+
+При выгрузке модуля cr_watcher, последний возвращает вызовы в target-модуле 
+в исходное состояние.
+
+=======================================================================
+
+Пример анализа модуля vboxvfs (входит в поставку VirtualBox guest 
+additions, обеспечивает поддержку shared folders):
+
+1.
+/sbin/insmod cr_watcher.ko target="vboxvfs"
+
+См. в /var/log/messages: инструментирование области "core".
+
+[NB]
+cat /sys/module/cr_watcher/parameters/target
+	=> будет выдано 'vboxvfs' (без кавычек),
+т.е. значение параметра target.
+
+2.
+echo 777888999666555444 > /media/shared/other/fake.txt
+
+См. по логу:
+	Called: kmem_cache_alloc(de800040, d0), result: dd3ec860
+	Called: __kmalloc(6, d0), result: c56da5e0
+	Called: kmem_cache_alloc(de800040, d0), result: c56daae0
+	Called: kmem_cache_alloc(de805a40, d0), result: da0d8000
+	Called: kmem_cache_alloc(de800040, d0), result: c94adea0
+	Called: kmem_cache_alloc(de805a40, d0), result: da168000
+	Called: kfree(da168000)
+	Called: kfree(c94adea0)
+	Called: kfree(da0d8000)
+	Called: kfree(c56daae0)
+	Called: kfree(dd3ec860)
+	Called: kmem_cache_alloc(de800040, d0), result: dd3ec860
+	Called: __kmalloc(6, d0), result: c56daae0
+	Called: kmem_cache_alloc(de800040, d0), result: c94adea0
+	Called: kmem_cache_alloc(de805a40, d0), result: da0d8000
+	Called: kmem_cache_alloc(de800040, d0), result: c3538b40
+	Called: kmem_cache_alloc(de805a40, d0), result: da168000
+	Called: kfree(da168000)
+	Called: kfree(c3538b40)
+	Called: kfree(da0d8000)
+	Called: kfree(c94adea0)
+	Called: kfree(dd3ec860)
+	Called: kmem_cache_alloc(de800040, d0), result: c3538b40
+	Called: __kmalloc(6, d0), result: dd3ec860
+	Called: kmem_cache_alloc(de800040, d0), result: c94adea0
+	Called: kmem_cache_alloc(de805a40, d0), result: da0d8000
+	Called: kmem_cache_alloc(de800040, d0), result: c5523ec0
+	Called: kmem_cache_alloc(de805a40, d0), result: da168000
+	Called: kfree(da168000)
+	Called: kfree(c5523ec0)
+	Called: kfree(da0d8000)
+	Called: kfree(c94adea0)
+	Called: kfree(c3538b40)
+	Called: __kmalloc(10, d0), result: c3538be0
+	Called: kmem_cache_alloc(de800040, d0), result: c3538b40
+	Called: __kmalloc(19, d0), result: c34d1bc0
+	Called: __kmalloc(19, d0), result: c94adea0
+	Called: kmem_cache_alloc(de800040, d0), result: c34d1240
+	Called: kmem_cache_alloc(de800040, d0), result: c5523ec0
+	Called: __kmalloc(4096, d0), result: de1a1000
+	Called: copy_from_user(de1a1000, b73c1000, 19), result: 0
+	Called: kfree(de1a1000)
+	Called: kfree(c5523ec0)
+
+3.
+/sbin/rmmod cr_watcher
+
+Слежение за target-модулем прекращается автоматически при выгрузке 
+cr_watcher.
+
+См. по логу записи о восстановлении адресов вызовов.
+=======================================================================
+
+Пример call_repl проверен на след. системах:
+
+1. OpenSUSE 11.2 x86, ядро 2.6.31.x, target: "vboxvfs".
+4. Ubuntu 10.04 beta 1 x86, ядро 2.6.32.x, target: "snd".
+3. Fedora 12 x86_64, ядро 2.6.31.x, target: "snd".
+6. Mandriva Cooker (2010) x86, ядро 2.6.31.12, target: "snd"
+=======================================================================
