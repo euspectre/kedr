@@ -1,0 +1,17 @@
+﻿Total in 2.6.33.1 and 2.6.33.2:
+
+Total commits:                                  280
+Fixes for common ("not-very-specific") bugs:    55
+
+Among the fixed problems:
+- Unhandled error case (=> NPD, leaks, etc.):   15
+- Other bad pointer operations (including NPD): 9
+- Race condition, unsynchronized access:        9
+- Buffer overflow:                              8
+- Invalid free, no check if already deleted:    4
+- Other resource leaks:                         4
+- Buffer overflow while doing DMA:              2
+- Deadlock:                                     2
+- Operation not allowed in atomic context:      1
+- Reference counting issues:                    1
+=======================================================================
