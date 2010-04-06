@@ -1,0 +1,161 @@
+﻿Пример для демонстрации перехвата (подмены) вызовов функций в данном модуле 
+ядра в runtime с использованием trace events для вывода данных. 
+=======================================================================
+
+Этот пример - вариант примера 'call_repl1', только вывод из replacement-
+функций делается с помощью trace events, а не просто путём printk в 
+системный журнал.
+
+Работает только на x86 и x86_64.
+
+Вряд ли скомпилируется на ядрах старше 2.6.28.
+=======================================================================
+
+Пример работы с модулями из call_repl_with_events. Кроме чтения файла 
+трассы, все операции выполняются под root'ом.
+
+Предполагается, что debugfs смонтирована в /sys/kernel/debug/. Если не 
+смонтирована по умолчанию (как, например, на Fedora 12 x64), нужно 
+смонтировать явно:
+
+mount -t debugfs nodev /sys/kernel/debug/
+
+или так:
+
+mount -t debugfs none /sys/kernel/debug/
+
+После этого можно выполнять шаги, описанные ниже.
+
+0. 
+cd ./cr_target/
+
+1. 
+Загружаем модуль-наблюдатель
+
+/sbin/insmod ../cr_watcher/cr_watcher.ko
+
+В каталоге /sys/kernel/debug/tracing/events должен появиться подкаталог 
+"cr_watcher". В нём должны быть подкаталоги с именами вида 
+called_<имя_функции> - это имена событий, соотв. вызову replacement-функции 
+для данной функции.
+
+В каталоге /sys/kernel/debug/tracing/events/cr_watcher должны быть ещё, как 
+минимум, файлы enable и filter.
+
+2. 
+Включаем (enable) наши events. По умолчанию, они находятся в неактивном - 
+disabled - состоянии.
+
+echo 1 > /sys/kernel/debug/tracing/events/cr_watcher/enable
+
+Чтобы потом выключить все наши event'ы, достаточно будет вывести в этой файл
+ноль.
+
+При желании, можно включать/выключать event'ы и по отдельности, например:
+echo 1 > /sys/kernel/debug/tracing/events/cr_watcher/called_<имя_функции>/enable
+и
+echo 0 > /sys/kernel/debug/tracing/events/cr_watcher/called_<имя_функции>/enable
+
+3. 
+Включаем "минимальный" tracer ("nop") для сбора информации с наших 
+trace events в replacement-функциях.
+
+echo nop > /sys/kernel/debug/tracing/current_tracer
+
+Сообщения о срабатывании event'ов будут выводиться в след. файлы:
+
+- /sys/kernel/debug/tracing/trace - полный список сообщений (сохраняется, 
+пока не будет изменён текущий tracer или пока не будет выгружен модуль 
+cr_watcher).
+Cообщения там накапливаются и при чтении не исчезают.
+
+- /sys/kernel/debug/tracing/trace_pipe - как обычно бывает для pipe, 
+сообщения, считанные оттуда, из неё удаляются. Подробнее см. в докум. по 
+ядру: Documentation/trace/*.txt
+
+4. 
+Загружаем анализируемый модуль. Точно такой же, как в примере "call_repl1".
+
+./cr_target_load.sh
+
+См. /sys/kernel/debug/tracing/trace :
+------------------
+# tracer: nop
+#
+#           TASK-PID    CPU#    TIMESTAMP  FUNCTION
+#              | |       |          |         |
+          insmod-6095  [000]  1995.761510: called___kmalloc: __kmalloc(184, d0), result: c355b080
+------------------
+
+Это отработал вызов __kmalloc в init-функции модуля cr_target.
+
+4. 
+echo "zxcvbnmjhgfdsda" > /dev/cfake0
+
+См. /sys/kernel/debug/tracing/trace :
+------------------
+# tracer: nop
+#
+#           TASK-PID    CPU#    TIMESTAMP  FUNCTION
+#              | |       |          |         |
+           <...>-6095  [000]  1995.761510: called___kmalloc: __kmalloc(184, d0), result: c355b080
+            bash-6020  [000]  2232.979962: called___kmalloc: __kmalloc(4000, d0), result: c5412000
+            bash-6020  [000]  2232.980060: called_copy_from_user: copy_from_user(c5412000, b74a1000, 16), result: 0
+------------------
+
+4. dd if=/dev/cfake1 ibs=100 count=1
+
+См. /sys/kernel/debug/tracing/trace :
+------------------
+# tracer: nop
+#
+#           TASK-PID    CPU#    TIMESTAMP  FUNCTION
+#              | |       |          |         |
+           <...>-6095  [000]  1995.761510: called___kmalloc: __kmalloc(184, d0), result: c355b080
+            bash-6020  [000]  2232.979962: called___kmalloc: __kmalloc(4000, d0), result: c5412000
+            bash-6020  [000]  2232.980060: called_copy_from_user: copy_from_user(c5412000, b74a1000, 16), result: 0
+
+              dd-6159  [000]  2326.546093: called___kmalloc: __kmalloc(4000, d0), result: c558f000
+              dd-6159  [000]  2326.546325: called_copy_to_user: copy_to_user(0805a000, c558f000, 100), result: 0
+------------------
+
+5. ./cr_target_unload.sh
+
+См. в /sys/kernel/debug/tracing/trace :
+------------------
+# tracer: nop
+#
+#           TASK-PID    CPU#    TIMESTAMP  FUNCTION
+#              | |       |          |         |
+           <...>-6095  [000]  1995.761510: called___kmalloc: __kmalloc(184, d0), result: c355b080
+            bash-6020  [000]  2232.979962: called___kmalloc: __kmalloc(4000, d0), result: c5412000
+            bash-6020  [000]  2232.980060: called_copy_from_user: copy_from_user(c5412000, b74a1000, 16), result: 0
+
+              dd-6159  [000]  2326.546093: called___kmalloc: __kmalloc(4000, d0), result: c558f000
+              dd-6159  [000]  2326.546325: called_copy_to_user: copy_to_user(0805a000, c558f000, 100), result: 0
+
+           rmmod-6167  [000]  2410.233534: called_kfree: kfree(c5412000)
+           rmmod-6167  [000]  2410.233538: called_kfree: kfree(c558f000)
+           rmmod-6167  [000]  2410.233539: called_kfree: kfree(c355b080)
+------------------
+
+=======================================================================
+
+Пример call_repl_with_events проверялся на след. системах 
+(в скобках - версии ядра):
+
+1. OpenSUSE 11.2 x86 (2.6.31.x) - OK
+
+2. Fedora 12 x86_64 (2.6.31.x) - OK
+[NB] Debugfs не была смонтирована по умолчанию.
+
+3. Ubuntu 10.04 beta 1 x86 (2.6.32.x) - OK
+
+4. Mandriva Cooker (2010) x86 (2.6.31.12) - OK
+[NB] Debugfs не была смонтирована по умолчанию.
+
+5. OpenSUSE 11.3 Milestone 4 x86 (2.6.33.x) - OK. 
+Здесь, правда, функция copy_from_user() - inline, вместо неё в таблице 
+анализируемых функций стоит пока указывать _copy_from_user() 
+(вызывается из copy_from_user()).
+=======================================================================
