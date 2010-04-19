@@ -1,0 +1,203 @@
+﻿Пример для демонстрации взаимодействия Controller-Payload-Target.
+=======================================================================
+
+Задачи сontroller-модуля:
+- отлавливать моменты загрузки и выгрузки целевого (target) модуля;
+- инструментировать target-модуль, т.е. производить в нём подмену адресов 
+вызова;
+- поддерживать список активных payload-модулей (плюс, controller 
+экспортирует функции для register/unregister payload).
+
+Помимо всего этого, controller экспортирует функцию, которая позволяет 
+проверить, выполняет ли сейчас target модуль свою init-часть или уже нет.
+
+Payload модули содержат replacement-функции и предоставляют controller'у 
+таблицы замен адресов вызова (при регистрации). Эти модули и осуществляют 
+сбор данных о вызовах, сделанных target модулем и т.д.
+
+В данном примере 3 payload модуля.
+- cp_payload1 обрабатывает вызовы: __kmalloc, kfree, kmem_cache_alloc, 
+kmem_cache_free;
+- cp_payload2 обрабатывает вызовы: copy_from_user/_copy_from_user, 
+copy_to_user;
+- cp_payload1 обрабатывает вызовы: down_interruptible, up.
+
+Т.е. всего эти три payload модуля наблюдают за 8 функциями target-модуля 
+(из пары copy_from_user/_copy_from_user проверяется только одна функция на 
+каждой системе).
+
+Target-модуль (cp_target) - всё тот же "cfake".
+
+=======================================================================
+Замечания по сборке.
+
+Сначала нужно собрать cp_controller, т.к. payload-модулям потребуется для 
+сборки файл Module.symvers, который создаётся при сборке cp_controller.
+
+=======================================================================
+Действия (под root):
+
+1.
+cd cp_target
+
+2.
+insmod ../cp_controller/cp_controller.ko target_name="cp_target"
+
+[NB] Посмотреть список параметров модуля cp_controller и их текущие 
+значения можно так:
+ls /sys/module/cp_controller/parameters/
+cat /sys/module/cp_controller/parameters/<имя_параметра>
+
+3.
+insmod ../cp_payload1/cp_payload1.ko
+insmod ../cp_payload3/cp_payload3.ko
+insmod ../cp_payload2/cp_payload2.ko
+
+Log:
+----------------
+[cp_controller] Initializing
+[cp_payload1] Initializing
+[cp_controller] Registering payload from module "cp_payload1"
+[cp_payload3] Initializing
+[cp_controller] Registering payload from module "cp_payload3"
+[cp_payload2] Initializing
+[cp_controller] Registering payload from module "cp_payload2"
+----------------
+
+[NB] Выгрузить controller не получится, пока хоть один payload модуль 
+загружен.
+
+[NB] Не получится загрузить новый payload модуль или выгрузить какие-то из 
+уже загруженных payload модулей, если загружен target модуль и за ним идёт 
+наблюдение.
+
+4.
+./cp_target_load.sh
+
+Log:
+----------------
+[cp_controller] Module 'cp_target' has just loaded.
+[cp_controller] try_module_get() for payload module 'cp_payload3'.
+[cp_controller] try_module_get() for payload module 'cp_payload2'.
+[cp_controller] try_module_get() for payload module 'cp_payload1'.
+[cp_controller] total number of target functions is 8.
+[cp_controller] Module "cp_target", processing "init" area
+[cp_controller] At 0xe0e760bc: changing address 0xc030dc60 to 0xe0dee150
+[cp_controller] Module "cp_target", processing "core" area
+[cp_controller] At 0xe0e721be: changing address 0xc030e9b0 to 0xe0dee040
+[cp_controller] At 0xe0e721ec: changing address 0xc030e9b0 to 0xe0dee040
+[cp_controller] At 0xe0e722d0: changing address 0xc030dc60 to 0xe0dee150
+[cp_controller] At 0xe0e72418: changing address 0xc0274200 to 0xe0dc6040
+[cp_controller] At 0xe0e72456: changing address 0xc02741a0 to 0xe0dc60a0
+[cp_controller] At 0xe0e725d6: changing address 0xc0274200 to 0xe0dc6040
+[cp_controller] At 0xe0e72637: changing address 0xc042b850 to 0xe0de1040
+[cp_controller] At 0xe0e72656: changing address 0xc02741a0 to 0xe0dc60a0
+[cp_controller] At 0xe0e72689: changing address 0xc02741a0 to 0xe0dc60a0
+[cp_controller] At 0xe0e72716: changing address 0xc0274200 to 0xe0dc6040
+[cp_controller] At 0xe0e72777: changing address 0xc042b9a0 to 0xe0de10b0
+[cp_controller] At 0xe0e72796: changing address 0xc02741a0 to 0xe0dc60a0
+[cp_controller] At 0xe0e727c9: changing address 0xc02741a0 to 0xe0dc60a0
+[cp_target] Initializing
+[cp_payload1] Called: __kmalloc(184, d0), result: dd564500, in init: yes
+----------------
+
+[NB] Replacement-функция для __kmalloc() проверяет, вызвана ли она при 
+выполнении инициализации модуля или нет. Просто, чтобы показать, как это 
+делается.
+
+5.
+echo "zxcvbnmjhgfdsda" > /dev/cfake0
+
+Log:
+----------------
+[cp_target] open() for MJ=251 and MN=0
+[cp_payload1] Called: __kmalloc(4000, d0), result: dc4f9000, in init: no
+[cp_target] write() for MJ=251 and MN=0
+[cp_payload3] Called: down_interruptible(dd56450c), result: 0
+[cp_payload2] Called: copy_from_user(dc4f9000, b7433000, 16), result: 0
+[cp_payload3] Called: up(dd56450c)
+[cp_target] release() for MJ=251 and MN=0
+----------------
+
+6.
+dd if=/dev/cfake0 ibs=100 count=1
+
+Log:
+----------------
+[cp_target] open() for MJ=251 and MN=0
+[cp_target] read() for MJ=251 and MN=0
+[cp_target] read() for MJ=251 and MN=0
+[cp_payload3] Called: down_interruptible(dd56450c), result: 0
+[cp_payload2] Called: copy_to_user(0805a000, dc4f9000, 100), result: 0
+[cp_payload3] Called: up(dd56450c)
+[cp_target] release() for MJ=251 and MN=0
+----------------
+
+7.
+dd if=/dev/cfake1 ibs=20 count=1
+
+Log:
+----------------
+[cp_target] open() for MJ=251 and MN=1
+[cp_payload1] Called: __kmalloc(4000, d0), result: da50f000, in init: no
+[cp_target] read() for MJ=251 and MN=1
+[cp_target] read() for MJ=251 and MN=1
+[cp_payload3] Called: down_interruptible(dd564568), result: 0
+[cp_payload2] Called: copy_to_user(0805a000, da50f000, 20), result: 0
+[cp_payload3] Called: up(dd564568)
+[cp_target] release() for MJ=251 and MN=1
+----------------
+
+8.
+./cp_target_unload.sh
+
+Log:
+----------------
+[cp_target] Cleaning up
+[cp_payload1] Called: kfree(dc4f9000)
+[cp_payload1] Called: kfree(da50f000)
+[cp_payload1] Called: kfree(dd564500)
+[cp_controller] Module 'cp_target' is going to unload.
+[cp_controller] module_put() for payload module 'cp_payload3'.
+[cp_controller] module_put() for payload module 'cp_payload2'.
+[cp_controller] module_put() for payload module 'cp_payload1'.
+----------------
+
+9.
+rmmod cp_payload1 cp_payload2 cp_payload3
+
+Log:
+----------------
+[cp_controller] Unregistering payload from module "cp_payload1"
+[cp_payload1] Cleanup successful
+[cp_controller] Unregistering payload from module "cp_payload2"
+[cp_payload2] Cleanup successful
+[cp_controller] Unregistering payload from module "cp_payload3"
+[cp_payload3] Cleanup successful
+----------------
+
+10.
+rmmod cp_controller
+
+=======================================================================
+Пример "controller_payload" проверялся на след. системах (в скобках - 
+версии ядра):
+
+1.  OpenSUSE 11.2 x86 (2.6.31.x) 		- OK
+2.  OpenSUSE 11.2 x86_64 (2.6.31.x) 		- OK
+3.  OpenSUSE 11.3 Milestone 4 x86 (2.6.33.x) 	- OK
+4.  SLES 11 x86_64 (2.6.27.x) 			- OK
+5.  Fedora 12 x86_64 (2.6.31.x)			- OK
+6.  Fedora 11 x86 (2.6.30.x) 			- OK
+7.  Debian 5 x86_64 (2.6.26.x) 			- OK
+8.  Ubuntu 10.04 beta 1 x86 (2.6.32.x) 		- OK
+9.  Ubuntu 9.04 x86_64 (2.6.28.x)		- OK
+10. Mandriva Cooker (2010) x86 (2.6.31.12) 	- OK
+
+[NB] Пример также проверялся на модуле vboxvfs на OpenSUSE 11.2 x86 
+(VBox Additions v.3.1.6) и Fedora 11 x86 (VBox Additions v.2.2.4). 
+
+Операции: mount / unmount для shared folder, создание, запись, чтение, 
+удаление файла там. Соотв. вызовы отлавливаются и регистрируются, всё в 
+порядке. Тем не менее, для более полной картины нужно перехватывать вызовы 
+большего числа функций.
