@@ -20,7 +20,7 @@ Payload модули содержат replacement-функции и предос
 kmem_cache_free;
 - cp_payload2 обрабатывает вызовы: copy_from_user/_copy_from_user, 
 copy_to_user;
-- cp_payload1 обрабатывает вызовы: down_interruptible, up.
+- cp_payload3 обрабатывает вызовы: down_interruptible, up.
 
 Т.е. всего эти три payload модуля наблюдают за 8 функциями target-модуля 
 (из пары copy_from_user/_copy_from_user проверяется только одна функция на 
