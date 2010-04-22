@@ -41,7 +41,7 @@ int module_weak_ref_init(void)
 // Should be called when the functionality will no longer be used.
 void module_weak_ref_destroy(void)
 {
-	BUG_ON(list_empty(&module_weak_ref_list));
+	BUG_ON(!list_empty(&module_weak_ref_list));
 	unregister_module_notifier(&detector_nb);
 }
 // Shedule 'destroy' function to call when module is unloaded.
