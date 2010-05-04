@@ -1,0 +1,166 @@
+﻿Пример "generate_payload".
+Основа - пример "controller_payload", но в данном случае код payload модулей
+не пишется вручную, а генерируется с помощью MiST Engine по шаблонам и 
+описаниям в спец. формате.
+=======================================================================
+
+Шаблоны находятся в подкаталоге templates, исходные данные для генерации 
+кода (значения параметров) - в подкаталоге data.
+
+=======================================================================
+
+Вывод данных в этом примере осуществляется с помощью trace events. Как 
+следствие, пример, скорее всего, не пойдёт на ядрах старше 2.6.31 
+(не скомпилируется). 
+
+Определения trace events и пр. здесь тоже генерируются автоматически. Нужно 
+только в файле с исходными данными указать имена и типы параметров, которые 
+необх. вывести в трассу. См. параметры trace.*, а также комментарии в 
+data/my_payload1.data.
+=======================================================================
+
+Controller и target - те же самые, что и в примере "controller_payload". 
+Они не зависят от того, как именно организованы payload модули, куда и как 
+производится вывод данных и т.д.
+=======================================================================
+
+Для генерации кода payload modules нужен инструмент "mist_gen" из примера 
+"mist_gen.simple".
+См. указания в README к "mist_gen.simple" о том, как собрать "mist_gen", 
+как он работает и с чем его едят.
+
+[NB] Ниже считаем, что приложение "mist_gen" есть где-то в путях из $PATH.
+=======================================================================
+
+[1]
+Сборка модулей "cp_controller" и "cp_target" выполняется так же, как и в 
+примере "controller_payload", откуда эти модули и были взяты. 
+
+"cp_controller" нужно собрать до начала сборки payload модулей, чтобы необх.
+.symvers-файл был готов (детали см. в README по "controller_payload").
+
+[2]
+Генерация кода payload modules. При желании можно её выполнять и не на той 
+машине, где будет производиться сборка модулей.
+
+Шаблоны общие для всех payload modules. Файлы с исходными данными для 
+генерации, соответственно, для каждого свои.
+
+Для каждого payload module генерируются: 
+
+- payload.c - содержит реализацию replacement-функций, всего необходимого 
+для взаимодействия с controller'ом, а также init- и exit-функции для модуля,
+необходимые объявления (MODULE_AUTHOR, ...)  и т.д.
+
+- trace_payload.h - содержит определения необходимых trace events 
+(по образцу из примера на trace events из кода ядра 2.6.33.1).
+
+[NB] Для систем на базе ядра 2.6.33 и новее (например, OpenSuSE 11.3) в 
+файле payload2.data нужно заменить copy_from_user на _copy_from_user.
+
+Команды (считаем, что они выполняются из корневого каталога примера): 
+
+mist_gen templates/payload.c/ data/my_payload1.data > modules/my_payload1/payload.c
+mist_gen templates/trace_payload.h/ data/my_payload1.data > modules/my_payload1/trace_payload.h
+
+И так - для каждого payload module ('my_payload*').
+
+Или так:
+cd modules && \
+for pm in my_payload*; do \
+        mist_gen ../templates/payload.c/ ../data/${pm}.data > ${pm}/payload.c && \
+        mist_gen ../templates/trace_payload.h/ ../data/${pm}.data > ${pm}/trace_payload.h; \
+done
+
+После этого payload-модули можно собирать, как обычно (make).
+
+[3]
+Загрузка и выполнение примера (всё основное делается под root).
+
+[NB] Подробнее о выводе данных с помощью trace events - в README для примера
+"call_repl_with_events".
+
+Операции:
+
+1. Если debugfs не смонтирована, её надо смонтировать:
+        mount -t debugfs none /sys/kernel/debug/
+
+2. Загружаем controller:
+        insmod modules/cp_controller/cp_controller.ko target_name="cp_target"
+[NB] Если предполагается следить не за "штатным" модулем "cp_target", а за 
+каким-то другим, имя соотв. модуля нужно указать вместо "cp_target" в 
+target_name.
+        
+3. Загружаем необходимые payload модули:
+        insmod modules/my_payload1/my_payload1.ko
+        insmod modules/my_payload2/my_payload2.ko
+        insmod modules/my_payload3/my_payload3.ko
+        ...
+        
+Проверяем, что в /sys/kernel/debug/tracing/events/ появились подкаталоги с 
+такими же именами, как и у загруженных payload модулей: 
+my_payload1, my_payload2, ...
+
+В каждом из этих каталогов должны быть подкаталоги для events, 
+оответствующих функциям, вызовы которых должны регистрироваться (имя 
+события - "called_<имя_целевой_функции>"): 
+called___kmalloc, called_kfree, ... 
+
+4. Включаем обработку событий от payload modules (только для тех, которые в 
+данный момент загружены, разумеется):
+        echo 1 > /sys/kernel/debug/tracing/events/my_payload1/enable
+        echo 1 > /sys/kernel/debug/tracing/events/my_payload2/enable
+        echo 1 > /sys/kernel/debug/tracing/events/my_payload3/enable
+        ...
+        
+5. Включаем "минимальный" tracer ("nop"):
+        echo nop > /sys/kernel/debug/tracing/current_tracer
+        
+6. Загружаем target module и работаем с ним так же, как и в примере 
+"controller_payload". Replacement-функции будут выводить необх. данные (об 
+аргументах target-функций и т.д.) в трассу, которую можно читать из 
+/sys/kernel/debug/tracing/trace, как из обычного файла.
+
+[NB] Не стоит держать этот файл открытым постоянно: если при этом системе 
+потребуется записать туда сообщение о новом событии, она не сможет этого 
+сделать. И, возможно, даже не будет жаловаться, что не может получить доступ
+к файлу на запись.
+
+[NB] Можно и подключиться к /sys/kernel/debug/tracing/trace_pipe как к pipe 
+и читать записи оттуда по мере их появления. Считанные записи из pipe 
+удаляются. 
+
+Операции:
+cd modules/cp_target/
+./cp_target_load.sh
+echo 123456789788 > /dev/cfake0
+dd if=/dev/cfake0 ibs=20 count=1
+./cp_target_unload.sh
+
+Записи будут примерно такого вида (если регистрируются только вызовы 
+__kmalloc и kfree): 
+-----------------
+#           TASK-PID    CPU#    TIMESTAMP  FUNCTION
+#              | |       |          |         |
+          insmod-3588  [000]  5169.188503: called___kmalloc: __kmalloc(184, d0), in init: 1, result: da01e900
+            bash-3553  [000]  5257.712547: called___kmalloc: __kmalloc(4000, d0), in init: 0, result: db72a000
+           rmmod-3633  [000]  5368.109579: called_kfree: kfree(db72a000)
+           rmmod-3633  [000]  5368.109582: called_kfree: kfree((null))
+           rmmod-3633  [000]  5368.109583: called_kfree: kfree(da01e900)
+-----------------
+
+[NB] Записи о событиях из "my_payloadN" останутся в 
+/sys/kernel/debug/tracing/trace до тех пор, пока загружены все модули вида 
+"my_payload*", которым соответствуют хоть какие-то events.
+=======================================================================
+
+Пример "generate_payload" проверен на след. системах (в скобках - 
+версии ядра):
+
+1. OpenSUSE 11.2 x86 (2.6.31.x)                 - OK
+2. OpenSUSE 11.2 x86_64 (2.6.31.x)              - OK
+3. OpenSUSE 11.3 Milestone 4 x86 (2.6.33.x)     - OK
+4. Fedora 12 x86_64 (2.6.31.x)                  - OK
+5. Ubuntu 10.04 x86 (2.6.32.x) (проверка выполнена и на "cp_target", и на 
+   "vboxvfs")                                   - OK 
+6. Mandriva Cooker (2010) x86 (2.6.31.12)       - TODO

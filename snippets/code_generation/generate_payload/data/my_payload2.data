@@ -1,0 +1,95 @@
+# This module processes the calls to copy_*_user and related functions.
+
+module.name = my_payload2
+module.author = Me, me and me again
+module.license = GPL
+
+header =>>
+#include <linux/kernel.h>   /* printk() */
+#include <linux/slab.h>     /* kmalloc() */
+#include <linux/errno.h>    /* error codes */
+#include <asm/uaccess.h>    /* copy_*_user */
+
+#include <cp_controller/controller_common.h>
+<<
+
+# Each group corresponds to a target function.
+# 
+# Give 'returnsVoid' a non-empty value if the target function returns void.
+# Otherwise, it is not necessary to define 'returnsVoid' at all.
+# If the function returns void, 'returnType' will be ignored.
+
+#######################################################################
+[group]
+	# Name and return type of the target function
+	function.name = copy_from_user
+	returnType = long
+
+	# Names and types of the arguments of the target function
+	arg.type = void*
+	arg.name = to
+
+	arg.type = const void __user *
+	arg.name = from
+	
+	arg.type = unsigned long
+	arg.name = n
+	
+	# The parameters to be output to the trace. 
+	trace.param.type = const void*
+	trace.param.name = to
+
+	trace.param.type = const void*
+	trace.param.name = from
+
+	trace.param.type = unsigned long
+	trace.param.name = n
+	
+	trace.param.type = long
+	trace.param.name = returnValue
+
+	# The format string to be used for trace output.
+	# The order in which parameters will be listed in the call to
+	# a tracing function is the same as the corresponding trace.param.* 
+	# definitions are listed in this file.
+	trace.formatString = "arguments: (%p, %p, %lu), result: %ld"
+
+# End of the group of definitions for copy_from_user().
+
+#######################################################################
+[group]
+	# Name and return type of the target function
+	function.name = copy_to_user
+	returnType = long
+
+	# Names and types of the arguments of the target function
+	arg.type = void __user *
+	arg.name = to
+
+	arg.type = const void *
+	arg.name = from
+	
+	arg.type = unsigned long
+	arg.name = n
+	
+	# The parameters to be output to the trace. 
+	trace.param.type = const void*
+	trace.param.name = to
+
+	trace.param.type = const void*
+	trace.param.name = from
+
+	trace.param.type = unsigned long
+	trace.param.name = n
+	
+	trace.param.type = long
+	trace.param.name = returnValue
+
+	# The format string to be used for trace output.
+	# The order in which parameters will be listed in the call to
+	# a tracing function is the same as the corresponding trace.param.* 
+	# definitions are listed in this file.
+	trace.formatString = "arguments: (%p, %p, %lu), result: %ld"
+
+# End of the group of definitions for copy_to_user().
+#######################################################################
