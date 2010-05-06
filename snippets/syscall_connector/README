@@ -1,0 +1,88 @@
+Библиотека для реализации syscall-подобных функций через обмен сообщениями с ядром.
+
+Под syscall-подобными функциями подразумеваются функции, вызываемые из user space.
+Но в результате управление передается в kernel space, где вызывается некоторая функция/функции,
+после чего управление передается назад. При этом параметры функции в kernel space могут зависеть от параметров
+функции в user space, а возвращаемое значение функции user space может формироватся с учетом возвращаемого значения
+функции в kernel space.
+
+Обмен сообщениями происходит через т.н. sc_connection, который уникально идентифицируется парой <pid, in_type>, где
+pid - уникальный идентификатор потока, из которого происходит syscall, а
+in_type - идентификатор типа взаимодействия, определяющий вызванную функцию.
+
+
+Для того, чтобы организовать обмен сообщениями между kernel и user space, оба пространства сначала должны определить
+общий идентификатор in_type_A типа взаимодействия(in_type), который они хотят использовать для обмена.
+В данной реализации этот тип должен быть "прошит" в коде как некоторое уникальное число.
+В дальнейшем, возможно, станет доступной возможность определять это число из user space на основе строки.
+
+Стандартная(простая) реализация взаимодействия:
+
+User space:
+1. Определить схему получения pid - идентификатора потока, вызывающего функцию. Этот идентификатор должен быть уникален
+в том смысле, чтобы одновременные вызовы syscall-подобной фунции взаимодействовали с ядром под разными pid.
+
+В простейшем случае, pid = getpid();
+С потоками - pid = pthread_self() << 16 | getpid();
+
+2. Код sysall-подобной функции:
+sc_interaction* interaction = sc_interaction_create(pid, in_type_A);
+/*form msg from parameters*/
+sc_send(interaction, msg, msg_len);
+sc_recv(interaction, msg_recv, msg_recv_len);
+/* process msg_recv and form result*/
+sc_interaction_destroy(interaction);
+return result;
+
+Kernel space:
+1. Реализовать функцию по обработке сообщения от user_space:
+void function_for_interaction_of_type_A(sc_interaction* interaction, const void* buf, size_t len, void *data)
+{
+    /*extract data from 'buf'*/
+    /*do some work inside kernel, e.g call some function*/
+    /*form reply message*/
+    sc_send(interaction, msg_reply, msg_reply_len);
+}
+
+2. При инициализации модуля
+sc_register_callback_for_type(in_type_A, function_for_interaction_of_type_A, NULL);
+3. При выгрузке модуля
+sc_unregister_callback_for_type(in_type_A);
+
+Если единочного обмена сообщениями недостаточно для получения результата взаимодействия,то:
+
+User space:
+Внутри syscall-подобной функции выполняет sc_send и sc_recv, сколько надо, когда надо
+
+Kernel space:
+void function_for_interaction_of_type_A(sc_interaction* interaction, const void* buf, size_t len, void *data)
+{
+    int *state;//state of interaction protocol
+    if(data == NULL)
+    {
+        // First message recieved
+        /*extract data from 'buf'*/
+        /*do some work inside kernel, e.g call some function*/
+        /*form reply message*/
+        sc_send(interaction, msg_reply, msg_reply_len);
+        //create state variable
+        state = malloc(sizeof(*state));
+        *state = 1;//next state of interaction
+        //register itself for recieve messages from same user space process.
+        sc_register_callback(interaction, function_for_interaction_of_type_A, state);
+        return;
+    }
+    *state = data;
+    switch(*state)
+    {
+    case 1://second message recieved
+        /*process recieving message*/
+        *state = 2;
+        return;
+    case 2://third message recieved
+        ...
+    case final:
+        sc_unregister_callback(interaction);
+        kfree(state);
+    }
+}
