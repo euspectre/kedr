@@ -1,0 +1,27 @@
+WORK_DIR := $(shell pwd)
+
+MIST_DIR     := $(WORK_DIR)/mist_engine
+MIST_INC_DIR := $(MIST_DIR)/include
+MIST_LIB_DIR := $(MIST_DIR)/lib
+MIST_SRC_DIR := $(WORK_DIR)/src/mist_engine
+
+.PHONY: all clean mist_engine sample
+
+all: mist_engine sample
+
+mist_engine: 
+	cd "$(MIST_SRC_DIR)" && \
+	./configure --prefix "$(MIST_DIR)" && \
+	make
+	-make -C "$(MIST_SRC_DIR)" uninstall
+	make -C "$(MIST_SRC_DIR)" install
+
+sample: 
+	MIST_INC_DIR=$(MIST_INC_DIR) MIST_LIB_DIR=$(MIST_LIB_DIR) make -C src
+	cp src/mist_gen .
+
+clean: 
+	-rm -f mist_gen
+	-make -C "$(MIST_SRC_DIR)" uninstall clean
+	-make -C src clean
+	

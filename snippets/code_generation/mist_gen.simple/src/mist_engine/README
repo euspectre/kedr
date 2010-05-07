@@ -1,0 +1,10 @@
+MiST (Minimal String Template) Engine provides a library (C API) and a command line tool for generation of data based on special templates. 
+
+In some cases, the templates are little more than just "documents with holes" where the engine sticks appropriate data. Each "hole", or placeholder, has a name and can be assigned one or more values or even none at all. A more complex template can refer to other templates ("subtemplates"), this is as if the subtemplates were included in the template.
+
+The core parts of this engine are used in T2C ("Template-to-Code") system for template-based generation of test sources and other files in test suites.
+
+See doc/html/mist-doc/index.html for details.
+
+Project page on SourceForge.net: 
+https://sourceforge.net/projects/template2code/

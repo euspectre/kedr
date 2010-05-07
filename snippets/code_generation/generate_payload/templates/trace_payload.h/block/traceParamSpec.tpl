@@ -1,0 +1,1 @@
+<$if concat(trace.param.name)$><$param : join(, )$><$else$>void<$endif$>
