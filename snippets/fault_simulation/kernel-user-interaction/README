@@ -1,0 +1,3 @@
+Библиотека для установки индикаторных функций для точек симуляции из user space.
+
+В user space индикаторные функции идентифицируются по их именам. Эти имена должны зарегистрированы предварительно в kernel space вызовом функции kedr_fsim_indicator_function_register. После этого, вызовом kedr_fsim_set_indicator(point_name, indicator_name, params, params_len) в user space устанавливается индикатор с именем indicator_name для точки симуляции point_name. params и params_len определяют опциональные параметры для индикаторной функции, для каждой индикаторной фунции формат параметров свой.
