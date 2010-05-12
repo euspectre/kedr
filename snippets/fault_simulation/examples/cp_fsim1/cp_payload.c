@@ -17,6 +17,10 @@ MODULE_LICENSE("GPL");
 
 struct kedr_simulation_point *kmalloc_point = NULL, *kmca_point = NULL;
 
+static inline int kedr_fsim_simulate_kmalloc(size_t size)
+{
+	return kedr_fsim_simulate(kmalloc_point, &size);
+}
 /* ================================================================ */
 /* Declarations of replacement functions (should be the same as for 
  * the target functions but with a different name.) 
@@ -75,14 +79,14 @@ cfake_init_module(void)
 	BUG_ON(	ARRAY_SIZE(target_func_addrs) != 
 		ARRAY_SIZE(repl_func_addrs));
 	
-	kmalloc_point = kedr_fsim_point_register("kmalloc");
+	kmalloc_point = kedr_fsim_point_register("kmalloc", "size_t");
 	if(!kmalloc_point)
 	{
 		printk(KERN_INFO "Cannot register fault simulation point \"%s\".",
 			"kmalloc");
 		return 1;
 	}
-	kmca_point = kedr_fsim_point_register("kmem_cahce_alloc");
+	kmca_point = kedr_fsim_point_register("kmem_cahce_alloc", NULL);
 	if(!kmalloc_point)
 	{
 		printk(KERN_INFO "Cannot register fault simulation point \"%s\".",
@@ -104,7 +108,7 @@ module_exit(cfake_cleanup_module);
 static void*
 repl___kmalloc(size_t size, gfp_t flags)
 {
-	void* result = kedr_fsim_simulate(kmalloc_point) ? NULL
+	void* result = kedr_fsim_simulate_kmalloc(size) ? NULL
 					: __kmalloc(size, flags);
 	printk(	KERN_INFO "[cp_fsym1] Called: "
 		"__kmalloc(%zu, %x), result: %p, in init: %s\n",
@@ -130,7 +134,7 @@ repl_kfree(const void* p)
 static void*
 repl_kmem_cache_alloc(struct kmem_cache* mc, gfp_t flags)
 {
-	void* result = kedr_fsim_simulate(kmca_point) ? NULL
+	void* result = kedr_fsim_simulate(kmca_point, NULL) ? NULL
 					: kmem_cache_alloc(mc, flags);
 	printk(	KERN_INFO "[cp_fsym1] Called: "
 		"kmem_cache_alloc(%p, %x), result: %p\n",
