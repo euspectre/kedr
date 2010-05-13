@@ -150,8 +150,6 @@ sc_recv(sc_interaction* interaction, void* buf, size_t len)
 		.msg_iov = &iov,
 		.msg_iovlen = 1
 	};
-	void* result;
-	
 	struct nlmsghdr *nlh = (struct nlmsghdr *)malloc(
 				 NLMSG_SPACE(sc_msg_len(&sc_message)));
 	
