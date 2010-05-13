@@ -6,7 +6,7 @@
 MODULE_AUTHOR("Tsyvarev");
 MODULE_LICENSE("GPL");
 
-int fault_always(void* user_data)
+int fault_always(void* indicator_state, void* user_data)
 {
 	printk(KERN_INFO "Indicator was called.\n");
 	return 1;
@@ -24,8 +24,8 @@ static int __init
 fault_control_init_module(void)
 {
 	printk(KERN_INFO "[fault_control] Starts\n");
-	return kedr_fsim_set_indicator("kmalloc", fault_always, THIS_MODULE,
-		NULL, NULL);
+	return kedr_fsim_set_indicator("kmalloc", fault_always, "",
+        THIS_MODULE, NULL, NULL);
 }
 
 module_init(fault_control_init_module);
