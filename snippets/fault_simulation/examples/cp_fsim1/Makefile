@@ -55,7 +55,8 @@ else
 # where the payload modules are built independent on the controller.
 ccflags-y := -I$(src)/.. -I$(src)/../../
 
-obj-m := $(MODULE_NAME).o fault_control.o
+# obj-m := $(MODULE_NAME).o fault_control.o
+obj-m := $(MODULE_NAME).o
 $(MODULE_NAME)-y := \
 	cp_payload.o
 	
