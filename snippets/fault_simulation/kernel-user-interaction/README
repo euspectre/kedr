@@ -1,3 +1,52 @@
 Библиотека для установки индикаторных функций для точек симуляции из user space.
 
 В user space индикаторные функции идентифицируются по их именам. Эти имена должны зарегистрированы предварительно в kernel space вызовом функции kedr_fsim_indicator_function_register. После этого, вызовом kedr_fsim_set_indicator(point_name, indicator_name, params, params_len) в user space устанавливается индикатор с именем indicator_name для точки симуляции point_name. params и params_len определяют опциональные параметры для индикаторной функции, для каждой индикаторной фунции формат параметров свой.
+
+Пример использования(пути относительно каталога snippets):
+
+1. Скопировать исходные файлы payload модуля fault_simulation/example/cp_fsim
+в подкаталог controller_payload(к другим payload модулям, это необходимо для корректной сборки). 
+
+2. Собрать модули(вызовом make в соответствующей директории, предварительно прочитав README в этих директориях, если есть):
+controller_payload/cp_controller/
+controller_payload/cp_target
+fault_simulation/
+controller_payload/cp_fsim/
+syscall_connector/
+fault_simulation/kernel-user-interaction/kernel_part/
+
+   Собрать user space библиотеки(также, как и модули):
+syscall_connector/user_space
+fault_simulation/kernel-user-interaction/user_part/
+
+    Собрать тестовый пример:
+fault_simulation/kernel-user-interaction/user_part/example
+
+2. Запустить последовательно модули:
+
+controller_payload/cp_controller/cp_controller.ko target_name="cp_target" (базовый интерфейс payload модулей)
+fault_simulation/fault_simulation.ko (базовый интерфейс для точек симуляции)
+controller_payload/cp_fsim/cp_fsim.ko (payload модуль с точками fault_simulation)
+syscall_connector/syscall_connector.ko (интерфейс для обмена сообщениями между user space и kernel space)
+fault_simulation/kernel-user-interaction/kernel_part/fault_indicator_manager.ko (управление индикаторными функциями из user space)
+
+3. Запустить тестовый пример:
+cd fault_simulation/kernel-user-interaction/user_part/example/
+./test
+
+Он установит индикаторную функцию для точки kmalloc с параметром size_limit=1000.
+Эта функция симулирует ошибку в случае, когда переданный ей аргумент size удовлетворяет
+соотношению size >= size_limit ("fault if size greater").
+
+4. Запустить целевой модуль
+cd controller_payload/cp_target/
+./cp_target_load.sh
+
+Так как при загрузке вызовов kmalloc с размером больше 1000 нет, то загрузка модуля пройдет успешно.
+
+5.
+Выполнить вывод в устройство, создаваемое целевым модулем(из-под root'а):
+echo 123 >> /dev/cfake0
+
+В это время будет попытка выделить память под устройство, но так как размер этой памяти 4000>1000, то
+память выделена не будет(fault simulation). О чем и сообщит модуль
