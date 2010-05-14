@@ -1,0 +1,53 @@
+﻿Вариант примера "generate_payload", с демонстранцией сбора данных в atomic 
+context и вывода их в трассу.
+=======================================================================
+
+В качестве atomic context здесь используются:
+- область кода, перед которой захвачен spinlock;
+- контекст таймерной функции;
+- контекст tasklet-функции.
+
+В двух последних случаях, по сути, это контекст прерывания (soft IRQ).
+
+2 payload module:
+
+- my_payload1 - перехват 4 функций для работы с памятью, почти без 
+изменений взят из "generate_payload". Отличие только в том, что для 
+__kmalloc и kmem_cache_alloc в трассу сбрасываются ещё и результаты 
+вызовов in_atomic() и in_interrupt().
+
+- my_payload2 - перехват функций захвата и освобождения spinlock'а (тех, 
+через которые реализованы spin_lock_irqsave и spin_unlock_irqrestore).
+
+[NB] Есть 2 варианта .data-файла для 'my_payload2':
+- my_payload2-before_k2.6.33.data - для версий ядра ниже 2.6.33.
+- my_payload2-k2.6.33_and_newer.data - для версии ядра 2.6.33 и новее.
+
+Соотв. файл надо скопировать / symlink в my_payload2.data перед генерацией 
+кода payload модуля. Как генерировать код, описано в README для примера 
+"generate_payload".
+=======================================================================
+
+[NB] Если в ядре используется упрощённая реализация spinlock 
+(spinlock_api_up.h), то перехват _raw_spin_lock_irqsave() / 
+_spin_lock_irqsave() не пройдёт: это не функции, а макросы в данном случае.
+
+Такое будет только для ядер без поддержки SMP и без отладочного режима для 
+spinlock'ов (не определены ни CONFIG_SMP, ни CONFIG_DEBUG_SPINLOCK).
+
+Т.е. рассмотрим только случаи, когда это не так. Плюс, считаем, что не 
+определен символ CONFIG_INLINE_SPIN_LOCK_IRQSAVE и ему подобные.
+Тогда _raw_spin_lock_irqsave / _spin_lock_irqsave - это обычные функции и 
+их вызовы можно перехватить.
+
+2.6.31, 2.6.32:
+unsigned long _spin_lock_irqsave(spinlock_t* lock)
+void _spin_unlock_irqrestore(spinlock_t* lock, unsigned long flags)
+
+2.6.33: 
+unsigned long _raw_spin_lock_irqsave(raw_spinlock_t* lock)
+void _raw_spin_unlock_irqrestore(raw_spinlock_t* lock, unsigned long flags)
+
+=======================================================================
+Все основные операции выполняются точно так же, как и в примере 
+"generate_payload" (см. README для него).
