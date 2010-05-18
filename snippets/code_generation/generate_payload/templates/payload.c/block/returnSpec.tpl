@@ -1,1 +1,0 @@
-<$if returnsVoid$>void<$else$><$returnType$><$endif$>

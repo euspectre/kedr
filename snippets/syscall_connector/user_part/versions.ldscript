@@ -1,9 +1,0 @@
-SC_1.0{
-	global:
-		sc_interaction_create;
-		sc_interaction_destroy;
-		sc_send;
-		sc_recv;
-	local:
-		*;
-};

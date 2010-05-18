@@ -1,1 +1,0 @@
-trace_called_<$function.name$>(<$traceArgumentList$>);

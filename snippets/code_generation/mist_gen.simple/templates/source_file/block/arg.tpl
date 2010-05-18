@@ -1,1 +1,0 @@
-<$arg.type$> <$arg.name$>

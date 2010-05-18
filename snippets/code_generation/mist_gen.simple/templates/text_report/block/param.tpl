@@ -1,1 +1,0 @@
-"<$arg.name$>" of type "<$arg.type$>"

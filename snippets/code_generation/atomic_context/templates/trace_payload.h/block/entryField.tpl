@@ -1,1 +1,0 @@
-__field(<$trace.param.type$>, <$trace.param.name$>)
