@@ -1,0 +1,6 @@
+FSIM_1.0{
+	global:
+		kedr_fsim_set_indicator;
+	local:
+		*;
+};

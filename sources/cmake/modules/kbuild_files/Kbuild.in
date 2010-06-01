@@ -1,0 +1,4 @@
+# Pass CMake ${CFLAGS} to the compiler of the kernel module
+EXTRA_CFLAGS = ${CFLAGS}
+
+obj-m= hello.o
