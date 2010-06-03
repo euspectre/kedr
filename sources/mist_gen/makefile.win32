@@ -1,0 +1,38 @@
+APP_NAME := mist_gen.exe
+
+MIST_DIR     := mist_engine
+MIST_INC_DIR := $(MIST_DIR)\include
+MIST_LIB_DIR := $(MIST_DIR)\lib
+
+MIST_DLL := mist_engine.dll
+
+CXXFLAGS := -Wall -Wextra -g -O0
+LDFLAGS  := -L$(MIST_LIB_DIR) -lmist_engine
+
+HEADERS := \
+	src\Generator.h \
+	src\Common.h \
+	src\ValueLoader.h \
+	src\TemplateLoader.h
+
+OBJS := \
+	src\Common.o \
+	src\Generator.o \
+	src\TemplateLoader.o \
+	src\ValueLoader.o \
+	src\main.o
+
+.PHONY: all clean
+all: $(MIST_DLL) $(APP_NAME)
+
+$(MIST_DLL): $(MIST_LIB_DIR)\$(MIST_DLL)
+	copy $< $@
+
+$(APP_NAME): $(OBJS)
+	g++ -o $@ $^ $(LDFLAGS)
+
+%.o: %.cpp $(HEADERS)
+	g++ -c -o $@ $(CXXFLAGS) -I$(MIST_INC_DIR) $<
+
+clean: 
+	-del /Q $(MIST_DLL) $(APP_NAME) src\*.o
