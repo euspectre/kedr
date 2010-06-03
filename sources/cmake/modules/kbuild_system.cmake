@@ -1,3 +1,4 @@
+include(cmake_useful)
 # Where this CMake module is located
 set(kbuild_this_module_dir "${CMAKE_SOURCE_DIR}/cmake/modules")
 # Symvers files, which should be processed for build kernel module
@@ -21,9 +22,6 @@ set(kbuild_include_dirs)
 # 
 # Other sources is treated as only prerequisite of building process.
 #
-# (!)All object sources are treated relative to the current dir,
-# not to the current source dir.
-#
 # Only one call of kbuild_add_module or kbuild_add_objects
 # is allowed in the CMakeLists.txt.
 #
@@ -40,48 +38,61 @@ function(kbuild_add_module name)
 	else(ARGN)
 		set(sources "${CMAKE_CURRENT_BINARY_DIR}/${name}.c")
 	endif(ARGN)
-	#Object sources with absolute path
-	set(obj_sources_abs)
-	#Other sources
-	set(other_sources)
-	foreach(source ${sources})
-		string(REGEX MATCH ".+(\\.c)|(\\.o)$" is_obj_source ${source})
-		if(is_obj_source)
-			string(REGEX MATCH "^/" is_abs_path ${source})
-			if(NOT is_abs_path)
-				set(source "${CMAKE_CURRENT_BINARY_DIR}/${source}")
-			endif(NOT is_abs_path)
-			list(APPEND obj_sources_abs ${source})
-		else(is_obj_source)
-			list(APPEND other_sources ${source})
-		endif(is_obj_source)
-	endforeach(source ${sources})
-	#list of files from which module building is depend
-	set(depend_files ${obj_sources_abs} ${other_sources})
+	#Sources with absolute paths
+	to_abs_path(sources_abs ${sources})
+	#list of files from which module building is depended
+	set(depend_files)
 	#Sources of "c" type, but without extension
-	#(for clean files)
+	#(for clean files, 
+	#for out-of-source builds do not create files in source tree)
 	set(c_sources_noext_abs)
 	#Sources of "o" type, but without extension
 	set(o_sources_noext_abs)
-	foreach(obj_source_abs ${obj_sources_abs})
-		string(REGEX REPLACE "(.+)((\\.c)|(\\.o))$" "\\1"
-			obj_source_noext_abs
-			${obj_source_abs})
-		if(CMAKE_MATCH_2 STREQUAL ".c")
-			list(APPEND c_sources_noext_abs ${obj_source_noext_abs})
-		elseif(CMAKE_MATCH_2 STREQUAL ".o")
-			list(APPEND o_sources_noext_abs ${obj_source_noext_abs})
-		else(CMAKE_MATCH_2 STREQUAL ".c")
-			message(FATAL_ERROR "BUG in kbuild_add_module")
-		endif(CMAKE_MATCH_2 STREQUAL ".c")
-	endforeach(obj_source_abs ${obj_sources_abs})
+	foreach(c_source_noext_abs ${c_sources_noext_abs})
+		_kbuild_add_clean_files_c(${c_source_noext_abs} clean_files_list)
+		list(APPEND clean_files_list "${c_source_noext_abs}.o")
+	endforeach(c_source_noext_abs ${c_sources_noext_abs})
+	#sort sources
+	foreach(source_abs ${sources_abs})
+		string(REGEX MATCH "(.+)((\\.c)|(\\.o))$" is_obj_source ${source_abs})
+		if(is_obj_source)
+			#real sources
+			set(obj_source_noext_abs ${CMAKE_MATCH_1})
+			if(CMAKE_MATCH_2 STREQUAL ".c")
+				is_path_inside_dir(is_in_source ${CMAKE_SOURCE_DIR} ${source_abs})
+				is_path_inside_dir(is_in_binary ${CMAKE_BINARY_DIR} ${source_abs})
+				if(is_in_source AND NOT is_in_binary)
+					#special process c-sources in source tree
+					file(RELATIVE_PATH c_source_rel ${CMAKE_SOURCE_DIR} ${source_abs})
+					set(c_source_abs_real ${CMAKE_BINARY_DIR}/${c_source_rel})
+					#add rule for create duplicate..
+					rule_copy_file(${c_source_abs_real} ${source_abs})
+					#..and forgot initial file
+					set(source_abs ${c_source_abs_real})
+					#regenerate source without extension
+					string(REGEX REPLACE "(.+)\\.c" "\\1" 
+						obj_source_noext_abs
+						${source_abs})
+				endif(is_in_source AND NOT is_in_binary)
+				list(APPEND c_sources_noext_abs ${obj_source_noext_abs})
+			else(CMAKE_MATCH_2 STREQUAL ".c")
+				list(APPEND o_sources_noext_abs ${obj_source_noext_abs})
+			endif(CMAKE_MATCH_2 STREQUAL ".c")
+		else(is_obj_source)
+			#sources only for DEPENDS
+		endif(is_obj_source)
+		list(APPEND depend_files ${source_abs})
+	endforeach(source_abs ${sources_abs})
 	#Object sources relative to current dir
 	#(for $(module)-y :=)
 	set(obj_sources_noext_rel)
-	foreach(source_noext_abs ${c_sources_noext_abs} ${o_sources_noext_abs})
-		file(RELATIVE_PATH source_noext_rel ${CMAKE_CURRENT_BINARY_DIR} ${source_noext_abs})			
-		list(APPEND obj_sources_noext_rel ${source_noext_rel})
-	endforeach(source_noext_abs ${c_sources_noext_abs} ${o_sources_noext_abs})
+	foreach(obj_sources_noext_abs
+			${c_sources_noext_abs} ${o_sources_noext_abs})
+		file(RELATIVE_PATH obj_source_noext_rel
+			${CMAKE_CURRENT_BINARY_DIR} ${obj_sources_noext_abs})
+		list(APPEND obj_sources_noext_rel ${obj_source_noext_rel})
+	endforeach(obj_sources_noext_abs)
+
 	if(NOT obj_sources_noext_rel)
 		message(FATAL_ERROR "List of object files for module ${name} is empty.")
 	endif(NOT obj_sources_noext_rel)
@@ -253,16 +264,3 @@ macro(_kbuild_add_clean_files_c c_source_noext_abs clean_files_list)
 		list(APPEND ${clean_files_list} "${_kbuild_dir_part}${created_file}")
 	endforeach(created_file "${_kbuild_name}.o" ".${_kbuild_name}.o.cmd")
 endmacro(_kbuild_add_clean_files_c c_source_noext_abs clean_files_list)
-
-#auxiliary
-#Create rule for obtain one file by copiing another
-function(rule_copy_file target_file source_file)
-	add_custom_command(OUTPUT ${target_file}
-					COMMAND cp -p ${source_file} ${target_file}
-					DEPENDS ${source_file}
-					)
-endfunction(rule_copy_file target_file source_file)
-#Create rule for obtain file in binary tree by copiing it from source tree
-function(rule_copy_source rel_source_file)
-	rule_copy_file(${CMAKE_CURRENT_BINARY_DIR}/${rel_source_file} ${CMAKE_CURRENT_SOURCE_DIR}/${rel_source_file})
-endfunction(rule_copy_source rel_source_file)
