@@ -1,0 +1,1 @@
+kedr_install_headers("controller" "controller_common.h")
