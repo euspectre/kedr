@@ -1,0 +1,44 @@
+[group]
+	# Name and return type of the target function
+	function.name = kfree
+	returnsVoid = yes
+	# No need to specify 'returnType' in this case
+
+	# Names and types of the arguments of the target function
+	arg.type = void*
+	arg.name = p
+	
+	# The parameters to be output to the trace. 
+	trace.param.type = void*
+	trace.param.name = p
+
+	# The format string to be used for trace output.
+	# The order in which parameters will be listed in the call to
+	# a tracing function is the same as the corresponding trace.param.* 
+	# definitions are listed in this file.
+	trace.formatString = "arguments: (%p)"
+
+	prologue =>>
+	/********************************************************* 
+	* TODO: specify prologue code here, if necessary. It will be
+	* inserted at the beginning of the replacement function.
+	*********************************************************/
+	<<
+	
+	middleCode =>>
+	/********************************************************* 
+	* TODO: specify the code here that should be inserted after the 
+	* target function is called but before the collected data is 
+	* output by the replacement function. 
+	*********************************************************/
+	<<
+	
+	epilogue =>>
+	/******************************************************** 
+	* TODO: specify epilogue code here, if necessary. It will be
+	* inserted at the end of the replacement function.
+	*********************************************************/
+	<<
+# End of the group of definitions for kfree().
+
+#######################################################################

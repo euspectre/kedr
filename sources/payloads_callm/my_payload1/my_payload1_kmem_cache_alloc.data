@@ -1,0 +1,38 @@
+[group]
+	# Name and return type of the target function
+	function.name = kmem_cache_alloc
+	returnType = void*
+
+	# Names and types of the arguments of the target function
+	arg.type = struct kmem_cache*
+	arg.name = mc
+	
+	arg.type = gfp_t
+	arg.name = flags
+	
+	# The parameters to be output to the trace. 
+	trace.param.type = void*
+	trace.param.name = mc
+
+	trace.param.type = unsigned int
+	trace.param.name = flags
+
+	trace.param.type = int
+	trace.param.name = inInit
+	
+	trace.param.type = void*
+	trace.param.name = returnValue
+
+	# The format string to be used for trace output.
+	# The order in which parameters will be listed in the call to
+	# a tracing function is the same as the corresponding trace.param.* 
+	# definitions are listed in this file.
+	trace.formatString = "arguments: (%p, %x), in init: %d, result: %p"
+
+	prologue =>>
+	int inInit;
+	inInit = kedr_target_module_in_init();
+	<<
+# End of the group of definitions for kmem_cache_alloc().
+
+#######################################################################
