@@ -13,16 +13,11 @@ kbuild_include_directories(
 	)
 
 kbuild_add_module(${kmodule_name} 
-	"${CMAKE_CURRENT_BINARY_DIR}/controller.c"
-    "${CMAKE_CURRENT_BINARY_DIR}/${arch_dir}/lib/inat.c"
-    "${CMAKE_CURRENT_BINARY_DIR}/${arch_dir}/lib/insn.c"
-    "${CMAKE_CURRENT_BINARY_DIR}/${arch_dir}/lib/inat-tables.h"
+	"controller.c"
+    "${arch_dir}/lib/inat.c"
+    "${arch_dir}/lib/insn.c"
+    "${arch_dir}/lib/inat-tables.h"
     )
-
-
-rule_copy_source("controller.c")
-rule_copy_source("${arch_dir}/lib/inat.c")
-rule_copy_source("${arch_dir}/lib/insn.c")
 
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${arch_dir}/lib/inat-tables.h"
 			COMMAND LC_ALL=C awk -f "${CMAKE_CURRENT_SOURCE_DIR}/${arch_dir}/tools/gen-insn-attr-x86.awk"
@@ -30,3 +25,6 @@ add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${arch_dir}/lib/inat-tabl
 				"${CMAKE_CURRENT_BINARY_DIR}/${arch_dir}/lib/inat-tables.h"
 			DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${arch_dir}/lib/x86-opcode-map.txt"
 			)
+
+kedr_install_kmodule(${kmodule_name})
+kedr_install_symvers(${kmodule_name})

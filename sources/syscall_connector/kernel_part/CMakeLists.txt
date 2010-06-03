@@ -1,3 +1,6 @@
-kbuild_add_module("syscall_connector")
+set(kmodule_name "syscall_connector")
 
-rule_copy_source("syscall_connector.c")
+kbuild_add_module(${kmodule_name} "syscall_connector.c")
+
+kedr_install_kmodule(${kmodule_name})
+kedr_install_symvers(${kmodule_name})
