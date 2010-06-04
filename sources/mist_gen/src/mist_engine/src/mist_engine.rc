@@ -1,8 +1,8 @@
 #include <winver.h>
 
 VS_VERSION_INFO VERSIONINFO
-  FILEVERSION 1,0,0,0
-  PRODUCTVERSION 1,0,0,0
+  FILEVERSION 1,0,1,0
+  PRODUCTVERSION 1,0,1,0
   FILEFLAGSMASK 0
   FILEFLAGS 0
   FILEOS VOS__WINDOWS32
@@ -15,12 +15,12 @@ VS_VERSION_INFO VERSIONINFO
       BEGIN
 	VALUE "CompanyName", "Institute for System Programming of the Russian Academy of Sciences (ISPRAS)"
 	VALUE "FileDescription", "MiST Engine Library"
-	VALUE "FileVersion", "1.0.0.0"
+	VALUE "FileVersion", "1.0.1.0"
 	VALUE "InternalName", "mist_engine"
 	VALUE "LegalCopyright", "Copyright © Institute for System Programming of the Russian Academy of Sciences (ISPRAS)."
 	VALUE "OriginalFilename", "mist_engine.dll"
 	VALUE "ProductName", "Minimal String Template Engine (MiST)"
-	VALUE "ProductVersion", "1.0.0"
+	VALUE "ProductVersion", "1.0.1"
       END
     END
     BLOCK "VarFileInfo"

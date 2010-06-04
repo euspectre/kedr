@@ -231,7 +231,7 @@ typedef struct CMistNameValuePair_
 MIST_ENGINE_API EMistErrorCode
 mist_engine_init(unsigned int api_ver);
 
-/// Create an template group and return a pointer to it in '*ptg'. 
+/// Create a template group and return a pointer to it in '*ptg'. 
 ///
 /// 'source' array contains the names of the templates to be stored
 /// in the group and the strings to load the templates from.

@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------
+MiST Engine 1.0.1
+---------------------------------------------------------------------------
+2010-05-30 Eugene Shatokhin  <spectre@ispras.ru>
+    * Added support for CMake-based build and install process. The support for Autotools-based builds can be dropped in some future version.
+
+---------------------------------------------------------------------------
 MiST Engine 1.0.0 final
 ---------------------------------------------------------------------------
 2010-02-01 Eugene Shatokhin  <spectre@ispras.ru>

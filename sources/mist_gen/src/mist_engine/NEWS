@@ -1,3 +1,11 @@
+2010-05-30
+MiST Engine 1.0.1 released.
+
+This is a minor release. The most important change is that MiST Engine can 
+now be built with CMake build system both on Linux and Microsoft Windows.
+
+-----------------------------------------------------------
+
 2010-02-01
 MiST Engine 1.0.0 final released.
 
