@@ -3,7 +3,7 @@ include(cmake_useful)
 set(CONTROLLER_SYMVERS_FILE "${CMAKE_BINARY_DIR}/controller/Module.symvers")
 kbuild_use_symbols(${CONTROLLER_SYMVERS_FILE})
 
-set(MIST_GEN_EXECUTABLE "${CMAKE_SOURCE_DIR}/mist_gen/mist_gen")
+set(MIST_GEN_EXECUTABLE "${CMAKE_BINARY_DIR}/mist_gen/mist_gen")
 set(MIST_GEN_TEMPLATES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/templates")
 # Common commands for generate payload.h and trace_payload.h
 function(rules_generate_payload data_file dest_dir)
