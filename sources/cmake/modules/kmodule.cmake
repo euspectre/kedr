@@ -45,7 +45,7 @@ macro(kmodule_is_function_exist function_name RESULT_VAR)
     if("${RESULT_VAR}" MATCHES "^${RESULT_VAR}$")
         message(STATUS "Looking for ${function_name} in the kernel")
         execute_process(
-            COMMAND ${kmodule_this_module_dir}/kmodule_files/scripts/look_kernel_function.pl ${function_name}
+            COMMAND perl ${kmodule_this_module_dir}/kmodule_files/scripts/look_kernel_function.pl ${function_name}
             RESULT_VARIABLE ${RESULT_VAR}
             OUTPUT_QUIET)
         if (${RESULT_VAR} EQUAL 0)
