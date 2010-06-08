@@ -17,6 +17,7 @@ if(NOT functions_data)
 		"None of the functions of my_payload1.data exists in the kernel.")
 endif(NOT functions_data)
 
+kbuild_include_directories ("${CMAKE_CURRENT_BINARY_DIR}")
 kbuild_add_module(${kmodule_name}
 	"payload.c"
 	"trace_payload.h")

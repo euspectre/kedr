@@ -8,11 +8,16 @@ MODULE_AUTHOR("<$module.author$>");
 MODULE_LICENSE("<$module.license$>");
 /*********************************************************************/
 
+#include <kedr/controller/controller_common.h>
+
+<$header$>
+
+/* To minimize the unexpected consequences of trace event-related 
+ * headers and symbols, place #include directives for system headers 
+ * before '#define CREATE_TRACE_POINTS' directive
+ */
 #define CREATE_TRACE_POINTS
 #include "trace_payload.h" /* trace event facilities */
-
-#include <kedr/controller/controller_common.h>
-<$header$>
 
 /*********************************************************************
  * Replacement functions

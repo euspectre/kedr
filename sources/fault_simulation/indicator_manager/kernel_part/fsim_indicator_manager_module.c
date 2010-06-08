@@ -10,6 +10,7 @@
 
 #include <linux/module.h>
 #include <linux/list.h> /* list functions */
+#include <linux/slab.h> /* kmalloc & kfree */
 
 /* weak reference of module functionality */
 #include <kedr/module_weak_ref/module_weak_ref.h>

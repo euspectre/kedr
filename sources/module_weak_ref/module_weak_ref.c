@@ -1,5 +1,6 @@
 #include <kedr/module_weak_ref/module_weak_ref.h>
 
+#include <linux/slab.h>
 #include <linux/list.h>
 
 struct destroy_data
