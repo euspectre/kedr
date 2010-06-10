@@ -1,0 +1,48 @@
+<chapter id="intro">
+<title>Introduction</title>
+<para>
+T2C stands for <quote>Template&ndash;to&ndash;Code</quote>. It is a system to facilitate development of functional tests including the tests for conformance to specification (standard, reference, etc.).
+</para>
+
+<para>
+The main goal of T2C is to automate some of the tedious and repetitive tasks involved in test development. T2C tools use special templates to generate the source code of the tests from the parameterized tests provided by the developer. It is especially useful when it is necessary to create a number of tests which differ only in several parameters&nbsp;&mdash; a quite common situation in the development of functional tests.
+</para>
+
+<itemizedlist>
+<para>
+The key features of T2C are as follows:
+</para>
+    <listitem><para>
+T2C facilitates development of <firstterm>parameterized tests</firstterm>. It is often necessary to create a number of test scenarios (test functions or the like) that differ only in a small number of places, for example, in the arguments to be passed to the function under test. Instead of developing a bunch of such test scenarios, T2C allows to prepare a single parameterized test scenario for this group of tests. The scenario is written in almost the same programming language that the developer chooses to use for the tests. The only difference is that the places where the values of each particular parameter should be inserted are marked in a special way in the scenario. Once the parameterized test scenario and the sets of parameter values are provided by the developer, T2C file generator will do the rest. It will create the necessary test scenarios with the parameter values inserted in appropriate places. 
+    </para></listitem>
+    
+    <listitem><para>
+If the tests should check a system for conformance to a set of requirements (assertions, statements of a specification, etc.), T2C provides the means to link each check in a test to the requirement that is checked there. In this manual, it will be demonstrated how to use this functionality to output the text of each requirement that is violated in the system under test. That is, if a test detects that a requirement does not hold, T2C allows the test not only to report failure but also to output the text of this requirement. This can make the test reports much easier to understand.
+    </para></listitem>
+    
+    <listitem><para>
+Although T2C tools can be used for test development without any other testing framework, it is by no means intended to replace the existing well-established testing frameworks with them. T2C technology is flexible enough so it can be integrated with these frameworks if necessary, enhancing them with the support for parameterized tests, requirement-related facilities, etc.
+    </para></listitem>
+    
+    <listitem><para>
+T2C provides common API that can be used in the tests to automate some tedious tasks and hide the lower level details of the employed testing framework from the test developer. Using T2C API also helps increase portability of the tests among the testing frameworks which is sometimes also valuable. It is not required to use the T2C API in the tests, a test developer can get away without it as well. But in many cases, using T2C API may be reasonable.
+    </para></listitem>
+    
+    <listitem><para>
+T2C technology does not require of the test developer to use any particular programming language for the tests. As long as the appropriate templates and the implementation of T2C API are provided for a programming language, T2C file generator will create the sources of the tests and other required files for that language.
+    </para></listitem>
+</itemizedlist>
+
+<para>
+This manual gives an overview of T2C, explains a typical workflow used in test development with T2C tools and presents a reference of various aspects related to T2C. It also contains a case study where the tests for several functions from <ulink url="&glib-url;">GLib library</ulink> are developed step by step.
+</para>
+
+<para>
+Although T2C can be used both on Linux and Microsoft&nbsp;Windows platforms, the examples are done on Linux in this manual unless specifically stated. The process of test development is quite similar on Microsoft&nbsp;Windows systems.
+</para>
+
+<para>
+The latest stable version of T2C as well as the development versions can be found at <ulink url="&t2c-url;"><quote>Template&ndash;to&ndash;Code</quote> project site at SourceForge.net</ulink>
+</para>
+
+</chapter>

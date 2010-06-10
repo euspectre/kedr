@@ -1,0 +1,196 @@
+/*
+ * Common CSS-stylesheet for KEDR documentation
+ */
+
+body 
+{ 
+	font-family: sans-serif; 
+}
+
+h1, h2, h3, h4, h5 
+{ 
+	font-style: italic; 
+	text-decoration: underline; 
+}
+
+h1 
+{ 
+	font-size: 200%; 
+}
+
+h2 
+{ 
+	font-size: 150%; 
+}
+
+h3 
+{ 
+	font-size: 125%; 
+	text-align: left; 
+}
+
+h4, h5, h6
+{ 
+	font-size: 100%; 
+	text-align: left; 
+}
+
+
+h3.author, h3.corpauthor 
+{ 
+	text-align: left; 
+	font-style: normal; 
+	font-size: 100%; 
+	margin-bottom: 0; 
+}
+
+p 
+{ 
+	text-align: justify; 
+}
+
+.releaseinfo
+{
+	font-size: 125%; 
+}
+
+code 
+{ 
+	white-space: nowrap; 
+	font-family: monospace;
+	font-size: 100%;
+}
+
+div.navheader th, .toc, a:link, a:active 
+{ 
+	color: #00f; 
+	text-decoration: underline; 
+}
+
+a:visited 
+{ 
+	color: #00f; 
+	text-decoration: underline; 
+}
+
+a:hover 
+{ 
+	color: #00f; 
+	text-decoration: none; 
+}
+
+.programlisting, .screen, .note, .warning, .caution, .tip, .important
+{
+	border: thin solid #cccccc; 
+	padding: 0in;
+	font-size: 100%;
+}
+
+.programlisting, .screen
+{
+	background-color: #eee; 
+	font-family: monospace;
+}
+
+.note, .tip
+{
+	background-color: white;
+	border: thin solid #369; 
+}
+
+.warning .title, .caution .title, .important .title, .note .title, .tip .title
+{
+	color: #000;
+	font-size: 125%;
+}
+
+.warning, .caution, .important
+{
+	background-color: white;
+	border: thin solid #c00; 
+}
+
+.note .programlisting, .note .screen, 
+.tip .programlisting, .tip .screen, 
+.warning .programlisting, .warning .screen, 
+.caution .programlisting, .caution .screen, 
+.important .programlisting, .important .screen
+{
+    border: none;
+    background: none;
+}
+
+.note .title, .tip .title
+{
+	margin: 0in;
+	padding: 0.05in 0.1in 0.05in 0.1in;	
+	text-decoration: none;
+	background-color: #a0e0ff;
+	border-bottom: thin solid #369; 
+}
+
+.warning .title, .caution .title, .important .title
+{
+	margin: 0in;
+	padding: 0.05in 0.1in 0.05in 0.1in;	
+	text-decoration: none;
+	background-color: #ff9090;
+	border-bottom: thin solid #c00; 
+}
+
+.note p, .tip p, .warning p, .caution p, .important p
+{
+	padding: 0in 0.1in 0in 0.1in;	
+}
+
+img
+{
+	border: thin solid #808080;
+	margin: 0in 0.5in
+}
+
+.command
+{
+    font-family: monospace;
+}
+
+.filename
+{
+    /*font-family: serif;*/
+    font-style: italic;
+}
+
+.emphasis /*, .firstterm*/
+{
+	font-weight: bold;
+}
+
+/* Special style for cited phrases */
+.pcite
+{
+	font-style: italic;
+}
+
+/* This style instructs the browser treat the corresponding part of the text
+ * as a single entity, that is, not to break it at the end of the line, etc.
+ */
+.nobreak
+{
+	white-space: nowrap;
+}
+
+.table-contents td
+{
+	padding: 0em 0.5em;
+}
+
+.synopsis
+{
+	font-size: 100%;
+	font-family: monospace;
+	/*margin-left: 0.5in;
+	margin-right: 0.5in;*/
+		
+	border: thin solid #cccccc; 
+	background-color: #eee;
+}
