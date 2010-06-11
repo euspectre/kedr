@@ -1,13 +1,91 @@
 ﻿<section id="getting_started">
 <title>Getting Started</title>
 
-TODO: general words: what this section is about
+<para>
+This section shows how to install KEDR framework and how to use it to analyse a simple kernel module.
+</para>
 <!-- ================================================================ -->
 
 <section id="getting_started.install">
 <title>Installation</title>
 
-TODO: how to install KEDR
+<para>
+It is recommended to build KEDR from source. This allows to avoid a lot of issues concerning the differences between many versions and variants of Linux kernel. For the present, there is no official binary distribution of KEDR. 
+</para>
+
+<para>
+The source code of the framework can be downloaded from the <ulink url="&kedr-url;">project site</ulink> at BerliOS Developer.
+</para>
+
+<itemizedlist>
+<para>
+To be able to build KEDR, you need the following:
+</para>
+
+<listitem><para>
+Your Linux system should have kernel version 2.6.31 or newer (<command>uname -r</command> command should tell you what kernel version you are currently using)
+</para></listitem>
+
+<listitem><para>
+CMake build system (<ulink url="http://cmake.org/">http://cmake.org/</ulink>) version 2.6 or newer (version 2.8 or newer is preferable), 
+</para></listitem>
+
+<listitem><para>
+GNU C and C++ compilers - version 4.0 or newer is recommended
+</para></listitem>
+
+<listitem><para>
+GNU Make
+</para></listitem>
+
+<listitem><para>
+Other tools and packages necessary to build kernel modules: on some systems it can be <quote>kernel-*-devel</quote>, <quote>kernel-*-source</quote>, <quote>kernel-*-syms</quote> or some other packages, on some systems you may need to install <quote>DKMS</quote> package as well, etc.
+</para></listitem>
+</itemizedlist>
+
+<para>
+After all the prerequisites have been met, unpack the archive with the sources (<filename>kedr-&lt;version&gt;.tar.bz2</filename>) and create another directory, say, <filename class='directory'>kedr-build</filename> where KEDR will be built.
+</para>
+
+<note><para>
+It is highly recommended to use an out-of-source build, i.e. not to build KEDR from the directory containing its sources. With an out-of-source build, you leave the source tree of KEDR unchanged, which can be convenient. You can also configure and build the framework from different build directories with different options if you want to. An in-source build would make this impossible.
+</para></note>
+
+<para>
+Change current directory to <filename class='directory'>kedr-build</filename> and configure the package using the following command:
+</para>
+
+<programlisting><![CDATA[
+cmake -DCMAKE_INSTALL_PREFIX=<install_directory> <path-to-kedr-sources>
+]]></programlisting>
+
+<para>
+The package will be configured to be installed to <replaceable>&lt;install_directory&gt;</replaceable>. For example:
+</para>
+
+<programlisting><![CDATA[
+cmake -DCMAKE_INSTALL_PREFIX=/opt/kedr/ ../kedr-0.1/
+]]></programlisting>
+
+<para>
+If the configuration stage completes successfully, you can type <command>make</command> to build the package and <command>make install</command> - to install it to the configured location (<filename class='directory'>/opt/kedr/</filename> in the example above). You may need to execute <command>make install</command> as a root user.
+</para>
+
+<para>
+If you would like to install KEDR to the default location (usually, <filename class='directory'>/usr/local/</filename>), you can omit that <code>CMAKE_INSTALL_PREFIX</code> stuff and configure the package as follows:
+</para>
+
+<programlisting><![CDATA[
+cmake ../kedr-0.1/
+]]></programlisting>
+
+<para>
+To remove the files installed with <command>make install</command>, you can use <command>make uninstall</command> command.
+</para>
+
+<note><para>
+Currently, <command>make uninstall</command> does not remove directories, only files. That is why it can be convenient to install KEDR to a custom location like <filename class='directory'>/opt/kedr/</filename> rather than to <filename class='directory'>/usr/local/</filename> or the like. In the former case it is easier to cleanup after the package: <command>make uninstall</command> followed by <command>rm -rf /opt/kedr</command> will do the job.
+</para></note>
 
 </section> <!-- "getting_started.install" -->
 <!-- ================================================================ -->
