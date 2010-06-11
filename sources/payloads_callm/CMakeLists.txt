@@ -23,4 +23,5 @@ function(rules_build_datafile data_file)
 						DEPENDS ${data_funcs_abs})
 endfunction(rules_build_datafile data_file)
 
-add_subdirectory(my_payload1)
+#add_subdirectory(my_payload1)
+add_subdirectory(common_memory_management)
