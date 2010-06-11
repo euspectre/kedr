@@ -63,19 +63,19 @@ code
 
 div.navheader th, .toc, a:link, a:active 
 { 
-	color: #00f; 
+	color: #41A317; 
 	text-decoration: underline; 
 }
 
 a:visited 
 { 
-	color: #00f; 
+	color: #41A317; 
 	text-decoration: underline; 
 }
 
 a:hover 
 { 
-	color: #00f; 
+	color: #41A317; 
 	text-decoration: none; 
 }
 
@@ -88,19 +88,21 @@ a:hover
 
 .programlisting, .screen
 {
-	background-color: #eee; 
+	background-color: #C3FDB8; 
 	font-family: monospace;
 }
 
 .note, .tip
 {
 	background-color: white;
-	border: thin solid #369; 
+	border: thin solid #347235; 
 }
 
 .warning .title, .caution .title, .important .title, .note .title, .tip .title
 {
-	color: #000;
+	color: white;
+	font-style: normal;
+	text-decoration: none;	
 	font-size: 125%;
 }
 
@@ -124,16 +126,14 @@ a:hover
 {
 	margin: 0in;
 	padding: 0.05in 0.1in 0.05in 0.1in;	
-	text-decoration: none;
-	background-color: #a0e0ff;
-	border-bottom: thin solid #369; 
+	background-color: #4AA02C;
+	border-bottom: thin solid #347235; 
 }
 
 .warning .title, .caution .title, .important .title
 {
 	margin: 0in;
 	padding: 0.05in 0.1in 0.05in 0.1in;	
-	text-decoration: none;
 	background-color: #ff9090;
 	border-bottom: thin solid #c00; 
 }
@@ -192,5 +192,5 @@ img
 	margin-right: 0.5in;*/
 		
 	border: thin solid #cccccc; 
-	background-color: #eee;
+	background-color: #C3FDB8;
 }
