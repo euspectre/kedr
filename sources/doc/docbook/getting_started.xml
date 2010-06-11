@@ -1,0 +1,23 @@
+﻿<section id="getting_started">
+<title>Getting Started</title>
+
+TODO: general words: what this section is about
+<!-- ================================================================ -->
+
+<section id="getting_started.install">
+<title>Installation</title>
+
+TODO: how to install KEDR
+
+</section> <!-- "getting_started.install" -->
+<!-- ================================================================ -->
+
+<section id="getting_started.example">
+<title>A Simple Example</title>
+
+TODO: how to use KEDR for call monitoring and fault simulation for a simple kernel module
+
+</section> <!-- "getting_started.example" -->
+<!-- ================================================================ -->
+
+</section>

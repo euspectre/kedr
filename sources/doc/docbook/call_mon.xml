@@ -1,0 +1,8 @@
+﻿<section id="call_mon">
+<title>Call Monitoring</title>
+
+TODO: describe how use KEDR call monitoring facilities and how to customize the set of functions to be monitored: choosing among the provided payload modules, preparing a payload module for a user-defined set of functions. 
+
+Describe the appropriate examples too.
+
+</section>

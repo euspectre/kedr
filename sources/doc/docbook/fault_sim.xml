@@ -1,0 +1,8 @@
+﻿<section id="fault_sim">
+<title>Fault Simulation</title>
+
+TODO: describe how use KEDR fault simulation facilities and how to customize the set of functions to be affected and the scenarios (using the canned ones or providing your own).
+
+Describe the appropriate examples too.
+
+</section>

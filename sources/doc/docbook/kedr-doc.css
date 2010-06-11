@@ -194,3 +194,10 @@ img
 	border: thin solid #cccccc; 
 	background-color: #C3FDB8;
 }
+
+/* This style is used to emphasize a word or a part of a word.
+ */
+.emphasized
+{
+	font-weight: bold;
+}

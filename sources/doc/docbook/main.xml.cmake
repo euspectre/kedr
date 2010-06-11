@@ -1,47 +1,63 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
     "@DOCBOOK_DTD_FILE@" [ 
         <!ENTITY % kedr-entities SYSTEM "entities.xml"> %kedr-entities; 
-        <!ENTITY kedr-intro SYSTEM "intro.xml">
-        <!ENTITY kedr-install SYSTEM "install.xml">
+        <!ENTITY kedr_intro SYSTEM "intro.xml">
+        <!ENTITY kedr_call_mon SYSTEM "call_mon.xml">
+        <!ENTITY kedr_extend SYSTEM "extend.xml">
+        <!ENTITY kedr_fault_sim SYSTEM "fault_sim.xml">
+        <!ENTITY kedr_getting_started SYSTEM "getting_started.xml">
+        <!ENTITY kedr_install SYSTEM "install.xml">
+        <!ENTITY kedr_overview SYSTEM "overview.xml">
+        <!ENTITY kedr_tips SYSTEM "tips.xml">
     ]
 >
 
-<book lang="en">
-<title>Das KEDR Buch</title>
-<bookinfo>
+<article lang="en">
+<title>KEDR &rel-version; Reference Manual</title>
+<articleinfo>
     <releaseinfo>KEDR &rel-version; Reference Manual (&rel-date;)</releaseinfo>
-    <author>
-        <firstname>Simon</firstname>
-        <surname>Simonsen</surname>
-        <email>someone@tolku.net</email>
-    </author>
+    <authorgroup>
+	    <author>
+	        <firstname>Eugene</firstname>
+	        <surname>Shatokhin</surname>
+	        <email>spectre@ispras.ru</email>
+	    </author>
+	    <author>
+	        <firstname>Andrey</firstname>
+	        <surname>Tsyvarev</surname>
+	        <email>tsyvarev@ispras.ru</email>
+	    </author>
+    </authorgroup>
     <copyright>
-        <year>2056</year>
+        <year>&kedr-lifespan;</year>
         <holder>&ispras-name;</holder>
     </copyright>
     <legalnotice>
         <para><ulink url="&ispras-url;">&ispras-url;</ulink></para>
     </legalnotice>
-</bookinfo>
+</articleinfo>
 
-<!-- ============ Chapters ============ -->
+<!-- ============ Top-level sections ============ -->
 <!-- Introduction -->
-&kedr-intro;
+&kedr_intro;
 
-<!-- Installation -->
-&kedr-install;
+<!-- Overview -->
+&kedr_overview; 
 
-<!-- Overview
-&t2c-overview; -->
+<!-- Getting Started -->
+&kedr_getting_started;
 
-<!-- Typical Workflow
-&t2c-workflow; -->
+<!-- Call Monitoring -->
+&kedr_call_mon;
 
-<!-- Case Study
-&t2c-case_study; -->
+<!-- Fault Simulation -->
+&kedr_fault_sim;
 
-<!-- T2C Reference
-&t2c-reference; -->
+<!-- Extending KEDR -->
+&kedr_extend;
 
-</book>
+<!-- Tips and Tricks -->
+&kedr_tips;
+	
+</article>
