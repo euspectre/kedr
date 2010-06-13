@@ -81,13 +81,13 @@ a:hover
 
 .programlisting, .screen, .note, .warning, .caution, .tip, .important
 {
-	border: thin solid #cccccc; 
 	padding: 0in;
 	font-size: 100%;
 }
 
 .programlisting, .screen
 {
+	border: thin solid #54C571; 
 	background-color: #C3FDB8; 
 	font-family: monospace;
 }
@@ -134,7 +134,7 @@ a:hover
 {
 	margin: 0in;
 	padding: 0.05in 0.1in 0.05in 0.1in;	
-	background-color: #ff9090;
+	background-color: #ff0000;
 	border-bottom: thin solid #c00; 
 }
 
