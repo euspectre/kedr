@@ -25,3 +25,4 @@ endfunction(rules_build_datafile data_file)
 
 #add_subdirectory(my_payload1)
 add_subdirectory(common_memory_management)
+add_subdirectory(mutexes)

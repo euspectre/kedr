@@ -1,0 +1,31 @@
+[group]
+	# Name and return type of the target function
+	function.name = __mutex_init
+	returnsVoid = yes
+
+	# Names and types of the arguments of the target function
+	arg.type = struct mutex*
+	arg.name = lock
+
+	arg.type = const char*
+	arg.name = name
+
+	arg.type = struct lock_class_key*
+	arg.name = key
+	
+	# The parameters to be output to the trace. 
+	trace.param.type = struct mutex*
+	trace.param.name = lock
+
+	trace.param.type = const char*
+	trace.param.name = name
+
+	trace.param.type = struct lock_class_key*
+	trace.param.name = key
+
+	# The format string to be used for trace output.
+	trace.formatString = "arguments: (%p, %p, %p)"
+
+# End of the group of definitions for __mutex_init().
+
+#######################################################################

@@ -1,0 +1,19 @@
+[group]
+	# Name and return type of the target function
+	function.name = mutex_unlock
+	returnsVoid = yes
+
+	# Names and types of the arguments of the target function
+	arg.type = struct mutex*
+	arg.name = lock
+	
+	# The parameters to be output to the trace. 
+	trace.param.type = struct mutex*
+	trace.param.name = lock
+
+	# The format string to be used for trace output.
+	trace.formatString = "arguments: (%p)"
+
+# End of the group of definitions for mutex_unlock().
+
+#######################################################################
