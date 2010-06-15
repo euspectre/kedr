@@ -1,0 +1,9 @@
+# This module processes the calls to mutex related functions.
+
+module.name = @kmodule_name@
+module.author = Tsyvarev
+module.license = GPL
+
+header =>>
+#include <linux/spinlock.h>   /* spinlock related functions */
+<<

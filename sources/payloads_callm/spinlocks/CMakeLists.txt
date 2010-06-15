@@ -1,5 +1,5 @@
 #name of module created
-set(kmodule_name "kedr_cm_mutexes")
+set(kmodule_name "kedr_cm_spinlocks")
 #really harcoded, because of mist engine templates
 #set(kmodule_source_file "payload.c")
 #set(kmodule_header_file "trace_payload.h")
@@ -11,11 +11,12 @@ configure_file("beginning.data.in"
 	"${CMAKE_CURRENT_BINARY_DIR}/beginning.data")
 
 kedr_configure_data_pieces(functions_data REQUIRED
-	"__mutex_init"
-	"mutex_lock"
-	"mutex_lock_interruptible"
-	"mutex_trylock"
-	"mutex_unlock"
+	ONE_OF_BEGIN "_spin_lock" "_raw_spin_lock" ONE_OF_END
+	ONE_OF_BEGIN "_spin_lock_irq" "_raw_spin_lock_irq" ONE_OF_END
+	ONE_OF_BEGIN "_spin_lock_irqsave" "_raw_spin_lock_irqsave" ONE_OF_END
+	ONE_OF_BEGIN "_spin_unlock" "_raw_spin_unlock" ONE_OF_END
+	ONE_OF_BEGIN "_spin_unlock_irq" "_raw_spin_unlock_irq" ONE_OF_END
+	ONE_OF_BEGIN "_spin_unlock_irqrestore" "_raw_spin_unlock_irqrestore" ONE_OF_END
 )
 
 kbuild_include_directories ("${CMAKE_CURRENT_BINARY_DIR}")

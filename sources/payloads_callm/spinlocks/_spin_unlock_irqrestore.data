@@ -1,0 +1,25 @@
+[group]
+	# Name and return type of the target function
+	function.name = _spin_unlock_irqrestore
+	returnsVoid = yes
+
+	# Names and types of the arguments of the target function
+	arg.type = spinlock_t*
+	arg.name = lock
+	
+	arg.type = unsigned long
+	arg.name = flags
+
+	# The parameters to be output to the trace. 
+	trace.param.type = spinlock_t*
+	trace.param.name = lock
+
+	trace.param.type = unsigned long
+	trace.param.name = flags
+
+	# The format string to be used for trace output.
+	trace.formatString = "arguments: (%p, %lu)"
+
+# End of the group of definitions for _spin_unlock_irqrestore().
+
+#######################################################################
