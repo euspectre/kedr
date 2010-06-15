@@ -1,0 +1,36 @@
+﻿KEDR Framework
+--------------
+KEDR framework provides the tools for runtime analysis (especially, 
+verification) of kernel-mode drivers on Linux (KEDR is an acronym 
+for KErnel-mode Drivers in Runtime). The framework is intended to be used 
+by the driver developers and may be useful for the driver certification 
+systems as well.
+
+The tools provided by KEDR operate on a driver chosen by the user (target 
+driver). They monitor kernel function calls made by the driver, perform 
+fault simulation, etc. This may complement many existing tools for error 
+detection, fault simulation, memory checking, etc., that operate on the 
+Linux kernel as a whole.
+
+The typical usage of KEDR is essentially as follows. The user works with 
+the target driver as usual or probably runs some specific tests on it. At 
+the same time, KEDR tools are monitoring the operation of the driver, 
+checking if it works correctly, doing fault simulation if requested, 
+dumping the data about the actions made by the driver to some kind of a 
+trace for future analysis, etc. 
+
+KEDR framework is designed to be easy to extend and build upon. For 
+example, the set of kernel functions to be monitored is fully customizable; 
+fault simulation scenarios can also be provided and controlled by the user. 
+Besides that, KEDR provides an interface to implement custom types of 
+analysis via pluggable modules - in addition to call monitoring and fault 
+simulation.
+
+Currently, KEDR works on x86 and x86-64 architectures. 
+
+KEDR is free software and is distributed under the terms of GNU General 
+Public License Version 2.
+
+The latest stable version of KEDR as well as the development versions can 
+be found at KEDR project site at BerliOS Developer: 
+https://developer.berlios.de/projects/kedr/
