@@ -1,0 +1,5 @@
+__mutex_init
+mutex_lock
+mutex_lock_interruptible
+mutex_trylock
+mutex_unlock
