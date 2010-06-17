@@ -1,0 +1,11 @@
+[group]
+	# Name and return type of the target function
+	function.name = schedule
+	returnsVoid = yes
+
+	# The format string to be used for trace output.
+	trace.formatString = ""
+
+# End of the group of definitions for schedule().
+
+#######################################################################

@@ -19,7 +19,7 @@ endfunction(rules_generate_payload data_file dest_dir)
 function(rules_build_datafile data_file)
 	to_abs_path(data_funcs_abs ${ARGN})
 	add_custom_command(OUTPUT ${data_file}
-						COMMAND cat ${data_funcs_abs} >> ${data_file}
+						COMMAND cat ${data_funcs_abs} > ${data_file}
 						DEPENDS ${data_funcs_abs})
 endfunction(rules_build_datafile data_file)
 
@@ -93,3 +93,4 @@ add_subdirectory(common_memory_management)
 add_subdirectory(mutexes)
 add_subdirectory(spinlocks)
 add_subdirectory(user_space_access)
+add_subdirectory(shedule)
