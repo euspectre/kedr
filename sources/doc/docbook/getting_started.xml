@@ -88,7 +88,7 @@ Currently, <command>make uninstall</command> does not remove directories, only f
 </para></note>
 
 <para>
-KEDR package also contains a set of tests for KEDR framework. You may want to run these tests after KEDR is built but before it is installed to see if the tools provided by the framework correctly operate on your system. To do so, just execute <command>make check</command>.
+KEDR package also contains a set of tests for KEDR framework. You may want to run these tests after KEDR is built but before it is installed to see if the tools provided by the framework correctly operate on your system. To do so, just execute <command>make check</command> (as root user).
 </para>
 
 </section> <!-- "getting_started.install" -->
