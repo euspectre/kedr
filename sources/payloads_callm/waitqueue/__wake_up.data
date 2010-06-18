@@ -1,0 +1,37 @@
+[group]
+	# Name and return type of the target function
+	function.name = __wake_up
+	returnsVoid = yes
+
+	# Names and types of the arguments of the target function
+	arg.type = wait_queue_head_t*
+	arg.name = q
+
+	arg.type = unsigned int
+	arg.name = mode
+
+	arg.type = int
+	arg.name = nr_exclusive
+
+	arg.type = void*
+	arg.name = key
+
+	# The parameters to be output to the trace. 
+	trace.param.type = wait_queue_head_t*
+	trace.param.name = q
+
+	trace.param.type = unsigned int
+	trace.param.name = mode
+
+	trace.param.type = int
+	trace.param.name = nr_exclusive
+
+	trace.param.type = void*
+	trace.param.name = key
+
+	# The format string to be used for trace output.
+	trace.formatString = "arguments: (%p, %u, %d, %p)"
+
+# End of the group of definitions for __wake_up().
+
+#######################################################################
