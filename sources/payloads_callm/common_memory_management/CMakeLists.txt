@@ -9,8 +9,10 @@ configure_file("beginning.data.in"
 
 kedr_configure_data_pieces(functions_data REQUIRED
 	"__kmalloc"
+	"krealloc"
 	"kfree"
 	"kmem_cache_alloc"
+	"kmem_cache_alloc_node"
 	OPTIONAL "kmem_cache_alloc_notrace" REQUIRED
 	"kmem_cache_free"
 )

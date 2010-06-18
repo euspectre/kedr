@@ -1,5 +1,7 @@
 __kmalloc
+krealloc
 kfree
 kmem_cache_alloc
+kmem_cache_alloc_node
 kmem_cache_alloc_notrace
 kmem_cache_free

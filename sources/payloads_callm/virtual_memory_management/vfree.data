@@ -1,22 +1,19 @@
 [group]
 	# Name and return type of the target function
-	function.name = capable
-	returnType = int
+	function.name = vfree
+	returnsVoid = yes
 
 	# Names and types of the arguments of the target function
-	arg.type = int
-	arg.name = cap
-
+	arg.type = const void*
+	arg.name = addr
+	
 	# The parameters to be output to the trace. 
-	trace.param.type = int
-	trace.param.name = cap
-
-	trace.param.type = int
-	trace.param.name = returnValue
+	trace.param.type = const void*
+	trace.param.name = addr
 
 	# The format string to be used for trace output.
-	trace.formatString = "arguments: (%d), result: %d"
+	trace.formatString = "arguments: (%p)"
 
-# End of the group of definitions for capable().
+# End of the group of definitions for vfree().
 
 #######################################################################
