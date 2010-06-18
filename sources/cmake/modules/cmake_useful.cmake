@@ -50,3 +50,41 @@ macro(is_path_inside_dir output_var dir path)
         set(${output_var} "TRUE")
     endif(_is_not_inside_dir)
 endmacro(is_path_inside_dir output_var dir path)
+
+########################################################################
+# Test-related macros
+########################################################################
+
+# This macro enables testing support and performs other initialization tasks.
+# It should be used in the top-level CMakeLists.txt file before 
+# add_subdirectory () calls.
+macro (kedr_test_init)
+    enable_testing ()
+    add_custom_target (check 
+        COMMAND ${CMAKE_CTEST_COMMAND}
+    )
+    add_custom_target (build_tests)
+    add_dependencies (check build_tests)
+endmacro (kedr_test_init)
+
+# Use this macro to specify an additional target to be built before the tests
+# are executed.
+macro (kedr_test_add_target target_name)
+    set_target_properties (${target_name}
+        PROPERTIES EXCLUDE_FROM_ALL true
+    )
+    add_dependencies (build_tests ${target_name})
+endmacro (kedr_test_add_target target_name)
+
+# This function adds a test script (a Bash script, actually) to the set of
+# tests for the package. The script may reside in current source or binary 
+# directory (the source directory is searched first).
+function (kedr_test_add_script test_name script_file)
+    set (TEST_SCRIPT_FILE)
+    to_abs_path (TEST_SCRIPT_FILE ${script_file})
+        
+    add_test (${test_name}
+        /bin/bash ${TEST_SCRIPT_FILE} ${ARGN}
+    )
+endfunction (kedr_test_add_script)
+########################################################################

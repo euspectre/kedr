@@ -1,0 +1,29 @@
+#!/bin/bash
+
+########################################################################
+# This test checks the basic operations with the controller module.
+########################################################################
+CONTROLLER_MODULE="@CONTROLLER_DIR@/@CONTROLLER_NAME@.ko"
+printf "Controller module: ${CONTROLLER_MODULE}\n"
+
+if test ! -f "${CONTROLLER_MODULE}"; then
+    printf "Controller module is missing: ${CONTROLLER_MODULE}\n"
+    
+    # test failed
+    exit 1
+fi
+
+/sbin/insmod "${CONTROLLER_MODULE}"
+if test $? -ne 0; then
+    printf "Failed to load the controller module\n"
+    exit 1
+fi
+
+/sbin/rmmod "@CONTROLLER_NAME@"
+if test $? -ne 0; then
+    printf "Failed to unload the controller module\n"
+    exit 1
+fi
+
+# test passed
+exit 0

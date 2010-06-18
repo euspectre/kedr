@@ -1,0 +1,89 @@
+#!/bin/bash
+
+########################################################################
+# This test checks the basic operations with the controller module.
+# Usage: 
+#   /bin/bash ins_rm_with_target.sh <target_name>
+# The target module is expected to be <target_name>/<target_name>.ko.
+########################################################################
+WORK_DIR=${PWD}
+
+if test $# -ne 1; then
+    printf "Usage: /bin/bash ins_rm_with_target.sh <target_name\n"
+    exit 1
+fi
+
+CONTROLLER_MODULE="@CONTROLLER_DIR@/@CONTROLLER_NAME@.ko"
+printf "Controller module: ${CONTROLLER_MODULE}\n"
+
+if test ! -f "${CONTROLLER_MODULE}"; then
+    printf "Controller module is missing: ${CONTROLLER_MODULE}\n"
+    exit 1
+fi
+
+TARGET_NAME=$1
+TARGET_MODULE=./${TARGET_NAME}/${TARGET_NAME}.ko
+
+if test ! -f "${TARGET_MODULE}"; then
+    printf "Target module is missing: ${TARGET_MODULE}\n"
+    exit 1
+fi
+
+PAYLOAD_NAME="simple_payload"
+PAYLOAD_MODULE=./${PAYLOAD_NAME}/${PAYLOAD_NAME}.ko
+
+if test ! -f "${PAYLOAD_MODULE}"; then
+    printf "Payload module is missing: ${PAYLOAD_MODULE}\n"
+    exit 1
+fi
+
+########################################################################
+# Scenario:
+#   load controller
+#   load a simple payload module
+#   load target
+#   try to unload controller (must fail)
+#   unload target
+#   unload the payload module
+#   unload controller (must succeed this time)
+########################################################################
+/sbin/insmod "${CONTROLLER_MODULE}" target_name="${TARGET_NAME}" || exit 1
+/sbin/insmod "${PAYLOAD_MODULE}" || exit 1
+
+cd "${TARGET_NAME}" && sh ./target_load.sh
+if test $? -ne 0; then
+    printf "Failed to load the target module: ${TARGET_MODULE}\n"
+    exit 1
+fi
+
+printf "Trying to unload the controller while the target is under analysis (must fail)\n"
+/sbin/rmmod "@CONTROLLER_NAME@"
+if test $? -eq 0; then
+    printf "The controller module must have been locked "
+    printf "as long as the target module is under analysis\n"
+    sh ./target_unload.sh
+    exit 1
+fi
+printf "This error was expected, continuing.\n"
+
+sh ./target_unload.sh
+if test $? -ne 0; then
+    printf "Failed to unload the target module: ${TARGET_NAME}\n"
+    exit 1
+fi
+cd "${WORK_DIR}"
+
+/sbin/rmmod "${PAYLOAD_NAME}"
+if test $? -ne 0; then
+    printf "Failed to unload the payload module: ${PAYLOAD_NAME}\n"
+    exit 1
+fi
+
+/sbin/rmmod "@CONTROLLER_NAME@"
+if test $? -ne 0; then
+    printf "Failed to unload the controller module\n"
+    exit 1
+fi
+
+# test passed
+exit 0
