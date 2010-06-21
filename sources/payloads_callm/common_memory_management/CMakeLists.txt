@@ -21,7 +21,7 @@ set(kmem_cache_alloc_FUNCTION "kmem_cache_alloc")
 configure_file("kmem_cache_alloc.data.in"
 	"${CMAKE_CURRENT_BINARY_DIR}/kmem_cache_alloc.data")
 
-list(FIND functions_data "kmem_cache_alloc_notrace" kmem_cache_alloc_notrace_index)
+list(FIND functions_data "kmem_cache_alloc_notrace.data" kmem_cache_alloc_notrace_index)
 if(NOT kmem_cache_alloc_notrace_index EQUAL -1)
 	set(kmem_cache_alloc_FUNCTION "kmem_cache_alloc_notrace")
 	configure_file("kmem_cache_alloc.data.in"
