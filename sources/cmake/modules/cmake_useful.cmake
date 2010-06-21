@@ -24,10 +24,8 @@ macro(to_abs_path output_var)
         if(_is_abs_path)
             list(APPEND ${output_var} ${path})
         else(_is_abs_path)
-            set (to_abs_path_file "to_abs_path_file-NOTFOUND")
-            find_file(to_abs_path_file ${path}
-                ${CMAKE_CURRENT_SOURCE_DIR}
-                NO_DEFAULT_PATH
+            file(GLOB to_abs_path_file 
+                "${CMAKE_CURRENT_SOURCE_DIR}/${path}"
             )
             if(NOT to_abs_path_file)
                 set (to_abs_path_file "${CMAKE_CURRENT_BINARY_DIR}/${path}")

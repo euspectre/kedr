@@ -10,15 +10,23 @@ set(kmodule_data_file "payload.data")
 configure_file("beginning.data.in"
 	"${CMAKE_CURRENT_BINARY_DIR}/beginning.data")
 
+option(enable_full_spinlock "Intercept all spinlock-related function" OFF)
+#SET(enable_full_spinlock CACHE BOOL "Intercept all spinlock-related function")
+
 kedr_configure_data_pieces(functions_data REQUIRED
-	ONE_OF_BEGIN "_spin_lock" "_raw_spin_lock" ONE_OF_END
-	ONE_OF_BEGIN "_spin_lock_irq" "_raw_spin_lock_irq" ONE_OF_END
 	ONE_OF_BEGIN "_spin_lock_irqsave" "_raw_spin_lock_irqsave" ONE_OF_END
-	OPTIONAL
-	ONE_OF_BEGIN "_spin_unlock" "_raw_spin_unlock" ONE_OF_END
-	ONE_OF_BEGIN "_spin_unlock_irq" "_raw_spin_unlock_irq" ONE_OF_END
 	ONE_OF_BEGIN "_spin_unlock_irqrestore" "_raw_spin_unlock_irqrestore" ONE_OF_END
 )
+if(enable_full_spinlock)
+	kedr_configure_data_pieces(functions_optional_data REQUIRED
+		ONE_OF_BEGIN "_spin_lock" "_raw_spin_lock" ONE_OF_END
+		ONE_OF_BEGIN "_spin_lock_irq" "_raw_spin_lock_irq" ONE_OF_END
+		ONE_OF_BEGIN "_spin_unlock" "_raw_spin_unlock" ONE_OF_END
+		ONE_OF_BEGIN "_spin_unlock_irq" "_raw_spin_unlock_irq" ONE_OF_END
+	)
+	list(APPEND functions_data ${functions_optional_data})
+endif(enable_full_spinlock)
+
 
 kbuild_include_directories ("${CMAKE_CURRENT_BINARY_DIR}")
 kbuild_add_module(${kmodule_name}
