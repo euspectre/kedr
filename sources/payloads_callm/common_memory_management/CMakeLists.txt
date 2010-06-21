@@ -12,8 +12,7 @@ kedr_configure_data_pieces(functions_data REQUIRED
 	"krealloc"
 	"kfree"
 	"kmem_cache_alloc"
-	OPTIONAL "kmem_cache_alloc_node"
-	"kmem_cache_alloc_notrace" REQUIRED
+	OPTIONAL "kmem_cache_alloc_notrace" REQUIRED
 	"kmem_cache_free"
 )
 
