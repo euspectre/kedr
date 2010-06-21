@@ -9,7 +9,7 @@ configure_file("beginning.data.in"
 
 kedr_configure_data_pieces(functions_data REQUIRED
 	"schedule"
-	"preempt_schedule"
+	OPTIONAL "preempt_schedule" REQUIRED
 	"_cond_resched"
 	"schedule_timeout"
 	"schedule_timeout_uninterruptible"
