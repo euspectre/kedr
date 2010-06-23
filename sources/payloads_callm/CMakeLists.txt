@@ -1,5 +1,3 @@
-include(cmake_useful)
-
 kbuild_use_symbols("${CMAKE_BINARY_DIR}/base/Module.symvers")
 
 set(MIST_GEN_EXECUTABLE "${CMAKE_BINARY_DIR}/mist_gen/mist_gen")

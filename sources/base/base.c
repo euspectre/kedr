@@ -45,7 +45,15 @@
 #include <linux/errno.h>
 #include <linux/list.h>
 
+#include <linux/mutex.h>
+
 #include <kedr/base/common.h>
+
+/* ================================================================ */
+/* This string will be used in debug output to specify the name of 
+ * the current component of KEDR
+ */
+#define COMPONENT_STRING "base: "
 
 /* ================================================================ */
 MODULE_AUTHOR("Eugene A. Shatokhin");
@@ -57,18 +65,29 @@ struct payload_module_list
 	struct list_head list;
 	struct kedr_payload* payload;
 };
+/* ================================================================ */
+
+// TODO: protect global data from race conditions
 
 /* The list of currently loaded payload modules - 
  * effectively, the list of 'struct kedr_payload*' */
 struct list_head payload_modules;
-/* ================================================================ */
 
 /* Nonzero if registering payloads is allowed, 0 otherwise (for example, 
  * if a target module is currently loaded) */
 int deny_payload_register = 0;
+/* A mutex to protect operations with the payloads */
+DEFINE_MUTEX(payload_mutex);
 
 /* The combined replacement table (from all payload modules) */
 struct kedr_repl_table combined_repl_table;
+/* A mutex to protect operations with the replacement table */
+DEFINE_MUTEX(repl_table_mutex);
+
+/* The current controller */
+struct kedr_impl_controller* current_controller = NULL;
+/* A mutex to protect operations with the controller */
+DEFINE_MUTEX(controller_mutex);
 
 /* ================================================================ */
 /* Free the combined replacement table, reset the pointers to NULL and 
@@ -115,7 +134,8 @@ create_repl_table(struct kedr_repl_table* repl_table)
 		repl_table->num_addrs += entry->payload->repl_table.num_addrs;
 	}
 	
-	KEDR_MSG("base: total number of target functions is %u.\n",
+	KEDR_MSG(COMPONENT_STRING 
+		"total number of target functions is %u.\n",
 		repl_table->num_addrs);
 		
 	repl_table->orig_addrs = kzalloc(
@@ -175,8 +195,12 @@ base_cleanup_module(void)
 	 * the target module: it was never instrumented. It was probably 
 	 * loaded with no payload modules present. 
 	 * */
-
-	KEDR_MSG("base: cleanup successful\n");
+	
+	/* Just in case the controller failed to unregister itself */
+	kedr_impl_controller_unregister(current_controller);
+	
+	KEDR_MSG(COMPONENT_STRING
+		"cleanup successful\n");
 	return;
 }
 
@@ -184,7 +208,8 @@ base_cleanup_module(void)
 static int __init
 base_init_module(void)
 {
-	KEDR_MSG("base: initializing\n");
+	KEDR_MSG(COMPONENT_STRING
+		"initializing\n");
 
 	/* Initialize the list of payloads */
 	INIT_LIST_HEAD(&payload_modules);	
@@ -239,14 +264,15 @@ kedr_payload_register(struct kedr_payload* payload)
 	
 	if (payload_find(payload) != NULL)
 	{
-		KEDR_MSG("base: module \"%s\" attempts to register "
-			"the same payload twice\n",
+		KEDR_MSG(COMPONENT_STRING
+			"module \"%s\" attempts to register the same payload twice\n",
 			module_name(payload->mod));
 		return -EINVAL;
 	}
 	
-	KEDR_MSG("base: registering payload from module \"%s\"\n",
-			module_name(payload->mod));
+	KEDR_MSG(COMPONENT_STRING
+		"registering payload from module \"%s\"\n",
+		module_name(payload->mod));
 	
 	new_elem = kzalloc(sizeof(struct payload_module_list), GFP_KERNEL);
 	if (new_elem == NULL) return -ENOMEM;
@@ -268,14 +294,16 @@ kedr_payload_unregister(struct kedr_payload* payload)
 	doomed = payload_find(payload);
 	if (doomed == NULL)
 	{
-		KEDR_MSG("base: module \"%s\" attempts to unregister "
-		"the payload that was never registered\n",
+		KEDR_MSG(COMPONENT_STRING
+			"module \"%s\" attempts to unregister the payload "
+			"that was never registered\n",
 			module_name(payload->mod));
 		return;
 	}
 	
-	KEDR_MSG("base: unregistering payload from module \"%s\"\n",
-			module_name(payload->mod));
+	KEDR_MSG(COMPONENT_STRING
+		"unregistering payload from module \"%s\"\n",
+		module_name(payload->mod));
 	
 	list_del(&doomed->list);
 	kfree(doomed);
@@ -286,9 +314,115 @@ EXPORT_SYMBOL(kedr_payload_unregister);
 int
 kedr_target_module_in_init(void)
 {
+	/* The call should be delegated to the controller.
+	 * The caller must ensure the controller is present.
+	 */
+	BUG_ON(current_controller == NULL);
+	
 	/* TODO!!! */
 	return 0; 
 }
 EXPORT_SYMBOL(kedr_target_module_in_init);
 
+/**********************************************************************/
+int 
+kedr_impl_controller_register(struct kedr_impl_controller* controller)
+{
+	int result = 0;
+	BUG_ON(
+		controller == NULL || 
+		controller->mod == NULL ||
+		controller->delegates.target_module_in_init == NULL
+	);
+	
+	result = mutex_lock_interruptible(&controller_mutex);
+	if (result != 0)
+	{
+		KEDR_MSG(COMPONENT_STRING
+			"failed to lock controller_mutex\n");
+		return result;
+	}
+	
+	if (current_controller != NULL)
+	{
+		KEDR_MSG(COMPONENT_STRING
+			"a controller is already registered\n");
+		result = -EINVAL;
+		goto out;
+	}
+	
+	current_controller = controller;
+	KEDR_MSG(COMPONENT_STRING
+			"controller has been registered successfully\n");
+out:
+	mutex_unlock(&controller_mutex); 
+	return result;
+}
+EXPORT_SYMBOL(kedr_impl_controller_register);
+
+void
+kedr_impl_controller_unregister(struct kedr_impl_controller* controller)
+{
+	if (mutex_lock_interruptible(&controller_mutex) != 0)
+	{
+		KEDR_MSG(COMPONENT_STRING
+			"failed to lock controller_mutex\n");
+		return;
+	}
+	
+	if (current_controller != NULL)
+	{
+		/* 'controller' is allowed to be NULL in one situation only:
+		 * if kedr_impl_controller_unregister(current_controller) is called 
+		 * from the cleanup function of kedr-base and current_controller 
+		 * is NULL.
+		 */ 
+		BUG_ON(controller == NULL);
+		if (current_controller == controller)
+		{
+			current_controller = NULL;
+			KEDR_MSG(COMPONENT_STRING
+				"controller has been unregistered successfully\n");
+		}
+		else
+		{
+			KEDR_MSG(COMPONENT_STRING
+				"an attempt was made to unregister a controller that "
+				"was never registered\n");
+		}
+	}
+	else if (controller != NULL)
+	{
+		KEDR_MSG(COMPONENT_STRING
+			"an attempt was made to unregister a controller that "
+			"was never registered\n");
+	}
+	mutex_unlock(&controller_mutex);
+	return;
+}
+EXPORT_SYMBOL(kedr_impl_controller_unregister);
+
+const struct kedr_repl_table*  
+kedr_impl_get_repl_table(void)
+{
+	/*TODO*/
+	return NULL;
+}
+EXPORT_SYMBOL(kedr_impl_get_repl_table);
+
+void
+kedr_impl_target_loaded(void)
+{
+	/*TODO*/
+	return;
+}
+EXPORT_SYMBOL(kedr_impl_target_loaded);
+
+void
+kedr_impl_target_unloaded(void)
+{
+	/*TODO*/
+	return;
+}
+EXPORT_SYMBOL(kedr_impl_target_unloaded);
 /* ================================================================ */

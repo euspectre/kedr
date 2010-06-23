@@ -1,12 +1,14 @@
 set(kmodule_name "kedr_controller")
 set(kmodule "${kmodule_name}.ko")
-# Should be configured in some way
+
+# In the future, it should be configurable somehow
 set(arch "x86")
 
 set(arch_dir "arch/${arch}")
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${arch_dir}/lib)
 
+kbuild_use_symbols("${CMAKE_BINARY_DIR}/base/Module.symvers")
 kbuild_include_directories(
 	"${CMAKE_CURRENT_SOURCE_DIR}/${arch_dir}/include"
 	"${CMAKE_CURRENT_BINARY_DIR}/${arch_dir}/lib"

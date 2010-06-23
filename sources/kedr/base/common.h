@@ -1,11 +1,14 @@
 /*
- * This file contains common declarations provided by the controller for 
- * payload modules.
+ * This file contains common declarations to be used by the controller
+ * and payload modules.
  */
 
-#ifndef BASE_H_1739_INCLUDED
-#define BASE_H_1739_INCLUDED
+#ifndef COMMON_H_1739_INCLUDED
+#define COMMON_H_1739_INCLUDED
 
+/**********************************************************************
+ * Public API                                                        
+ **********************************************************************/
 /*
  * The replacement table to be used by controller to actually instrument 
  * the target driver.
@@ -39,10 +42,6 @@ struct kedr_payload
 	struct kedr_repl_table repl_table;
 };
 
-/* ================================================================ */
-/* Public API                                                       */
-/* ================================================================ */
-
 /*
  * Use KEDR_MSG() instead of printk to output debug messages to the system
  * log.
@@ -54,7 +53,7 @@ struct kedr_payload
     # define KEDR_MSG(fmt, args...) /* do nothing */
 #endif
 
-/* Register a payload module with the controller. 
+/* Registers a payload module with the controller. 
  * 'payload' should provide all the data the controller needs to use this 
  * payload module.
  * This function returns 0 if successful, an error code otherwise.
@@ -64,7 +63,7 @@ struct kedr_payload
 int 
 kedr_payload_register(struct kedr_payload* payload);
 
-/* Unregister a payload module, the controller will not use it any more.
+/* Unregisters a payload module, the controller will not use it any more.
  * 'payload' should be the same as passed to the corresponding call to
  * kedr_payload_register().
  * 
@@ -96,5 +95,95 @@ kedr_payload_unregister(struct kedr_payload* payload);
  * */
 int
 kedr_target_module_in_init(void);
-/* ================================================================ */
-#endif /* BASE_H_1739_INCLUDED */
+
+/********************************************************************** 
+ * Interface for the controller
+ * DO NOT use it for payloads and custom modules.
+ * This interface should be used only for implementation of KEDR itself,
+ * hence 'kedr_impl' prefix in the names.
+ **********************************************************************/
+
+/* 
+ * This structure contains the pointers to the functions that will 
+ * actually be delegated the job when some of public functions are called.
+ *
+ * The goal is, the API for payload modules should be provided by "base"
+ * only (the only component that is guaranteed to be loaded before any 
+ * payload module). 
+ * However, the functions like kedr_target_module_in_init() require data
+ * owned by controller and the controller is to be loaded after payload 
+ * modules. The functions like that are meaningful only when the controller 
+ * is loaded but the controller cannot simply export these as it is loaded 
+ * last.
+ *
+ * Ideally, controller should require no knowledge about the payload 
+ * modules. Its main responsibility is to find the target module (or wait 
+ * for it to be loaded) and instrument it.
+ *
+ * To resolve the issue, the delegates emerge.
+ * Some of the public functions provided by the base are little more than 
+ * wrappers around the "delegate" functions provided by controller when it 
+ * registers itself with the base.
+ */
+struct kedr_impl_delegates
+{
+	int (*target_module_in_init)(void);
+};
+
+/* This structure represents a controller */
+struct kedr_impl_controller
+{
+	/* kernel module of the controller */
+	struct module* mod; 
+	
+	/* delegate functions */
+	struct kedr_impl_delegates delegates;
+};
+
+/*
+ * Registers the controller module with the base.
+ * Only one controller can be registered at a time.
+ * The function returns nonzero on success, 0 otherwise.
+ */
+/*TODO*/
+int 
+kedr_impl_controller_register(struct kedr_impl_controller* controller);
+
+/* 
+ * Unregisters the controller (should be called in the controller's cleanup
+ * function).
+ */
+/*TODO*/
+void
+kedr_impl_controller_unregister(struct kedr_impl_controller* controller);
+
+/*
+ * Returns the combined replacement table (based on the data from all 
+ * registered payload modules).
+ * The table is owned by the base and must not be modified by the caller.
+ * NULL is returned if there is not enough memory to prepare the table.
+ */
+/*TODO*/
+const struct kedr_repl_table*  
+kedr_impl_get_repl_table(void);
+
+/*
+ * This function is called by the controller to inform the base that 
+ * a target module has been loaded into memory and is about to be 
+ * instrumented.
+ * The base can use this to lock the payload modules in memory, etc.
+ */
+/*TODO*/
+void
+kedr_impl_target_loaded(void);
+	
+/*
+ * This function is called by the controller to inform the base that 
+ * a target module has been unloaded.
+ */
+/*TODO*/
+void
+kedr_impl_target_unloaded(void);
+
+/**********************************************************************/
+#endif /* COMMON_H_1739_INCLUDED */

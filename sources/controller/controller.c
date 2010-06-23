@@ -574,7 +574,7 @@ detector_notifier_call(struct notifier_block *nb,
 }
 
 /* ================================================================ */
-// struct for watching for loading/unloading of modules.
+/* A struct for watching for loading/unloading of modules.*/
 struct notifier_block detector_nb = {
 	.notifier_call = detector_notifier_call,
 	.next = NULL,
@@ -582,18 +582,40 @@ struct notifier_block detector_nb = {
 };
 /* ================================================================ */
 
+/* TODO */
+static int
+is_target_module_in_init(void)
+{
+	if (target_in_init)
+	{
+		/* Ensure that nobody silently unloads the target 
+		 * while we are accessing it here. */
+		if (target_module && try_module_get(target_module))
+		{
+			target_in_init = 
+				(target_module->module_init != NULL);
+			module_put(target_module);
+		}
+	}
+	
+	/* [NB] When the target is unloaded, on_module_unload() will set 
+	 * target_in_init to 0.*/
+	return target_in_init;
+}
+
+/* The structure representing this controller */
+struct kedr_impl_controller controller = {
+	.mod = THIS_MODULE,
+	.delegates.target_module_in_init = is_target_module_in_init,
+};	
+
+/* ================================================================ */
 static void
 controller_cleanup_module(void)
 {
 	unregister_module_notifier(&detector_nb);
 	
-	/* The system won't let unload the controller while at least one
-	 * payload module is loaded: payload modules use symbols from the 
-	 * controller.
-	 * So, if we managed to get here, there must be no payload modules 
-	 * registered.
-	 *  */
-	BUG_ON(!list_empty(&payload_modules));
+	kedr_impl_controller_unregister(&controller);
 	
 	/* Even if a target module is now loaded, it must not have been
 	 * instrumented as there are no payload modules at the moment.
@@ -613,9 +635,16 @@ controller_init_module(void)
 {
 	int result;
 	printk(KERN_INFO "[cp_controller] Initializing\n");
-
+	
 	/* Initialize the list */
 	INIT_LIST_HEAD(&payload_modules);	
+	
+	/* Register with the base */
+	result = kedr_impl_controller_register(&controller);
+	if (result < 0)
+	{
+		goto fail;
+	}
 
 	result = register_module_notifier(&detector_nb);
 	if (result < 0)
@@ -643,7 +672,7 @@ module_exit(controller_exit_module);
 /* ================================================================ */
 
 /* Look for a given element in the list. */
-static struct payload_module_list* 
+/*static struct payload_module_list* 
 payload_find(struct kedr_payload* payload)
 {
 	struct payload_module_list* entry;
@@ -656,21 +685,19 @@ payload_find(struct kedr_payload* payload)
 			return entry;
 	}
 	return NULL;
-}
+}*/
 
 /* ================================================================ */
 /* Implementation of public functions                               */
 /* ================================================================ */
 
-int 
+/*int 
 kedr_payload_register(struct kedr_payload* payload)
 {
 	struct payload_module_list* new_elem = NULL;
 	
 	BUG_ON(payload == NULL);
 	
-	/* If there is a target module already watched for, do not allow
-	 * to register another payload. */
 	if (target_module != NULL)
 	{
 		return -EBUSY;
@@ -697,7 +724,7 @@ kedr_payload_register(struct kedr_payload* payload)
 	list_add_tail(&new_elem->list, &payload_modules);
 	return 0;
 }
-EXPORT_SYMBOL(kedr_payload_register);
+
 
 void 
 kedr_payload_unregister(struct kedr_payload* payload)
@@ -706,8 +733,7 @@ kedr_payload_unregister(struct kedr_payload* payload)
 	
 	BUG_ON(payload == NULL);
 	
-	/* By this time, the target module must have been unloaded. */
-	BUG_ON(target_module != NULL);
+		BUG_ON(target_module != NULL);
 	
 	doomed = payload_find(payload);
 	if (doomed == NULL)
@@ -726,27 +752,6 @@ kedr_payload_unregister(struct kedr_payload* payload)
 	kfree(doomed);
 	return;
 }
-EXPORT_SYMBOL(kedr_payload_unregister);
-
-int
-kedr_target_module_in_init(void)
-{
-	if (target_in_init)
-	{
-		/* Ensure that nobody silently unloads the target 
-		 * while we are accessing it here. */
-		if (target_module && try_module_get(target_module))
-		{
-			target_in_init = 
-				(target_module->module_init != NULL);
-			module_put(target_module);
-		}
-	}
-	
-	/* [NB] When the target is unloaded, on_module_unload() will set 
-	 * target_in_init to 0.*/
-	return target_in_init;
-}
-EXPORT_SYMBOL(kedr_target_module_in_init);
+*/
 
 /* ================================================================ */
