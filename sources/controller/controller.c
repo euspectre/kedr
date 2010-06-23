@@ -1,9 +1,39 @@
+/*
+ * The "controller" component of KEDR system. 
+ * Its main responsibility is to instrument the target module
+ * to allow call interception.
+ *
+ * Copyright (C) 2010 Institute for System Programming 
+ *		              of the Russian Academy of Sciences (ISPRAS)
+ * Authors: 
+ *		Eugene A. Shatokhin <spectre@ispras.ru>
+ *		Andrey V. Tsyvarev  <tsyvarev@ispras.ru>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or (at
+ * your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, GOOD TITLE or
+ * NON INFRINGEMENT.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+
+	
 /* [NB] For now, we just don't care of some synchronization issues.
  * */
 
 /* TODO: protect access to target_module with a mutex.
  * 
  * */
+ 
+/* TODO: revisit locking modules in memory */
 
 #include <linux/version.h>
 #include <linux/module.h>
@@ -13,17 +43,13 @@
 #include <linux/kernel.h>	/* printk() */
 #include <linux/slab.h>		/* kmalloc() */
 #include <linux/errno.h>	/* error codes */
-#include <linux/list.h>		/* linker lists */
+#include <linux/list.h>		/* linked lists */
 
 #include <asm/insn.h>		/* instruction decoder machinery */
 
-#include <kedr/controller/controller_common.h>	/* common declarations */
+#include <kedr/base/common.h>	/* common declarations */
 
-MODULE_AUTHOR("Eugene");
-
-/* Because this module uses the instruction decoder which is distributed
- * under GPL, I have no choice but to distribute this module under GPL too.
- * */
+MODULE_AUTHOR("Eugene A. Shatokhin");
 MODULE_LICENSE("GPL");
 
 /* ========== Module Parameters ========== */
@@ -55,9 +81,9 @@ struct list_head payload_modules;
 /* ================================================================ */
 
 /* The combined replacement table  */
-void** target_func_addrs = NULL;
-void** repl_func_addrs = NULL;
-unsigned int num_func_addrs = 0;
+void** orig_addrs = NULL;
+void** repl_addrs = NULL;
+unsigned int num_addrs = 0;
 
 /* ================================================================ */
 /* Free the combined replacement table, reset the pointers to NULL and 
@@ -107,7 +133,7 @@ create_repl_table(void*** ptarget_funcs, void*** prepl_funcs,
 	list_for_each(pos, &payload_modules)
 	{
 		entry = list_entry(pos, struct payload_module_list, list);
-		*pnum_funcs += entry->payload->num_func_addrs;
+		*pnum_funcs += entry->payload->repl_table.num_addrs;
 	}
 	
 	printk(KERN_INFO "[cp_controller] "
@@ -125,23 +151,23 @@ create_repl_table(void*** ptarget_funcs, void*** prepl_funcs,
 	}
 	
 	i = 0;
-	list_for_each(pos, &payload_modules)
+	/*list_for_each(pos, &payload_modules)
 	{
 		unsigned int k;
 		entry = list_entry(pos, struct payload_module_list, list);
 		BUG_ON(	entry->payload == NULL || 
-			entry->payload->target_func_addrs == NULL || 
-			entry->payload->repl_func_addrs == NULL);
+			entry->payload->orig_addrs == NULL || 
+			entry->payload->repl_addrs == NULL);
 		
-		for (k = 0; k < entry->payload->num_func_addrs; ++k)
+		for (k = 0; k < entry->payload->num_addrs; ++k)
 		{
 			(*ptarget_funcs)[i] = 
-				entry->payload->target_func_addrs[k];
+				entry->payload->orig_addrs[k];
 			(*prepl_funcs)[i] = 
-				entry->payload->repl_func_addrs[k];
+				entry->payload->repl_addrs[k];
 			++i;
 		}
-	}
+	}*/
 	
 	return 0;
 }
@@ -399,9 +425,9 @@ replace_calls_in_module(struct module* mod)
 			
 		do_process_area(mod->module_init, 
 			mod->module_init + mod->init_text_size,
-			target_func_addrs,
-			repl_func_addrs,
-			num_func_addrs);
+			orig_addrs,
+			repl_addrs,
+			num_addrs);
 	}
 
 	printk( KERN_INFO "[cp_controller] Module \"%s\", "
@@ -410,9 +436,9 @@ replace_calls_in_module(struct module* mod)
 		
 	do_process_area(mod->module_core, 
 		mod->module_core + mod->core_text_size,
-		target_func_addrs,
-		repl_func_addrs,
-		num_func_addrs);
+		orig_addrs,
+		repl_addrs,
+		num_addrs);
 	return;
 }
 
@@ -461,8 +487,8 @@ on_module_load(struct module *mod)
 	}
 	
 	/* Create the combined replacement table */
-	ret = create_repl_table(&target_func_addrs, &repl_func_addrs,
-		&num_func_addrs);
+	ret = create_repl_table(&orig_addrs, &repl_addrs,
+		&num_addrs);
 	if (ret != 0)
 	{
 		printk(KERN_ALERT "[cp_controller] "
@@ -491,8 +517,8 @@ on_module_unload(struct module *mod)
 	 * less error-prone. 
 	 * ("Premature optimization is the root of all evil" - D.Knuth?).
 	 * */
-	free_repl_table(&target_func_addrs, &repl_func_addrs, 
-		&num_func_addrs);
+	free_repl_table(&orig_addrs, &repl_addrs, 
+		&num_addrs);
 	
 	/* Release the payload modules as the target is about to unload and 
 	 * will execute no code from now on.

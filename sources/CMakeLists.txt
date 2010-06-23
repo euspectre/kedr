@@ -79,17 +79,34 @@ include_directories(${CMAKE_SOURCE_DIR})
 kbuild_include_directories(${CMAKE_SOURCE_DIR})
 
 #######################################################################
+# Make "Release" the default build type
+if (NOT CMAKE_BUILD_TYPE)
+    set (CMAKE_BUILD_TYPE "Release")
+endif ()
+message (STATUS "Build type is \"${CMAKE_BUILD_TYPE}\"")
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    kbuild_add_cflags(
+        "-DKEDR_DEBUG"
+    )
+endif()
+
+#######################################################################
+add_subdirectory(base)
+
+# TODO: uncomment in production version
 add_subdirectory(controller)
-add_subdirectory(module_weak_ref)
-add_subdirectory(syscall_connector)
-add_subdirectory(fault_simulation)
+
+#add_subdirectory(module_weak_ref)
+#add_subdirectory(syscall_connector)
+#add_subdirectory(fault_simulation)
 add_subdirectory(kedr)
 
 add_subdirectory(mist_gen)
 add_subdirectory(payloads_callm)
 
 # Documentation
-add_subdirectory(doc)
+#add_subdirectory(doc)
 
 # "Global" tests
 add_subdirectory(tests)

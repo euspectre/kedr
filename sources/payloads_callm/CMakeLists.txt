@@ -1,7 +1,6 @@
 include(cmake_useful)
 
-set(CONTROLLER_SYMVERS_FILE "${CMAKE_BINARY_DIR}/controller/Module.symvers")
-kbuild_use_symbols(${CONTROLLER_SYMVERS_FILE})
+kbuild_use_symbols("${CMAKE_BINARY_DIR}/base/Module.symvers")
 
 set(MIST_GEN_EXECUTABLE "${CMAKE_BINARY_DIR}/mist_gen/mist_gen")
 set(MIST_GEN_TEMPLATES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/templates")
@@ -89,11 +88,13 @@ macro(kedr_configure_data_pieces output_filelist)
 endmacro(kedr_configure_data_pieces output_filelist)
 
 #add_subdirectory(my_payload1)
+
+# TODO: uncomment in production version
 add_subdirectory(common_memory_management)
-add_subdirectory(mutexes)
-add_subdirectory(spinlocks)
+#add_subdirectory(mutexes)
+#add_subdirectory(spinlocks)
 add_subdirectory(user_space_access)
-add_subdirectory(shedule)
-add_subdirectory(waitqueue)
-add_subdirectory(capable)
-add_subdirectory(virtual_memory_management)
+#add_subdirectory(shedule)
+#add_subdirectory(waitqueue)
+#add_subdirectory(capable)
+#add_subdirectory(virtual_memory_management)

@@ -1,7 +1,7 @@
 set(kmodule_name "fsim_indicator_manager")
 
 kbuild_use_symbols(
-	"${CMAKE_BINARY_DIR}/controller/Module.symvers"
+	"${CMAKE_BINARY_DIR}/base/Module.symvers"
 	"${CMAKE_BINARY_DIR}/syscall_connector/kernel_part/Module.symvers"
 	"${CMAKE_BINARY_DIR}/fault_simulation/base/Module.symvers")
 

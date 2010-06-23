@@ -8,7 +8,7 @@ MODULE_AUTHOR("<$module.author$>");
 MODULE_LICENSE("<$module.license$>");
 /*********************************************************************/
 
-#include <kedr/controller/controller_common.h>
+#include <kedr/base/common.h>
 
 <$header$>
 
@@ -26,20 +26,20 @@ MODULE_LICENSE("<$module.license$>");
 /*********************************************************************/
 
 /* Names and addresses of the functions of interest */
-static void* target_func_addrs[] = {
+static void* orig_addrs[] = {
 <$targetFunctionAddress : join(,\n)$>
 };
 
 /* Addresses of the replacement functions */
-static void* repl_func_addrs[] = {
+static void* repl_addrs[] = {
 <$replFunctionAddress : join(,\n)$>
 };
 
 static struct kedr_payload payload = {
-	.mod 			= THIS_MODULE,
-	.target_func_addrs 	= &target_func_addrs[0],
-	.repl_func_addrs 	= &repl_func_addrs[0],
-	.num_func_addrs		= ARRAY_SIZE(target_func_addrs)
+	.mod 			        = THIS_MODULE,
+	.repl_table.orig_addrs 	= &orig_addrs[0],
+	.repl_table.repl_addrs 	= &repl_addrs[0],
+	.repl_table.num_addrs	= ARRAY_SIZE(orig_addrs)
 };
 /*********************************************************************/
 
@@ -54,8 +54,8 @@ static void
 static int __init
 <$module.name$>_init_module(void)
 {
-	BUG_ON(	ARRAY_SIZE(target_func_addrs) != 
-		ARRAY_SIZE(repl_func_addrs));
+	BUG_ON(	ARRAY_SIZE(orig_addrs) != 
+		ARRAY_SIZE(repl_addrs));
 	
 	printk(KERN_INFO "[<$module.name$>] Initializing\n");
 	return kedr_payload_register(&payload);

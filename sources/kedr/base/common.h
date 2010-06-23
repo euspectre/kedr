@@ -3,35 +3,56 @@
  * payload modules.
  */
 
-#ifndef CONTROLLER_COMMON_H_1739_INCLUDED
-#define CONTROLLER_COMMON_H_1739_INCLUDED
+#ifndef BASE_H_1739_INCLUDED
+#define BASE_H_1739_INCLUDED
 
-/* This structure contains everything the controller needs to properly 
- * operate on a payload module (the module that actually provides the 
- * replacement functions, etc.).
- * 
- * The controller does not need to know the internals of a payload module.
- * */
-struct kedr_payload
+/*
+ * The replacement table to be used by controller to actually instrument 
+ * the target driver.
+ */
+struct kedr_repl_table
 {
-	/* the payload module itself */
-	struct module* mod; 
-	
-	/* array of addresses of target functions 
+	/* array of original addresses of target functions 
 	 * ("what to replace") */
-	void** target_func_addrs; 
+	void** orig_addrs; 
 	
 	/* array of addresses of replacement functions 
 	 * ("with what to replace") */
-	void** repl_func_addrs; 
+	void** repl_addrs; 
 	
 	/* number of elements to process in each of the two arrays above */
-	unsigned int num_func_addrs;
+	unsigned int num_addrs;
+};
+
+/* This structure contains everything KEDR needs to properly 
+ * operate on a payload module (the module that actually provides the 
+ * replacement functions, etc.).
+ * 
+ * KEDR does not need to know the internals of a particular payload module.
+ * */
+struct kedr_payload
+{
+	/* payload module itself */
+	struct module* mod; 
+	
+	/* function replacement table */ 
+	struct kedr_repl_table repl_table;
 };
 
 /* ================================================================ */
-/* Public functions                                                 */
+/* Public API                                                       */
 /* ================================================================ */
+
+/*
+ * Use KEDR_MSG() instead of printk to output debug messages to the system
+ * log.
+ */
+#undef KEDR_MSG /* just in case */
+#ifdef KEDR_DEBUG
+    # define KEDR_MSG(fmt, args...) printk(KERN_DEBUG "[KEDR] " fmt, ## args)
+#else
+    # define KEDR_MSG(fmt, args...) /* do nothing */
+#endif
 
 /* Register a payload module with the controller. 
  * 'payload' should provide all the data the controller needs to use this 
@@ -76,4 +97,4 @@ kedr_payload_unregister(struct kedr_payload* payload);
 int
 kedr_target_module_in_init(void);
 /* ================================================================ */
-#endif /* CONTROLLER_COMMON_H_1739_INCLUDED */
+#endif /* BASE_H_1739_INCLUDED */

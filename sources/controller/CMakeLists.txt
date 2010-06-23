@@ -1,4 +1,4 @@
-set(kmodule_name "cp_controller")
+set(kmodule_name "kedr_controller")
 set(kmodule "${kmodule_name}.ko")
 # Should be configured in some way
 set(arch "x86")

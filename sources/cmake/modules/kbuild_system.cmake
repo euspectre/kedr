@@ -1,10 +1,17 @@
 include(cmake_useful)
+
 # Where this CMake module is located
 set(kbuild_this_module_dir "${CMAKE_SOURCE_DIR}/cmake/modules")
+
 # Symvers files, which should be processed for build kernel module
 set(kbuild_symbol_files)
+
 #include directories for build kernel modules
 set(kbuild_include_dirs)
+
+# Additional compiler flags for the module
+set(kbuild_cflags)
+
 # kbuild_add_module(name [sources ..])
 #
 # Build kernel module from sources_files, analogue of add_executable.
@@ -129,19 +136,28 @@ function(kbuild_add_module name)
 			set(obj_src_string "${obj_src_string} ${obj}.o")
 		endforeach(obj ${obj_sources_noext_rel})
 	endif(is_build_simple)
-	#Build kbuild file - compiler flags
+
+	# Build kbuild file - compiler flags
 	set(cflags_string "ccflags-y := ")
-	#compiler flags - directories
+    if(kbuild_cflags)
+		foreach(cflag ${kbuild_cflags})
+       		set(cflags_string "${cflags_string} ${cflag}")
+		endforeach(cflag ${kbuild_cflags})
+	endif(kbuild_cflags)
+
+	# compiler flags - directories
 	if(kbuild_include_dirs)
 		foreach(dir ${kbuild_include_dirs})
 			set(cflags_string "${cflags_string} -I${dir}")
 		endforeach(dir ${kmodule_include_dirs})
 	endif(kbuild_include_dirs)
-	#Configure kbuild file
+    
+    # Configure kbuild file
 	configure_file(${kbuild_this_module_dir}/kbuild_system_files/Kbuild.in
 					${CMAKE_CURRENT_BINARY_DIR}/Kbuild
 					)
-	#Create rules, depending on kbuild_use_symbols call
+	
+    # Create rules, depending on kbuild_use_symbols call
 	set(symvers_file ${CMAKE_CURRENT_BINARY_DIR}/Module.symvers)
 	if(kbuild_symbol_files)
 		list(APPEND depend_files ${symvers_file})
@@ -212,15 +228,22 @@ function(kbuild_add_object source)
 	set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${clean_files_list}")
 endfunction(kbuild_add_object source)
 
-#kbuild_include_directories(dir1 .. dirn)
+# kbuild_include_directories(dir1 .. dirn)
 macro(kbuild_include_directories)
 	list(APPEND kbuild_include_dirs ${ARGN})
 endmacro(kbuild_include_directories)
-#kbuild_use_symbols(symvers_file1.. symvers_filen)
+
+# kbuild_use_symbols(symvers_file1 .. symvers_filen)
 macro(kbuild_use_symbols)
 #	set(kbuild_symbol_files "${kbuild_symbol_files} ${ARGN}")
 	list(APPEND kbuild_symbol_files ${ARGN})
 endmacro(kbuild_use_symbols)
+
+# kbuild_add_cflags (flag1 ... flagN)
+# Specify additional compiler flags for the module.
+macro(kbuild_add_cflags)
+	list(APPEND kbuild_cflags ${ARGN})
+endmacro(kbuild_add_cflags)
 
 # Internal functions
 # List common files, created by kbuild

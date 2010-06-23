@@ -16,7 +16,7 @@
 #include <kedr/module_weak_ref/module_weak_ref.h>
 
 /* kedr_target_module_in_init */
-#include <kedr/controller/controller_common.h>
+#include <kedr/base/common.h>
 /* kernel-user spaces interaction */
 #include <kedr/syscall_connector/syscall_connector.h>
 
