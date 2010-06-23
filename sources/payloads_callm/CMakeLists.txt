@@ -87,14 +87,12 @@ macro(kedr_configure_data_pieces output_filelist)
 	endforeach(arg ${ARGN})
 endmacro(kedr_configure_data_pieces output_filelist)
 
-#add_subdirectory(my_payload1)
-
 # TODO: uncomment in production version
 add_subdirectory(common_memory_management)
 #add_subdirectory(mutexes)
 #add_subdirectory(spinlocks)
 add_subdirectory(user_space_access)
-#add_subdirectory(shedule)
+#add_subdirectory(sñhedule)
 #add_subdirectory(waitqueue)
 #add_subdirectory(capable)
 #add_subdirectory(virtual_memory_management)
