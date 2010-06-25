@@ -34,13 +34,20 @@
 #include <linux/slab.h>
 #include <linux/errno.h>
 #include <linux/list.h>
-
+#include <linux/string.h>
 #include <linux/spinlock.h>
-//#include <linux/mutex.h>
+#include <linux/mutex.h>
 
 #include <asm/insn.h>		/* instruction decoder machinery */
 
 #include <kedr/base/common.h>	/* common declarations */
+
+/* To minimize the unexpected consequences of trace event-related 
+ * headers and symbols, place #include directives for system headers 
+ * before '#define CREATE_TRACE_POINTS' directive
+ */
+#define CREATE_TRACE_POINTS
+#include "controller_tracing.h" /* trace events */
 
 /* ================================================================ */
 /* This string will be used in debug output to specify the name of 
@@ -426,6 +433,7 @@ on_module_load(struct module *mod)
 	}
 	
 	replace_calls_in_module(mod);
+	trace_target_session_begins(target_name);
 	return;
 }
 
@@ -469,6 +477,8 @@ on_module_unload(struct module *mod)
 		"failed to handle unloading of the target module.\n");
 		return;
 	}
+	
+	trace_target_session_ends(target_name);
 	return;
 }
 

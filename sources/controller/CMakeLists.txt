@@ -12,13 +12,15 @@ kbuild_use_symbols("${CMAKE_BINARY_DIR}/base/Module.symvers")
 kbuild_include_directories(
 	"${CMAKE_CURRENT_SOURCE_DIR}/${arch_dir}/include"
 	"${CMAKE_CURRENT_BINARY_DIR}/${arch_dir}/lib"
+	"${CMAKE_CURRENT_SOURCE_DIR}"
 	)
 
 kbuild_add_module(${kmodule_name} 
-	"controller.c"
+    "controller.c"
     "${arch_dir}/lib/inat.c"
     "${arch_dir}/lib/insn.c"
     "${arch_dir}/lib/inat-tables.h"
+    "controller_tracing.h"
     )
 
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${arch_dir}/lib/inat-tables.h"
