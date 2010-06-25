@@ -50,7 +50,7 @@ struct kedr_payload
 #ifdef KEDR_DEBUG
     # define KEDR_MSG(fmt, args...) printk(KERN_DEBUG "[KEDR] " fmt, ## args)
 #else
-    # define KEDR_MSG(fmt, args...) /* do nothing */
+    # define KEDR_MSG(fmt, args...) do { } while(0) /* do nothing */
 #endif
 
 /* Registers a payload module with the controller. 
@@ -92,6 +92,8 @@ kedr_payload_unregister(struct kedr_payload* payload);
  * kedr_target_module_in_init() is used. It is up to the user of the target
  * module to ensure that no request is made to the module until its 
  * initialization is properly handled by the tests.
+ *
+ * It is allowed to call this function from atomic context.
  * */
 int
 kedr_target_module_in_init(void);
@@ -127,6 +129,9 @@ kedr_target_module_in_init(void);
  */
 struct kedr_impl_delegates
 {
+	/* This delegate must not sleep/reschedule as it can be called 
+	 * from an atomic context. It may use spinlocks however.
+	 */
 	int (*target_module_in_init)(void);
 };
 
@@ -143,9 +148,8 @@ struct kedr_impl_controller
 /*
  * Registers the controller module with the base.
  * Only one controller can be registered at a time.
- * The function returns nonzero on success, 0 otherwise.
+ * The function returns 0 if successful, an error code otherwise.
  */
-/*TODO*/
 int 
 kedr_impl_controller_register(struct kedr_impl_controller* controller);
 
@@ -153,37 +157,34 @@ kedr_impl_controller_register(struct kedr_impl_controller* controller);
  * Unregisters the controller (should be called in the controller's cleanup
  * function).
  */
-/*TODO*/
 void
 kedr_impl_controller_unregister(struct kedr_impl_controller* controller);
-
-/*
- * Returns the combined replacement table (based on the data from all 
- * registered payload modules).
- * The table is owned by the base and must not be modified by the caller.
- * NULL is returned if there is not enough memory to prepare the table.
- */
-/*TODO*/
-const struct kedr_repl_table*  
-kedr_impl_get_repl_table(void);
 
 /*
  * This function is called by the controller to inform the base that 
  * a target module has been loaded into memory and is about to be 
  * instrumented.
  * The base can use this to lock the payload modules in memory, etc.
+ * The base also fills the combined replacement table (*ptable).
+ * In case of failure, the contents of the table are undefined.
+ *
+ * The replacement table is created from the data provided by all 
+ * registered payloads. The contents of the table are owned by the base and 
+ * must not be modified by the caller.
+ *
+ * The function returns 0 if successful, an error code otherwise.
  */
-/*TODO*/
-void
-kedr_impl_target_loaded(void);
+int
+kedr_impl_on_target_load(struct kedr_repl_table* ptable);
 	
 /*
  * This function is called by the controller to inform the base that 
  * a target module has been unloaded.
+ *
+ * The function returns 0 if successful or an error code in case of failure.
  */
-/*TODO*/
-void
-kedr_impl_target_unloaded(void);
+int
+kedr_impl_on_target_unload(void);
 
 /**********************************************************************/
 #endif /* COMMON_H_1739_INCLUDED */

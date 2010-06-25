@@ -25,152 +25,90 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-	
-/* [NB] For now, we just don't care of some synchronization issues.
- * */
-
-/* TODO: protect access to target_module with a mutex.
- * 
- * */
- 
-/* TODO: revisit locking modules in memory */
-
 #include <linux/version.h>
 #include <linux/module.h>
 #include <linux/moduleparam.h>
 #include <linux/init.h>
 
-#include <linux/kernel.h>	/* printk() */
-#include <linux/slab.h>		/* kmalloc() */
-#include <linux/errno.h>	/* error codes */
-#include <linux/list.h>		/* linked lists */
+#include <linux/kernel.h>
+#include <linux/slab.h>
+#include <linux/errno.h>
+#include <linux/list.h>
+
+#include <linux/spinlock.h>
+//#include <linux/mutex.h>
 
 #include <asm/insn.h>		/* instruction decoder machinery */
 
 #include <kedr/base/common.h>	/* common declarations */
 
+/* ================================================================ */
+/* This string will be used in debug output to specify the name of 
+ * the current component of KEDR
+ */
+#define COMPONENT_STRING "controller: "
+
+/* ================================================================ */
 MODULE_AUTHOR("Eugene A. Shatokhin");
 MODULE_LICENSE("GPL");
 
 /* ========== Module Parameters ========== */
-/* Name of the module to analyse. It can be passed to 'insmod' as 
+/* 
+ * Name of the module to analyze. It can be passed to 'insmod' as 
  * an argument, for example,
- * 	/sbin/insmod cp_controller.ko target_name="module_to_be_analysed"
- * */
+ * 	/sbin/insmod cp_controller.ko target_name="module_to_be_analyzed"
+ */
 static char* target_name = ""; /* an empty name will match no module */
 module_param(target_name, charp, S_IRUGO);
-/* ================================================================ */
 
-/* The module being analysed. */
+// to be implemented in some later version:
+/*
+ * If 0, the controller will not instrument the target module if the latter
+ * is already loaded, that is, if the target has been loaded earlier than
+ * the controller. The controller will issue a warning and fail to load in
+ * this case.
+ * 
+ * If this parameter is nonzero, the controller will instrument the target
+ * module even if the module is already loaded.
+ */
+//int instrument_if_loaded = 0;
+//module_param(instrument_if_loaded, int, S_IRUGO);
+
+/* ================================================================ */
+/* A mutex to protect most of the global data in the controler - except 
+ * those protected by the special spinlocks, see below.
+ */
+DEFINE_MUTEX(controller_mutex);
+
+/* The module being analyzed. NULL if the module is not currently loaded. */
 struct module* target_module = NULL;
 
 /* Nonzero if the target module is initializing, 0 if it has completed 
  * initialization or if no target is loaded at the moment. */
 int target_in_init = 0;
 
-/* ================================================================ */
-struct payload_module_list
-{
-	struct list_head list;
-	struct kedr_payload* payload;
-};
+/* A spinlock to protect target_in_init from concurrent access. 
+ * A mutex would not do because target_in_init can be accessed from atomic
+ * context too (kedr_target_module_in_init() can be called from a replacement
+ * function executing in atomic context).
+ */
+spinlock_t target_in_init_lock;
 
-/* The list of currently loaded payload modules - 
- * effectively, the list of 'struct kedr_payload*' */
-struct list_head payload_modules;
+/* If nonzero, module load and unload notifications will be handled,
+ * if 0, they will not.
+ */
+int handle_module_notifications = 0;
 /* ================================================================ */
 
-/* The combined replacement table  */
+/* The replacement table (the data pointed-to by its fields is owned by 
+ * kedr-base) 
+ */
+struct kedr_repl_table repl_table;
+
+/* The combined replacement table  
 void** orig_addrs = NULL;
 void** repl_addrs = NULL;
-unsigned int num_addrs = 0;
-
-/* ================================================================ */
-/* Free the combined replacement table, reset the pointers to NULL and 
- * the number of elements - to 0. */
-static void
-free_repl_table(void*** ptarget_funcs, void*** prepl_funcs, 
-	unsigned int* pnum_funcs)
-{
-	BUG_ON(ptarget_funcs == NULL);
-	BUG_ON(prepl_funcs == NULL);
-	BUG_ON(pnum_funcs == NULL);
-	
-	kfree(*ptarget_funcs);
-	kfree(*prepl_funcs);
-	
-	*ptarget_funcs = NULL;
-	*prepl_funcs = NULL;
-	*pnum_funcs = 0;
-	return;
-}
-
-/* Allocate appropriate amount of memory and combine the replacement 
- * tables from all payload modules into a single 'table'. Actually, 
- * the table is returned in two arrays, '*ptarget_funcs' and '*repl_funcs',
- * the number of elements in each one is returned in '*pnum_funcs'.
- * */
-static int
-create_repl_table(void*** ptarget_funcs, void*** prepl_funcs, 
-	unsigned int* pnum_funcs)
-{
-	struct payload_module_list* entry;
-	struct list_head *pos;
-	unsigned int i;
-	
-	BUG_ON(ptarget_funcs == NULL);
-	BUG_ON(prepl_funcs == NULL);
-	BUG_ON(pnum_funcs == NULL);
-	
-	*ptarget_funcs = NULL;
-	*prepl_funcs = NULL;
-	*pnum_funcs = 0;
-	
-	/* Determine the total number of target functions. If there are no
-	 * target functions, do nothing. No need to allocate memory in this 
-	 * case.
-	 * */
-	list_for_each(pos, &payload_modules)
-	{
-		entry = list_entry(pos, struct payload_module_list, list);
-		*pnum_funcs += entry->payload->repl_table.num_addrs;
-	}
-	
-	printk(KERN_INFO "[cp_controller] "
-		"total number of target functions is %u.\n",
-		*pnum_funcs);
-		
-	*ptarget_funcs = kzalloc((*pnum_funcs) * sizeof(void*), GFP_KERNEL);
-	*prepl_funcs = kzalloc((*pnum_funcs) * sizeof(void*), GFP_KERNEL);
-	if (*ptarget_funcs == NULL || *prepl_funcs == NULL)
-	{
-		/* Don't care which of the two has failed, kfree(NULL) is 
-		 * almost a no-op anyway*/
-		free_repl_table(ptarget_funcs, prepl_funcs, pnum_funcs);
-		return -ENOMEM;		
-	}
-	
-	i = 0;
-	/*list_for_each(pos, &payload_modules)
-	{
-		unsigned int k;
-		entry = list_entry(pos, struct payload_module_list, list);
-		BUG_ON(	entry->payload == NULL || 
-			entry->payload->orig_addrs == NULL || 
-			entry->payload->repl_addrs == NULL);
-		
-		for (k = 0; k < entry->payload->num_addrs; ++k)
-		{
-			(*ptarget_funcs)[i] = 
-				entry->payload->orig_addrs[k];
-			(*prepl_funcs)[i] = 
-				entry->payload->repl_addrs[k];
-			++i;
-		}
-	}*/
-	
-	return 0;
-}
+unsigned int num_addrs = 0;*/
 
 /* ================================================================ */
 /* Helpers */
@@ -250,8 +188,9 @@ do_process_insn(struct insn* c_insn, void* kaddr, void* end_kaddr,
 	if (kaddr + c_insn->length > end_kaddr)
 	{
 	/* Note: it is OK to stop at 'end_kaddr' but no further */
-		printk( KERN_WARNING "[cp_controller] "
-	"Instruction decoder stopped past the end of the section.\n");
+		KEDR_MSG(COMPONENT_STRING
+	"instruction decoder stopped past the end of the section.\n");
+		WARN_ON(1);
 	}
 		
 /* This call may be overkill as insn_get_length() probably has to decode 
@@ -277,7 +216,8 @@ do_process_insn(struct insn* c_insn, void* kaddr, void* end_kaddr,
 	insn_get_immediate(c_insn);
 	if (c_insn->immediate.nbytes != 4)
 	{
-		printk( KERN_WARNING "[cp_controller] At 0x%p: "
+		KEDR_MSG(COMPONENT_STRING 
+	"at 0x%p: "
 	"opcode: 0x%x, "
 	"immediate field is %u rather than 32 bits in size; "
 	"insn.length = %u, insn.imm = %u, off_immed = %d\n",
@@ -287,7 +227,7 @@ do_process_insn(struct insn* c_insn, void* kaddr, void* end_kaddr,
 			c_insn->length,
 			(unsigned int)c_insn->immediate.value,
 			insn_offset_immediate(c_insn));
-		
+		WARN_ON(1);
 		return c_insn->length;
 	}
 	
@@ -302,8 +242,8 @@ do_process_insn(struct insn* c_insn, void* kaddr, void* end_kaddr,
 		/* Change the address of the function to be called */
 			BUG_ON(to_funcs[i] == NULL);
 			
-			printk( KERN_INFO "[cp_controller] At 0x%p: "
-		"changing address 0x%p to 0x%p (displ: 0x%x to 0x%x)\n",
+			KEDR_MSG(COMPONENT_STRING 
+	"at 0x%p: changing address 0x%p to 0x%p (displ: 0x%x to 0x%x)\n",
 				kaddr,
 				from_funcs[i], 
 				to_funcs[i],
@@ -356,8 +296,9 @@ do_process_area(void* kbeg, void* kend,
 			from_funcs, to_funcs, nfuncs);
 		if (len == 0)	
 		{
-			printk( KERN_WARNING "[cp_controller] "
-			"do_process_insn() returned 0\n");
+			KEDR_MSG(COMPONENT_STRING
+				"do_process_insn() returned 0\n");
+			WARN_ON(1);
 			break;
 		}
 
@@ -419,32 +360,33 @@ replace_calls_in_module(struct module* mod)
 
 	if (mod->module_init != NULL)
 	{
-		printk( KERN_INFO "[cp_controller] Module \"%s\", "
-		"processing \"init\" area\n",
+		KEDR_MSG(COMPONENT_STRING 
+			"target module: \"%s\", processing \"init\" area\n",
 			module_name(mod));
 			
 		do_process_area(mod->module_init, 
 			mod->module_init + mod->init_text_size,
-			orig_addrs,
-			repl_addrs,
-			num_addrs);
+			repl_table.orig_addrs,
+			repl_table.repl_addrs,
+			repl_table.num_addrs);
 	}
 
-	printk( KERN_INFO "[cp_controller] Module \"%s\", "
-		"processing \"core\" area\n",
+	KEDR_MSG(COMPONENT_STRING 
+		"target module: \"%s\", processing \"core\" area\n",
 		module_name(mod));
 		
 	do_process_area(mod->module_core, 
 		mod->module_core + mod->core_text_size,
-		orig_addrs,
-		repl_addrs,
-		num_addrs);
+		repl_table.orig_addrs,
+		repl_table.repl_addrs,
+		repl_table.num_addrs);
 	return;
 }
 
 /* ================================================================== */
-// Module filter.
-// Should return not 0, if detector should watch for module with this name.
+/* Module filter.
+ * Should return nonzero if detector should watch for module with this name.
+ */
 static int 
 filter_module(const char *mod_name)
 {
@@ -453,46 +395,33 @@ filter_module(const char *mod_name)
 	 * */
 	return strcmp(mod_name, target_name) == 0;
 }
-// There are 3 functions, which should do real work
-// for interaction with modules
+
+/*
+ * on_module_load() should do real work when the target module is loaded:
+ * instrument it, etc.
+ *
+ * Note that this function is called with controller_mutex locked.
+ */
 static void 
 on_module_load(struct module *mod)
 {
-	struct payload_module_list* entry;
-	struct list_head *pos;
-	int ret;
+	int ret = 0;
+	unsigned long flags;
 	
-	printk(KERN_INFO "[cp_controller] Module '%s' has just loaded.\n",
+	KEDR_MSG(COMPONENT_STRING 
+		"target module \"%s\" has just loaded.\n",
 		module_name(mod));
 	
+	spin_lock_irqsave(&target_in_init_lock, flags);
 	target_in_init = 1;
+	spin_unlock_irqrestore(&target_in_init_lock, flags);
 	
-	/* Call try_module_get for all registered payload modules to 
-	 * prevent them from unloading while the target is loaded */
-	list_for_each(pos, &payload_modules)
-	{
-		entry = list_entry(pos, struct payload_module_list, list);
-		BUG_ON(entry->payload->mod == NULL);
-		
-		printk(KERN_INFO "[cp_controller] "
-			"try_module_get() for payload module '%s'.\n",
-			module_name(entry->payload->mod));
-		
-		if(try_module_get(entry->payload->mod) == 0)
-		{
-			printk(KERN_ALERT "[cp_controller] "
-		"try_module_get() failed for payload module '%s'.\n",
-				module_name(entry->payload->mod));
-		}
-	}
-	
-	/* Create the combined replacement table */
-	ret = create_repl_table(&orig_addrs, &repl_addrs,
-		&num_addrs);
+	/* Notify the base and request the combined replacement table */
+	ret = kedr_impl_on_target_load(&repl_table);
 	if (ret != 0)
 	{
-		printk(KERN_ALERT "[cp_controller] "
-	"Not enough memory to create the combined replacement table.\n");
+		KEDR_MSG(COMPONENT_STRING
+		"failed to handle loading of the target module.\n");
 		return;
 	}
 	
@@ -500,43 +429,46 @@ on_module_load(struct module *mod)
 	return;
 }
 
-/* [NB] This function is called even if initialization of the target module 
+/*
+ * on_module_unload() should do real work when the target module is about to
+ * be unloaded. 
+ *
+ * Note that this function is called with controller_mutex locked.
+ *
+ * [NB] This function is called even if initialization of the target module 
  * fails.
  * */
 static void 
 on_module_unload(struct module *mod)
 {
-	struct payload_module_list* entry;
-	struct list_head *pos;
+	int ret = 0;
+	unsigned long flags;
 	
-	printk(KERN_INFO "[cp_controller] Module '%s' is going to unload.\n",
+	KEDR_MSG(COMPONENT_STRING 
+		"target module \"%s\" is going to unload.\n",
 		module_name(mod));
 	
-	/* Destroy the combined replacement table. It is not very efficient 
-	 * to destroy / recreate it each time but still it is simple and 
-	 * less error-prone. 
-	 * ("Premature optimization is the root of all evil" - D.Knuth?).
-	 * */
-	free_repl_table(&orig_addrs, &repl_addrs, 
-		&num_addrs);
+/* The replacement table may be used no longer. 
+ * The base will take care of releasing its contents when appropriate.
+ * [NB] The access to repl_table is already synchronized as on_module_unload()
+ * is called with controller_mutex locked.
+ */
+	repl_table.num_addrs = 0;
+	repl_table.orig_addrs = NULL;
+	repl_table.repl_addrs = NULL;	 
 	
-	/* Release the payload modules as the target is about to unload and 
-	 * will execute no code from now on.
-	 * 
-	 * The payload modules can now unload as well if the user wishes so.
-	 * */
-	list_for_each(pos, &payload_modules)
-	{
-		entry = list_entry(pos, struct payload_module_list, list);
-		BUG_ON(entry->payload->mod == NULL);
-		
-		printk(KERN_INFO "[cp_controller] "
-			"module_put() for payload module '%s'.\n",
-			module_name(entry->payload->mod));
-		module_put(entry->payload->mod);
-	}
-	
+	spin_lock_irqsave(&target_in_init_lock, flags);
 	target_in_init = 0; 
+	spin_unlock_irqrestore(&target_in_init_lock, flags);
+	
+	/* Notify the base */
+	ret = kedr_impl_on_target_unload();
+	if (ret != 0)
+	{
+		KEDR_MSG(COMPONENT_STRING
+		"failed to handle unloading of the target module.\n");
+		return;
+	}
 	return;
 }
 
@@ -546,30 +478,41 @@ static int
 detector_notifier_call(struct notifier_block *nb,
 	unsigned long mod_state, void *vmod)
 {
-	struct module *mod = (struct module *)vmod;
-
-	//switch on module state
-	/* TODO: protect from simultaneous execution (would it be enough to
-	 * protect 'target_module' variable only?)*/
-	switch(mod_state)
-	{
-	case MODULE_STATE_COMING:// module has just loaded
-		if(!filter_module(module_name(mod))) break;
-		
-		BUG_ON(target_module != NULL);
-		target_module = mod;
-		on_module_load(mod);
-		break;
+	struct module* mod = (struct module *)vmod;
+	BUG_ON(mod == NULL);
 	
-	case MODULE_STATE_GOING:// module is going to unload
+	if (mutex_lock_interruptible(&controller_mutex) != 0)
+	{
+		KEDR_MSG(COMPONENT_STRING
+			"failed to lock controller_mutex\n");
+		return 0;
+	}
+	
+	if (handle_module_notifications)
+	{
+		/* handle module state change */
+		switch(mod_state)
+		{
+		case MODULE_STATE_COMING: /* the module has just loaded */
+			if(!filter_module(module_name(mod))) break;
+			
+			BUG_ON(target_module != NULL);
+			target_module = mod;
+			on_module_load(mod);
+			break;
+		
+		case MODULE_STATE_GOING: /* the module is going to unload */
 		/* if the target module has already been unloaded, 
 		 * target_module is NULL, so (mod != target_module) will
 		 * be true. */
-		if(mod != target_module) break;
-		
-		on_module_unload(mod);
-		target_module = NULL;
+			if(mod != target_module) break;
+			
+			on_module_unload(mod);
+			target_module = NULL;
+		}
 	}
+
+	mutex_unlock(&controller_mutex);
 	return 0;
 }
 
@@ -582,25 +525,40 @@ struct notifier_block detector_nb = {
 };
 /* ================================================================ */
 
-/* TODO */
+/* Returns nonzero if a target module is currently loaded and it executes 
+ * its init function at the moment, 0 otherwise (0 is returned even if there
+ * is no target module loaded at the moment).
+ * See the description of kedr_target_module_in_init().
+ *
+ * Actually, kedr_target_module_in_init() delegates its work to this 
+ * function. In addition, kedr-base must ensure that no concurrent execution
+ * of this delegate function occurs.
+ */
 static int
 is_target_module_in_init(void)
 {
+/*
+ * The target cannot unload before this function exits.
+ * Indeed, is_target_module_in_init() is called by kedr_target_module_in_init(),
+ * which may only be called from the replacement functions. The replacement 
+ * functions are called from the code of the target driver. As long as at
+ * least one replacement function is working, the target module is still 
+ * there because it is in use by some task.
+ */
+	unsigned long flags;
+	int result;
+	
+	spin_lock_irqsave(&target_in_init_lock, flags);
 	if (target_in_init)
 	{
-		/* Ensure that nobody silently unloads the target 
-		 * while we are accessing it here. */
-		if (target_module && try_module_get(target_module))
-		{
-			target_in_init = 
-				(target_module->module_init != NULL);
-			module_put(target_module);
-		}
+		target_in_init = (target_module->module_init != NULL);
 	}
+	result = target_in_init;
+	spin_unlock_irqrestore(&target_in_init_lock, flags);
 	
 	/* [NB] When the target is unloaded, on_module_unload() will set 
 	 * target_in_init to 0.*/
-	return target_in_init;
+	return result;
 }
 
 /* The structure representing this controller */
@@ -614,18 +572,14 @@ static void
 controller_cleanup_module(void)
 {
 	unregister_module_notifier(&detector_nb);
-	
 	kedr_impl_controller_unregister(&controller);
 	
-	/* Even if a target module is now loaded, it must not have been
-	 * instrumented as there are no payload modules at the moment.
-	 * Note that a payload module cannot be unloaded if there is a 
-	 * target module present. So there is no need to uninstrument 
-	 * the target module: it was never instrumented. It was probably 
-	 * loaded with no payload modules present. 
-	 * */
-
-	printk(KERN_INFO "[cp_controller] Cleanup successful\n");
+/* TODO later: uninstrument target if it is still loaded.
+ * This makes sense only if there is a reasonable safe way of instrumenting
+ * a live module ("hot patching") available.
+ */
+	KEDR_MSG(COMPONENT_STRING 
+		"cleanup successful\n");
 	return;
 }
 
@@ -633,27 +587,67 @@ controller_cleanup_module(void)
 static int __init
 controller_init_module(void)
 {
-	int result;
-	printk(KERN_INFO "[cp_controller] Initializing\n");
+	int result = 0;
+	KEDR_MSG(COMPONENT_STRING
+		"initializing\n");
 	
-	/* Initialize the list */
-	INIT_LIST_HEAD(&payload_modules);	
-	
-	/* Register with the base */
+	/* Register with the base - must do this before the controller 
+	 * begins to respond to module load/unload notifications.
+	 */
 	result = kedr_impl_controller_register(&controller);
 	if (result < 0)
 	{
 		goto fail;
 	}
-
+	
+	/* When looking for the target module, module_mutex must be locked */
+	result = mutex_lock_interruptible(&module_mutex);
+	if (result != 0)
+	{
+		KEDR_MSG(COMPONENT_STRING
+			"failed to lock module_mutex\n");
+		goto fail;
+	}
+	
 	result = register_module_notifier(&detector_nb);
 	if (result < 0)
 	{
+		goto unlock_and_fail;
+	}
+	
+	/* Check if the target is already loaded */
+	if (find_module(target_name) != NULL)
+	{
+		KEDR_MSG(COMPONENT_STRING
+			"target module \"%s\" is already loaded\n",
+			target_name);
+		
+		KEDR_MSG(COMPONENT_STRING
+	"instrumenting already loaded target modules is not supported\n");
+		result = -EEXIST;
+		goto unlock_and_fail;
+	}
+	
+	result = mutex_lock_interruptible(&controller_mutex);
+	if (result != 0)
+	{
+		KEDR_MSG(COMPONENT_STRING
+			"failed to lock controller_mutex\n");
 		goto fail;
 	}
-
+	handle_module_notifications = 1;
+	mutex_unlock(&controller_mutex);
+	
+	mutex_unlock(&module_mutex);
+		
+/* From now on, the controller will be notified when the target module
+ * is loaded or have finished cleaning-up and is just about to unload
+ * from memory.
+ */
 	return 0; /* success */
 
+unlock_and_fail:
+	mutex_unlock(&module_mutex);
 fail:
 	controller_cleanup_module();
 	return result;
@@ -668,90 +662,4 @@ controller_exit_module(void)
 
 module_init(controller_init_module);
 module_exit(controller_exit_module);
-
-/* ================================================================ */
-
-/* Look for a given element in the list. */
-/*static struct payload_module_list* 
-payload_find(struct kedr_payload* payload)
-{
-	struct payload_module_list* entry;
-	struct list_head *pos;
-	
-	list_for_each(pos, &payload_modules)
-	{
-		entry = list_entry(pos, struct payload_module_list, list);
-		if(entry->payload == payload)
-			return entry;
-	}
-	return NULL;
-}*/
-
-/* ================================================================ */
-/* Implementation of public functions                               */
-/* ================================================================ */
-
-/*int 
-kedr_payload_register(struct kedr_payload* payload)
-{
-	struct payload_module_list* new_elem = NULL;
-	
-	BUG_ON(payload == NULL);
-	
-	if (target_module != NULL)
-	{
-		return -EBUSY;
-	}
-	
-	if (payload_find(payload) != NULL)
-	{
-		printk(KERN_ALERT "[cp_controller] Module \"%s\" attempts "
-			"to register the same payload twice\n",
-			module_name(payload->mod));
-		return -EINVAL;
-	}
-	
-	printk(KERN_INFO "[cp_controller] Registering payload "
-			"from module \"%s\"\n",
-			module_name(payload->mod));
-	
-	new_elem = kzalloc(sizeof(struct payload_module_list), GFP_KERNEL);
-	if (new_elem == NULL) return -ENOMEM;
-		
-	INIT_LIST_HEAD(&new_elem->list);
-	new_elem->payload = payload;
-	
-	list_add_tail(&new_elem->list, &payload_modules);
-	return 0;
-}
-
-
-void 
-kedr_payload_unregister(struct kedr_payload* payload)
-{
-	struct payload_module_list* doomed = NULL;
-	
-	BUG_ON(payload == NULL);
-	
-		BUG_ON(target_module != NULL);
-	
-	doomed = payload_find(payload);
-	if (doomed == NULL)
-	{
-		printk(KERN_ALERT "[cp_controller] Module \"%s\" attempts "
-		"to unregister the payload that was never registered\n",
-			module_name(payload->mod));
-		return;
-	}
-	
-	printk(KERN_INFO "[cp_controller] Unregistering payload "
-			"from module \"%s\"\n",
-			module_name(payload->mod));
-	
-	list_del(&doomed->list);
-	kfree(doomed);
-	return;
-}
-*/
-
 /* ================================================================ */

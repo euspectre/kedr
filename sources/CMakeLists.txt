@@ -94,19 +94,19 @@ endif()
 #######################################################################
 add_subdirectory(base)
 
-# TODO: uncomment in production version
 add_subdirectory(controller)
 
-#add_subdirectory(module_weak_ref)
-#add_subdirectory(syscall_connector)
-#add_subdirectory(fault_simulation)
+add_subdirectory(module_weak_ref)
+add_subdirectory(syscall_connector)
+add_subdirectory(fault_simulation)
+
 add_subdirectory(kedr)
 
 add_subdirectory(mist_gen)
 add_subdirectory(payloads_callm)
 
 # Documentation
-#add_subdirectory(doc)
+add_subdirectory(doc)
 
 # "Global" tests
 add_subdirectory(tests)
