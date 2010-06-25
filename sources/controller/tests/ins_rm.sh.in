@@ -3,6 +3,16 @@
 ########################################################################
 # This test checks the basic operations with the controller module.
 ########################################################################
+BASE_MODULE="@BASE_DIR@/@BASE_NAME@.ko"
+printf "Base module: ${BASE_MODULE}\n"
+
+if test ! -f "${BASE_MODULE}"; then
+    printf "Base module is missing: ${BASE_MODULE}\n"
+    
+    # test failed
+    exit 1
+fi
+
 CONTROLLER_MODULE="@CONTROLLER_DIR@/@CONTROLLER_NAME@.ko"
 printf "Controller module: ${CONTROLLER_MODULE}\n"
 
@@ -13,17 +23,28 @@ if test ! -f "${CONTROLLER_MODULE}"; then
     exit 1
 fi
 
+/sbin/insmod "${BASE_MODULE}"
+if test $? -ne 0; then
+    printf "Failed to load the base module\n"
+    exit 1
+fi
+
 /sbin/insmod "${CONTROLLER_MODULE}"
 if test $? -ne 0; then
     printf "Failed to load the controller module\n"
+    /sbin/rmmod "@BASE_NAME@"
     exit 1
 fi
 
 /sbin/rmmod "@CONTROLLER_NAME@"
 if test $? -ne 0; then
     printf "Failed to unload the controller module\n"
+    /sbin/rmmod "@BASE_NAME@"
     exit 1
 fi
+
+# cleanup
+/sbin/rmmod "@BASE_NAME@" || exit 1
 
 # test passed
 exit 0

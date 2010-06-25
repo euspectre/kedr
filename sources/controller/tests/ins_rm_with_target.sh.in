@@ -13,6 +13,16 @@ if test $# -ne 1; then
     exit 1
 fi
 
+BASE_MODULE="@BASE_DIR@/@BASE_NAME@.ko"
+printf "Base module: ${BASE_MODULE}\n"
+
+if test ! -f "${BASE_MODULE}"; then
+    printf "Base module is missing: ${BASE_MODULE}\n"
+    
+    # test failed
+    exit 1
+fi
+
 CONTROLLER_MODULE="@CONTROLLER_DIR@/@CONTROLLER_NAME@.ko"
 printf "Controller module: ${CONTROLLER_MODULE}\n"
 
@@ -39,20 +49,35 @@ fi
 
 ########################################################################
 # Scenario:
-#   load controller
+#   load base
 #   load a simple payload module
+#   load controller
 #   load target
 #   try to unload controller (must fail)
 #   unload target
 #   unload the payload module
 #   unload controller (must succeed this time)
 ########################################################################
-/sbin/insmod "${CONTROLLER_MODULE}" target_name="${TARGET_NAME}" || exit 1
-/sbin/insmod "${PAYLOAD_MODULE}" || exit 1
+/sbin/insmod "${BASE_MODULE}" || exit 1
+
+/sbin/insmod "${CONTROLLER_MODULE}" target_name="${TARGET_NAME}"
+if test $? -ne 0; then
+    printf "Failed to load the controller\n"
+    /sbin/rmmod "@BASE_NAME@"
+    exit 1
+fi
+
+/sbin/insmod "${PAYLOAD_MODULE}"
+if test $? -ne 0; then
+    printf "Failed to load the payload module\n"
+    /sbin/rmmod "@CONTROLLER_NAME@" "@BASE_NAME@"
+    exit 1
+fi
 
 cd "${TARGET_NAME}" && sh ./target_load.sh
 if test $? -ne 0; then
     printf "Failed to load the target module: ${TARGET_MODULE}\n"
+    /sbin/rmmod "${PAYLOAD_NAME}" "@CONTROLLER_NAME@" "@BASE_NAME@"
     exit 1
 fi
 
@@ -62,6 +87,7 @@ if test $? -eq 0; then
     printf "The controller module must have been locked "
     printf "as long as the target module is under analysis\n"
     sh ./target_unload.sh
+    /sbin/rmmod "${PAYLOAD_NAME}" "@CONTROLLER_NAME@" "@BASE_NAME@"
     exit 1
 fi
 printf "This error was expected, continuing.\n"
@@ -69,6 +95,7 @@ printf "This error was expected, continuing.\n"
 sh ./target_unload.sh
 if test $? -ne 0; then
     printf "Failed to unload the target module: ${TARGET_NAME}\n"
+    /sbin/rmmod "${PAYLOAD_NAME}" "@CONTROLLER_NAME@" "@BASE_NAME@"
     exit 1
 fi
 cd "${WORK_DIR}"
@@ -76,12 +103,14 @@ cd "${WORK_DIR}"
 /sbin/rmmod "${PAYLOAD_NAME}"
 if test $? -ne 0; then
     printf "Failed to unload the payload module: ${PAYLOAD_NAME}\n"
+    /sbin/rmmod "@CONTROLLER_NAME@" "@BASE_NAME@"
     exit 1
 fi
 
 /sbin/rmmod "@CONTROLLER_NAME@"
 if test $? -ne 0; then
     printf "Failed to unload the controller module\n"
+    /sbin/rmmod "@BASE_NAME@"
     exit 1
 fi
 
