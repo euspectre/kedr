@@ -7,6 +7,7 @@
 # The target module is expected to be <target_name>/<target_name>.ko.
 ########################################################################
 WORK_DIR=${PWD}
+KEDR_TEST_DEVICE=/dev/kedr_test
 
 if test $# -ne 1; then
     printf "Usage: /bin/bash ins_rm_with_target.sh <target_name\n"
@@ -54,6 +55,7 @@ fi
 #   load controller
 #   load target
 #   try to unload controller (must fail)
+#   write some data to the device created by the target
 #   unload target
 #   unload the payload module
 #   unload controller (must succeed this time)
@@ -79,6 +81,13 @@ if test $? -ne 0; then
     printf "Failed to load the target module: ${TARGET_MODULE}\n"
     /sbin/rmmod "${PAYLOAD_NAME}" "@CONTROLLER_NAME@" "@BASE_NAME@"
     exit 1
+fi
+
+printf "Sending some data to the device created by the target\n"
+echo "abracadabra123456789" > ${KEDR_TEST_DEVICE}
+if test $? -ne 0; then
+    printf "Errors occured while trying to write to ${KEDR_TEST_DEVICE}\n"
+# A kind of a non-fatal assertion.
 fi
 
 printf "Trying to unload the controller while the target is under analysis (must fail)\n"
@@ -113,6 +122,8 @@ if test $? -ne 0; then
     /sbin/rmmod "@BASE_NAME@"
     exit 1
 fi
+
+/sbin/rmmod "@BASE_NAME@" || exit 1
 
 # test passed
 exit 0

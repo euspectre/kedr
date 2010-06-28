@@ -43,7 +43,13 @@ static void*
 repl___kmalloc(size_t size, gfp_t flags)
 {
 	void* returnValue;
-
+	
+	printk(KERN_INFO 
+	"[simple_payload] __kmalloc called from \"%s\" part of the target code.\n",
+		(kedr_target_module_in_init() ? "init" : "core" )
+	);
+	
+	
 	/* Call the target function */
 	returnValue = __kmalloc(size, flags);
     /* Do nothing more */
