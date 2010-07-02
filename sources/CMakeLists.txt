@@ -31,11 +31,21 @@ include(kmodule)
 
 #######################################################################
 # See conventions
-set(KEDR_INSTALL_PREFIX_LIB "lib")
-set(KEDR_INSTALL_PREFIX_INCLUDE "include/kedr")
-#set(KEDR_INSTALL_PREFIX_KINCLUDE "include/kedr")
-set(KEDR_INSTALL_PREFIX_KMODULE "lib/modules/${KBUILD_VERSION_STRING}/misc")
-set(KEDR_INSTALL_PREFIX_KSYMVERS "lib/modules/${KBUILD_VERSION_STRING}/symvers")
+set(KEDR_INSTALL_PREFIX_LIB "${CMAKE_INSTALL_PREFIX}/lib")
+set(KEDR_INSTALL_PREFIX_INCLUDE "${CMAKE_INSTALL_PREFIX}/include/kedr")
+#set(KEDR_INSTALL_PREFIX_KINCLUDE "${CMAKE_INSTALL_PREFIX}/include/kedr")
+set(KEDR_INSTALL_PREFIX_KMODULE "${CMAKE_INSTALL_PREFIX}/lib/modules/${KBUILD_VERSION_STRING}/misc")
+set(KEDR_INSTALL_PREFIX_KSYMVERS "${CMAKE_INSTALL_PREFIX}/lib/modules/${KBUILD_VERSION_STRING}/symvers")
+#
+string(REGEX MATCH "^/opt|^/usr|^/$" IS_GLOBAL_INSTALL ${CMAKE_INSTALL_PREFIX})
+if(IS_GLOBAL_INSTALL)
+    message("Global installation")
+    set(KEDR_INSTALL_PREFIX_VAR "/var/opt/kedr")
+else(IS_GLOBAL_INSTALL)
+    message("Local installation")
+    set(KEDR_INSTALL_PREFIX_VAR "${CMAKE_INSTALL_PREFIX}/var")
+endif(IS_GLOBAL_INSTALL)
+set(KEDR_INSTALL_PREFIX_EXEC "${CMAKE_INSTALL_PREFIX}/bin")
 
 #######################################################################
 # Initialize test-related stuff
@@ -103,6 +113,14 @@ add_subdirectory(fault_simulation)
 add_subdirectory(kedr)
 
 add_subdirectory(mist_gen)
+
+#Configuration-files for collect payloads
+set(kedr_cm_conf_filename "kedr_cm.conf")
+set(kedr_cm_conf_file "${CMAKE_BINARY_DIR}/tools/service/${kedr_cm_conf_filename}")
+set(kedr_test_cm_conf_filename "kedr_cm_test.conf")
+set(kedr_test_cm_conf_file "${CMAKE_BINARY_DIR}/tools/service/${kedr_test_cm_conf_filename}")
+# should be before payloads
+add_subdirectory(tools)
 add_subdirectory(payloads_callm)
 
 # Documentation

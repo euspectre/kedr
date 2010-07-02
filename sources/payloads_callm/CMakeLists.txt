@@ -85,6 +85,12 @@ macro(kedr_configure_data_pieces output_filelist)
 	endforeach(arg ${ARGN})
 endmacro(kedr_configure_data_pieces output_filelist)
 
+# See callm_payloads_conf_build and callm_payloads_conf_install variables description in the parent directory.
+macro(kedr_add_default_cm_payload payload_name)
+    file(APPEND ${kedr_cm_conf_file} "payload ${KEDR_INSTALL_PREFIX_KMODULE}/${payload_name}.ko" "\n")
+    file(APPEND ${kedr_test_cm_conf_file} "payload ${CMAKE_CURRENT_BINARY_DIR}/${payload_name}.ko" "\n")
+endmacro(kedr_add_default_cm_payload payload_name)
+
 add_subdirectory(common_memory_management)
 add_subdirectory(mutexes)
 add_subdirectory(spinlocks)

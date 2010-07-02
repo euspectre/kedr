@@ -1,0 +1,324 @@
+#!/bin/sh
+
+# Usage: 
+# kedr.sh start target_name [-c conf_string(s) | conf_file] ...
+# kedr.sh stop
+# kedr.sh status
+#
+# 'start' - start KEDR, when it is not started, for watching for given target.
+# Use config file @DEFAULT_KEDR_CONF_FILE@, if no other arguments are passed.
+# Otherwise, join config strings and config files, passed to it, into one config file,
+# and use it instead default.
+#
+# 'stop' - stop KEDR, if it was running.
+#
+# 'status' - output current state of KEDR.
+
+# default config file
+default_config_file=@DEFAULT_KEDR_CONF_FILE@
+
+# commands for kernel module control
+MODPROBE=/sbin/modprobe
+INSMOD=/sbin/insmod
+RMMOD=/sbin/rmmod
+
+# directory for temporary files
+tmp_dir=/tmp/kedr
+
+# commands(in format of config file), used for last start KEDR
+start_conf_file=${tmp_dir}/start.conf
+
+
+if test $# -eq 0; then
+    echo start, stop or status command should be specified
+    exit 1
+fi
+
+# execute command_line
+#
+# Execute command line, passed to it.
+execute()
+{
+#    echo "execute: $*"
+    eval $*
+}
+
+# get_module_name module_file|module_name
+#
+# For module file, return name of module, for module name return itself
+get_module_name()
+{
+    echo $1 | sed 's/^.*\///;s/\..*$//'
+}
+
+# is_module_running module_name
+#
+# Determine, whether module with given name(not from module file!), is currently running.
+is_module_running()
+{
+    /sbin/lsmod | grep "^$1[[:blank:]]\{1,\}" &> /dev/null
+}
+
+# resolve_module_alias alias
+#
+# If given parameter is alias for some module, return name of this module.
+# Otherwise, return parameter itself, as if it is module name.
+resolve_module_alias()
+{
+    #not implemented yet
+    echo -n $1
+}
+
+# collect_conf_file target_file [-c conf_string | conf_file]...
+#
+# Build config file from pieses: config string or config files.
+# If target file exists - append.
+collect_conf_file()
+{
+    target_conf_file=$1
+    shift
+    while test $# -gt 0; do
+        if test "$1" = "-c"; then
+            shift
+            if test $# -eq 0; then
+                echo "After '-c' parameter should be config string(s)"
+                rm -f ${target_conf_file}
+                exit 1
+            fi
+            echo -e "$1" >> ${target_conf_file}
+        else
+            cat "$1" >> ${target_conf_file}
+            echo -e "\n" >> ${target_conf_file}
+        fi
+        shift
+    done
+}
+
+# Some regular expressions for parsing configuration file
+regex_parse_conf="  /^#/ d;\
+                    /^[[:blank:]]\{0,\}$/ d;\
+                    s/^on_load[[:blank:]]\{1,\}//; t on_load;\
+                    s/^on_unload[[:blank:]]\{1,\}//; t on_unload;\
+                    s/^module[[:blank:]]\{1,\}//; t module;\
+                    s/^payload[[:blank:]]\{1,\}//; t payload;\
+                    b error;"
+
+alias_alphabet="[^\.\/[:blank:]]"
+regex_is_alias="/^${alias_alphabet}\{1,\}\([[:blank:]]\|$\)/ b alias; b notalias"
+
+# parse_conf_payloads conf_file
+#
+# Translate config file to the payloads list.
+# Each payload is prepended with a string, determine its type:
+# 'm' - module name, 'a' - probably, alias(or module name).
+parse_conf_payloads()
+{
+    sed -n -e  "${regex_parse_conf}" -e ":payload; s/[[:blank:]].\{0,\}//;" -e "${regex_is_alias}" \
+            -e ":alias; s/^/a\n/p; d; :notalias; s/^.\{0,\}\///; s/\..\{0,\}$//; s/^/m\n/p; d" \
+            -e ":on_load; :on_unload; :module; :error; d" "$1"
+}
+
+# parse_conf_on_load conf_file
+#
+# Translate config file to the list of commands for loading KEDR.
+# Each command string is prepended with a string, contains ordinal number of the source string.
+parse_conf_on_load()
+{
+    sed -n -e "${regex_parse_conf}" -e ":module; :payload; ${regex_is_alias};"\
+            -e ":alias; s!^!/sbin/modprobe !; b out; :notalias; s!^!/sbin/insmod !; b out;"\
+            -e ":on_load; b out; :on_unload; d"\
+            -e ":error; s/^/echo \"Incorrect config line '/; s/$/'\"/;"\
+            -e ":out; =; p; " "$1"
+}
+
+# parse_conf_on_unload conf_file [line_number]
+#
+# Translate config file to the list of commands for unloading KEDR.
+# Optional line_number argument means to translate
+# only up to 'line_number' line(exclusive) in the configuration file.
+parse_conf_on_unload()
+{
+    if test $2; then
+        up_to_line="${2}q"
+    else
+        up_to_line=":start"
+    fi
+    sed -n  -e ${up_to_line} -e "${regex_parse_conf}" -e ":module; :payload; s/[[:blank:]].\{0,\}//; ${regex_is_alias};"\
+            -e ":alias; s!^!/sbin/modprobe -r !; b out; :notalias; s!^!/sbin/rmmod !; b out;"\
+            -e ":on_unload; b out; :on_load; d"\
+            -e ":error; s/^/echo \"Incorrect config line '/; s/$/'\"/;"\
+            -e ":out; p; " "$1" | sed '1!G;h;$!d'
+}
+
+#list_loaded_payloads conf_file
+#
+# Output names(one for line) of those payloads modules, which is currently running.
+list_loaded_payloads()
+{
+    OLD_IFS=${IFS}
+    IFS=$'\n'
+    # Output parsing results into file for debugging purposes.
+    parse_conf_payloads $1 > ${tmp_dir}/payloads_tmp.txt
+    payload_type=
+    for LINE in `cat ${tmp_dir}/payloads_tmp.txt`; do
+        IFS=${OLD_IFS}
+        if test -z ${payload_type}; then
+            # Store type of payload.
+            payload_type=${LINE}
+        else
+            payload_name=${LINE}
+            if test ${payload_type} = "a"; then
+                payload_name=`resolve_module_alias ${payload_name}`
+            fi
+            if is_module_running $payload_name; then 
+                echo ${LINE}
+            fi
+        fi
+        IFS=$'\n'
+    done;
+    IFS=${OLD_IFS}
+}
+
+# execute_conf_on_load conf_file
+#
+# Execute lines in the configuration file in 'on_load' mode.
+execute_conf_on_load()
+{
+    OLD_IFS=${IFS}
+    IFS=$'\n'
+    # Output parsing results into file for debugging purposes.
+    parse_conf_on_load $1 > ${tmp_dir}/commands_tmp.txt
+    line_number=
+    for LINE in `cat ${tmp_dir}/commands_tmp.txt`; do
+        IFS=${OLD_IFS}
+        if test -z ${line_number}; then
+            # Store executed line for rollback in case of error, when this line will be executed.
+            line_number=${LINE}
+        else
+            if ! execute ${LINE}; then 
+                echo "Fail to execute commands for start.. rollback."
+                rollback ${start_conf_file} $line_number
+                return 1
+            fi
+            line_number=
+        fi
+        IFS=$'\n'
+    done;
+    IFS=${OLD_IFS}
+}
+
+# execute_conf_on_unload conf_file
+#
+# Execute lines in the configuration file in 'on_load' mode.
+execute_conf_on_unload()
+{
+    OLD_IFS=${IFS}
+    IFS=$'\n'
+    for LINE in `parse_conf_on_unload $1`; do
+        IFS=${OLD_IFS}
+        execute ${LINE}
+        IFS=$'\n'
+    done;
+    IFS=${OLD_IFS}
+}
+# rollback conf_file string_number
+#
+# Rollback first 'string_number' commands from the config files(performs unload operation for them)
+rollback()
+{
+    OLD_IFS=${IFS}
+    IFS=$'\n'
+    for LINE in `parse_conf_on_unload ${start_conf_file} $2`; do
+        IFS=${OLD_IFS}
+        execute ${LINE}
+        IFS=$'\n'
+    done;
+    IFS=${OLD_IFS}
+}
+
+
+base_name=`get_module_name @BASE_MODULE@`
+controller_name=`get_module_name @CONTROLLER_MODULE@`
+target_name=
+command=$1
+shift
+#
+base_is_running=0
+controller_is_running=0
+target_is_running=0
+
+# Collect status information of KEDR
+if is_module_running ${base_name}; then
+    base_is_running=1
+    if is_module_running ${controller_name}; then
+        controller_is_running=1
+        target_name=`cat /sys/module/${controller_name}/parameters/target_name`
+        if is_module_running ${target_name}; then
+            target_is_running=1
+        fi
+    fi
+fi
+
+case ${command} in
+start)
+    if test ${base_is_running} -ne 0; then
+        echo "Service already running. For stop it call '$0 stop'"
+        exit 1
+    fi
+    if test $# -eq 0; then
+        echo "For start command name of the target module should be specified as the second argument"
+        exit 1
+    fi
+    target_name=`get_module_name $1`
+    shift
+    #collect all parts of the configuration to the ${start_conf_file}
+    mkdir -p ${tmp_dir} || (echo "Cannot create directory for temporary files" && exit 1)
+    #empty file
+    echo "" > ${start_conf_file} || (echo "Cannot write to temporary file" && exit 1)
+
+    collect_conf_file ${start_conf_file} -c "module @BASE_MODULE@"
+    if test $# -eq 0; then
+        collect_conf_file ${start_conf_file} ${default_config_file}
+    else
+        collect_conf_file ${start_conf_file} "$@"
+    fi
+    collect_conf_file ${start_conf_file} -c "module @CONTROLLER_MODULE@ target_name=${target_name}"
+
+    execute_conf_on_load ${start_conf_file}
+    if test $? -ne 0; then
+        # In the release version next line should be uncommented
+        #rm -f ${start_conf_file}
+        exit 1
+    fi
+    echo "KEDR started."
+    ;;
+stop)
+    if test ${base_is_running} -eq 0; then
+        echo "Service is not running. For start it call '$0 start'"
+        exit 1
+    fi
+    execute_conf_on_unload ${start_conf_file}
+    rm -f ${start_conf_file}
+    echo "KEDR stopped."
+    ;;
+status)
+    if test ${base_is_running} -ne 0; then
+        echo "Base is running, payloads:"
+        list_loaded_payloads ${start_conf_file}
+        if test ${controller_is_running} -ne 0; then
+            echo "Controller is running, target is '${target_name}'"
+            if test ${target_is_running} -ne 0; then
+                echo "Target is running"
+            else
+                echo "Target is not running"
+            fi;
+        else
+            echo "Controller is not running"
+        fi;
+    else
+        echo "Base is not running"
+    fi;
+    ;;
+*)
+    echo "incorrect command '$command' to service, should be 'start', 'stop' or 'status'."
+esac

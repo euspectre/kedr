@@ -36,3 +36,5 @@ rules_build_datafile(${kmodule_data_file} "beginning.data"
 	${functions_data})
 
 kedr_install_kmodule(${kmodule_name})
+
+kedr_add_default_cm_payload(${kmodule_name})
