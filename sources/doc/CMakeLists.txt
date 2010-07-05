@@ -9,6 +9,7 @@ add_custom_target(doc ALL)
 # from DocBook sources. Otherwise the stored version of the docs will be 
 # simply copied to the build tree, ready to be installed.
 ########################################################################
+option(KEDR_GENERATE_DOC "Whether need to generate documentation from sources." OFF)
 
 # Directory for the documentation in HTML format in the binary tree.
 set (KEDR_HTML_DIR "${CMAKE_CURRENT_BINARY_DIR}/html")
@@ -23,10 +24,11 @@ if (KEDR_GENERATE_DOC)
     message (STATUS 
 "Checking whether to generate the documentation from DocBook sources - yes"
     )
-
+    SET(DOCBOOK_DTD_FILE "${CMAKE_SOURCE_DIR}/../dtd/docbookx.dtd" CACHE FILEPATH "Path to DTD file for DocBook")
+    SET(DOCBOOK_XSL_PATH "${CMAKE_SOURCE_DIR}/../xsl" CACHE PATH "Directory containing XSL stylesheets for DocBook")
 # Check if xsltproc tool, DTD and XSL files are available.
     message (STATUS "Checking for xsltproc")
-    find_program (XSLTPROC xsltproc)
+    find_program (XSLTPROC xsltproc DOC "Path to xsltproc tool.")
     if (NOT XSLTPROC)
         message (FATAL_ERROR 
 "xsltproc tool is not found. It is usually provided by 'libxslt' package or something similar."
@@ -35,9 +37,6 @@ if (KEDR_GENERATE_DOC)
         message (STATUS "Checking for xsltproc: ${XSLTPROC}")
     endif ()
 
-    if (NOT DOCBOOK_DTD_FILE)
-        set (DOCBOOK_DTD_FILE "${CMAKE_SOURCE_DIR}/../dtd/docbookx.dtd")
-    endif ()
     if (NOT EXISTS "${DOCBOOK_DTD_FILE}")
         message (STATUS 
         "DocBook DTD file is missing: ${DOCBOOK_DTD_FILE}"
@@ -48,9 +47,6 @@ if (KEDR_GENERATE_DOC)
     endif ()
     message (STATUS "DocBook DTD file is ${DOCBOOK_DTD_FILE}")
     
-    if (NOT DOCBOOK_XSL_PATH)
-        set (DOCBOOK_XSL_PATH "${CMAKE_SOURCE_DIR}/../xsl")
-    endif ()
     if (NOT EXISTS "${DOCBOOK_XSL_PATH}/html/")
         message (STATUS 
         "No XSL stylesheets for HTML found in ${DOCBOOK_XSL_PATH}"
