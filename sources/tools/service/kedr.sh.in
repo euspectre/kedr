@@ -3,6 +3,7 @@
 # Usage: 
 # kedr.sh start target_name [-c conf_string(s) | conf_file] ...
 # kedr.sh stop
+# kedr.sh restart
 # kedr.sh status
 #
 # 'start' - start KEDR, when it is not started, for watching for given target.
@@ -11,6 +12,8 @@
 # and use it instead default.
 #
 # 'stop' - stop KEDR, if it was running.
+#
+# 'restart' - stop KEDR and start it with same configuration.
 #
 # 'status' - output current state of KEDR.
 
@@ -271,6 +274,11 @@ start)
     fi
     target_name=`get_module_name $1`
     shift
+    if test ${target_is_running} -ne 0; then
+        echo "Cannot start KEDR for watch target module, which is currently loaded. Unload target module firstly."
+        exit 1
+    fi
+    echo "Starting KEDR..."
     #collect all parts of the configuration to the ${start_conf_file}
     mkdir -p ${tmp_dir} || (echo "Cannot create directory for temporary files" && exit 1)
     #empty file
@@ -297,6 +305,11 @@ stop)
         echo "Service is not running. For start it call '$0 start'"
         exit 1
     fi
+    if test ${target_is_running} -ne 0; then
+        echo "Cannot stop KEDR when it watched for target module, which is currently loaded. Unload target module firstly."
+        exit 1
+    fi
+    echo "Stopping KEDR..."
     execute_conf_on_unload ${start_conf_file}
     rm -f ${start_conf_file}
     echo "KEDR stopped."
@@ -319,6 +332,30 @@ status)
         echo "Base is not running"
     fi;
     ;;
+restart)
+    if test ${base_is_running} -eq 0; then
+        echo "Service is not running. For start it call '$0 start'"
+        exit 1
+    fi
+    if test ${target_is_running} -ne 0; then
+        echo "Cannot stop KEDR when it watched for target module, which is currently loaded. Unload target module firstly."
+        exit 1
+    fi
+    echo "Stopping KEDR..."
+    execute_conf_on_unload ${start_conf_file}
+    if is_module_running ${base_name}; then
+        echo "Failed to stop KEDR"
+        exit 1
+    fi
+    echo "Starting KEDR..."
+    execute_conf_on_load ${start_conf_file}
+    if test $? -ne 0; then
+        echo "Failed to start KEDR again."
+        rm -f ${start_conf_file}
+        exit 1
+    fi
+    echo "KEDR started."
+    ;;
 *)
-    echo "incorrect command '$command' to service, should be 'start', 'stop' or 'status'."
+    echo "incorrect command '$command' to service, should be 'start', 'stop', 'restart' or 'status'."
 esac
