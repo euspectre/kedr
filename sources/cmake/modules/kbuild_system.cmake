@@ -36,9 +36,10 @@ set(kbuild_cflags)
 # from "${name}.c" source.
 
 function(kbuild_add_module name)
+    set(symvers_file ${CMAKE_CURRENT_BINARY_DIR}/Module.symvers)
 	#Global target
 	add_custom_target(${name} ALL
-			DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${name}.ko)
+			DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${name}.ko ${symvers_file})
 	#Sources
 	if(ARGN)
 		set(sources ${ARGN})
@@ -158,21 +159,18 @@ function(kbuild_add_module name)
 					)
 	
     # Create rules, depending on kbuild_use_symbols call
-	set(symvers_file ${CMAKE_CURRENT_BINARY_DIR}/Module.symvers)
 	if(kbuild_symbol_files)
-		list(APPEND depend_files ${symvers_file})
-
-		add_custom_command(OUTPUT ${symvers_file}
+    	add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${name}.ko ${symvers_file}
 				COMMAND cat ${kbuild_symbol_files} >> ${symvers_file}
-				DEPENDS ${kbuild_symbol_files}
-				)
+    			COMMAND make -C ${KBUILD_BUILD_DIR} M=${CMAKE_CURRENT_BINARY_DIR} modules
+    			DEPENDS ${depend_files} ${kbuild_symbol_files}
+                )
 	else(kbuild_symbol_files)
-		list(APPEND clean_files_list ${symvers_file})
+    	add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${name}.ko ${symvers_file}
+    			COMMAND make -C ${KBUILD_BUILD_DIR} M=${CMAKE_CURRENT_BINARY_DIR} modules
+    			DEPENDS ${depend_files}
+    			)
 	endif(kbuild_symbol_files)
-	add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${name}.ko
-			COMMAND make -C ${KBUILD_BUILD_DIR} M=${CMAKE_CURRENT_BINARY_DIR} modules
-			DEPENDS ${depend_files}
-			)
 
 	set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${clean_files_list}")
 endfunction(kbuild_add_module name)

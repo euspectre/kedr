@@ -7,7 +7,9 @@ kbuild_use_symbols(
 
 kbuild_add_module(${kmodule_name}
 	"fsim_indicator_manager_module.c"
-	"${CMAKE_BINARY_DIR}/module_weak_ref/module_weak_ref.o")
+	"module_weak_ref.c")
+
+rule_copy_file("module_weak_ref.c" "${CMAKE_SOURCE_DIR}/module_weak_ref/module_weak_ref.c")
 
 kedr_install_kmodule(${kmodule_name})
 kedr_install_symvers(${kmodule_name})
