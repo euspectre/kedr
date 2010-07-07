@@ -16,3 +16,6 @@
 <!-- various URLs  -->
 <!ENTITY kedr-url           "https://developer.berlios.de/projects/kedr/">
 <!ENTITY kernel-url         "http://kernel.org/">
+
+<!-- service script -->
+<!ENTITY kedr-service        "kedr">

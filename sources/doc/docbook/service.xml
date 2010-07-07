@@ -1,0 +1,208 @@
+<section id="kedr_service">
+<title>Service for control KEDR</title>
+
+<section id="kedr_service.general">
+<title>General</title>
+<para>
+    <command>&kedr-service;</command> - service-like tool for simplify control of KEDR.
+</para>
+</section>
+
+<section id="kedr_service.syntax">
+<title>Usage</title>
+
+<cmdsynopsis>
+    <command>&kedr-service; start</command>
+    <arg choice='plain'><replaceable>target_name</replaceable></arg>
+    <group rep="repeat">
+        <arg choice='plain'>-c <replaceable>conf_string</replaceable></arg>
+        <arg choice='plain'><replaceable>conf_file</replaceable></arg>
+    </group>
+</cmdsynopsis>
+<cmdsynopsis>
+    <command>&kedr-service; stop</command>
+</cmdsynopsis>
+<cmdsynopsis>
+    <command>&kedr-service; status</command>
+</cmdsynopsis>
+<cmdsynopsis>
+    <command>&kedr-service; restart</command>
+</cmdsynopsis>
+</section>
+<section id="kedr_service.options">
+<title>Options</title>
+
+<variablelist>
+    <varlistentry>
+        <term><option>-c</option> <replaceable>conf_string</replaceable></term>
+        <listitem>
+            <para>
+Use configuration string <replaceable>conf_string</replaceable> instead of default configuration file.
+            </para>
+        </listitem>
+    </varlistentry>
+    <varlistentry>
+        <term><replaceable>conf_file</replaceable></term>
+        <listitem>
+            <para>
+Use configuration file <replaceable>conf_file</replaceable> instead of default configuration file.
+            </para>
+        </listitem>
+    </varlistentry>
+</variablelist>
+            <para>
+All <replaceable>conf_string</replaceable> and(or) <replaceable>conf_file</replaceable>, which appears in the command options, joined into one configuration file in the same order, as them appear in the command line, and resulting file is used as configuration file for the command.
+            </para>
+            <para>
+If no <replaceable>conf_string</replaceable> and <replaceable>conf_file</replaceable> options are given, command use default configurations file, which is <filename>/var/opt/kedr/kedr.conf</filename> or <filename>%prefix%/var/kedr.conf</filename>.
+
+            </para>
+
+</section>
+<section id="kedr_service.description">
+<title>Description</title>
+    <section id="kedr_service.description.start">
+    <title>&kedr-service; start</title>
+        <para>
+<command>&kedr-service; start</command> firstly loads KEDR module kedr_base. Then it translate configuration file(default or given by the options, see <xref linkend="kedr_service.options"></xref>) in the <quote>on_load</quote> mode and execute all resulting strings. Finally, KEDR module kedr_controller is loaded, with target_name parameter equal to <replaceable>target_name</replaceable>.
+        </para>
+        <para>
+If kedr_base module is already loaded, <command>&kedr-service; start</command> does nothing and returns 1.
+        </para>
+        <para>
+If module with name <replaceable>target_name</replaceable> is currently loaded, <command>&kedr-service; start</command> does nothing and returns 1.
+        </para>
+        <para>
+If starting kedr_base or kedr_controller modules, or processing some line in configuration file failed(return not 0), rollback is performed. That is, all lines in configuration file, up to the failed line, are processed in <quote>on_unload</quote> mode, and kedr_base module is unloaded(if it was started successfully). Then 1 is returned.
+        </para>
+    </section>
+
+    <section id="kedr_service.description.stop">
+    <title>&kedr-service; stop</title>
+        <para>
+<command>&kedr-service; stop</command> firstly unload KEDR module kedr_controller. Then translate configuration file, that was used at the last start, in <quote>on_unload</quote> mode and execute resulting strings. Finally, module kedr_base is unloaded.
+        </para>
+        <para>
+If kedr_base module was not started, <command>&kedr-service; stop</command> does nothing and returns 1.
+        </para>
+        <para>
+If module with name <replaceable>target_name</replaceable> is currently running, <command>&kedr-service; stop</command> does nothing and returns 1 error code.
+        </para>
+    </section>
+
+    <section id="kedr_service.description.status">
+    <title>&kedr-service; status</title>
+        <para>
+<command>&kedr-service; status</command> output information about status of KEDR.
+That is: whether kedr_base kernel module is loaded, what payload modules are currently loaded, whether kedr_controller module is loaded, whether module, for which controller should watch(target module), is currently loaded.
+        </para>
+    </section>
+
+    <section id="kedr_service.description.restart">
+    <title>&kedr-service; restart</title>
+        <para>
+<command>&kedr-service; restart</command> does efficiently same as
+            <programlisting>
+<command>&kedr-service; stop</command> &amp;&amp; <command>&kedr-service; start</command> <replaceable>target_name</replaceable> <replaceable>conf_file</replaceable>
+            </programlisting>
+with <replaceable>target_name</replaceable> equal to current name of the target and <replaceable>conf_file</replaceable> equal to the configuration file(default or constructed from options), with which KEDR was started last time.
+        </para>
+        <para>
+If kedr_base module is not currently loading, <command>&kedr-service; restart</command> does nothing and returns 1.
+        </para>
+        <para>
+If module with name <replaceable>target_name</replaceable> is currently loading, <command>&kedr-service; restart</command> does nothing and returns 1.
+        </para>
+        <para>
+If after executing stop stage kedr_base module is loaded, start stage will not be executed and <command>&kedr-service; restart</command> returns 1.
+        </para>
+    </section>
+</section>
+
+<section id="kedr_service.config_file">
+<title>Configuration file</title>
+    <para>
+        Configurations file is treated as ordered array of lines of given formats:
+        <simplelist>
+            <member>
+                <synopsis>
+<literal>on_load</literal> <replaceable>shell-command</replaceable>
+                </synopsis>
+            </member>
+            <member>
+                <synopsis>
+<literal>on_unload</literal> <replaceable>shell-command</replaceable>
+                </synopsis>
+            </member>
+            <member>
+                <synopsis>
+<literal>module</literal>|<literal>payload</literal> <replaceable>module-name</replaceable>|<replaceable>module-filename</replaceable> <optional><replaceable>parameters...</replaceable></optional>
+                 </synopsis>
+            </member>
+        </simplelist>
+    </para>
+    <para>
+        Also, empty lines, lines containing only spaces and lines started with <literal>#</literal> are allowed and ignored when parsing configuration file.
+    </para>
+    <para>
+        Line, containing <replaceable>shell-command</replaceable>, prepended by <literal>on_load</literal>, executed in <quote>on_load</quote> mode and ignored otherwise.
+    </para>
+    <para>
+        Line, containing <replaceable>shell-command</replaceable>, prepended by <literal>on_unload</literal>, executed in <quote>on_unload</quote> mode and ignored otherwise.
+    </para>
+    <para>
+Line
+        <synopsis>
+<literal>module</literal> <replaceable>module-name</replaceable> <optional><replaceable>parameters...</replaceable></optional>
+        </synopsis>
+where <replaceable>module-name</replaceable> is name of module or its alias, is efficiently equivalent to
+        <programlisting>
+<literal>on_load</literal> modprobe <replaceable>module-name</replaceable> <optional><replaceable>parameters...</replaceable></optional>
+<literal>on_unload</literal> modprobe -r <replaceable>module-name</replaceable> 
+        </programlisting>
+    </para>
+    <para>
+Line
+        <synopsis>
+<literal>module</literal> <replaceable>module-filename</replaceable> <optional><replaceable>parameters...</replaceable></optional>
+        </synopsis>
+where <replaceable>module-filename</replaceable> is path(absolute) to the module, is efficiently equivalent to
+        <programlisting>
+<literal>on_load</literal> insmod <replaceable>module-filename</replaceable> <optional><replaceable>parameters...</replaceable></optional>
+<literal>on_unload</literal> rmmod <replaceable>module-filename</replaceable> 
+        </programlisting>
+    </para>
+    <para>
+Keyword <literal>payload</literal> at the start of the line have same meaning, as <literal>module</literal>, but also marks <replaceable>module-name</replaceable> or <replaceable>module-filename</replaceable> as payload module.
+    </para>
+    <para>
+        In <quote>on_load</quote> mode all translated lines in configuration file executed from the first to the last, in <quote>on_unload</quote> - from the last to the first (e.g, if module A is loaded after module B, then A unloaded before B).
+    </para>
+</section>
+<section id="kedr_service.examples">
+<title>Examples</title>
+    <para>
+After
+        <programlisting><![CDATA[
+kedr start module1
+        ]]></programlisting>
+KEDR will be started with default payloads and when module named <literal>module1</literal> will be loaded, it will be watched by the KEDR.
+    </para>
+    <para>
+        <programlisting><![CDATA[
+kedr start module1 -c 'payload payload1 arg1 arg2' -c 'payload payload2'
+        ]]></programlisting>
+do the same, but instead loading default payloads, it load payload <literal>payload1</literal> with arguments <literal>arg1</literal> <literal>arg2</literal> and <literal>payload2</literal>.
+    </para>
+    <para>
+If payload module <literal>payload1</literal> use symbols from module <literal>module1</literal>, then configuration file should contain
+        <programlisting>
+...
+module module1
+payload payload1
+...
+        </programlisting>
+(in that order!)
+    </para>
+</section>
+</section>

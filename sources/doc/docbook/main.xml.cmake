@@ -2,6 +2,7 @@
 <!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
     "@DOCBOOK_DTD_FILE@" [ 
         <!ENTITY % kedr-entities SYSTEM "entities.xml"> %kedr-entities; 
+        <!ENTITY kedr_service SYSTEM "service.xml">
         <!ENTITY kedr_intro SYSTEM "intro.xml">
         <!ENTITY kedr_call_mon SYSTEM "call_mon.xml">
         <!ENTITY kedr_extend SYSTEM "extend.xml">
@@ -59,5 +60,7 @@
 
 <!-- Tips and Tricks -->
 &kedr_tips;
+<!-- Controlling KEDR -->
+&kedr_service;
 	
 </article>
