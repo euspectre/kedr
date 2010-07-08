@@ -1,14 +1,14 @@
-<section id="kedr_service">
-<title>Service for control KEDR</title>
+<section id="kedr_control">
+<title>Service for controlling KEDR</title>
 
-<section id="kedr_service.general">
+<section id="kedr_control.general">
 <title>General</title>
 <para>
     <command>&kedr-service;</command> - service-like tool for simplify control of KEDR.
 </para>
 </section>
 
-<section id="kedr_service.syntax">
+<section id="kedr_control.syntax">
 <title>Usage</title>
 
 <cmdsynopsis>
@@ -29,7 +29,7 @@
     <command>&kedr-service; restart</command>
 </cmdsynopsis>
 </section>
-<section id="kedr_service.options">
+<section id="kedr_control.options">
 <title>Options</title>
 
 <variablelist>
@@ -59,12 +59,12 @@ If no <replaceable>conf_string</replaceable> and <replaceable>conf_file</replace
             </para>
 
 </section>
-<section id="kedr_service.description">
+<section id="kedr_control.description">
 <title>Description</title>
-    <section id="kedr_service.description.start">
+    <section id="kedr_control.description.start">
     <title>&kedr-service; start</title>
         <para>
-<command>&kedr-service; start</command> firstly loads KEDR module kedr_base. Then it translate configuration file(default or given by the options, see <xref linkend="kedr_service.options"></xref>) in the <quote>on_load</quote> mode and execute all resulting strings. Finally, KEDR module kedr_controller is loaded, with target_name parameter equal to <replaceable>target_name</replaceable>.
+<command>&kedr-service; start</command> firstly loads KEDR module kedr_base. Then it translate configuration file(default or given by the options, see <xref linkend="kedr_control.options"></xref>) in the <quote>on_load</quote> mode and execute all resulting strings. Finally, KEDR module kedr_controller is loaded, with target_name parameter equal to <replaceable>target_name</replaceable>.
         </para>
         <para>
 If kedr_base module is already loaded, <command>&kedr-service; start</command> does nothing and returns 1.
@@ -77,7 +77,7 @@ If starting kedr_base or kedr_controller modules, or processing some line in con
         </para>
     </section>
 
-    <section id="kedr_service.description.stop">
+    <section id="kedr_control.description.stop">
     <title>&kedr-service; stop</title>
         <para>
 <command>&kedr-service; stop</command> firstly unload KEDR module kedr_controller. Then translate configuration file, that was used at the last start, in <quote>on_unload</quote> mode and execute resulting strings. Finally, module kedr_base is unloaded.
@@ -90,7 +90,7 @@ If module with name <replaceable>target_name</replaceable> is currently running,
         </para>
     </section>
 
-    <section id="kedr_service.description.status">
+    <section id="kedr_control.description.status">
     <title>&kedr-service; status</title>
         <para>
 <command>&kedr-service; status</command> output information about status of KEDR.
@@ -98,7 +98,7 @@ That is: whether kedr_base kernel module is loaded, what payload modules are cur
         </para>
     </section>
 
-    <section id="kedr_service.description.restart">
+    <section id="kedr_control.description.restart">
     <title>&kedr-service; restart</title>
         <para>
 <command>&kedr-service; restart</command> does efficiently same as
@@ -119,7 +119,7 @@ If after executing stop stage kedr_base module is loaded, start stage will not b
     </section>
 </section>
 
-<section id="kedr_service.config_file">
+<section id="kedr_control.config_file">
 <title>Configuration file</title>
     <para>
         Configurations file is treated as ordered array of lines of given formats:
@@ -179,7 +179,7 @@ Keyword <literal>payload</literal> at the start of the line have same meaning, a
         In <quote>on_load</quote> mode all translated lines in configuration file executed from the first to the last, in <quote>on_unload</quote> - from the last to the first (e.g, if module A is loaded after module B, then A unloaded before B).
     </para>
 </section>
-<section id="kedr_service.examples">
+<section id="kedr_control.examples">
 <title>Examples</title>
     <para>
 After

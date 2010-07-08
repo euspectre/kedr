@@ -1,0 +1,84 @@
+<section id="capture_trace">
+<title>Service for capturing trace into file</title>
+
+<section id="capture_trace.general">
+<title>General</title>
+<para>
+    <command>capture_trace</command> - service-like tool for capture output of payloads' tracepoints into file, specified by user.
+</para>
+</section>
+
+<section id="capture_trace.syntax">
+<title>Usage</title>
+
+<cmdsynopsis>
+    <command>capture_trace start</command>
+    <arg choice='plain'><replaceable>file</replaceable></arg>
+    <arg><replaceable>debugfs_mount_point</replaceable></arg>
+</cmdsynopsis>
+<cmdsynopsis>
+    <command>capture_trace stop</command>
+</cmdsynopsis>
+<cmdsynopsis>
+    <command>capture_trace status</command>
+</cmdsynopsis>
+</section>
+<section id="capture_trace.options">
+<title>Options</title>
+
+<variablelist>
+    <varlistentry>
+        <term><replaceable>file</replaceable></term>
+        <listitem>
+            <para>
+Path to file, where to store results of capturing.
+            </para>
+        </listitem>
+    </varlistentry>
+    <varlistentry>
+        <term><replaceable>debugfs_mount_point</replaceable></term>
+        <listitem>
+            <para>
+Directory, where debugfs filesystem is currently mounted. This filesystem contains tracing file, which will be capturing. When argument is not supplied,
+it is assumed that mount point of debugfs filesystem is <filename>/sys/kernel/debug</filename>.
+            </para>
+        </listitem>
+    </varlistentry>
+</variablelist>
+</section>
+<section id="capture_trace.description">
+<title>Description</title>
+    <section id="capture_trace.description.start">
+    <title>capture_trace start</title>
+        <para>
+<command>capture_trace start</command> start to capturing output into tracing file and store this output into file <replaceable>file</replaceable>. Note, that all strings, stored in <replaceable>file</replaceable>, are deleted from tracing file.
+        </para>
+        <para>
+If capturing already started, <command>capture_trace start</command> does nothing and returns 1.
+        </para>
+    </section>
+
+    <section id="capture_trace.description.stop">
+    <title>capture_trace stop</title>
+        <para>
+<command>capture_trace stop</command> stops to capturing tracing file. After this command is returned, all tracing strings are stored into tracing file as usual.
+        </para>
+        <para>
+If capturing is not started, <command>capture_trace stop</command> does nothing and returns 1.
+        </para>
+    </section>
+
+    <section id="capture_trace.description.status">
+    <title>&kedr-service; status</title>
+        <para>
+<command>capture_trace status</command> report, whether capturing was started or not. In the future, it may also report, into what file trace is stored.
+        </para>
+    </section>
+</section>
+<section id="capture_trace.examples">
+<title>Examples</title>
+    <para>
+Will be in the getted started.    
+    </para>
+</section>
+</section>
