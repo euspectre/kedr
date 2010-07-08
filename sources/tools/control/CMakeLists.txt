@@ -32,7 +32,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/kedr.in
                 @ONLY)
 
 #same for configure kedr_test.sh(for tests)
-set(DEFAULT_KEDR_CONF_FILE "${CMAKE_CURRENT_BINARY_DIR}/${kedr_conf_filename}")
+set(DEFAULT_KEDR_CONF_FILE "${CMAKE_CURRENT_BINARY_DIR}/${kedr_test_conf_filename}")
 
 set(BASE_MODULE "${CMAKE_BINARY_DIR}/base/kedr_base.ko")
 set(CONTROLLER_MODULE "${CMAKE_BINARY_DIR}/controller/kedr_controller.ko")
@@ -40,8 +40,6 @@ set(CONTROLLER_MODULE "${CMAKE_BINARY_DIR}/controller/kedr_controller.ko")
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/kedr.in
                 ${CMAKE_CURRENT_BINARY_DIR}/kedr_test
                 @ONLY)
-
-
 
 install(FILES "${kedr_cm_conf_file}" "${kedr_conf_file}"
 			DESTINATION "${KEDR_INSTALL_PREFIX_VAR}"

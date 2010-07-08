@@ -116,10 +116,18 @@ add_subdirectory(mist_gen)
 
 #Configuration-files for collect payloads
 set(kedr_cm_conf_filename "kedr_cm.conf")
-set(kedr_cm_conf_file "${CMAKE_BINARY_DIR}/tools/service/${kedr_cm_conf_filename}")
+set(kedr_cm_conf_file "${CMAKE_BINARY_DIR}/tools/control/${kedr_cm_conf_filename}")
 set(kedr_test_cm_conf_filename "kedr_cm_test.conf")
-set(kedr_test_cm_conf_file "${CMAKE_BINARY_DIR}/tools/service/${kedr_test_cm_conf_filename}")
-# should be before payloads
+set(kedr_test_cm_conf_file "${CMAKE_BINARY_DIR}/tools/control/${kedr_test_cm_conf_filename}")
+# Directory for local mount debugfs for enable payloads tracepoints and for use by capturing trace script)
+# This directory is used in configuration file for control KEDR service.
+set(kedr_debugfs_dir "/tmp/kedr/debugfs")
+# Directory for local mount debugfs for kedr_controller.
+# This directory will be used only in service script(internally), and should DIFFER from previous one,
+# because script itself do not now, whether this directory already used for mount point in conf file, or not.
+set(kedr_controller_debugfs_dir "/tmp/kedr/controller_debugfs")
+
+# tools should be before payloads
 add_subdirectory(tools)
 add_subdirectory(payloads_callm)
 

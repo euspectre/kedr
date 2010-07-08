@@ -1,0 +1,130 @@
+#!/bin/sh
+
+############################################################################
+# Usage:
+#		capture_trace start <path> [<debugfs-mount-dir>]
+#       capture_trace stop
+#       capture_trace status
+# 
+# 'start' command starts listening to the trace pipe, capture the messages
+# output there by the payload modules and by the controller and store them
+# in the file specified by <path>.
+#
+# <debugfs-mount-dir> is used to determine, where debugfs is mounted.
+# If it is not given, it is assumed to "/sys/kernel/debug".
+#
+# 'stop' command stops capturing.
+#
+# 'status' command output, whether capturing is running now.
+#
+# A message occupies a single line in the trace.
+# Currently, the messages have the following format (the number of spaces
+# may vary, of course):
+# TASK-PID    [CPU#]    TIMESTAMP:  EVENT: DATA
+# 
+# Example:
+# rmmod-2274  [000] 16770.039434: called_kfree: arguments: (dd5eb000)
+############################################################################
+
+if test $# -eq 0 ; then
+    printf "'start', 'stop' or 'status' command should be specified.\n"
+	exit 0
+fi
+
+command="$1"
+shift
+
+PID_FILE=/tmp/kedr/capture_trace.pid
+
+if test -f "${PID_FILE}"; then
+    LISTENER_PID=$(cat "${PID_FILE}")
+    # Check if $PID_FILE indeed contains a pid (a weak check).
+    echo ${LISTENER_PID} | grep '^[0-9][0-9]*$' > /dev/null
+    if test $? -ne 0; then
+    	printf "Invalid pid of a listener process: \"${LISTENER_PID}\". Remove temporary file.\n"
+
+    # Remove the pid file as it is probably corrupted somehow.
+    	rm -f "${PID_FILE}"
+        LISTENER_PID=
+    fi
+else
+    LISTENER_PID=
+fi
+
+case ${command} in
+start)
+    if test $# -lt 1 ; then
+        printf "Usage: $0 start <path_where_to_store_trace> [<debugfs-mount-dir>]\n"
+    	exit 1
+    fi
+    OUT_FILE="$1"
+    shift
+    if test "${LISTENER_PID}"; then
+    	# temporary file exists
+    	printf "It seems that some other process is now listening to the trace "
+    	printf "or the previous attempt to listen to it aborted unexpectedly.\n" 
+    	printf "Please execute\n    $(dirname $0)/capture_trace_stop.sh\nbefore "
+    	printf "trying to run\n    $0\n"
+    	exit 1
+    fi
+    
+    # empty file and verify, whether it can be writting to.
+    printf "" > "${OUT_FILE}"
+    if test $? -ne 0; then
+        printf "Cannot open file \"${OUT_FILE}\" for write."
+        exit 1
+    fi
+    if test $# -ne 0; then
+        DEBUGFS_MOUNT_POINT="$1"
+        shift
+    else
+        DEBUGFS_MOUNT_POINT="/sys/kernel/debug"
+    fi
+    if test ! -d ${DEBUGFS_MOUNT_POINT}; then
+        printf "debugfs mount point ${DEBUGFS_MOUNT_POINT} is not exist.\n"
+        printf "Please specify correct directory, where debugfs is mounted, by the second parameter.\n"
+        exit 1
+    fi
+    # Start listening to the trace pipe and capturing the events
+    cat "${DEBUGFS_MOUNT_POINT}/tracing/trace_pipe" >> "${OUT_FILE}" &
+    LISTENER_PID=$!
+    # $! is the pid of the last backgroud process launched from this shell.
+
+    # Check if the listener process is actually running.
+    ps -e | grep $! > /dev/null
+    if test $? -ne 0; then
+    	printf "Failed to start listening to the trace pipe\n"
+    	exit 1
+    fi
+    echo ${LISTENER_PID} > "${PID_FILE}"
+    printf "Capturing started.\n"
+    ;;
+stop)
+    if test ! "${LISTENER_PID}"; then
+    	printf "Nothing to stop: no process is listening to the trace pipe now.\n"
+    	exit 1
+    fi
+    # Check if this pid is actually the id of a listener process.
+    ALL_PS_OUT=$(ps -ef) 
+    LISTENER_PRESENT=$(echo "${ALL_PS_OUT}" | grep "${LISTENER_PID}.*cat.*/trace_pipe" | wc -l)
+
+    if test ${LISTENER_PRESENT} -eq 1; then
+    	kill ${LISTENER_PID}
+    fi
+    # If there are no listeners, do nothing, just remove .pid file.
+
+    rm -f ${PID_FILE}
+    printf "Capturing stopped.\n"
+    ;;
+status)
+    if test "${LISTENER_PID}"; then
+        printf "Capturing of the trace is running now.\n"
+    else
+        printf "Capturing of the trace is not running now.\n"
+    fi
+    ;;
+*)
+    printf "Incorrect command \"${command}\". Should be 'start' ,'stop' or 'status'."
+esac
+
+exit 0
