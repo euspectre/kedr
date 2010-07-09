@@ -6,6 +6,7 @@ if test $# -eq 0; then
     echo "'load' or 'unload' command should be specified."
     exit 1
 fi
+current_dir=`dirname $0`
 command="$1"
 shift
 
@@ -22,7 +23,7 @@ load)
 
     # Invoke insmod with all arguments we got
     # and use a pathname, as insmod doesn't look in . by default
-    /sbin/insmod @KEDR_SAMPLE_TARGET@ $* || exit 1
+    /sbin/insmod ${current_dir}/${module}.ko $* || exit 1
 
     # retrieve major number
     major=$(awk "\$2==\"$device\" {print \$1}" /proc/devices)

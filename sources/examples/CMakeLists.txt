@@ -13,3 +13,5 @@ set (KEDR_EXAMPLE_PATH "share/${KEDR_PACKAGE_NAME}-${KEDR_VERSION_MAJOR}.${KEDR_
 #    DESTINATION "${KEDR_EXAMPLE_PATH}")
 
 #######################################################################
+
+add_subdirectory(sample_target)

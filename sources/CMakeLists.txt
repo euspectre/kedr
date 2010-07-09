@@ -131,7 +131,7 @@ set(kedr_controller_debugfs_dir "/tmp/kedr/controller_debugfs")
 add_subdirectory(tools)
 add_subdirectory(payloads_callm)
 
-add_subdirectory(sample_target)
+add_subdirectory(examples)
 # Documentation
 add_subdirectory(doc)
 
