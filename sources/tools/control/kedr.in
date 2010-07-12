@@ -279,7 +279,7 @@ start)
     fi
     target_name=`get_module_name $1`
     shift
-    if test ${target_is_running} -ne 0; then
+    if is_module_running ${target_name}; then
         echo "Cannot start KEDR for watch target module, which is currently loaded. Unload target module firstly."
         exit 1
     fi
