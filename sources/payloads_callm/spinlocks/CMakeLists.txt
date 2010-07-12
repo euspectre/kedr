@@ -1,10 +1,5 @@
 #name of module created
 set(kmodule_name "kedr_cm_spinlocks")
-#really harcoded, because of mist engine templates
-#set(kmodule_source_file "payload.c")
-#set(kmodule_header_file "trace_payload.h")
-#name of data file
-set(kmodule_data_file "payload.data")
 
 #first part of data-file
 configure_file("beginning.data.in"
@@ -13,18 +8,18 @@ configure_file("beginning.data.in"
 option(enable_full_spinlock "Intercept all spinlock-related function" OFF)
 #SET(enable_full_spinlock CACHE BOOL "Intercept all spinlock-related function")
 
-kedr_configure_data_pieces(functions_data REQUIRED
+kmodule_configure_kernel_functions(functions REQUIRED
 	ONE_OF_BEGIN "_spin_lock_irqsave" "_raw_spin_lock_irqsave" ONE_OF_END
 	ONE_OF_BEGIN "_spin_unlock_irqrestore" "_raw_spin_unlock_irqrestore" ONE_OF_END
 )
 if(enable_full_spinlock)
-	kedr_configure_data_pieces(functions_optional_data REQUIRED
+	kmodule_configure_kernel_functions(functions_optional REQUIRED
 		ONE_OF_BEGIN "_spin_lock" "_raw_spin_lock" ONE_OF_END
 		ONE_OF_BEGIN "_spin_lock_irq" "_raw_spin_lock_irq" ONE_OF_END
 		ONE_OF_BEGIN "_spin_unlock" "_raw_spin_unlock" ONE_OF_END
 		ONE_OF_BEGIN "_spin_unlock_irq" "_raw_spin_unlock_irq" ONE_OF_END
 	)
-	list(APPEND functions_data ${functions_optional_data})
+	list(APPEND functions ${functions_optional})
 endif(enable_full_spinlock)
 
 
@@ -33,11 +28,9 @@ kbuild_add_module(${kmodule_name}
 	"payload.c"
 	"trace_payload.h")
 
-rules_generate_payload(${CMAKE_CURRENT_BINARY_DIR}/${kmodule_data_file}
-						${CMAKE_CURRENT_BINARY_DIR})
+rules_generate_payload()
 
-rules_build_datafile(${kmodule_data_file} "beginning.data"
-	${functions_data})
+rules_build_datafile(${functions})
 
 kedr_install_kmodule(${kmodule_name})
 

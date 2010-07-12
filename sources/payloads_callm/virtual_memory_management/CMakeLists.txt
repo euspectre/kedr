@@ -1,13 +1,11 @@
 #name of module created
 set(kmodule_name "kedr_cm_vmm")
-#name of data file
-set(kmodule_data_file "payload.data")
 
 #first part of data-file
 configure_file("beginning.data.in"
 	"${CMAKE_CURRENT_BINARY_DIR}/beginning.data")
 
-kedr_configure_data_pieces(functions_data REQUIRED
+kmodule_configure_kernel_functions(functions REQUIRED
 	"vmalloc"
 	"__vmalloc"
 	"vmalloc_user"
@@ -21,11 +19,9 @@ kbuild_add_module(${kmodule_name}
 	"payload.c"
 	"trace_payload.h")
 
-rules_generate_payload(${CMAKE_CURRENT_BINARY_DIR}/${kmodule_data_file}
-						${CMAKE_CURRENT_BINARY_DIR})
+rules_generate_payload()
 
-rules_build_datafile(${kmodule_data_file} "beginning.data"
-	${functions_data})
+rules_build_datafile(${functions})
 
 kedr_install_kmodule(${kmodule_name})
 

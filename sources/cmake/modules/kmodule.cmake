@@ -65,18 +65,74 @@ macro(kmodule_is_function_exist function_name RESULT_VAR)
     endif(${RESULT_VAR})
 
 endmacro(kmodule_is_function_exist function_name RESULT_VAR)
-#kmodule_configure_kernel_functions(output_list func1 item1 [func2 item2...])
+
+# Build list of functions, which really exist on the current system
+#
+# kmodule_configure_kernel_functions(output_list {[REQUIRED | OPTIONAL] {func | ONE_OF_LIST}} ...)
+#
+# ONE_OF_LIST := ONE_OF_BEGIN {func ...} ONE_OF_END
+#
+# There are 2 modes for lookup function: 
+# OPTIONAL - if functions doesn't exists, it silently ignored.
+# REQUIRED - if functions doesn't exists, FATAL_ERROR message is printed.
+#
+# Initial mode is REQUIRED, and it can be changed at any time by REQUIRED and OPTIONAL.
+#
+# ONE_OF_BEGIN/ONE_OF_END determine section, in which no more than one function should exist,
+# otherwise FATAL_ERROR message is printed. When mode is REQUIRED, precisely one function should exist.
+# Inside this section other keywords shouldn't be used (even another ONE_OF_BEGIN).
+
 macro(kmodule_configure_kernel_functions output_list)
+	set(kmodule_configure_kernel_functions_mode "REQUIRED")
+	set(kmodule_configure_kernel_functions_one_of_section "FALSE")
 	set(${output_list})
-	set(kmodule_input_lists ${ARGN})
-	while(kmodule_input_lists)
-		list(GET kmodule_input_lists 0 kmodule_func)
-		set(kmodule_func_varname _KMODULE_IS_${kmodule_func}_EXIST)
-        kmodule_is_function_exist(${kmodule_func} ${kmodule_func_varname})
-		if(${kmodule_func_varname})
-			list(GET kmodule_input_lists 1 kmodule_item)
-			list(APPEND ${output_list} ${kmodule_item})
-		endif(${kmodule_func_varname})
-		list(REMOVE_AT kmodule_input_lists 0 1)
-	endwhile(kmodule_input_lists)
+	foreach(arg ${ARGN})
+		if(arg STREQUAL "REQUIRED" OR arg STREQUAL "OPTIONAL")
+			if(kmodule_configure_kernel_functions_one_of_section)
+				message(FATAL_ERROR "Inside ONE_OF_BEGIN/ONE_OF_END section other keywords are not allowed.")
+			endif(kmodule_configure_kernel_functions_one_of_section)
+			set(kmodule_configure_kernel_functions_mode ${arg})
+		elseif(arg STREQUAL "ONE_OF_BEGIN")
+			if(kmodule_configure_kernel_functions_one_of_section)
+				message(FATAL_ERROR "Nested ONE_OF_BEGIN/ONE_OF_END sections are not allowed.")
+			endif(kmodule_configure_kernel_functions_one_of_section)
+			set(kmodule_configure_kernel_functions_one_of_section "TRUE")
+			set(kmodule_configure_kernel_functions_one_of_section_function)
+		elseif(arg STREQUAL "ONE_OF_END")
+			if(NOT kmodule_configure_kernel_functions_one_of_section)
+				message(FATAL_ERROR "ONE_OF_END without ONE_OF_BEGIN is not allowed.")
+			endif(NOT kmodule_configure_kernel_functions_one_of_section)
+			if(kmodule_configure_kernel_functions_one_of_section_function)
+				list(APPEND ${output_list} ${kmodule_configure_kernel_functions_one_of_section_function})				
+			else(kmodule_configure_kernel_functions_one_of_section_function)
+				if(kmodule_configure_kernel_functions_mode STREQUAL "REQUIRED")
+					message(FATAL_ERROR "No any function in ONE_OF section exists in the kernel, but it is required.")
+				endif(kmodule_configure_kernel_functions_mode STREQUAL "REQUIRED")
+			endif(kmodule_configure_kernel_functions_one_of_section_function)
+			set(kmodule_configure_kernel_functions_one_of_section "FALSE")
+		else(arg STREQUAL "REQUIRED" OR arg STREQUAL "OPTIONAL")
+			set(kmodule_func_varname _KMODULE_IS_${arg}_EXIST)
+			kmodule_is_function_exist(${arg} ${kmodule_func_varname})
+			if(kmodule_configure_kernel_functions_one_of_section)
+				if(${kmodule_func_varname})
+					if(kmodule_configure_kernel_functions_one_of_section_function)
+						message(FATAL_ERROR "Two functions from ONE_OF sections exist in the kernel.")
+					else(kmodule_configure_kernel_functions_one_of_section_function)
+						set(kmodule_configure_kernel_functions_one_of_section_function ${arg})	
+					endif(kmodule_configure_kernel_functions_one_of_section_function)
+				endif(${kmodule_func_varname})
+			else(kmodule_configure_kernel_functions_one_of_section)
+				if(${kmodule_func_varname})
+					list(APPEND ${output_list} ${arg})
+				else(${kmodule_func_varname})
+					if(kmodule_configure_kernel_functions_mode STREQUAL "REQUIRED")
+						message(FATAL_ERROR "Function ${arg} is absent in the kernel, but it is required.")
+					endif(kmodule_configure_kernel_functions_mode STREQUAL "REQUIRED")
+				endif(${kmodule_func_varname})
+			endif(kmodule_configure_kernel_functions_one_of_section)
+		endif(arg STREQUAL "REQUIRED" OR arg STREQUAL "OPTIONAL")
+	endforeach(arg ${ARGN})
+	if(kmodule_configure_kernel_functions_one_of_section)
+		message(FATAL_ERROR "Unclosed ONE_OF_SECTION (ONE_OF_BEGIN without ONE_OF_END)")
+	endif(kmodule_configure_kernel_functions_one_of_section)
 endmacro(kmodule_configure_kernel_functions output_list)
