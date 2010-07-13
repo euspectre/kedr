@@ -110,13 +110,10 @@ add_subdirectory(mist_gen)
 set(function_triggers_file "${CMAKE_BINARY_DIR}/controller/tests/call_interception/function_triggers.data")
 add_subdirectory(controller)
 
-add_subdirectory(module_weak_ref)
 add_subdirectory(syscall_connector)
 add_subdirectory(fault_simulation)
 
 add_subdirectory(kedr)
-
-
 
 #Configuration-files for collect payloads
 set(kedr_cm_conf_filename "kedr_cm.conf")
