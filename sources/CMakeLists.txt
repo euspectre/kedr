@@ -103,7 +103,11 @@ endif()
 
 #######################################################################
 add_subdirectory(base)
+add_subdirectory(mist_gen)
 
+# This file will be used for tests, whether controller really intercept
+# particular functions calls
+set(function_triggers_file "${CMAKE_BINARY_DIR}/controller/tests/call_interception/function_triggers.data")
 add_subdirectory(controller)
 
 add_subdirectory(module_weak_ref)
@@ -112,7 +116,7 @@ add_subdirectory(fault_simulation)
 
 add_subdirectory(kedr)
 
-add_subdirectory(mist_gen)
+
 
 #Configuration-files for collect payloads
 set(kedr_cm_conf_filename "kedr_cm.conf")

@@ -47,3 +47,5 @@ kedr_test_add_script (controller.basics.02
 # The following subdirectories contain the stuff necessary for the testing
 add_subdirectory (simple_target)
 add_subdirectory (simple_payload)
+
+add_subdirectory (call_interception)

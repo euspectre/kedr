@@ -39,6 +39,36 @@ function(rules_build_datafile)
 						DEPENDS ${source_files_abs})
 endfunction(rules_build_datafile)
 
+set(triggers_include_filename "triggers_include.list")
+# Add include directives, needed for triggers for functions
+# from ${triggers_include_filename} file
+# (in the current source or binary directory)
+# kedr_test_add_triggers_include()
+function(kedr_test_add_triggers_include)
+	file(APPEND ${function_triggers_file} "include =>>\n")
+	to_abs_path(triggers_include_file "${triggers_include_filename}")
+	file(READ "${triggers_include_file}" triggers_include_code)
+	file(APPEND ${function_triggers_file} "${triggers_include_code}" "\n")
+	file(APPEND ${function_triggers_file} "<<\n")
+endfunction(kedr_test_add_triggers_include)
+# Add triggers and tests for given functions in the payload module
+# For each function 'f' its trigger code should be in the file 'f.trigger'
+# kedr_test_add_trigger_for_function(payload function ...)
+function(kedr_test_add_trigger_for_function payload)
+	foreach(function ${ARGN})
+		file(APPEND ${function_triggers_file} "function = ${function}\n")
+		file(APPEND ${function_triggers_file} "payload = ${payload}\n")
+		file(APPEND ${function_triggers_file} "code =>>\n")
+		to_abs_path(trigger_file "${function}.trigger")
+		file(READ "${trigger_file}" trigger_code)
+		file(APPEND ${function_triggers_file} "${trigger_code}" "\n")
+		file(APPEND ${function_triggers_file} "<<\n")
+#		These lines should be uncommented and corrected in the future
+#		kedr_test_add_script("controller.call_interception.${function}.01"
+#				"${CMAKE_BINARY_DIR}/controller/tests/call_interception/test_program"
+#				"${function}")
+	endforeach(function ${ARGN})
+endfunction(kedr_test_add_trigger_for_function payload)
 #for local use, add line to configuration file, for install one and for test one
 macro(kedr_add_conf_line_install)
     file(APPEND ${kedr_cm_conf_file} ${ARGN} "\n")

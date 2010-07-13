@@ -6,7 +6,5 @@ module.author = Tsyvarev
 module.license = GPL
 
 header =>>
-#include <linux/kernel.h>   /* printk() */
 #include <linux/slab.h>     /* kmalloc() */
-#include <linux/errno.h>    /* error codes */
 <<
