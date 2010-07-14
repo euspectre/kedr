@@ -63,10 +63,12 @@ function(kedr_test_add_trigger_for_function payload)
 		file(READ "${trigger_file}" trigger_code)
 		file(APPEND ${function_triggers_file} "${trigger_code}" "\n")
 		file(APPEND ${function_triggers_file} "<<\n")
-#		These lines should be uncommented and corrected in the future
-#		kedr_test_add_script("controller.call_interception.${function}.01"
-#				"${CMAKE_BINARY_DIR}/controller/tests/call_interception/test_program"
-#				"${function}")
+
+		kedr_test_add_script("controller.call_interception.${function}.01"
+				"${CMAKE_BINARY_DIR}/controller/tests/call_interception/test.sh"
+				"${function}"
+				"${payload}"
+		)
 	endforeach(function ${ARGN})
 endfunction(kedr_test_add_trigger_for_function payload)
 #for local use, add line to configuration file, for install one and for test one

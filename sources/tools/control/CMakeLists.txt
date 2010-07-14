@@ -18,7 +18,7 @@ add_custom_target("kedr_test_conf"
 
 rule_copy_file(${kedr_test_conf_file} ${kedr_test_cm_conf_file})
 
-add_dependencies(build_tests kedr_test_conf)
+kedr_test_add_target(kedr_test_conf)
 
 
 #for configure kedr.sh
