@@ -64,7 +64,7 @@ get_module_name()
 # Determine, whether module with given name(not from module file!), is currently running.
 is_module_running()
 {
-    /sbin/lsmod | grep "^$1[[:blank:]]\{1,\}" &> /dev/null
+    /sbin/lsmod | grep "^$1[[:blank:]]\{1,\}" > /dev/null
 }
 
 # resolve_module_alias alias
@@ -192,10 +192,11 @@ list_loaded_payloads()
 # Execute lines in the configuration file in 'on_load' mode.
 execute_conf_on_load()
 {
+    conf_file_local=$1
     OLD_IFS=${IFS}
     IFS=$'\n'
     # Output parsing results into file for debugging purposes.
-    parse_conf_on_load $1 > ${tmp_dir}/commands_tmp.txt
+    parse_conf_on_load ${conf_file_local} > ${tmp_dir}/commands_tmp.txt
     line_number=
     for LINE in `cat ${tmp_dir}/commands_tmp.txt`; do
         IFS=${OLD_IFS}
