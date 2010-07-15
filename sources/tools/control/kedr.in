@@ -1,5 +1,7 @@
 #!/bin/sh
 
+newline='
+'
 # Usage: 
 # kedr.sh start target_name [-c conf_string(s) | conf_file] ...
 # kedr.sh stop
@@ -38,7 +40,7 @@ start_conf_file=${tmp_dir}/start.conf
 
 
 if test $# -eq 0; then
-    echo start, stop or status command should be specified
+    printf "'start', 'stop' or 'status' command should be specified\n"
     exit 1
 fi
 
@@ -47,7 +49,7 @@ fi
 # Execute command line, passed to it.
 execute()
 {
-#    echo "execute: $*"
+#    printf "%s\n" "execute: $*"
     eval $*
 }
 
@@ -56,7 +58,7 @@ execute()
 # For module file, return name of module, for module name return itself
 get_module_name()
 {
-    echo $1 | sed 's/^.*\///;s/\..*$//'
+    printf "%s" "$1" | sed 's/^.*\///;s/\..*$//'
 }
 
 # is_module_running module_name
@@ -74,7 +76,7 @@ is_module_running()
 resolve_module_alias()
 {
     #not implemented yet
-    echo -n $1
+    printf "%s" "$1"
 }
 
 # collect_conf_file target_file [-c conf_string | conf_file]...
@@ -89,14 +91,14 @@ collect_conf_file()
         if test "$1" = "-c"; then
             shift
             if test $# -eq 0; then
-                echo "After '-c' parameter should be config string(s)"
+                printf "After '-c' parameter should be config string(s)\n"
                 rm -f ${target_conf_file}
                 exit 1
             fi
-            echo -e "$1" >> ${target_conf_file}
+            printf "%s\n" "$1" >> "${target_conf_file}"
         else
-            cat "$1" >> ${target_conf_file}
-            echo -e "\n" >> ${target_conf_file}
+            cat "$1" >> "${target_conf_file}"
+            printf "\n" >> "${target_conf_file}"
         fi
         shift
     done
@@ -132,10 +134,10 @@ parse_conf_payloads()
 # Each command string is prepended with a string, contains ordinal number of the source string.
 parse_conf_on_load()
 {
-    sed -n -e "${regex_parse_conf}" -e ":module; :payload; ${regex_is_alias};"\
-            -e ":alias; s!^!/sbin/modprobe !; b out; :notalias; s!^!/sbin/insmod !; b out;"\
-            -e ":on_load; b out; :on_unload; d"\
-            -e ":error; s/^/echo \"Incorrect config line '/; s/$/'\"/;"\
+    sed -n -e "${regex_parse_conf}" -e ":module; :payload; ${regex_is_alias};" \
+            -e ":alias; s!^!/sbin/modprobe !; b out; :notalias; s!^!/sbin/insmod !; b out;" \
+            -e ":on_load; b out; :on_unload; d" \
+            -e ":error; s/^/printf \"%s\\n\" \"Incorrect config line '/; s/$/'\"/;" \
             -e ":out; =; p; " "$1"
 }
 
@@ -154,19 +156,19 @@ parse_conf_on_unload()
     sed -n  -e ${up_to_line} -e "${regex_parse_conf}" -e ":module; :payload; s/[[:blank:]].\{0,\}//; ${regex_is_alias};"\
             -e ":alias; s!^!/sbin/modprobe -r !; b out; :notalias; s!^!/sbin/rmmod !; b out;"\
             -e ":on_unload; b out; :on_load; d"\
-            -e ":error; s/^/echo \"Incorrect config line '/; s/$/'\"/;"\
+            -e ":error; s/^/printf \"%s\\n\" \"Incorrect config line '/; s/$/'\"/;"\
             -e ":out; p; " "$1" | sed '1!G;h;$!d'
 }
 
-#list_loaded_payloads conf_file
+# list_loaded_payloads conf_file
 #
 # Output names(one for line) of those payloads modules, which is currently running.
 list_loaded_payloads()
 {
     OLD_IFS=${IFS}
-    IFS=$'\n'
+    IFS="$newline"
     # Output parsing results into file for debugging purposes.
-    parse_conf_payloads $1 > ${tmp_dir}/payloads_tmp.txt
+    parse_conf_payloads "$1" > ${tmp_dir}/payloads_tmp.txt
     payload_type=
     for LINE in `cat ${tmp_dir}/payloads_tmp.txt`; do
         IFS=${OLD_IFS}
@@ -179,10 +181,10 @@ list_loaded_payloads()
                 payload_name=`resolve_module_alias ${payload_name}`
             fi
             if is_module_running $payload_name; then 
-                echo ${LINE}
+                printf "%s\n" "${LINE}"
             fi
         fi
-        IFS=$'\n'
+        IFS="$newline"
     done;
     IFS=${OLD_IFS}
 }
@@ -192,26 +194,25 @@ list_loaded_payloads()
 # Execute lines in the configuration file in 'on_load' mode.
 execute_conf_on_load()
 {
-    conf_file_local=$1
     OLD_IFS=${IFS}
-    IFS=$'\n'
+    IFS="$newline"
     # Output parsing results into file for debugging purposes.
-    parse_conf_on_load ${conf_file_local} > ${tmp_dir}/commands_tmp.txt
+    parse_conf_on_load "$1" > ${tmp_dir}/commands_tmp.txt
     line_number=
     for LINE in `cat ${tmp_dir}/commands_tmp.txt`; do
         IFS=${OLD_IFS}
         if test -z ${line_number}; then
             # Store executed line for rollback in case of error, when this line will be executed.
-            line_number=${LINE}
+            line_number="${LINE}"
         else
             if ! execute ${LINE}; then 
-                echo "Fail to execute commands for start.. rollback."
-                rollback ${start_conf_file} $line_number
+                printf "Fail to execute commands for start.. rollback.\n"
+                rollback "${start_conf_file}" "$line_number"
                 return 1
             fi
             line_number=
         fi
-        IFS=$'\n'
+        IFS="$newline"
     done;
     IFS=${OLD_IFS}
 }
@@ -222,11 +223,11 @@ execute_conf_on_load()
 execute_conf_on_unload()
 {
     OLD_IFS=${IFS}
-    IFS=$'\n'
+    IFS="$newline"
     for LINE in `parse_conf_on_unload $1`; do
         IFS=${OLD_IFS}
         execute ${LINE}
-        IFS=$'\n'
+        IFS="$newline"
     done;
     IFS=${OLD_IFS}
 }
@@ -236,11 +237,11 @@ execute_conf_on_unload()
 rollback()
 {
     OLD_IFS=${IFS}
-    IFS=$'\n'
+    IFS="$newline"
     for LINE in `parse_conf_on_unload ${start_conf_file} $2`; do
         IFS=${OLD_IFS}
         execute ${LINE}
-        IFS=$'\n'
+        IFS="$newline"
     done;
     IFS=${OLD_IFS}
 }
@@ -271,105 +272,105 @@ fi
 case ${command} in
 start)
     if test ${base_is_running} -ne 0; then
-        echo "Service already running. For stop it call '$0 stop'"
+        printf "%s\n" "Service already running. For stop it call '$0 stop'"
         exit 1
     fi
     if test $# -eq 0; then
-        echo "For start command name of the target module should be specified as the second argument"
+        printf "For start command name of the target module should be specified as the second argument\n"
         exit 1
     fi
-    target_name=`get_module_name $1`
+    target_name=`get_module_name "$1"`
     shift
     if is_module_running ${target_name}; then
-        echo "Cannot start KEDR for watch target module, which is currently loaded. Unload target module firstly."
+        printf "Cannot start KEDR for watch target module, which is currently loaded. Unload target module firstly.\n"
         exit 1
     fi
-    echo "Starting KEDR..."
+    printf "Starting KEDR...\n"
     #collect all parts of the configuration to the ${start_conf_file}
-    mkdir -p ${tmp_dir} || (echo "Cannot create directory for temporary files" && exit 1)
+    mkdir -p ${tmp_dir} || (printf "Cannot create directory for temporary files\n" && exit 1)
     #empty file
-    echo "" > ${start_conf_file}
+    printf "\n" > "${start_conf_file}"
     if test $? -ne 0; then
-        echo "Cannot write to temporary file"
+        printf "Cannot write to temporary file\n"
         exit 1
     fi
-    collect_conf_file ${start_conf_file} -c "module @BASE_MODULE@"
+    collect_conf_file "${start_conf_file}" -c "module @BASE_MODULE@"
     if test $# -eq 0; then
-        collect_conf_file ${start_conf_file} ${default_config_file}
+        collect_conf_file "${start_conf_file}" "${default_config_file}"
     else
-        collect_conf_file ${start_conf_file} "$@"
+        collect_conf_file "${start_conf_file}" "$@"
     fi
-    collect_conf_file ${start_conf_file} -c "module @CONTROLLER_MODULE@ target_name=${target_name}"
+    collect_conf_file "${start_conf_file}" -c "module @CONTROLLER_MODULE@ target_name=${target_name}"
     # Enable tracepoints for controller
-    collect_conf_file ${start_conf_file} -c "on_load mkdir -p @kedr_controller_debugfs_dir@" \
+    collect_conf_file "${start_conf_file}" -c "on_load mkdir -p @kedr_controller_debugfs_dir@" \
                                             -c "on_load mount debugfs -t debugfs @kedr_controller_debugfs_dir@" \
-                                            -c "on_load echo 1 > @kedr_controller_debugfs_dir@/tracing/events/${controller_name}/enable" \
+                                            -c "on_load printf 1 > @kedr_controller_debugfs_dir@/tracing/events/${controller_name}/enable" \
                                             -c "on_load umount @kedr_controller_debugfs_dir@"
 
-    execute_conf_on_load ${start_conf_file}
+    execute_conf_on_load "${start_conf_file}"
     if test $? -ne 0; then
         # In the release version next line should be uncommented
-        #rm -f ${start_conf_file}
+        #rm -f "${start_conf_file}"
         exit 1
     fi
-    echo "KEDR started."
+    printf "KEDR started.\n"
     ;;
 stop)
     if test ${base_is_running} -eq 0; then
-        echo "Service is not running. For start it call '$0 start'"
+        printf "%s\n" "Service is not running. For start it call '$0 start'"
         exit 1
     fi
     if test ${target_is_running} -ne 0; then
-        echo "Cannot stop KEDR when it watched for target module, which is currently loaded. Unload target module firstly."
+        printf "Cannot stop KEDR when it watched for target module, which is currently loaded. Unload target module firstly.\n"
         exit 1
     fi
-    echo "Stopping KEDR..."
-    execute_conf_on_unload ${start_conf_file}
-    rm -f ${start_conf_file}
-    echo "KEDR stopped."
+    printf "Stopping KEDR...\n"
+    execute_conf_on_unload "${start_conf_file}"
+    rm -f "${start_conf_file}"
+    printf "%s\n" "KEDR stopped."
     ;;
 status)
     if test ${base_is_running} -ne 0; then
-        echo "Base is running, payloads:"
-        list_loaded_payloads ${start_conf_file}
+        printf "Base is running, payloads:\n"
+        list_loaded_payloads "${start_conf_file}"
         if test ${controller_is_running} -ne 0; then
-            echo "Controller is running, target is '${target_name}'"
+            printf "%s\n" "Controller is running, target is '${target_name}'"
             if test ${target_is_running} -ne 0; then
-                echo "Target is running"
+                printf "Target is running\n"
             else
-                echo "Target is not running"
+                printf "Target is not running\n"
             fi;
         else
-            echo "Controller is not running"
+            printf "Controller is not running\n"
         fi;
     else
-        echo "Base is not running"
+        printf "Base is not running\n"
     fi;
     ;;
 restart)
     if test ${base_is_running} -eq 0; then
-        echo "Service is not running. For start it call '$0 start'"
+        printf "%s\n" "Service is not running. For start it call '$0 start'"
         exit 1
     fi
     if test ${target_is_running} -ne 0; then
-        echo "Cannot stop KEDR when it watched for target module, which is currently loaded. Unload target module firstly."
+        printf "Cannot stop KEDR when it watched for target module, which is currently loaded. Unload target module firstly.\n"
         exit 1
     fi
-    echo "Stopping KEDR..."
-    execute_conf_on_unload ${start_conf_file}
-    if is_module_running ${base_name}; then
-        echo "Failed to stop KEDR"
+    printf "Stopping KEDR...\n"
+    execute_conf_on_unload "${start_conf_file}"
+    if is_module_running "${base_name}"; then
+        printf "Failed to stop KEDR\n"
         exit 1
     fi
-    echo "Starting KEDR..."
-    execute_conf_on_load ${start_conf_file}
+    printf "Starting KEDR...\n"
+    execute_conf_on_load "${start_conf_file}"
     if test $? -ne 0; then
-        echo "Failed to start KEDR again."
-        rm -f ${start_conf_file}
+        printf "Failed to start KEDR again.\n"
+        rm -f "${start_conf_file}"
         exit 1
     fi
-    echo "KEDR started."
+    printf "KEDR started.\n"
     ;;
 *)
-    echo "incorrect command '$command' to service, should be 'start', 'stop', 'restart' or 'status'."
+    printf "%s\n" "Incorrect command '$command' to service, should be 'start', 'stop', 'restart' or 'status'."
 esac
