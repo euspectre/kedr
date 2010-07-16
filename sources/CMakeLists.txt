@@ -190,7 +190,9 @@ kbuild_include_directories("${CMAKE_SOURCE_DIR}/include")
 #######################################################################
 # Make "Release" the default build type
 if (NOT CMAKE_BUILD_TYPE)
-    set (CMAKE_BUILD_TYPE "Release")
+    set (CMAKE_BUILD_TYPE "Release" CACHE STRING
+      "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
+      FORCE)
 endif ()
 message (STATUS "Build type is \"${CMAKE_BUILD_TYPE}\"")
 
