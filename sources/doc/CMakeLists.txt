@@ -1,5 +1,5 @@
 # The path where the HTML docs will be installed
-set (KEDR_DOC_PATH "share/doc/${KEDR_PACKAGE_NAME}-${KEDR_VERSION_MAJOR}.${KEDR_VERSION_MINOR}")
+set (KEDR_DOC_PATH "${KEDR_INSTALL_PREFIX_DOC}/${KEDR_PACKAGE_NAME}-${KEDR_VERSION_MAJOR}.${KEDR_VERSION_MINOR}")
 
 # Main target to generate or just copy the documentation
 add_custom_target(doc ALL)

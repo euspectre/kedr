@@ -1,5 +1,5 @@
 # The path where the examples will be installed
-set (KEDR_EXAMPLE_PATH "share/${KEDR_PACKAGE_NAME}-${KEDR_VERSION_MAJOR}.${KEDR_VERSION_MINOR}/examples")
+set (KEDR_EXAMPLE_PATH "${KEDR_INSTALL_PREFIX_EXAMPLES}")
 
 # TODO: provide instructions to install the examples
 
