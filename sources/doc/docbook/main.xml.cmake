@@ -12,6 +12,7 @@
         <!ENTITY kedr_install SYSTEM "install.xml">
         <!ENTITY kedr_overview SYSTEM "overview.xml">
         <!ENTITY kedr_tips SYSTEM "tips.xml">
+        <!ENTITY kedr_glossary SYSTEM "glossary.xml">
     ]
 >
 
@@ -67,4 +68,8 @@
 
 <!-- Capture trace -->
 &capture_trace;
+
+<!-- Glossary -->
+&kedr_glossary;
+
 </article>

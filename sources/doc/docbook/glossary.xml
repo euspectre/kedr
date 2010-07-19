@@ -1,0 +1,88 @@
+﻿<glossary id="glossary">
+<title>Glossary</title>
+
+<note><para>
+Note that although the terms <firstterm>driver</firstterm> and <firstterm>kernel module</firstterm> have  differences in meaning in some cases, they are used interchangeably here as the synonyms for <firstterm>loadable kernel module</firstterm>. The meaning is as it is defined <ulink url="http://en.wikipedia.org/wiki/Loadable_kernel_module">in Wikipedia</ulink>.
+</para></note>
+
+<glossentry id="kedr">
+<glossterm>KEDR</glossterm>
+
+<glossdef>
+    <para>
+A system to analyze <phrase role="emphasized">KE</phrase>rnel-mode <phrase role="emphasized">D</phrase>rivers in <phrase role="emphasized">R</phrase>untime. The tools provided by KEDR rely heavily on the means to intercept calls made by the kernel module under analysis. These call interception facilities are provided by the core components of KEDR.
+    </para>
+</glossdef>
+</glossentry>
+
+<glossentry id="target_module">
+<glossterm>Target module, target driver</glossterm>
+
+<glossdef>
+    <para>
+A kernel module to be analyzed. 
+    </para>
+</glossdef>
+</glossentry>
+
+<glossentry id="target_function">
+<glossterm>Target function</glossterm>
+
+<glossdef>
+    <para>
+To perform analysis of the target module, it can be necessary to intercept calls to some functions made by it. These functions are called <firstterm>target functions</firstterm>. For example, to analyse how memory is allocated and freed by the target module, one may need to intercept calls to <code>__kmalloc()</code>, <code>kfree()</code>, etc.
+    </para>
+    <para>
+The target functions can be exported by the <firstterm>base kernel</firstterm> or by other kernel modules.
+    </para>
+    <para>
+By choosing appropriate <link linkend="payload_module">payload modules</link>, the user may select the groups of functions the calls to which are to be intercepted.
+    </para>
+</glossdef>
+</glossentry>
+
+<glossentry id="replacement_function">
+<glossterm>Replacement function</glossterm>
+
+<glossdef>
+    <para>
+KEDR system instruments <link linkend="target_module">the target module</link> so that the calls to <link linkend="target_function">the target functions</link> are replaced in it with the calls to special <firstterm>replacement functions</firstterm>. 
+    </para>
+    <para>
+A replacement function has the same signature as the corresponding target function. When the replacement function is called, it receives the same argument values as the target function would. The replacement functions can be provided by the user (via custom <link linkend="payload_module">payload modules</link>). A replacement function may, for example, simply call the target function to let it do its work and then just output its arguments and the return value to a trace. Or it may collect some other data or even simulate a failure of the target functon (without actually calling it). 
+    </para>
+    <para>
+Apart from having the same signature as the corresponding target functions, KEDR system imposes no additional restrictions on the replacement functions. 
+    </para>
+</glossdef>
+</glossentry>
+
+<glossentry id="payload_module">
+<glossterm>Payload module</glossterm>
+
+<glossdef>
+    <para>
+A payload module is a kernel module that actually contains <link linkend="replacement_function">replacement functions</link> for a particular group of target functions. The core components of KEDR use this data when instrumenting the target module. Each payload module specifies the calls to which functions should be replaced with the calls to which functions.
+    </para>
+    <para>
+It is payload modules rather than KEDR core that define which data should be collected about the target module, how the execution of the latter should be altered (if it should be at all), etc. Different sets of payload modules may allow to perform different kinds of analysis of the target module.
+    </para>
+    <para>
+Currently, KEDR provides payload modules for several groups of functions to perform call monitoring and fault simulation. Custom payload modules can be provided by the user. As long as the payload modules rely on the API defined by KEDR, KEDR makes no difference between the payloads provided with it and the ones supplied by the user.
+    </para>
+</glossdef>
+</glossentry>
+
+<glossentry id="fault_simulation">
+<glossterm>Fault simulation</glossterm>
+
+<glossdef>
+    <para>
+Fault simulation is one of the many ways to check reliability of a target kernel module. It can be used, among other things, to see if the target module behaves correctly when the operating system fails to complete its requests. For example, you may want to find out if the target module crashes the system when there is not enough memory for its operations or if there is no contiguous memory block of a size greater than N, etc. 
+    </para>
+    <para>
+KEDR allows to perform fault simulation on the target module. The scenarios (what function calls to make fail and in what conditions) can be provided by the user as well. Several simple scenarios are supplied with KEDR.
+    </para>
+</glossdef>
+</glossentry>
+</glossary>
