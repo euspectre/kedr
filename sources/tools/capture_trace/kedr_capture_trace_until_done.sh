@@ -52,11 +52,11 @@ if test -f "${out_file}"; then
         exit 0
     fi
 else
-    printf "" >> ${out_file}
+    printf "" > ${out_file}
     if test $? -ne 0; then
         printf "Cannot create output file '%s'\n" "${out_file}"
         exit 1
     fi
 fi
 
-sed -e "/$end_session_regexp/ q" < "${trace_pipe}" > "${out_file}"
+sed -e "/$end_session_regexp/ q" < "${trace_pipe}" >> "${out_file}"
