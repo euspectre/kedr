@@ -111,10 +111,10 @@ set(trace_result_subdir "trace_result")
 set(trace_result_file "${trace_result_subdir}/trace")
 
 kedr_add_conf_line_install("on_load mkdir -p ${KEDR_INSTALL_PREFIX_VAR}/${trace_result_subdir}")
-kedr_add_conf_line_install("on_load ${KEDR_INSTALL_PREFIX_EXEC}/capture_trace start ${KEDR_INSTALL_PREFIX_VAR}/${trace_result_file} ${kedr_debugfs_dir}")
-kedr_add_conf_line_install("on_unload ${KEDR_INSTALL_PREFIX_EXEC}/capture_trace stop")
+kedr_add_conf_line_install("on_load ${KEDR_INSTALL_PREFIX_EXEC}/kedr_capture_trace start ${KEDR_INSTALL_PREFIX_VAR}/${trace_result_file} ${kedr_debugfs_dir}")
+kedr_add_conf_line_install("on_unload ${KEDR_INSTALL_PREFIX_EXEC}/kedr_capture_trace stop")
 
 kedr_add_conf_line_test("on_load mkdir -p ${CMAKE_BINARY_DIR}/var/${trace_result_subdir}")
-kedr_add_conf_line_test("on_load sh ${CMAKE_BINARY_DIR}/tools/capture_trace/capture_trace start ${CMAKE_BINARY_DIR}/var/${trace_result_file} ${kedr_debugfs_dir}")
-kedr_add_conf_line_test("on_unload sh ${CMAKE_BINARY_DIR}/tools/capture_trace/capture_trace stop")
+kedr_add_conf_line_test("on_load sh ${CMAKE_BINARY_DIR}/tools/capture_trace/kedr_capture_trace start ${CMAKE_BINARY_DIR}/var/${trace_result_file} ${kedr_debugfs_dir}")
+kedr_add_conf_line_test("on_unload sh ${CMAKE_BINARY_DIR}/tools/capture_trace/kedr_capture_trace stop")
 
