@@ -2,13 +2,13 @@
 
 ############################################################################
 # Usage:
-#		capture_trace start <path> [<debugfs-mount-dir>]
+#		capture_trace start <file> [<debugfs-mount-dir>]
 #       capture_trace stop
 #       capture_trace status
 # 
-# 'start' command starts listening to the trace pipe, capture the messages
-# output there by the payload modules and by the controller and store them
-# in the file specified by <path>.
+# 'start' command starts listening to the trace, capture the messages
+# output there by the payload modules and by the controller, and store them
+# in the file specified by <file>. If file exists, trace will be appended to it.
 #
 # <debugfs-mount-dir> is used to determine, where debugfs is mounted.
 # If it is not given, it is assumed to "/sys/kernel/debug".
@@ -63,16 +63,23 @@ start)
     	# temporary file exists
     	printf "It seems that some other process is now listening to the trace "
     	printf "or the previous attempt to listen to it aborted unexpectedly.\n" 
-    	printf "Please execute\n    $(dirname $0)/capture_trace_stop.sh\nbefore "
-    	printf "trying to run\n    $0\n"
+    	printf "Please execute\n    $(dirname $0)/kedr_capture_trace stop\n"
+    	printf "before."
     	exit 1
     fi
     
-    # empty file and verify, whether it can be writting to.
-    printf "" > "${OUT_FILE}"
-    if test $? -ne 0; then
-        printf "Cannot open file \"${OUT_FILE}\" for write."
-        exit 1
+    if test -e "${OUT_FILE}"; then
+        if test ! -w "${OUT_FILE}"; then
+            printf "Output file '%s' cannot be written\n" "${OUT_FILE}"
+            exit 1
+        fi
+    else
+        # create empty file
+        printf "" > "${OUT_FILE}"
+        if test $? -ne 0; then
+            printf "Cannot create output file '%s'\n" "${OUT_FILE}"
+            exit 1
+        fi
     fi
     if test $# -ne 0; then
         DEBUGFS_MOUNT_POINT="$1"
