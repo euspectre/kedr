@@ -241,12 +241,12 @@ payload_find(struct kedr_payload* payload)
 int 
 kedr_payload_register(struct kedr_payload* payload)
 {
-        int result = 0;
+	int result = 0;
 	struct payload_module_list* new_elem = NULL;
-        
+	
 	BUG_ON(payload == NULL);
     
-        result = mutex_lock_interruptible(&base_mutex);
+	result = mutex_lock_interruptible(&base_mutex);
 	if (result != 0)
 	{
 		KEDR_MSG(COMPONENT_STRING
@@ -259,7 +259,7 @@ kedr_payload_register(struct kedr_payload* payload)
 	if (deny_payload_register)
 	{
 		result = -EBUSY;
-                goto out;
+		goto out;
 	}
 	
 	if (payload_find(payload) != NULL)
@@ -268,7 +268,7 @@ kedr_payload_register(struct kedr_payload* payload)
 			"module \"%s\" attempts to register the same payload twice\n",
 			module_name(payload->mod));
 		result = -EINVAL;
-                goto out;
+		goto out;
 	}
 	
 	KEDR_MSG(COMPONENT_STRING
@@ -277,10 +277,10 @@ kedr_payload_register(struct kedr_payload* payload)
 	
 	new_elem = kzalloc(sizeof(struct payload_module_list), GFP_KERNEL);
 	if (new_elem == NULL)
-        {
-                result = -ENOMEM;
-                goto out;
-        }
+	{
+		result = -ENOMEM;
+		goto out;
+	}
 		
 	INIT_LIST_HEAD(&new_elem->list);
 	new_elem->payload = payload;
@@ -323,7 +323,7 @@ kedr_payload_unregister(struct kedr_payload* payload)
 	list_del(&doomed->list);
 	kfree(doomed);
 out:
-        mutex_unlock(&base_mutex);
+	mutex_unlock(&base_mutex);
 	return;
 }
 EXPORT_SYMBOL(kedr_payload_unregister);
@@ -331,8 +331,8 @@ EXPORT_SYMBOL(kedr_payload_unregister);
 int
 kedr_target_module_in_init(void)
 {
-        BUG_ON(current_controller == NULL);
-        
+	BUG_ON(current_controller == NULL);
+	
 /*
  * [NB] There is no need to use locking for 'current_controller' here.
  * kedr_target_module_in_init() may be called only from replacement
@@ -357,9 +357,9 @@ kedr_impl_controller_register(struct kedr_impl_controller* controller)
 {
 	int result = 0;
 	KEDR_MSG(COMPONENT_STRING
-        "kedr_impl_controller_register()\n");
-        
-        BUG_ON(
+	"kedr_impl_controller_register()\n");
+	
+	BUG_ON(
 		controller == NULL || 
 		controller->mod == NULL ||
 		controller->delegates.target_module_in_init == NULL
@@ -393,9 +393,9 @@ EXPORT_SYMBOL(kedr_impl_controller_register);
 void
 kedr_impl_controller_unregister(struct kedr_impl_controller* controller)
 {
-        KEDR_MSG(COMPONENT_STRING
-        "kedr_impl_controller_unregister()\n");
-        
+	KEDR_MSG(COMPONENT_STRING
+	"kedr_impl_controller_unregister()\n");
+	
 	if (mutex_lock_interruptible(&base_mutex) != 0)
 	{
 		KEDR_MSG(COMPONENT_STRING
@@ -441,9 +441,9 @@ kedr_impl_on_target_load(struct kedr_repl_table* ptable)
 	struct payload_module_list* entry;
 	struct list_head *pos;
 	
-        KEDR_MSG(COMPONENT_STRING
-        "kedr_impl_on_target_load()\n");
-        
+	KEDR_MSG(COMPONENT_STRING
+	"kedr_impl_on_target_load()\n");
+	
 	BUG_ON(ptable == NULL);
 	
 	result = mutex_lock_interruptible(&base_mutex);
@@ -499,8 +499,8 @@ kedr_impl_on_target_load(struct kedr_repl_table* ptable)
 	}
 	
 	ptable->orig_addrs = combined_repl_table.orig_addrs;
-        ptable->repl_addrs = combined_repl_table.repl_addrs;
-        ptable->num_addrs  = combined_repl_table.num_addrs;
+	ptable->repl_addrs = combined_repl_table.repl_addrs;
+	ptable->num_addrs  = combined_repl_table.num_addrs;
 out:
 	mutex_unlock(&base_mutex); 
 	return result;
@@ -514,9 +514,9 @@ kedr_impl_on_target_unload(void)
 	struct payload_module_list* entry;
 	struct list_head *pos;
 	
-        KEDR_MSG(COMPONENT_STRING
-        "kedr_impl_on_target_unload()\n");
-        
+	KEDR_MSG(COMPONENT_STRING
+	"kedr_impl_on_target_unload()\n");
+	
 	result = mutex_lock_interruptible(&base_mutex);
 	if (result != 0)
 	{

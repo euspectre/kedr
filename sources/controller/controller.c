@@ -434,6 +434,13 @@ on_module_load(struct module *mod)
 	
 	replace_calls_in_module(mod);
 	trace_target_session_begins(target_name);
+	
+	/* Until this function finishes, no replacement function will be called
+	 * because the target module has not completed loading yet. That means,
+	 * no tracepoint will be triggered in the target module before the 
+	 * tracepoint above is triggered. The order of the messages in the trace
+	 * is still up to the tracing system.
+	 */
 	return;
 }
 
