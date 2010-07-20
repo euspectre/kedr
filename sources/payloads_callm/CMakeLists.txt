@@ -71,21 +71,23 @@ function(kedr_test_add_trigger_for_function payload)
 		)
 	endforeach(function ${ARGN})
 endfunction(kedr_test_add_trigger_for_function payload)
-#for local use, add line to configuration file, for install one and for test one
-macro(kedr_add_conf_line_install)
-    file(APPEND ${kedr_cm_conf_file} ${ARGN} "\n")
-endmacro(kedr_add_conf_line_install)
-macro(kedr_add_conf_line_test)
-    file(APPEND ${kedr_test_cm_conf_file} ${ARGN} "\n")
-endmacro(kedr_add_conf_line_test)
 
-# For both configuration files(common lines)
-macro(kedr_add_conf_line)
-    kedr_add_conf_line_install(${ARGN})
-    kedr_add_conf_line_test(${ARGN})
-endmacro(kedr_add_conf_line)
+# For local use.
+# Add line to configuration file, for install one and for test one
+macro(kedr_add_conf_line_install line)
+    file(APPEND "${kedr_cm_conf_file}" "${line}" "\n")
+endmacro(kedr_add_conf_line_install line)
+macro(kedr_add_conf_line_test line)
+    file(APPEND "${kedr_test_cm_conf_file}" "${line}" "\n")
+endmacro(kedr_add_conf_line_test line)
 
-# 
+# Add line to both configuration files(common lines)
+macro(kedr_add_conf_line line)
+    kedr_add_conf_line_install("${line}")
+    kedr_add_conf_line_test("${line}")
+endmacro(kedr_add_conf_line line)
+
+# Macro for added load of given payload into default configuration file for call monitor payloads
 macro(kedr_add_default_cm_payload payload_name)
     kedr_add_conf_line_install("payload ${KEDR_INSTALL_PREFIX_KMODULE}/${payload_name}.ko")
     kedr_add_conf_line_test("payload ${CMAKE_CURRENT_BINARY_DIR}/${payload_name}.ko")
@@ -95,7 +97,8 @@ endmacro(kedr_add_default_cm_payload payload_name)
 
 kedr_add_conf_line("on_load mkdir -p ${kedr_debugfs_dir}")
 kedr_add_conf_line("on_load mount debugfs -t debugfs ${kedr_debugfs_dir}")
-kedr_add_conf_line("on_unload umount ${kedr_debugfs_dir}")
+# For rollback, when error occures while loading payloads
+kedr_add_conf_line("on_unload mount | grep \"${kedr_debugfs_dir}\"; if test $? -eq 0; then umount \"${kedr_debugfs_dir}\"; fi")
 
 add_subdirectory(common_memory_management)
 add_subdirectory(mutexes)
@@ -106,15 +109,5 @@ add_subdirectory(waitqueue)
 add_subdirectory(capable)
 add_subdirectory(virtual_memory_management)
 
-# File to store result of capturing trace (path relative to 'var' directory)
-set(trace_result_subdir "trace_result")
-set(trace_result_file "${trace_result_subdir}/trace")
-
-kedr_add_conf_line_install("on_load mkdir -p ${KEDR_INSTALL_PREFIX_VAR}/${trace_result_subdir}")
-kedr_add_conf_line_install("on_load ${KEDR_INSTALL_PREFIX_EXEC}/kedr_capture_trace start ${KEDR_INSTALL_PREFIX_VAR}/${trace_result_file} ${kedr_debugfs_dir}")
-kedr_add_conf_line_install("on_unload ${KEDR_INSTALL_PREFIX_EXEC}/kedr_capture_trace stop")
-
-kedr_add_conf_line_test("on_load mkdir -p ${CMAKE_BINARY_DIR}/var/${trace_result_subdir}")
-kedr_add_conf_line_test("on_load sh ${CMAKE_BINARY_DIR}/tools/capture_trace/kedr_capture_trace start ${CMAKE_BINARY_DIR}/var/${trace_result_file} ${kedr_debugfs_dir}")
-kedr_add_conf_line_test("on_unload sh ${CMAKE_BINARY_DIR}/tools/capture_trace/kedr_capture_trace stop")
-
+# After tracepoints are enabled for all payloads, unmount debugfs
+kedr_add_conf_line("on_load umount ${kedr_debugfs_dir}")
