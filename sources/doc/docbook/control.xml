@@ -119,10 +119,18 @@ If after executing stop stage kedr_base module is loaded, start stage will not b
     </section>
 </section>
 
+<section id="kedr_control.caveats">
+<title>Caveats</title>
+    <para>
+<command>&kedr-service;</command> in <command>start</command>, <command>stop</command> and <command>restart</command> modes change state of tracepoints, breaking usage of the trace. So, capturing trace mechanizm should be not running while exectute given command in the given modes. Precisely,
+<command>kedr_capture_trace</command> shouldn't be in capturing state and <command>kedr_capture_trace_until_done.sh</command> shouldn't be running, while <command>&kedr-service; start</command>, <command>&kedr-service; stop</command> or <command>&kedr-service; restart</command> command is executed.
+    </para>
+</section>
+
 <section id="kedr_control.config_file">
 <title>Configuration file</title>
     <para>
-        Configurations file is treated as ordered array of lines of given formats:
+Configurations file is treated as ordered array of lines of given formats:
         <simplelist>
             <member>
                 <synopsis>

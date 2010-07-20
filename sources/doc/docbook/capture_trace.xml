@@ -75,8 +75,10 @@ If capturing already started, <command>kedr_capture_trace start</command> does n
         <para>
 If capturing is not started, <command>kedr_capture_trace stop</command> does nothing and returns 1.
         </para>
+        <para>
+<command>kedr_capture_trace start</command> should not be called while <command>kedr_capture_trace_until_done.sh</command> is running.
+        </para>
     </section>
-
     <section id="capture_trace.description.status">
     <title>&kedr-service; status</title>
         <para>
@@ -91,10 +93,13 @@ If capturing is not started, <command>kedr_capture_trace stop</command> does not
         <para>
 If <replaceable>file</replaceable> doesn't exist, or it doesn't contain mark of last target unloading, script starts to capture trace into <replaceable>file</replaceable> (in the appending mode). Calling process is blocked until mark of unloading target appears in the <replaceable>file</replaceable>. After that, script stop capturing and returns.
         </para>
-        <para>
-<command>kedr_capture_trace_until_done.sh</command> shouldn't be called when <command>kedr_capture_trace</command> is in capturing state. Also, <command>kedr_capture_trace</command> should not be called until <command>kedr_capture_trace_until_done.sh</command> returns.
-        </para>
     </section>
+</section>
+<section id="capture_trace.caveats">
+<title>Caveats</title>
+    <para>
+Because both <command>kedr_capture_trace</command> and <command>kedr_capture_trace_until_done.sh</command> programs capture physycally one trace, them should't be used simultaneously. That is, <command>kedr_capture_trace_until_done.sh</command> shouldn't be called while <command>kedr_capture_trace</command> is in capturing state, and <command>kedr_capture_trace start</command> shouldn't be called while <command>kedr_capture_trace_until_done.sh</command> is running.
+    </para>
 </section>
 <section id="capture_trace.examples">
 <title>Examples</title>
