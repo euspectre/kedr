@@ -37,3 +37,5 @@ install(FILES   "${CMAKE_CURRENT_SOURCE_DIR}/makefile_installed"
         DESTINATION "${KEDR_EXAMPLE_PATH}/sample_target"
         RENAME makefile
 )
+
+add_subdirectory(tests)

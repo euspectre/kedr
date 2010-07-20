@@ -7,7 +7,8 @@
 #	'payload' - call monitor payload, which replace this function
 
 kedr_control_scipt="sh @CMAKE_BINARY_DIR@/tools/control/kedr_test"
-capture_trace_script="sh @CMAKE_BINARY_DIR@/tools/capture_trace/capture_trace"
+capture_trace_script="sh @CMAKE_BINARY_DIR@/tools/capture_trace/kedr_capture_trace"
+capture_trace_until_done_script="sh @CMAKE_BINARY_DIR@/tools/capture_trace/kedr_capture_trace_until_done.sh"
 kedr_debugfs_dir=@kedr_debugfs_dir@
 temp_dir=/tmp/kedr/call_interception
 
@@ -22,18 +23,18 @@ is_function_call_detected()
 {
 	trace_file_local=$1
 	function_local=$2
-	grep "called_${function_local}:" ${trace_file_local} &> /dev/null
+	grep "called_${function_local}:" ${trace_file_local} > /dev/null 2> /dev/null
 }
 
 if test $# -ne 2; then
-	echo -e "Usage:\n\n\t$0 function payload"
+	print "Usage:\n\n\t%s function payload\n" "$0"
 	exit 1
 fi
 
 function=$1
 payload=$2
 
-payload_name=`echo -n $payload | sed '/\// s/^.\{0,\}\///; /\./ s/\..\{0,\}$//;'`
+payload_name=`printf "%s" "$payload" | sed '/\// s/^.\{0,\}\///; /\./ s/\..\{0,\}$//;'`
 trace_file=${temp_dir}/${function}.trace
 
 # Load KEDR with given payload
@@ -43,22 +44,19 @@ ${kedr_control_scipt} start ${trigger_module_name} \
 	-c "on_load mkdir -p ${kedr_debugfs_dir}" \
 	-c "on_load mount debugfs -t debugfs ${kedr_debugfs_dir}" \
 	-c "on_unload umount ${kedr_debugfs_dir}" \
-	-c "on_load echo 1 > ${kedr_debugfs_dir}/tracing/events/${payload_name}/enable" \
-	-c "on_load mkdir -p ${temp_dir}" \
-	-c "on_load ${capture_trace_script} start ${trace_file} ${kedr_debugfs_dir}" \
-	-c "on_unload ${capture_trace_script} stop"
+	-c "on_load echo 1 > ${kedr_debugfs_dir}/tracing/events/${payload_name}/enable"
 
 if test $? -ne 0; then
-	echo "Failed to start test"
+	printf "Failed to start test\n"
 	exit 1
 fi
 
 # Load trigger module as target
 
-/sbin/insmod ${trigger_module}
+/sbin/insmod ${trigger_module} 
 
 if test $? -ne 0; then
-	echo "Failed to start trigger module"
+	printf "Failed to start trigger module\n"
 	${kedr_control_scipt} stop
 	exit 1
 fi
@@ -67,7 +65,7 @@ fi
 
 major=$(awk "\$2==\"$device\" {print \$1}" /proc/devices)
 if test "t$major" = "t"; then
-	echo "No device found for \"$module\" module";
+	printf "No device found for \"%s\" module\n" "$module";
 	/sbin/rmmod ${trigger_module}
 	${kedr_control_scipt} stop
 	exit 1;
@@ -78,28 +76,42 @@ mknod /dev/${device} c $major 0
 
 ${trigger_program} ${function}
 
-last_result=$?
+test_result=$?
 
 rm -f /dev/${device}
 /sbin/rmmod ${trigger_module}
-sleep 0.5
-${kedr_control_scipt} stop
 
-if test $last_result -ne 0; then
-	echo "Trigger program fail to trigger function call."
-	exit 1
+# Capture trace
+mkdir -p "${temp_dir}"
+rm -f "${trace_file}"
+
+${capture_trace_until_done_script} "${trace_file}" "${kedr_debugfs_dir}"
+
+if test $? -ne 0; then
+    printf "Some error occures while capturing trace\n"
+    ${kedr_control_scipt} stop
+    exit 1
 fi
 
-grep "target_session_ends" ${trace_file} &> /dev/null
+${kedr_control_scipt} stop
+
+if test $test_result -ne 0; then
+	printf "Trigger program fail to trigger function call.\n"
+	exit $test_result
+fi
+
+# Verify, whether trace file is full
+grep "target_session_ends" ${trace_file} > /dev/null 2> /dev/null
 if test $? -ne 0; then
-	echo "Trace file not full"
+	printf "Trace file not full\n"
+    # Only warning, not error
 fi
 
 if is_function_call_detected ${trace_file} ${function}; then
-	echo "Controller has intercepted call to function ${function}"
+	printf "Controller has intercepted call to function %s\n" "${function}"
 	result=0
 else
-	echo "Controller hasn't intercepted call to function ${function} (or trigger is incorrect)"
+	printf "Controller hasn't intercepted call to function %s (or trigger is incorrect)\n" "${function}"
 	result=1
 fi
 
