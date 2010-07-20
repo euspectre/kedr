@@ -41,6 +41,8 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/kedr.in
                 ${CMAKE_CURRENT_BINARY_DIR}/kedr_test
                 @ONLY)
 
+add_subdirectory(tests)
+
 install(FILES "${kedr_cm_conf_file}" "${kedr_conf_file}"
 			DESTINATION "${KEDR_INSTALL_PREFIX_VAR}"
             )
