@@ -6,7 +6,7 @@ Note that although the terms <firstterm>driver</firstterm> and <firstterm>kernel
 </para></note>
 
 <glossentry id="kedr">
-<glossterm>KEDR</glossterm>
+<glossterm><phrase role="emphasized">KEDR</phrase></glossterm>
 
 <glossdef>
     <para>
@@ -16,7 +16,7 @@ A system to analyze <phrase role="emphasized">KE</phrase>rnel-mode <phrase role=
 </glossentry>
 
 <glossentry id="target_module">
-<glossterm>Target module, target driver</glossterm>
+<glossterm><phrase role="emphasized">Target module, target driver</phrase></glossterm>
 
 <glossdef>
     <para>
@@ -26,7 +26,7 @@ A kernel module to be analyzed.
 </glossentry>
 
 <glossentry id="target_function">
-<glossterm>Target function</glossterm>
+<glossterm><phrase role="emphasized">Target function</phrase></glossterm>
 
 <glossdef>
     <para>
@@ -42,7 +42,7 @@ By choosing appropriate <link linkend="payload_module">payload modules</link>, t
 </glossentry>
 
 <glossentry id="replacement_function">
-<glossterm>Replacement function</glossterm>
+<glossterm><phrase role="emphasized">Replacement function</phrase></glossterm>
 
 <glossdef>
     <para>
@@ -58,7 +58,7 @@ Apart from having the same signature as the corresponding target functions, KEDR
 </glossentry>
 
 <glossentry id="payload_module">
-<glossterm>Payload module</glossterm>
+<glossterm><phrase role="emphasized">Payload module</phrase></glossterm>
 
 <glossdef>
     <para>
@@ -74,7 +74,7 @@ Currently, KEDR provides payload modules for several groups of functions to perf
 </glossentry>
 
 <glossentry id="fault_simulation">
-<glossterm>Fault simulation</glossterm>
+<glossterm><phrase role="emphasized">Fault simulation</phrase></glossterm>
 
 <glossdef>
     <para>

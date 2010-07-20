@@ -2,16 +2,26 @@
 <!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
     "@DOCBOOK_DTD_FILE@" [ 
         <!ENTITY % kedr-entities SYSTEM "entities.xml"> %kedr-entities; 
-        <!ENTITY kedr_service SYSTEM "control.xml">
-        <!ENTITY capture_trace SYSTEM "capture_trace.xml">
         <!ENTITY kedr_intro SYSTEM "intro.xml">
-        <!ENTITY kedr_call_mon SYSTEM "call_mon.xml">
-        <!ENTITY kedr_extend SYSTEM "extend.xml">
-        <!ENTITY kedr_fault_sim SYSTEM "fault_sim.xml">
         <!ENTITY kedr_getting_started SYSTEM "getting_started.xml">
-        <!ENTITY kedr_install SYSTEM "install.xml">
+
         <!ENTITY kedr_overview SYSTEM "overview.xml">
+
         <!ENTITY kedr_tips SYSTEM "tips.xml">
+
+        <!ENTITY kedr_service SYSTEM "control.xml">
+        <!ENTITY kedr_trace SYSTEM "capture_trace.xml">
+        <!ENTITY kedr_work SYSTEM "how_kedr_works.xml">
+        <!ENTITY kedr_call_mon SYSTEM "call_mon.xml">
+        <!ENTITY kedr_fault_sim SYSTEM "fault_sim.xml">
+        <!ENTITY kedr_using SYSTEM "using_kedr.xml">
+        
+        <!ENTITY kedr_custom_functions SYSTEM "custom_functions.xml">
+        <!ENTITY kedr_payload_api SYSTEM "payload_api.xml">
+        <!ENTITY kedr_custom_fsim_scenarios SYSTEM "custom_fsim_scenarios.xml">
+        <!ENTITY kedr_custom_analysis SYSTEM "custom_analysis.xml">
+        <!ENTITY kedr_extend SYSTEM "extend.xml">
+        
         <!ENTITY kedr_glossary SYSTEM "glossary.xml">
     ]
 >
@@ -51,23 +61,14 @@
 <!-- Getting Started -->
 &kedr_getting_started;
 
-<!-- Call Monitoring -->
-&kedr_call_mon;
-
-<!-- Fault Simulation -->
-&kedr_fault_sim;
+<!-- Using KEDR -->
+&kedr_using;
 
 <!-- Extending KEDR -->
 &kedr_extend;
 
-<!-- Tips and Tricks -->
-&kedr_tips;
-
-<!-- Controlling KEDR -->
-&kedr_service;
-
-<!-- Capture trace -->
-&capture_trace;
+<!-- Tips and Tricks - TODO -->
+<!-- &kedr_tips; -->
 
 <!-- Glossary -->
 &kedr_glossary;
