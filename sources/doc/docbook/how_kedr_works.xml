@@ -1,6 +1,21 @@
 ﻿<section id="how_kedr_works">
 <title>How KEDR Works</title>
 
+<para>
 TODO
+</para>
+
+<mediaobject>
+<imageobject>
+    <imagedata fileref="images/system_architecture.png" format="PNG"/>
+</imageobject>
+<textobject>
+    <phrase>KEDR: system architecture</phrase>
+</textobject>
+</mediaobject>
+
+<para>
+TODO
+</para>
 
 </section>
