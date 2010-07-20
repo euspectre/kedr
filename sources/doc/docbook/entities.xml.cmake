@@ -14,7 +14,7 @@
 <!ENTITY email-linux   "linux@ispras.ru">
 
 <!-- various URLs  -->
-<!ENTITY kedr-url           "https://developer.berlios.de/projects/kedr/">
+<!ENTITY kedr-url           "http://developer.berlios.de/projects/kedr/">
 <!ENTITY kernel-url         "http://kernel.org/">
 
 <!-- service script -->
