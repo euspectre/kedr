@@ -2,7 +2,9 @@
 <title>How KEDR Works</title>
 
 <para>
-TODO
+The interaction between the software components involved in driver 
+analysis with KEDR is outlined at the figure below. The logical components 
+related to KEDR are colored in green.
 </para>
 
 <mediaobject>
@@ -15,7 +17,131 @@ TODO
 </mediaobject>
 
 <para>
-TODO
+The user controls the analysis process via convenience API and tools 
+(<firstterm><quote>Kernel Module Analysis API + Tools</quote></firstterm> 
+on the figure) - either manually or via a user-space application. 
 </para>
+
+<para>
+The actual analysis of the target kernel module (driver) is performed by 
+<link linkend="payload_module">payload modules</link> of different types. 
+</para>
+
+<para>
+If the target module tries to call a function which one of the payload 
+modules is interested in (<link linkend="target_function"><firstterm>target 
+function</firstterm></link>), that payload module takes control and executes
+the corresponding <link linkend="replacement_function"><firstterm>replacement
+function</firstterm></link> instead. This way, the payload
+module can get access to the arguments of the target function. In addition,
+the payload module can change the behaviour of the target driver, for 
+example make it look like the target function has failed, etc.
+</para>
+
+<itemizedlist>
+<para>
+Payload modules can do various things:
+</para>
+
+<listitem><para>
+Collect data about which function was called when, with what arguments, and
+what it returned (<firstterm><quote>Call Monitor</quote></firstterm> 
+on the figure). The data is output to a trace 
+(via <firstterm><quote>Data Collector</quote></firstterm> facilities) 
+and can then be analyzed by user-space applications.
+</para></listitem>
+
+<listitem>
+    <para>
+Simulate the situations when the kernel seems to fail to satisfy some of 
+the requests made by the target driver 
+(<firstterm><quote>Fault Similator</quote></firstterm> on the 
+figure). That is, simulate low memory conditions, etc. Fault simulation is 
+performed according to the <firstterm>scenarios</firstterm> selected by the 
+user. It can be used to check if the driver is still reliable in error 
+conditions, if possible failures of the called functions are properly 
+handled by the driver, etc. 
+    </para>
+    <para>
+The <firstterm><quote>Control Interface</quote></firstterm> is used here, 
+for example, to manage the fault simulation scenarios, etc.
+</para>
+</listitem>
+
+<listitem><para>
+Check various requirements for the operation of the driver 
+(<firstterm><quote>Base Checker</quote></firstterm> on the figure): whether 
+it properly copies data to and from user space, whether it 
+uses virtual memory facilities in a right way, etc. 
+</para></listitem>
+
+<listitem><para>
+...And much more (see <xref linkend="custom_analysis"/>).
+</para></listitem>
+
+</itemizedlist>
+
+<note><para>
+Currently, KEDR already provides the sets of payload modules to perform 
+call monitoring and fault simulation. Payload modules for other types of 
+analysis can be developed separately.
+</para></note>
+
+<para>
+When loaded, payload modules register themselves with the KEDR core 
+(<filename>kedr-base</filename> module, actually) - see 
+<xref linkend="payload_api"/>.
+</para>
+
+<para>
+For the payload modules to be able to work, the KEDR core must instrument 
+the calls in the memory image of the target driver. The KEDR core has the 
+means to detect loading of the target driver (<firstterm><quote>Loading 
+Detector</quote></firstterm> on the figure). After the driver is loaded but 
+before it begins to execute its initialization function, the KEDR core 
+instruments the calls in it (<firstterm><quote>Call Instrumentation 
+Facilities</quote></firstterm> on the figure). Technically, loading detection
+and call instrumentation are performed by <filename>kedr-controller</filename> 
+module.
+</para>
+
+<orderedlist>
+<para>
+<link linkend="kedr_control">KEDR service script</link> makes sure each 
+component of KEDR is loaded in proper order. It does roughly the following 
+(the more precise description is available in <xref 
+linkend="kedr_control"/>):
+</para>
+
+<listitem><para>
+Loads the <filename>kedr-base</filename> module responsible to keep track 
+of payload modules and to provide API to them.
+</para></listitem>
+
+<listitem><para>
+Loads the payload modules listed in the configuration file. Each payload 
+module should register itself with the KEDR core by calling (see <xref 
+linkend="payload_api"/>), this is usually done in its init function.
+</para></listitem>
+
+<listitem><para>
+Loads the <filename>kedr-controller</filename> module passing it the name 
+of the target module as a parameter (<quote>target_name</quote>). From 
+this moment, the KEDR core begins watching for the specified target module 
+to load (see also <xref linkend="getting_started"/>).
+</para></listitem>
+</orderedlist>
+
+<para>
+When the analysis is done, the <link linkend="kedr_control">KEDR service 
+script</link> unloads the modules mentioned above, in appropriate order.
+</para>
+
+<note><para>
+Note that the KEDR core (<filename>kedr-base</filename> and 
+<filename>kedr-controller</filename> modules) makes no assumptions about what 
+exactly the currently registered payload modules do. This allows to 
+implement different types of analysis with the help of KEDR.
+</para></note>
 
 </section>

@@ -19,6 +19,12 @@ series of tests to estimate its reliability.
 </para>
 
 <para>
+One of the main goals of KEDR is to provide a reliable runtime analysis 
+engine for drivers on Linux, easy to use and easy to build custom 
+applications upon.
+</para>
+
+<para>
 Currently, there is a variety of tools in the kernel itself that allow 
 analyzing drivers: kmemcheck, kmemleak, fault injection framework, various 
 debugging facilities and so forth. Many of these tools operate on the 
@@ -193,6 +199,34 @@ functionality in the future versions of the system.
 </section>
 <!-- End of "overview.use_case" -->
 
+<section id="overview.technologies">
+<title>Key Technologies KEDR Relies Upon</title>
+
+<itemizedlist>
+<para>
+The core components of KEDR have been developed based on the technologies 
+heavily used in the kernel itself, for example:
+</para>
+
+<listitem><para>
+<firstterm>instruction decoding facilities</firstterm> used in the kernel 
+to implement KProbes;
+</para></listitem>
+
+<listitem><para>
+<firstterm>trace points</firstterm> and <firstterm>trace events</firstterm> - 
+the basis of various data collection systems used in the kernel;
+</para></listitem>
+
+<listitem><para>
+<firstterm>netlink</firstterm> as the mechanism for data exchange between 
+the kernel space and the user space.
+</para></listitem>
+</itemizedlist>
+
+</section>
+<!-- End of "overview.technologies" -->
+
 <section id="overview.limit">
 <title>Limitations</title>
 
@@ -234,33 +268,5 @@ the calls to <code>create_foo()</code> too to be able to track this.
 
 </section>
 <!-- End of "overview.limit" -->
-
-<section id="overview.technologies">
-<title>Key Technologies KEDR Relies Upon</title>
-
-<itemizedlist>
-<para>
-The core components of KEDR have been developed based on the technologies 
-heavily used in the kernel itself, for example:
-</para>
-
-<listitem><para>
-<firstterm>instruction decoding facilities</firstterm> used in the kernel 
-to implement KProbes;
-</para></listitem>
-
-<listitem><para>
-<firstterm>trace points</firstterm> and <firstterm>trace events</firstterm> - 
-the basis of various data collection systems used in the kernel;
-</para></listitem>
-
-<listitem><para>
-<firstterm>netlink</firstterm> as the mechanism for data exchange between 
-the kernel space and the user space.
-</para></listitem>
-</itemizedlist>
-
-</section>
-<!-- End of "overview.technologies" -->
 
 </section>
