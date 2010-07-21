@@ -1,6 +1,366 @@
 ﻿<section id="payload_api">
 <title>API for Payload Modules</title>
 
-TODO
+<para>
+This section describes the interface that the KEDR core provides for <link 
+linkend="payload_module">payload modules</link>. Technically, the API is 
+provided by <filename>kedr-base</filename> module.
+</para>
+
+<important><para>
+When interacting with the KEDR core, the payload modules should rely only on
+the API described here. Other types, functions, macros, constants, etc., 
+that can be found in the headers and the source files of KEDR system are for
+internal use only and subject to change.
+</para></important>
+
+<section id="payload_api.header">
+<title>Header file</title>
+
+<para>
+The API is declared in the header file that a payload module should #include:
+</para>
+
+<programlisting><![CDATA[
+#include <kedr/base/common.h>
+]]></programlisting>
+
+</section> <!-- "payload_api.header" -->
+<!-- ================================================================ -->
+
+<section id="payload_api.rtable">
+<title>struct kedr_repl_table</title>
+
+<para>
+<code>struct kedr_repl_table</code> represents a <firstterm>replacement 
+table</firstterm> that defines which <link 
+linkend="replacement_function">replacement function</link> should be 
+called instead of each particular <link 
+linkend="target_function">target function</link> in the module under 
+analysis.
+</para>
+
+<programlisting><![CDATA[
+struct kedr_repl_table
+{
+	void** orig_addrs; 
+	void** repl_addrs; 
+	unsigned int num_addrs;
+};
+]]></programlisting>
+
+<para>
+<code>orig_addrs</code> - an array of the addresses of target functions 
+(<quote>what to replace</quote>).
+</para>
+
+<para>
+<code>repl_addrs</code> - an array of addresses of replacement functions 
+(<quote>with what to replace</quote>).
+</para>
+
+<para>
+<code>num_addrs</code> - number of elements to process in each of the two 
+arrays above.
+</para>
+
+<para>
+Each payload module has usually a single global instance of this structure 
+(see the example in <xref linkend="payload_api.payload"/>).
+</para>
+
+<note><para>
+There are no additional restrictions on the names of replacement 
+functions. The KEDR core will use their addresses rather than the names.
+</para></note>
+
+</section> <!-- "payload_api.rtable" -->
+<!-- ================================================================ -->
+
+<section id="payload_api.payload">
+<title>struct kedr_payload</title>
+
+<para>
+<code>struct kedr_payload</code> represents a payload module from the 
+point of view of the KEDR core. 
+</para>
+
+<programlisting><![CDATA[
+struct kedr_payload
+{
+	struct module* mod;
+	struct kedr_repl_table repl_table;
+};
+]]></programlisting>
+
+<para>
+<code>mod</code> - the payload module itself. This field is usually 
+initialized with <code>THIS_MODULE</code> value.
+</para>
+
+<para>
+<code>repl_table</code> - <link linkend="payload_api.rtable">the 
+replacement table</link>.
+</para>
+
+<para>
+Each payload module has usually a single global instance of this structure 
+and passes its address when registering and unregistering itself with the 
+KEDR core.
+</para>
+
+<para>
+Example:
+</para>
+
+<programlisting><![CDATA[
+/* Addresses of the functions of interest (target functions) */
+static void* orig_addrs[] = {
+	(void*)&_copy_to_user,
+	(void*)&_copy_from_user
+};
+
+/* Addresses of the replacement functions */
+static void* repl_addrs[] = {
+	(void*)&repl__copy_to_user,
+	(void*)&repl__copy_from_user
+};
+
+static struct kedr_payload payload = {
+	.mod                    = THIS_MODULE,
+	.repl_table.orig_addrs  = &orig_addrs[0],
+	.repl_table.repl_addrs  = &repl_addrs[0],
+	.repl_table.num_addrs   = ARRAY_SIZE(orig_addrs)
+};
+]]></programlisting>
+
+</section> <!-- "payload_api.payload" -->
+<!-- ================================================================ -->
+
+<section id="payload_api.register">
+<title>kedr_payload_register()</title>
+
+<programlisting><![CDATA[
+int 
+kedr_payload_register(struct kedr_payload* payload);
+]]></programlisting>
+
+<para>
+This function registers a payload module with the KEDR core. 
+</para>
+
+<para>
+<code>payload</code> is the address of the <code>kedr_payload</code> 
+instance identifying the payload module (see <xref 
+linkend="payload_api.payload"/>).
+</para>
+
+<para>
+The function returns 0 if successful, an error code otherwise (the general 
+rules of the kernel functions apply here too).
+</para>
+
+<para>
+The function is usually called in the init function of the payload module.
+</para>
+
+</section>
+
+<!-- "payload_api.register" -->
+<!-- ================================================================ -->
+
+<section id="payload_api.unregister">
+<title>kedr_payload_unregister()</title>
+
+<programlisting><![CDATA[
+void 
+kedr_payload_unregister(struct kedr_payload* payload);
+]]></programlisting>
+
+<para>
+This function unregisters the payload module from the KEDR core. After 
+this is done, KEDR no longer uses this payload module (unless it 
+registers itself again).
+</para>
+
+<para>
+<code>payload</code> should be the same address as it was in the corresponding 
+call to <link linkend="payload_api.register">kedr_payload_register()</link>.
+</para>
+
+<para>
+The function is usually called in the cleanup (exit) function of the payload
+module.
+</para>
+
+</section>
+
+<!-- "payload_api.unregister" -->
+<!-- ================================================================ -->
+
+<section id="payload_api.in_init">
+<title>kedr_target_module_in_init()</title>
+
+<programlisting><![CDATA[
+int
+kedr_target_module_in_init(void);
+]]></programlisting>
+
+<para>
+This function returns nonzero if the target module is currently loaded and 
+is executing its init function at the moment, 0 otherwise.
+</para>
+
+<para>
+In fact, the function just checks whether the target module has already
+dropped its <code><quote>.init.*</quote></code> sections (what the modules 
+do after they have completed their initialization). Therefore the function 
+will always return 0 if the init function was not marked as 
+<code><quote>__init</quote></code> in the 
+target module. This should not be a big problem though.
+</para>
+
+<para>
+This function can be useful to implement particular fault simulation 
+scenarios (like <quote>fail everything after init</quote>), etc.
+</para>
+
+<para>
+Note however that there is a chance that the target module will complete
+its initialization after kedr_target_module_in_init() has determined that
+the target is in init but before the return value of 
+kedr_target_module_in_init() is used. It is up to the user of the target
+module to ensure that no request is made to the module until its 
+initialization is properly handled.
+</para>
+
+<para>
+It is allowed to call this function from atomic context.
+</para>
+
+</section>
+
+<!-- "payload_api.in_init" -->
+<!-- ================================================================ -->
+
+<section id="payload_api.stub">
+<title>A Stub of a Payload Module</title>
+
+<para>
+Here is what a simple payload module may look like (this is a stub rather 
+than a real module, of course).
+</para>
+
+<programlisting><![CDATA[
+/*********************************************************************
+ * Module: stub_payload
+ * 
+ * Target kernel functions: 
+ * 
+ *   unsigned long kfoo(void *) 
+ *   void* kbar(void *, unsigned int) 
+ *   int kbaz(void)
+ *
+ * The replacement functions provided by this module have the same 
+ * signatures as the respective target functions but different names.
+ *********************************************************************/
+#include <linux/module.h>
+#include <linux/init.h>
+
+MODULE_AUTHOR("<Some name here>");
+MODULE_LICENSE("<Some license here>");
+/*********************************************************************/
+
+#include <kedr/base/common.h>
+/* #include other necessary header files here */
+
+/*********************************************************************
+ * Replacement functions
+ *********************************************************************/
+static unsigned long
+repl_kfoo(void *arg)
+{
+    unsigned long returnValue;
+    
+    /* Call the target function (optional)*/
+    returnValue = kfoo(arg);
+    
+    /* Process the results if necessary, dump data to a trace, etc. */
+    /* ... */
+
+    /* What the replacement function should return is also up to the provider
+     * of the function. Here, it is the return value of the target function 
+     * but, generally, it is not mandatory.
+     */
+    return returnValue;
+}
+
+static void*
+repl_kbar(void *arg, unsigned int n)
+{
+/* The replacement function is not required to call the target function at 
+ * all. It is up to the provider of the replacement function.
+ */
+    if (n >= SOME_THRESHOLD) {
+        return NULL; /* this may simulate a failure */
+    } else {
+        return kbar(arg, n);
+    }
+}
+
+static int
+repl_kbaz(void)
+{
+/* The replacement function is not required to do anything at all. */
+    return 777;
+}
+
+/*********************************************************************/
+
+/* Addresses of the functions of interest (target functions) */
+static void* orig_addrs[] = {
+    (void*)&kfoo,
+    (void*)&kbar,    
+    (void*)&kbaz
+};
+
+/* Addresses of the replacement functions */
+static void* repl_addrs[] = {
+    (void*)&repl_kfoo,
+    (void*)&repl_kbar,    
+    (void*)&repl_kbaz
+};
+
+static struct kedr_payload payload = {
+    .mod                    = THIS_MODULE,
+    .repl_table.orig_addrs  = &orig_addrs[0],
+    .repl_table.repl_addrs  = &repl_addrs[0],
+    .repl_table.num_addrs   = ARRAY_SIZE(orig_addrs)
+};
+/*********************************************************************/
+
+static void
+stub_payload_cleanup_module(void)
+{
+    kedr_payload_unregister(&payload);
+    /* do other cleanup work */
+    return;
+}
+
+static int __init
+stub_payload_init_module(void)
+{
+    /* initialize other necessary facilities */
+    return kedr_payload_register(&payload);
+}
+
+module_init(kedr_cm_user_space_access_init_module);
+module_exit(stub_payload_cleanup_module);
+/*********************************************************************/
+]]></programlisting>
+
+</section>
+<!-- "payload_api.stub" -->
+<!-- ================================================================ -->
 
 </section>
