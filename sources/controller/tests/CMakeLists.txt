@@ -40,8 +40,15 @@ configure_file (
 kedr_test_add_script (controller.basics.01 
     ins_rm.sh
 )
+
+# Check common usage scenarios
 kedr_test_add_script (controller.basics.02 
-    ins_rm_with_target.sh "simple_target"
+    ins_rm_with_target.sh 0
+)
+
+# Check the case when the target is loaded before the controller
+kedr_test_add_script (controller.basics.03
+    ins_rm_with_target.sh 1
 )
 
 # The following subdirectories contain the stuff necessary for the testing

@@ -1,10 +1,208 @@
-#!/bin/bash
+#!/bin/sh
 
 ########################################################################
 # This test checks the basic operations with the controller module.
 # Usage: 
-#   /bin/bash ins_rm_with_target.sh <target_name>
-# The target module is expected to be <target_name>/<target_name>.ko.
+#   sh ins_rm_with_target.sh <target_before_controller>
+# If <target_before_controller> is specified and is non-zero, the target
+# module will be loaded before the controller module to check if the 
+# latter reports error as it should.
+########################################################################
+
+########################################################################
+# A function to check prerequisites: whether the necessary files exist,
+# etc.
+########################################################################
+checkPrereqs()
+{
+    if test ! -f "${BASE_MODULE}"; then
+        printf "Base module is missing: ${BASE_MODULE}\n"
+        exit 1
+    fi
+    
+    if test ! -f "${CONTROLLER_MODULE}"; then
+        printf "Controller module is missing: ${CONTROLLER_MODULE}\n"
+        exit 1
+    fi
+    
+    if test ! -f "${TARGET_MODULE}"; then
+        printf "Target module is missing: ${TARGET_MODULE}\n"
+        exit 1
+    fi
+    
+    if test ! -f "${PAYLOAD_MODULE}"; then
+        printf "Payload module is missing: ${PAYLOAD_MODULE}\n"
+        exit 1
+    fi
+}
+
+########################################################################
+# Cleanup function
+########################################################################
+cleanupAll()
+{
+    cd "${WORK_DIR}"
+    
+    lsmod | grep "${TARGET_NAME}" > /dev/null 2>&1
+    if test $? -eq 0; then
+        cd "${TARGET_NAME}"
+        sh ./target_unload.sh
+        cd "${WORK_DIR}"
+    fi
+    
+    lsmod | grep "@CONTROLLER_NAME@" > /dev/null 2>&1
+    if test $? -eq 0; then
+        /sbin/rmmod "@CONTROLLER_NAME@"
+    fi
+    
+    lsmod | grep "${PAYLOAD_NAME}" > /dev/null 2>&1
+    if test $? -eq 0; then
+        /sbin/rmmod "${PAYLOAD_NAME}"
+    fi
+    
+    lsmod | grep "@BASE_NAME@" > /dev/null 2>&1
+    if test $? -eq 0; then
+        /sbin/rmmod "@BASE_NAME@"
+    fi
+}
+########################################################################
+# Scenario:
+#   load base, payload module and controller
+#   load target
+#   try to unload controller (must fail)
+#   write some data to the device created by the target
+#   unload target
+#   unload the payload module
+#   unload controller (must succeed this time) and base
+########################################################################
+checkCommonScenario()
+{
+    printf "Executing checkCommonScenario()\n"
+    
+    /sbin/insmod "${BASE_MODULE}" || exit 1
+
+    /sbin/insmod "${CONTROLLER_MODULE}" target_name="${TARGET_NAME}"
+    if test $? -ne 0; then
+        printf "Failed to load the controller\n"
+        cleanupAll
+        exit 1
+    fi
+
+    /sbin/insmod "${PAYLOAD_MODULE}"
+    if test $? -ne 0; then
+        printf "Failed to load the payload module\n"
+        cleanupAll
+        exit 1
+    fi
+
+    cd "${TARGET_NAME}" && sh ./target_load.sh
+    if test $? -ne 0; then
+        printf "Failed to load the target module: ${TARGET_MODULE}\n"
+        cleanupAll
+        exit 1
+    fi
+
+    printf "Sending some data to the device created by the target\n"
+    echo "abracadabra123456789" > ${KEDR_TEST_DEVICE}
+    if test $? -ne 0; then
+        printf "Errors occured while trying to write to ${KEDR_TEST_DEVICE}\n"
+    # A kind of a non-fatal assertion.
+    fi
+
+    printf "Trying to unload the controller while the target is under analysis (must fail)\n"
+    /sbin/rmmod "@CONTROLLER_NAME@"
+    if test $? -eq 0; then
+        printf "The controller module must have been locked "
+        printf "as long as the target module is under analysis\n"
+        cleanupAll
+        exit 1
+    fi
+    printf "This error was expected, continuing.\n"
+
+    sh ./target_unload.sh
+    if test $? -ne 0; then
+        printf "Failed to unload the target module: ${TARGET_NAME}\n"
+        cleanupAll
+        exit 1
+    fi
+    cd "${WORK_DIR}"
+
+    /sbin/rmmod "${PAYLOAD_NAME}"
+    if test $? -ne 0; then
+        printf "Failed to unload the payload module: ${PAYLOAD_NAME}\n"
+        cleanupAll
+        exit 1
+    fi
+
+    /sbin/rmmod "@CONTROLLER_NAME@"
+    if test $? -ne 0; then
+        printf "Failed to unload the controller module\n"
+        cleanupAll
+        exit 1
+    fi
+
+    /sbin/rmmod "@BASE_NAME@" || exit 1
+}
+
+########################################################################
+# Scenario:
+#   load base and payload module
+#   load target
+#   try to load controller (must fail)
+#   unload target
+#   unload the payload module and base
+########################################################################
+checkTargetFirstScenario()
+{
+    printf "Executing checkTargetFirstScenario()\n"
+    
+    /sbin/insmod "${BASE_MODULE}" || exit 1
+
+    /sbin/insmod "${PAYLOAD_MODULE}"
+    if test $? -ne 0; then
+        printf "Failed to load the payload module\n"
+        cleanupAll
+        exit 1
+    fi
+
+    cd "${TARGET_NAME}" && sh ./target_load.sh
+    if test $? -ne 0; then
+        printf "Failed to load the target module: ${TARGET_MODULE}\n"
+        cleanupAll
+        exit 1
+    fi
+
+    printf "Trying to load the controller when the target is already loaded "
+    printf "(must fail)\n"
+    /sbin/insmod "${CONTROLLER_MODULE}" target_name="${TARGET_NAME}"
+    if test $? -eq 0; then
+        printf "Controller must have failed to load if the target "
+        printf "was already loaded at that moment\n"
+        cleanupAll
+        exit 1
+    fi
+    printf "This error was expected, continuing.\n"
+
+    sh ./target_unload.sh
+    if test $? -ne 0; then
+        printf "Failed to unload the target module: ${TARGET_NAME}\n"
+        cleanupAll
+        exit 1
+    fi
+    cd "${WORK_DIR}"
+
+    /sbin/rmmod "${PAYLOAD_NAME}"
+    if test $? -ne 0; then
+        printf "Failed to unload the payload module: ${PAYLOAD_NAME}\n"
+        cleanupAll
+        exit 1
+    fi
+
+    /sbin/rmmod "@BASE_NAME@" || exit 1
+}
+
+########################################################################
+# main
 ########################################################################
 WORK_DIR=${PWD}
 KEDR_TEST_DEVICE=/dev/kedr_test
@@ -15,115 +213,36 @@ if test $# -ne 1; then
 fi
 
 BASE_MODULE="@BASE_DIR@/@BASE_NAME@.ko"
-printf "Base module: ${BASE_MODULE}\n"
-
-if test ! -f "${BASE_MODULE}"; then
-    printf "Base module is missing: ${BASE_MODULE}\n"
-    
-    # test failed
-    exit 1
-fi
-
 CONTROLLER_MODULE="@CONTROLLER_DIR@/@CONTROLLER_NAME@.ko"
-printf "Controller module: ${CONTROLLER_MODULE}\n"
 
-if test ! -f "${CONTROLLER_MODULE}"; then
-    printf "Controller module is missing: ${CONTROLLER_MODULE}\n"
-    exit 1
-fi
-
-TARGET_NAME=$1
-TARGET_MODULE=./${TARGET_NAME}/${TARGET_NAME}.ko
-
-if test ! -f "${TARGET_MODULE}"; then
-    printf "Target module is missing: ${TARGET_MODULE}\n"
-    exit 1
-fi
+TARGET_NAME="simple_target"
+TARGET_MODULE="${TARGET_NAME}/${TARGET_NAME}.ko"
 
 PAYLOAD_NAME="simple_payload"
-PAYLOAD_MODULE=./${PAYLOAD_NAME}/${PAYLOAD_NAME}.ko
+PAYLOAD_MODULE="${PAYLOAD_NAME}/${PAYLOAD_NAME}.ko"
 
-if test ! -f "${PAYLOAD_MODULE}"; then
-    printf "Payload module is missing: ${PAYLOAD_MODULE}\n"
-    exit 1
+checkPrereqs
+
+printf "Base module: ${BASE_MODULE}\n"
+printf "Controller module: ${CONTROLLER_MODULE}\n"
+printf "Target module: ${TARGET_MODULE}\n"
+printf "Payload module: ${PAYLOAD_MODULE}\n"
+
+# Select the test scenario
+TARGET_FIRST=$1
+
+if test "t${TARGET_FIRST}" = "t"; then
+    checkCommonScenario
+else 
+    if test ${TARGET_FIRST} -eq 0; then 
+        checkCommonScenario
+    else
+        checkTargetFirstScenario
+    fi
 fi
 
-########################################################################
-# Scenario:
-#   load base
-#   load a simple payload module
-#   load controller
-#   load target
-#   try to unload controller (must fail)
-#   write some data to the device created by the target
-#   unload target
-#   unload the payload module
-#   unload controller (must succeed this time)
-########################################################################
-/sbin/insmod "${BASE_MODULE}" || exit 1
-
-/sbin/insmod "${CONTROLLER_MODULE}" target_name="${TARGET_NAME}"
-if test $? -ne 0; then
-    printf "Failed to load the controller\n"
-    /sbin/rmmod "@BASE_NAME@"
-    exit 1
-fi
-
-/sbin/insmod "${PAYLOAD_MODULE}"
-if test $? -ne 0; then
-    printf "Failed to load the payload module\n"
-    /sbin/rmmod "@CONTROLLER_NAME@" "@BASE_NAME@"
-    exit 1
-fi
-
-cd "${TARGET_NAME}" && sh ./target_load.sh
-if test $? -ne 0; then
-    printf "Failed to load the target module: ${TARGET_MODULE}\n"
-    /sbin/rmmod "${PAYLOAD_NAME}" "@CONTROLLER_NAME@" "@BASE_NAME@"
-    exit 1
-fi
-
-printf "Sending some data to the device created by the target\n"
-echo "abracadabra123456789" > ${KEDR_TEST_DEVICE}
-if test $? -ne 0; then
-    printf "Errors occured while trying to write to ${KEDR_TEST_DEVICE}\n"
-# A kind of a non-fatal assertion.
-fi
-
-printf "Trying to unload the controller while the target is under analysis (must fail)\n"
-/sbin/rmmod "@CONTROLLER_NAME@"
-if test $? -eq 0; then
-    printf "The controller module must have been locked "
-    printf "as long as the target module is under analysis\n"
-    sh ./target_unload.sh
-    /sbin/rmmod "${PAYLOAD_NAME}" "@CONTROLLER_NAME@" "@BASE_NAME@"
-    exit 1
-fi
-printf "This error was expected, continuing.\n"
-
-sh ./target_unload.sh
-if test $? -ne 0; then
-    printf "Failed to unload the target module: ${TARGET_NAME}\n"
-    /sbin/rmmod "${PAYLOAD_NAME}" "@CONTROLLER_NAME@" "@BASE_NAME@"
-    exit 1
-fi
-cd "${WORK_DIR}"
-
-/sbin/rmmod "${PAYLOAD_NAME}"
-if test $? -ne 0; then
-    printf "Failed to unload the payload module: ${PAYLOAD_NAME}\n"
-    /sbin/rmmod "@CONTROLLER_NAME@" "@BASE_NAME@"
-    exit 1
-fi
-
-/sbin/rmmod "@CONTROLLER_NAME@"
-if test $? -ne 0; then
-    printf "Failed to unload the controller module\n"
-    /sbin/rmmod "@BASE_NAME@"
-    exit 1
-fi
-
-/sbin/rmmod "@BASE_NAME@" || exit 1
+# just in case
+cleanupAll
 
 # test passed
 exit 0
