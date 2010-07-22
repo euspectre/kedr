@@ -9,7 +9,7 @@ newline='
 # kedr.sh status
 #
 # 'start' - start KEDR, when it is not started, for watching for given target.
-# Use config file @DEFAULT_KEDR_CONF_FILE@, if no other arguments are passed.
+# Use config file @KEDR_FILE_DEFAULT_CONTROL_CONFIG@, if no other arguments are passed.
 # Otherwise, join config strings and config files, passed to it, into one config file,
 # and use it instead default.
 #
@@ -20,7 +20,7 @@ newline='
 # 'status' - output current state of KEDR.
 
 # default config file
-default_config_file=@DEFAULT_KEDR_CONF_FILE@
+default_config_file=@KEDR_FILE_DEFAULT_CONTROL_CONFIG@
 
 # commands for kernel module control
 MODPROBE=/sbin/modprobe
@@ -28,12 +28,13 @@ INSMOD=/sbin/insmod
 RMMOD=/sbin/rmmod
 
 # directory for temporary files
-tmp_dir=/tmp/kedr
+tmp_dir=@KEDR_PREFIX_TEMP_SESSION@/control
 # Point for mount debugfs filesystem for enable tracing points in controller module
 # (!!!) This directory should not be used by capture trace functionality for same purpose, because
 # capturing trace will be running BEFORE controller, so after it run, debugfs should be always mounted.
 # But after enabling tracpoints for controller, it umount debugfs from its local directory
-contr_debugfs_mount_point=${tmp_dir}/controller_debugfs
+
+controller_debugfs_mount_point=${tmp_dir}/controller_debugfs
 
 # commands(in format of config file), used for last start KEDR
 start_conf_file=${tmp_dir}/start.conf
@@ -137,7 +138,7 @@ parse_conf_on_load()
     sed -n -e "${regex_parse_conf}" -e ":module; :payload; ${regex_is_alias};" \
             -e ":alias; s!^!/sbin/modprobe !; b out; :notalias; s!^!/sbin/insmod !; b out;" \
             -e ":on_load; b out; :on_unload; d" \
-            -e ":error; s/^/printf \"%s\\n\" \"Incorrect config line '/; s/$/'\"/;" \
+            -e ":error; s/^/printf \"%s\\\\n\" \"Incorrect config line '/; s/$/'\"/;" \
             -e ":out; =; p; " "$1"
 }
 
@@ -156,7 +157,7 @@ parse_conf_on_unload()
     sed -n  -e ${up_to_line} -e "${regex_parse_conf}" -e ":module; :payload; s/[[:blank:]].\{0,\}//; ${regex_is_alias};"\
             -e ":alias; s!^!/sbin/modprobe -r !; b out; :notalias; s!^!/sbin/rmmod !; b out;"\
             -e ":on_unload; b out; :on_load; d"\
-            -e ":error; s/^/printf \"%s\\n\" \"Incorrect config line '/; s/$/'\"/;"\
+            -e ":error; s/^/printf \"%s\\\\n\" \"Incorrect config line '/; s/$/'\"/;"\
             -e ":out; p; " "$1" | sed '1!G;h;$!d'
 }
 
@@ -247,8 +248,8 @@ rollback()
 }
 
 
-base_name=`get_module_name @BASE_MODULE@`
-controller_name=`get_module_name @CONTROLLER_MODULE@`
+base_name=`get_module_name @KEDR_FILE_BASE@`
+controller_name=`get_module_name @KEDR_FILE_CONTROLLER@`
 target_name=
 command=$1
 shift
@@ -294,18 +295,18 @@ start)
         printf "Cannot write to temporary file\n"
         exit 1
     fi
-    collect_conf_file "${start_conf_file}" -c "module @BASE_MODULE@"
+    collect_conf_file "${start_conf_file}" -c "module @KEDR_FILE_BASE@"
     if test $# -eq 0; then
         collect_conf_file "${start_conf_file}" "${default_config_file}"
     else
         collect_conf_file "${start_conf_file}" "$@"
     fi
-    collect_conf_file "${start_conf_file}" -c "module @CONTROLLER_MODULE@ target_name=${target_name}"
+    collect_conf_file "${start_conf_file}" -c "module @KEDR_FILE_CONTROLLER@ target_name=${target_name}"
     # Enable tracepoints for controller
-    collect_conf_file "${start_conf_file}" -c "on_load mkdir -p @kedr_controller_debugfs_dir@" \
-                                            -c "on_load mount debugfs -t debugfs @kedr_controller_debugfs_dir@" \
-                                            -c "on_load printf 1 > @kedr_controller_debugfs_dir@/tracing/events/${controller_name}/enable" \
-                                            -c "on_load umount @kedr_controller_debugfs_dir@"
+    collect_conf_file "${start_conf_file}" -c "on_load mkdir -p \"${controller_debugfs_mount_point}\"" \
+                                            -c "on_load mount debugfs -t debugfs \"${controller_debugfs_mount_point}\"" \
+                                            -c "on_load printf 1 > \"${controller_debugfs_mount_point}/tracing/events/${controller_name}/enable\"" \
+                                            -c "on_load umount \"${controller_debugfs_mount_point}\""
 
     execute_conf_on_load "${start_conf_file}"
     if test $? -ne 0; then
@@ -317,7 +318,7 @@ start)
     ;;
 stop)
     if test ${base_is_running} -eq 0; then
-        printf "%s\n" "Service is not running. For start it call '$0 start'"
+        printf "Service is not running. For start it call '%s start'\n" "$0"
         exit 1
     fi
     if test ${target_is_running} -ne 0; then

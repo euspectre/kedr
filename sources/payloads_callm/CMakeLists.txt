@@ -1,7 +1,8 @@
-kbuild_use_symbols("${CMAKE_BINARY_DIR}/base/Module.symvers")
+set(MIST_GEN_TEMPLATES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/templates/") 
 
 set(MIST_GEN_EXECUTABLE "${CMAKE_BINARY_DIR}/mist_gen/mist_gen")
-set(MIST_GEN_TEMPLATES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/templates")
+
+kbuild_use_symbols("${CMAKE_BINARY_DIR}/base/Module.symvers")
 
 # Common name of data file
 set(payload_data_file "payload.data")
@@ -72,33 +73,12 @@ function(kedr_test_add_trigger_for_function payload)
 	endforeach(function ${ARGN})
 endfunction(kedr_test_add_trigger_for_function payload)
 
-# For local use.
-# Add line to configuration file, for install one and for test one
-macro(kedr_add_conf_line_install line)
-    file(APPEND "${kedr_cm_conf_file}" "${line}" "\n")
-endmacro(kedr_add_conf_line_install line)
-macro(kedr_add_conf_line_test line)
-    file(APPEND "${kedr_test_cm_conf_file}" "${line}" "\n")
-endmacro(kedr_add_conf_line_test line)
-
-# Add line to both configuration files(common lines)
-macro(kedr_add_conf_line line)
-    kedr_add_conf_line_install("${line}")
-    kedr_add_conf_line_test("${line}")
-endmacro(kedr_add_conf_line line)
-
 # Macro for added load of given payload into default configuration file for call monitor payloads
 macro(kedr_add_default_cm_payload payload_name)
-    kedr_add_conf_line_install("payload ${KEDR_INSTALL_PREFIX_KMODULE}/${payload_name}.ko")
-    kedr_add_conf_line_test("payload ${CMAKE_CURRENT_BINARY_DIR}/${payload_name}.ko")
-# Enable tracepoints
-    kedr_add_conf_line("on_load echo 1 > ${kedr_debugfs_dir}/tracing/events/${payload_name}/enable")
+    file(APPEND ${kedr_cm_conf_file_data} "name = ${payload_name}\n")
+    file(APPEND ${kedr_cm_conf_file_data} "install_path = ${KEDR_INSTALL_PREFIX_KMODULE}/${payload_name}.ko\n")
+    file(APPEND ${kedr_cm_conf_file_data} "test_path = ${CMAKE_CURRENT_BINARY_DIR}/${payload_name}.ko\n")
 endmacro(kedr_add_default_cm_payload payload_name)
-
-kedr_add_conf_line("on_load mkdir -p ${kedr_debugfs_dir}")
-kedr_add_conf_line("on_load mount debugfs -t debugfs ${kedr_debugfs_dir}")
-# For rollback, when error occures while loading payloads
-kedr_add_conf_line("on_unload mount | grep \"${kedr_debugfs_dir}\"; if test $? -eq 0; then umount \"${kedr_debugfs_dir}\"; fi")
 
 add_subdirectory(common_memory_management)
 add_subdirectory(mutexes)
@@ -109,5 +89,3 @@ add_subdirectory(waitqueue)
 add_subdirectory(capable)
 add_subdirectory(virtual_memory_management)
 
-# After tracepoints are enabled for all payloads, unmount debugfs
-kedr_add_conf_line("on_load umount ${kedr_debugfs_dir}")

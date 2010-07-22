@@ -9,8 +9,9 @@
 kedr_control_scipt="sh @CMAKE_BINARY_DIR@/tools/control/kedr_test"
 capture_trace_script="sh @CMAKE_BINARY_DIR@/tools/capture_trace/kedr_capture_trace"
 capture_trace_until_done_script="sh @CMAKE_BINARY_DIR@/tools/capture_trace/kedr_capture_trace_until_done.sh"
-kedr_debugfs_dir=@kedr_debugfs_dir@
-temp_dir=/tmp/kedr/call_interception
+temp_dir=@KEDR_TEST_PREFIX_TEMP_SESSION@/call_interception
+kedr_debugfs_dir=${temp_dir}/debugfs
+
 
 device=kedr_trigger_device
 
@@ -35,16 +36,16 @@ function=$1
 payload=$2
 
 payload_name=`printf "%s" "$payload" | sed '/\// s/^.\{0,\}\///; /\./ s/\..\{0,\}$//;'`
-trace_file=${temp_dir}/${function}.trace
+trace_file="${temp_dir}/${function}.trace"
 
 # Load KEDR with given payload
 
-${kedr_control_scipt} start ${trigger_module_name} \
-	-c "payload ${payload}" \
-	-c "on_load mkdir -p ${kedr_debugfs_dir}" \
-	-c "on_load mount debugfs -t debugfs ${kedr_debugfs_dir}" \
-	-c "on_unload umount ${kedr_debugfs_dir}" \
-	-c "on_load echo 1 > ${kedr_debugfs_dir}/tracing/events/${payload_name}/enable"
+${kedr_control_scipt} start "${trigger_module_name}" \
+	-c "payload \"${payload}\"" \
+	-c "on_load mkdir -p \"${kedr_debugfs_dir}\"" \
+	-c "on_load mount debugfs -t debugfs \"${kedr_debugfs_dir}\"" \
+	-c "on_unload umount \"${kedr_debugfs_dir}\"" \
+	-c "on_load echo 1 > \"${kedr_debugfs_dir}/tracing/events/${payload_name}/enable\""
 
 if test $? -ne 0; then
 	printf "Failed to start test\n"
@@ -53,7 +54,7 @@ fi
 
 # Load trigger module as target
 
-/sbin/insmod ${trigger_module} 
+/sbin/insmod "${trigger_module}"
 
 if test $? -ne 0; then
 	printf "Failed to start trigger module\n"
@@ -79,7 +80,7 @@ ${trigger_program} ${function}
 test_result=$?
 
 rm -f /dev/${device}
-/sbin/rmmod ${trigger_module}
+/sbin/rmmod "${trigger_module}"
 
 # Capture trace
 mkdir -p "${temp_dir}"
@@ -101,7 +102,7 @@ if test $test_result -ne 0; then
 fi
 
 # Verify, whether trace file is full
-grep "target_session_ends" ${trace_file} > /dev/null 2> /dev/null
+grep "target_session_ends" "${trace_file}" > /dev/null 2> /dev/null
 if test $? -ne 0; then
 	printf "Trace file not full\n"
     # Only warning, not error

@@ -1,5 +1,5 @@
 #name of module created
-set(kmodule_name "kedr_cm_shedule")
+set(kmodule_name "kedr_cm_schedule")
 
 #first part of data-file
 configure_file("beginning.data.in"
