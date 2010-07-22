@@ -1,0 +1,177 @@
+#!/bin/sh
+
+########################################################################
+# This test checks kedr_target_module_in_init() function.
+# Usage: 
+#   sh test.sh <in_init> <in_atomic>
+#
+# <in_init> specifies whether the call to the target function should be made
+# at the initialization stage of the target module (!= 0) or from the module 
+# core (== 0)
+# <in_atomic> specifies whether that call should be made from atomic context
+# (!= 0) or not (== 0).
+########################################################################
+
+########################################################################
+# A function to check prerequisites: whether the necessary files exist,
+# etc.
+########################################################################
+checkPrereqs()
+{
+    if test ! -f "${BASE_MODULE}"; then
+        printf "Base module is missing: ${BASE_MODULE}\n"
+        exit 1
+    fi
+    
+    if test ! -f "${CONTROLLER_MODULE}"; then
+        printf "Controller module is missing: ${CONTROLLER_MODULE}\n"
+        exit 1
+    fi
+    
+    if test ! -f "${TARGET_MODULE}"; then
+        printf "Target module is missing: ${TARGET_MODULE}\n"
+        exit 1
+    fi
+    
+    if test ! -f "${PAYLOAD_MODULE}"; then
+        printf "Payload module is missing: ${PAYLOAD_MODULE}\n"
+        exit 1
+    fi
+}
+
+########################################################################
+# Cleanup function
+########################################################################
+cleanupAll()
+{
+    cd "${WORK_DIR}"
+    
+    lsmod | grep "${TARGET_NAME}" > /dev/null 2>&1
+    if test $? -eq 0; then
+        cd "${TARGET_NAME}"
+        sh ./target_unload.sh
+        cd "${WORK_DIR}"
+    fi
+    
+    lsmod | grep "@CONTROLLER_NAME@" > /dev/null 2>&1
+    if test $? -eq 0; then
+        /sbin/rmmod "@CONTROLLER_NAME@"
+    fi
+    
+    lsmod | grep "${PAYLOAD_NAME}" > /dev/null 2>&1
+    if test $? -eq 0; then
+        /sbin/rmmod "${PAYLOAD_NAME}"
+    fi
+    
+    lsmod | grep "@BASE_NAME@" > /dev/null 2>&1
+    if test $? -eq 0; then
+        /sbin/rmmod "@BASE_NAME@"
+    fi
+}
+
+########################################################################
+# doTest() - preform the actual testing
+########################################################################
+doTest()
+{
+    /sbin/insmod "${BASE_MODULE}" || exit 1
+
+    /sbin/insmod "${PAYLOAD_MODULE}"
+    if test $? -ne 0; then
+        printf "Failed to load the payload module\n"
+        cleanupAll
+        exit 1
+    fi
+    
+    OUT_PARAM_FILE="/sys/module/${PAYLOAD_NAME}/parameters/target_in_init"
+    if test ! -e "${OUT_PARAM_FILE}"; then
+        printf "Parameter file does not exist: ${OUT_PARAM_FILE}\n"
+        cleanupAll
+        exit 1
+    fi
+
+    /sbin/insmod "${CONTROLLER_MODULE}" target_name="${TARGET_NAME}"
+    if test $? -ne 0; then
+        printf "Failed to load the controller\n"
+        cleanupAll
+        exit 1
+    fi
+
+    /sbin/insmod "${TARGET_MODULE}" in_init=${IN_INIT} in_atomic=${IN_ATOMIC}
+    if test $? -ne 0; then
+        printf "Failed to load the target module: ${TARGET_MODULE}\n"
+        cleanupAll
+        exit 1
+    fi
+
+    /sbin/rmmod "${TARGET_NAME}"
+    if test $? -ne 0; then
+        printf "Failed to unload the target module: ${TARGET_NAME}\n"
+        cleanupAll
+        exit 1
+    fi
+
+    # Save the result to be analyzed below
+    RESULT_IN_INIT=$(cat "${OUT_PARAM_FILE}")
+
+    /sbin/rmmod "${PAYLOAD_NAME}"
+    if test $? -ne 0; then
+        printf "Failed to unload the payload module: ${PAYLOAD_NAME}\n"
+        cleanupAll
+        exit 1
+    fi
+
+    /sbin/rmmod "@CONTROLLER_NAME@"
+    if test $? -ne 0; then
+        printf "Failed to unload the controller module\n"
+        cleanupAll
+        exit 1
+    fi
+
+    /sbin/rmmod "@BASE_NAME@" || exit 1
+    
+    # Check the saved result
+    printf "Expected value of target_in_init flag is '${IN_INIT}', "
+    printf "actual value is '${RESULT_IN_INIT}'\n"
+    if test "t${RESULT_IN_INIT}" != "t${IN_INIT}"; then
+        exit 1
+    fi
+}
+
+########################################################################
+# main
+########################################################################
+WORK_DIR=${PWD}
+
+if test $# -ne 2; then
+    printf "Usage: sh test.sh <in_init> <in_atomic>\n"
+    exit 1
+fi
+
+IN_INIT=$1
+IN_ATOMIC=$2
+printf "Mode: in_init=${IN_INIT}, in_atomic=${IN_ATOMIC}\n"
+
+BASE_MODULE="@BASE_DIR@/@BASE_NAME@.ko"
+CONTROLLER_MODULE="@CONTROLLER_DIR@/@CONTROLLER_NAME@.ko"
+
+TARGET_NAME="test_in_init_target"
+TARGET_MODULE="target/${TARGET_NAME}.ko"
+
+PAYLOAD_NAME="test_in_init_payload"
+PAYLOAD_MODULE="payload/${PAYLOAD_NAME}.ko"
+
+checkPrereqs
+
+printf "Base module: ${BASE_MODULE}\n"
+printf "Controller module: ${CONTROLLER_MODULE}\n"
+printf "Target module: ${TARGET_MODULE}\n"
+printf "Payload module: ${PAYLOAD_MODULE}\n"
+
+doTest
+
+# just in case
+cleanupAll
+
+# test passed
+exit 0

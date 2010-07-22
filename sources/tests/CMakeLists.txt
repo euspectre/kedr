@@ -29,3 +29,6 @@ configure_file (
 )
 
 kedr_test_add_script (kedr.sample.01 sample.sh)
+
+# The tests for API provided by the KEDR core to the payload modules.
+add_subdirectory (payload_api)
