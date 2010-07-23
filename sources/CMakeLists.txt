@@ -89,7 +89,7 @@ endif()
 
 #######################################################################
 add_subdirectory(base)
-add_subdirectory(mist_gen)
+#add_subdirectory(mist_gen)
 
 # This file will be used for tests, whether controller really intercept
 # particular functions calls
