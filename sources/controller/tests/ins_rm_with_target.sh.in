@@ -208,7 +208,7 @@ WORK_DIR=${PWD}
 KEDR_TEST_DEVICE=/dev/kedr_test
 
 if test $# -ne 1; then
-    printf "Usage: /bin/bash ins_rm_with_target.sh <target_name\n"
+    printf "Usage: sh ins_rm_with_target.sh <target_before_controller>\n"
     exit 1
 fi
 
