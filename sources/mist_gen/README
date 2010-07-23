@@ -1,56 +1,18 @@
-The "mist_gen" example uses MiST Engine to generate different types of 
-documents from the same data but different templates.
+KEDR File Generator ("kedr_file_gen") is a tool to generate files based on 
+special templates ("documents with holes"). 
 ========================================================================
 
-The example should be build with GCC 4.x. On Windows, it is recommended to
-use MinGW for GCC C++ compiler and for GNU Make tool.
+Technically, it is a variant of "mist_gen" example from Template2Code 
+project (http://template2code.sourceforge.net) adapted to be applicable in 
+KEDR. 
 
-[NB] The sources of MiST Engine 1.0.0 are included in this example for 
-convenience, see src/mist_engine directory. Note that they are only used 
-to build the example on Linux (you do not need to build them manually anyway
-as the makefile handles this). During the build, MiST Engine library will be
-built and installed locally to 'mist_engine' subdirectory in the example's 
-main directory.
+The source code repository of the original "mist_gen" is available here:
+http://template2code.hg.sourceforge.net/hgweb/template2code/template2code/
 
-On Windows, the easiest way is to use the pre-built MiST Engine package 
-available from http://template2code.sourceforge.net. Just unpack the archive
-to 'mist_engine' subdirectory in the example's main directory. After that, 
-the subdirectory should contain at least 'include' and 'lib' subdirectories
-with the appropriate header files and libraries.
+KEDR File Generator tool uses a private copy of MiST Engine library (see http://template2code.sourceforge.net) to generate necessary files.
+========================================================================
 
-[Build]
-To build the example, execute
-
-        make -f makefile.linux 
-
-on Linux or
-
-        mingw32-make -f makefile.win32
-
-on Microsoft Windows.
-
-[Run]
-To run the example, execute 
-
-        ./mist_gen templates/source_file data/data.txt > result.c
-
-on Linux or
-
-        mist_gen.exe templates\source_file data\data.txt > result.c
-
-on Microsoft Windows.
-
-[Try it out]
-When you use "source_file" set of templates, a C source file will be 
-generated from the data in data.txt file.
-You can try to use a different set of templates, to generate a document in 
-a different format from the same data.
-
-Two more sets of templates are distributed with the example:
-- "html_table" (templates/html_table) allows to create a html page with a 
-    table filled with the data;
-- "text_report" (templates/some_report) allows to create a plain text 
-    "report" including the data.
+From the description of "mist_gen":
 
 [How it works]
 The resulting document is always organized as follows. It may have head
@@ -133,3 +95,4 @@ in each group are combined when generating the document.
 
 This allows to create other list-like structures in the document like the 
 list of function names in this example.
+========================================================================
