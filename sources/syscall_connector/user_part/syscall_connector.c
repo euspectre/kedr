@@ -26,9 +26,10 @@
 
 struct _sc_interaction
 {
-	int sock_fd;
+	sc_interaction_id in_type;
 	__u32 pid;
-	interaction_id in_type;
+
+	int sock_fd;
 	//may be other fields(e.g, sequence)
 };
 
@@ -37,7 +38,7 @@ struct _sc_interaction
  */
 
 HELPER_DLL_EXPORT sc_interaction*
-sc_interaction_create(__u32 pid, interaction_id in_type)
+sc_interaction_create(sc_interaction_id in_type, __u32 pid)
 {
 	struct sockaddr_nl src_addr;
 	sc_interaction* interaction;

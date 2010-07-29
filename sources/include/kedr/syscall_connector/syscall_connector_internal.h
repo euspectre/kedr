@@ -65,34 +65,34 @@
 /*
  * Formats of the message:
  *
- * | interaction_id | payload_length | payload | [padding] |
+ * | sc_interaction_id | payload_length | payload | [padding] |
  *                                   \_________/
  *                                  payload_length
  */
 
 struct sc_msg
 {
-	interaction_id in_type;
+	sc_interaction_id in_type;
 	size_t payload_length;
 	const void* payload;
 };
 
 static inline size_t sc_msg_len(struct sc_msg* msg)
 {
-	return sizeof(interaction_id) + sizeof(size_t)
+	return sizeof(sc_interaction_id) + sizeof(size_t)
 		+ msg->payload_length;
 }
 
 static inline void sc_msg_put(const struct sc_msg* msg, void* buffer)
 {
-	SC_MESSAGE_WRITE(buffer, msg->in_type, interaction_id);
+	SC_MESSAGE_WRITE(buffer, msg->in_type, sc_interaction_id);
 	SC_MESSAGE_WRITE(buffer, msg->payload_length, size_t);
 	SC_MESSAGE_WRITE_BYTES(buffer, msg->payload, msg->payload_length);
 }
 static inline int sc_msg_get(struct sc_msg* msg, const void* buffer,
 	size_t buffer_len)
 {
-	SC_MESSAGE_GET(buffer, buffer_len, msg->in_type, interaction_id);
+	SC_MESSAGE_GET(buffer, buffer_len, msg->in_type, sc_interaction_id);
 	SC_MESSAGE_GET(buffer, buffer_len, msg->payload_length, size_t);
 	SC_MESSAGE_GET_BYTES(buffer, buffer_len,
 		msg->payload, msg->payload_length);
