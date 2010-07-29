@@ -3,6 +3,7 @@
 #include <linux/slab.h>
 #include <linux/list.h>
 #include <linux/mutex.h> /* mutexes */
+#include <linux/spinlock.h> /* spinlocks */
 /*
  * List of 'destroy' functions(and their user_data) for some module.
  */
@@ -13,9 +14,9 @@ struct destroy_data
 	destroy_notify destroy;
 	void* user_data;
     /*
-     * currently_called=0, if one can safetly remove this node and its data(under mutex locked),
+     * currently_called=0, if one can safetly remove this node and its data(under spinlock locked),
      * otherwise 1.
-     * (make node, except 'list' member, readonly for others)
+     * (when 1, make this node itseld, and 'list', 'destroy' and 'user_data' fields readonly for others even without spinlock taken.)
      */
     int currently_called;
 };
@@ -30,36 +31,46 @@ struct module_weak_ref_data
 	struct module* m;
 	struct list_head destroy_data;
     /*
-     * currently_unloaded=0, if one can safetly remove this node (under mutex locked),
+     * currently_unloaded=0, if one can safetly remove this node (under spinlock locked),
      * otherwise 1.
+     * (when 1, make this node itself and 'list' member readonly for others even without spinlock taken.)
      */
     int currently_unloaded;
 };
 
-// pointer to list of modules
-LIST_HEAD(module_weak_ref_list);
+// Head of the list of modules
+static struct list_head module_weak_ref_list;
+
 /* 
- * Mutex which protect(against concurrent read and write):
+ * Spinlock which protect(against concurrent read and write):
  * -list of modules,  except node for unloading one
  * -list of destroy functions for each module, except node for currently executed callback
  */
-DEFINE_MUTEX(module_weak_ref_mutex);
+
+static spinlock_t module_weak_ref_spinlock;
+
 /*
  * Mutex for wait current callback execution.
  */
-DEFINE_MUTEX(module_weak_ref_callback_mutex);
+
+static struct mutex module_weak_ref_callback_mutex;
+
+// Indicator, whether all functionality is currently initialized.
+static int is_initialized = 0;
+
 // Auxiliary functions
+
 /* 
  * Look for node for given module.
  * If found, return this node. Otherwise, return NULL.
  *
- * [!] Should be called under module_weak_ref_mutex locked.
+ * Should be called with module_weak_ref_spinlock taken.
  */
 
 static struct module_weak_ref_data* get_module_node(struct module* m);
 
 /*
- * Called when some module is unloading.
+ * Callback, called when some module change its state(for detect unloading).
  */
 
 static int 
@@ -77,38 +88,80 @@ struct notifier_block detector_nb = {
 // Should be called for use weak reference functionality on module.
 int module_weak_ref_init(void)
 {
-	return register_module_notifier(&detector_nb);
+	int result;
+	
+	if(is_initialized) return 1; //already initialized
+    
+	spin_lock_init(&module_weak_ref_spinlock);
+    mutex_init(&module_weak_ref_callback_mutex);
+    INIT_LIST_HEAD(&module_weak_ref_list);
+    
+	result = register_module_notifier(&detector_nb);
+    if(result)
+    {
+        mutex_destroy(&module_weak_ref_callback_mutex);
+        return result;//fail to initialized
+    }
+    
+    is_initialized = 1;
+    return 0;
 }
 // Should be called when the functionality will no longer be used.
 void module_weak_ref_destroy(void)
 {
+    if(is_initialized) return;//already destroyed
+    
 	BUG_ON(!list_empty(&module_weak_ref_list));
 	unregister_module_notifier(&detector_nb);
+    mutex_destroy(&module_weak_ref_callback_mutex);
+    
+    is_initialized = 0;
 }
+
 // Shedule 'destroy' function to call when module is unloaded.
 void module_weak_ref(struct module* m,
 	destroy_notify destroy, void* user_data)
 {
 	struct destroy_data* ddata;
-    struct module_weak_ref_data* mdata;
+    struct module_weak_ref_data *mdata, *mdata_new;
+	unsigned long flags;
+    
+	if(!is_initialized) return;//silently returned
 	
 	ddata = kmalloc(sizeof(*ddata), GFP_KERNEL);
 	ddata->destroy = destroy;
 	ddata->user_data = user_data;
     ddata->currently_called = 0;
-
-    while(mutex_lock_interruptible(&module_weak_ref_mutex));
+    
+    spin_lock_irqsave(&module_weak_ref_spinlock, flags);
+	mdata = get_module_node(m);
+	// Add new node only if node for module already exist
+	if(mdata != NULL)
+    {
+    	list_add_tail(&ddata->list, &mdata->destroy_data);
+    }
+    spin_unlock_irqrestore(&module_weak_ref_spinlock, flags);
+    
+	if(mdata != NULL) return;
+    // Otherwise create node for module before, but without spinlock taken.
+	mdata_new = kmalloc(sizeof(*mdata_new), GFP_KERNEL);
+	mdata_new->m = m;
+    mdata_new->currently_unloaded = 0;
+	INIT_LIST_HEAD(&mdata_new->destroy_data);
+    spin_lock_irqsave(&module_weak_ref_spinlock, flags);
+    // Look for node for module again, because we was released spinlock.
 	mdata = get_module_node(m);
 	if(mdata == NULL)
-	{
-		mdata = kmalloc(sizeof(*mdata), GFP_KERNEL);
-		mdata->m = m;
-        mdata->currently_unloaded = 0;
-		INIT_LIST_HEAD(&mdata->destroy_data);
-		list_add_tail(&mdata->list, &module_weak_ref_list);
-	}
-	list_add_tail(&ddata->list, &mdata->destroy_data);
-    mutex_unlock(&module_weak_ref_mutex);
+    {
+    	list_add_tail(&mdata_new->list, &module_weak_ref_list);
+        mdata = mdata_new;
+    }
+    else //someone add node for module while we prepare ourself one
+    {
+        kfree(mdata_new);
+    }
+    list_add_tail(&ddata->list, &mdata->destroy_data);
+    spin_unlock_irqrestore(&module_weak_ref_spinlock, flags);
 }
 // Cancel sheduling.
 int module_weak_unref(struct module* m,
@@ -117,8 +170,9 @@ int module_weak_unref(struct module* m,
 	int result = -1;
 	struct destroy_data* ddata;
     struct module_weak_ref_data* mdata;
-    while(mutex_lock_interruptible(&module_weak_ref_mutex));
-	
+    unsigned long flags;
+
+	spin_lock_irqsave(&module_weak_ref_spinlock, flags);
 	mdata = get_module_node(m);
 	
     if(mdata != NULL)
@@ -128,7 +182,7 @@ int module_weak_unref(struct module* m,
     		if(ddata->destroy == destroy && ddata->user_data == user_data)
     		{
     			result = ddata->currently_called;
-    			if(result)
+    			if(!result)
                 {
         			list_del(&ddata->list);
         			kfree(ddata);
@@ -142,7 +196,7 @@ int module_weak_unref(struct module* m,
     		kfree(mdata);
     	}
     }
-    mutex_unlock(&module_weak_ref_mutex);
+    spin_unlock_irqrestore(&module_weak_ref_spinlock, flags);
     BUG_ON(mdata == NULL);//module not found
     BUG_ON(result == -1);//callback not found
     return result;
@@ -164,43 +218,45 @@ detector_modules_unload(struct notifier_block *nb,
 {
 	struct module_weak_ref_data* mdata;
 	struct destroy_data* ddata;
+    unsigned long flags;
 	//If module is not unloading do nothing
 	if(mod_state != MODULE_STATE_GOING) return 0;
-    while(mutex_lock_interruptible(&module_weak_ref_mutex));
+    
+    spin_lock_irqsave(&module_weak_ref_spinlock, flags);
 	mdata = get_module_node(vmod);
     mdata->currently_unloaded = 1; //prevent mdata to be invalidated
-    mutex_unlock(&module_weak_ref_mutex);
+    spin_unlock_irqrestore(&module_weak_ref_spinlock, flags);
+    
     BUG_ON(mdata == NULL);
 	//without mutex lock, but it shouldn't be invalidated because of 'currently_unloaded' flag
 	if(mdata != NULL)
 	{
-    	while(mutex_lock_interruptible(&module_weak_ref_mutex));
+    	spin_lock_irqsave(&module_weak_ref_spinlock, flags);
     	while(!list_empty(&mdata->list))
         {
             ddata = list_first_entry(&mdata->destroy_data, struct destroy_data, list);
             ddata->currently_called = 1; //prevent ddata to be invalidated
             /*
-             * Take another mutex - while callback is executed.
+             * Take mutex while spinlock is taken.
              *
-             *(!!!!)We take new mutex while holding another, 
+             *(!!!!)We take new lock while holding another, 
              * because otherwise module_weak_ref_wait() may be executed and returned
              * before we take mutex for callback, and callback will be executed after it,
              * that is error.
              */
-            while(mutex_lock_interruptible(&module_weak_ref_callback_mutex));
-            mutex_unlock(&module_weak_ref_mutex);
-            
+            mutex_lock(&module_weak_ref_callback_mutex);
+            spin_unlock_irqrestore(&module_weak_ref_spinlock, flags);
             
             ddata->destroy(vmod, ddata->user_data);
             mutex_unlock(&module_weak_ref_callback_mutex);
-            //reaquire old mutex
-            while(mutex_lock_interruptible(&module_weak_ref_mutex));
+            //reaquire spinlock
+    	    spin_lock_irqsave(&module_weak_ref_spinlock, flags);
             list_del(&ddata->list);
     		kfree(ddata);
         }
     	list_del(&mdata->list);
     	kfree(mdata);
-        mutex_unlock(&module_weak_ref_mutex);
+        spin_unlock_irqrestore(&module_weak_ref_spinlock, flags);
     }
 	return 0;
 }
@@ -208,6 +264,6 @@ detector_modules_unload(struct notifier_block *nb,
 void module_weak_ref_wait()
 {
     //simple take and release mutex for callback
-    while(mutex_lock_interruptible(&module_weak_ref_callback_mutex));
+    mutex_lock(&module_weak_ref_callback_mutex);
     mutex_unlock(&module_weak_ref_callback_mutex);
 }

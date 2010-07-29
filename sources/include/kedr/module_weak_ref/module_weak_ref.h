@@ -54,6 +54,8 @@ void module_weak_ref_destroy(void);
 
 /*
  * Schedule 'destroy' function to call when module is unloaded.
+ *
+ * Cannot be used in the interrupt context.
  */
 
 void module_weak_ref(struct module* m,
@@ -64,12 +66,16 @@ void module_weak_ref(struct module* m,
  *
  * Returns 0, if 'destroy' function will canceling and will not be called in the future.
  * Returns 1, if canceling of 'destroy' function impossible - it is executed at that moment.
+ *
+ * May be used in the interrupt context.
  */
 int module_weak_unref(struct module* m,
 	destroy_notify destroy, void* user_data);
 
 /*
  * Block current process until current call of the callback function will return.
+ *
+ * May call 'schedule' for current process.
  */
 
 void module_weak_ref_wait(void);
