@@ -89,6 +89,8 @@ void kedr_fsim_point_unregister(struct kedr_simulation_point* point);
  * 
  * Format of 'user_data' should correspond to the format string
  * used when point was registered.
+ *
+ * May be executed in the atomic context(and in the interruptible context?).
  */
 
 int kedr_fsim_simulate(struct kedr_simulation_point* point,
@@ -116,14 +118,19 @@ int kedr_fsim_simulate(struct kedr_simulation_point* point,
  * 
  * Otherwise set given indicator as current indicator,
  * used by point, and return 0.
+ *
+ * Because point may be used anywere in the program, 
+ * 'fi' should can correctly work in atomic context(and in the interrupt context?).
  */
 
-int kedr_fsim_set_indicator(const char* point_name,
+int kedr_fsim_indicator_set(const char* point_name,
 	kedr_fsim_fault_indicator fi, const char* format_string,
 	struct module* m,
 	void* indicator_state, kedr_fsim_destroy_indicator_state destroy);
 
 // Additional functions may be here.
 
+// Clear indicator for given point
+int kedr_fsim_indicator_clear(const char* point_name);
 
 #endif /* FAULT_SIMULATION_H */

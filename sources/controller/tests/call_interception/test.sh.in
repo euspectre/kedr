@@ -7,8 +7,7 @@
 #	'payload' - call monitor payload, which replace this function
 
 kedr_control_scipt="sh @CMAKE_BINARY_DIR@/tools/control/kedr_test"
-capture_trace_script="sh @CMAKE_BINARY_DIR@/tools/capture_trace/kedr_capture_trace"
-capture_trace_until_done_script="sh @CMAKE_BINARY_DIR@/tools/capture_trace/kedr_capture_trace_until_done.sh"
+capture_trace_until_done_script="sh @CMAKE_SOURCE_DIR@/tools/capture_trace/kedr_capture_trace_until_done.sh"
 temp_dir=@KEDR_TEST_PREFIX_TEMP_SESSION@/call_interception
 kedr_debugfs_dir=${temp_dir}/debugfs
 

@@ -189,7 +189,7 @@ EXPORT_SYMBOL(kedr_fsim_indicator_function_unregister);
 /*
  * Set indicator function for simulation point. 
  * 
- * Function behaviour is similar to kedr_fsim_set_indicator,
+ * Function behaviour is similar to kedr_fsim_indicator_set,
  * but instead of indicator function it accept name of this indicator
  * (this name should be binding with indicator function via
  * kedr_fsim_indicator_function_register).
@@ -207,8 +207,7 @@ int kedr_fsim_set_indicator_by_name(const char* point_name,
 	if(indicator_name == NULL || *indicator_name == '\0')
 	{
 		//clear indicator for the point
-		return kedr_fsim_set_indicator(point_name,
-				NULL, NULL,	NULL, NULL, NULL);
+		return kedr_fsim_indicator_clear(point_name);
 	}
 	node = indicator_descriptor_lookup(indicator_name);
 	if(node == NULL) return -1;
@@ -222,7 +221,7 @@ int kedr_fsim_set_indicator_by_name(const char* point_name,
 	{
 		indicator_state = NULL;
 	}
-	result = kedr_fsim_set_indicator(point_name,
+	result = kedr_fsim_indicator_set(point_name,
 		node->fi, node->format_string,
 		node->m, indicator_state, node->destroy_state);
 	if(result)

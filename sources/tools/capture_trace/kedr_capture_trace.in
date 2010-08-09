@@ -34,7 +34,7 @@ fi
 command="$1"
 shift
 
-PID_FILE=/tmp/kedr/capture_trace.pid
+PID_FILE=@KEDR_PREFIX_TEMP_SESSION@/capture_trace.pid
 
 if test -f "${PID_FILE}"; then
     LISTENER_PID=$(cat "${PID_FILE}")

@@ -97,6 +97,66 @@ KEDR package also contains a set of tests for KEDR framework. You may want to ru
 <section id="getting_started.example">
 <title>A Simple Example</title>
 
+<para>
+Show how to use KEDR for call monitoring for a simple kernel module.
+</para>
+<para>
+As a simple kernel module you can take <quote>sample_target</quote> module from installed examples. Copy contents of the directory <filename class='directory'>sample_target</filename> into your own place, and run 'make' in that place. You should get file <filename>kedr_sample_target.ko</filename> there. It is a kernel module, which we will use to demonstrate abilities of the KEDR.
+</para>
+<para>
+Run script
+    <programlisting>
+kedr start kedr_sample_target
+    </programlisting>
+from the binary directory of installed KEDR. It will starts KEDR modules and prepare them to watch for kernel module with name <quote>kedr_sample_target</quote>. Also, it loads default call monitor payloads, which trace information about calls for the some of widely used kernel functions. Note, that <quote>kedr_sample_target</quote> itself is not loading at this stage.
+</para>
+<para>
+Information about kernel function calls is output into debugfs filesystem, so to see this information, you need to have this filesystem mounted to some node of you filesystem.
+Usually, it mounted by default to <filename class='directory'>/sys/kernel/debug</filename>. If it is not you case, you can mount it, executing
+    <programlisting>
+mount debugfs -t debugfs /sys/kernel/debug
+    </programlisting>
+</para>
+<para>
+You can force to output information about kernel function calls into you own file, instead system-special temporary one. For doing this, execute from binary KEDR directory
+    <programlisting>
+kedr_capture_trace start <replaceable>file-to-store-trace</replaceable>
+    </programlisting>
+From this moment, all tracing information will be stored into file <replaceable>file-to-store-trace</replaceable>.
+</para>
+<para>
+Now, everything is ready to load kernel module which we will watch for. It is better to do this by executing
+    <programlisting>
+kedr_sample_target load
+    </programlisting>
+from the directory with the compiled <quote>kedr_sample_target</quote> module. The thing is that <quote>kedr_sample_target</quote> module really create character device, and aside from the loading module itself, the script creates <filename>/dev/cfake</filename> node, which represents this character device in the your filesystem.
+</para>
+<para>
+Do something with character device, creating by the module. E.g., write zeroes into it:
+    <programlisting>
+dd if=/dev/zero of=/dev/cfake bs=1 count=10
+    </programlisting>
+</para>
+<para>
+Now, open file with trace (which path you pass to <command>kedr_capture_trace</command> script). TODO: what user will see in the trace file.
+</para>
+<para>
+Unload driver module, using command
+    <programlisting>
+kedr_sample_target unload
+    </programlisting>
+Line, containing string 'target_session_ends', should appear in the trace file. There will be nothing to new in this file, until target will be loaded again. So, stop redirection of the trace into our file:
+    <programlisting>
+kedr_capture_trace stop
+    </programlisting>
+</para>
+<para>
+Last step - stopping KEDR modules.
+    <programlisting>
+kedr stop
+    </programlisting>
+</para>
+
 TODO: how to use KEDR for call monitoring and fault simulation for a simple kernel module
 
 </section> <!-- "getting_started.example" -->

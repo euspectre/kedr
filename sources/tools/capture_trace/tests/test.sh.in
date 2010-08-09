@@ -1,0 +1,198 @@
+#! /bin/sh
+
+# Test "kedr_capture_trace" of "kedr_capture_trace_until_done.sh" script.
+# Accept parameter "kedr_capture_trace" or "kedr_capture_trace_until_done"
+
+if test $# -ne 1; then
+    printf "Usage:\n\t\ttest.sh kedr_capture_trace|kedr_capture_trace_until_done\n"
+    exit 1
+fi
+
+if test $1 != 'kedr_capture_trace' && test $1 != 'kedr_capture_trace_until_done'; then
+    printf "Only 'kedr_capture_trace' or 'kedr_capture_trace_until_done' arguments are accepted\n"
+    exit 1
+fi
+
+
+tmpdir="@KEDR_TEST_PREFIX_TEMP_SESSION@/capture_trace"
+trace_file="${tmpdir}/trace"
+debugfs_mount_point="${tmpdir}/debugfs"
+
+base_module_name=kedr_base
+base_module="@CMAKE_BINARY_DIR@/base/${base_module_name}.ko"
+controller_module_name=kedr_controller
+controller_module="@CMAKE_BINARY_DIR@/controller/${controller_module_name}.ko"
+payload_module_name=kedr_payload
+payload_module="@CMAKE_CURRENT_BINARY_DIR@/payload/${payload_module_name}.ko"
+target_module_name=kedr_target
+target_module="@CMAKE_CURRENT_BINARY_DIR@/target/${target_module_name}.ko"
+
+capture_trace_until_done_script="sh @CMAKE_SOURCE_DIR@/tools/capture_trace/kedr_capture_trace_until_done.sh"
+capture_trace_script="sh @CMAKE_BINARY_DIR@/tools/capture_trace/kedr_test_capture_trace"
+
+#is_process_running pid
+is_process_running()
+{
+    nlines=`ps -p "$1" | wc -l`
+    test "$nlines" -eq 2
+}
+
+#is_module_loaded module_name
+is_module_loaded()
+{
+    lsmod | grep "$1" > /dev/null
+}
+#unload_module module_name
+#Verify, whether module is loaded, and unload it
+unload_module()
+{
+    module_name="$1"
+    if is_module_loaded "${module_name}"; then
+        /sbin/rmmod "${module_name}"
+    fi
+}
+#Unload all modules, used in tests, and do some other cleaning work
+# Do not kill capturing process(!)
+clean_all()
+{
+    unload_module "${target_module_name}"
+    mount | grep "${debugfs_mount_point}" > /dev/null
+    if test $? -eq 0; then
+        umount "${debugfs_mount_point}"
+    fi
+    unload_module "${controller_module_name}"
+    unload_module "${payload_module_name}"
+    unload_module "${base_module_name}"
+}
+
+# Load base, payload and controller modules
+/sbin/insmod "${base_module}"
+if test $? -ne 0; then
+	printf "Failed to load KEDR base module for tests\n"
+	exit 1
+fi
+
+/sbin/insmod "${payload_module}"
+if test $? -ne 0; then
+	printf "Failed to load payload module for tests\n"
+    clean_all
+	exit 1
+fi
+
+/sbin/insmod "${controller_module}" "target_name=${target_module_name}"
+if test $? -ne 0; then
+	printf "Failed to load KEDR controller module for tests\n"
+    clean_all
+	exit 1
+fi
+
+# Start capturing(in the background), preliminarily enable tracepoints in the payload module and controller
+
+mkdir -p "${debugfs_mount_point}"
+mount debugfs -t debugfs "${debugfs_mount_point}"
+if test $? -ne 0; then
+    printf "Cannot mount debugfs.\n"
+    clean_all
+    exit 1
+fi
+
+echo 1 > "${debugfs_mount_point}/tracing/events/${controller_module_name}/enable"
+if test $? -ne 0; then
+    printf "Cannot enable events for controller.\n"
+    clean_all
+    exit 1
+fi
+
+echo 1 > "${debugfs_mount_point}/tracing/events/${payload_module_name}/enable"
+if test $? -ne 0; then
+    printf "Cannot enable events for payload.\n"
+    clean_all
+    exit 1
+fi
+
+capture_pid=
+
+rm -f "${trace_file}"
+
+# Start capturing trace
+case "$1" in
+kedr_capture_trace)
+    ${capture_trace_script} start "${trace_file}" "${debugfs_mount_point}"
+    if test $? -ne 0; then
+        printf "Failed to start capturing\n"
+        clean_all
+        exit 1
+    fi
+;;
+kedr_capture_trace_until_done)
+    ${capture_trace_until_done_script} "${trace_file}" "${debugfs_mount_point}"&
+    capture_pid=$!
+
+    if ! is_process_running "$capture_pid"; then
+        printf "Failed to start capturing\n"
+        clean_all
+        exit 1
+    fi
+;;
+*)
+    print "Incorrect argument to test.\n"
+    exit 1
+esac
+
+# Load target module
+
+/sbin/insmod "${target_module}"
+
+if test $? -ne 0; then
+	printf "Failed to load target module\n"
+    #kill $capture_pid
+    clean_all
+	exit 1
+fi
+
+# Unload target module
+/sbin/rmmod "${target_module}"
+
+# Stop capturing
+case "$1" in
+kedr_capture_trace)
+    sleep 1
+    ${capture_trace_script} stop
+    if test $? -ne 0; then
+        printf "Error occures when stop capturing\n"
+        clean_all
+        exit 1
+    fi
+;;
+kedr_capture_trace_until_done)
+    wait "$capture_pid"
+;;
+esac
+
+umount "${debugfs_mount_point}"
+
+#Unload KEDR base, payload and controller modules
+/sbin/rmmod "${controller_module}"
+/sbin/rmmod "${payload_module}"
+/sbin/rmmod "${base_module}"
+
+#Verify trace existance
+if ! test -f "${trace_file}"; then
+    printf "Trace file wasn't created, but should\n"
+    exit 1
+fi
+#Verify, that trace contain some strings, which was output by payload
+if ! grep "Capture me payload 2" "${trace_file}" > /dev/null; then
+    printf "Module output line into trace, but that line wasn't captured\n"
+    exit 1
+fi
+
+#! Implementation specific
+#Verify, that trace contain message about unload of the target
+if ! grep "target_session_ends" "${trace_file}" > /dev/null; then
+    printf "Ending mark wasn't captured\n"
+    exit 1
+fi
+
+
+exit 0
