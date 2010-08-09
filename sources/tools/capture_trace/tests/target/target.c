@@ -6,7 +6,7 @@
 MODULE_AUTHOR("Tsyvarev");
 MODULE_LICENSE("GPL");
 
-#include <linux/kernel.h>	/* printk() */
+#include <linux/kernel.h>   /* printk() */
 #include <linux/slab.h>	    /* kmalloc(), kfree() */
 
 /* ================================================================ */

@@ -9,6 +9,7 @@ MODULE_LICENSE("GPL");
 #include <kedr/base/common.h>
 
 #include <linux/cdev.h>
+#include <linux/slab.h>	    /* kmalloc(), kfree() */
 
 /*********************************************************************/
 
