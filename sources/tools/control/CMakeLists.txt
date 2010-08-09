@@ -1,7 +1,5 @@
 set(templates_dir "${CMAKE_CURRENT_SOURCE_DIR}/templates/") 
 
-set(MIST_GEN_EXECUTABLE "${CMAKE_BINARY_DIR}/mist_gen/mist_gen")
-
 # data file for config file in test mode(produced from install data file)
 set(kedr_test_cm_conf_file_data "${CMAKE_CURRENT_BINARY_DIR}/kedr_test_cm.conf.data")
 # Directory for local mount debugfs for enable payloads tracepoints
@@ -29,7 +27,7 @@ add_custom_target(kedr_control_cm_config_file ALL
                     DEPENDS "${kedr_cm_conf_file}")
 
 add_custom_command(OUTPUT "${kedr_cm_conf_file}"
-                    COMMAND "${MIST_GEN_EXECUTABLE}" "${templates_dir}/kedr_cm.conf" "${kedr_cm_conf_file_data}" > "${kedr_cm_conf_file}"
+                    COMMAND "${KEDR_GEN_TOOL}" "${templates_dir}/kedr_cm.conf" "${kedr_cm_conf_file_data}" > "${kedr_cm_conf_file}"
                     DEPENDS "${kedr_cm_conf_file_data}")
 
 # How to create its variant for tests
@@ -37,7 +35,7 @@ add_custom_target(kedr_test_control_cm_config_file
                     DEPENDS "${kedr_test_cm_conf_file}")
 
 add_custom_command(OUTPUT "${kedr_test_cm_conf_file}"
-                    COMMAND "${MIST_GEN_EXECUTABLE}" "${templates_dir}/kedr_cm.conf" "${kedr_test_cm_conf_file_data}" > "${kedr_test_cm_conf_file}"
+                    COMMAND "${KEDR_GEN_TOOL}" "${templates_dir}/kedr_cm.conf" "${kedr_test_cm_conf_file_data}" > "${kedr_test_cm_conf_file}"
                     DEPENDS "${kedr_test_cm_conf_file_data}")
 
 add_custom_command(OUTPUT "${kedr_test_cm_conf_file_data}"

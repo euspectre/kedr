@@ -88,8 +88,100 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif()
 
 #######################################################################
+# kedr_gen is built here explicitly and installed to a temporary location.
+# This is only necessary to build KEDR itself.
+# This should be done before the first add_subdirectory() command.
+
+# The temporary install directory must be persistent and in must not be 
+# KEDR_INSTALL_PREFIX_TEMP because it has nothing to do with the installation 
+# of KEDR: it is used when KEDR is being built only.
+
+message (STATUS "Creating \"kedr_gen\"")
+set (KEDR_GEN_INSTALL_PREFIX "/var/tmp/${KEDR_PACKAGE_NAME}/kedr_gen.install")
+set (KEDR_GEN_TEMP_BUILD ${KEDR_INSTALL_PREFIX_TEMP_SESSION}/kedr_gen.build)
+
+# Create the temporary build and install directories first
+execute_process (
+    COMMAND rm -rf "${KEDR_GEN_TEMP_BUILD}" 
+    COMMAND mkdir -p "${KEDR_GEN_TEMP_BUILD}" 
+    RESULT_VARIABLE kedr_gen_result
+)
+if (NOT kedr_gen_result EQUAL 0)
+    message (FATAL_ERROR 
+"Failed to create directory ${KEDR_GEN_TEMP_BUILD}"
+    )
+endif ()
+
+execute_process (
+    COMMAND rm -rf "${KEDR_GEN_INSTALL_PREFIX}" 
+    COMMAND mkdir -p "${KEDR_GEN_INSTALL_PREFIX}" 
+    RESULT_VARIABLE kedr_gen_result
+)
+if (NOT kedr_gen_result EQUAL 0)
+    message (FATAL_ERROR 
+"Failed to create directory ${KEDR_GEN_TEMP_BUILD}"
+    )
+endif ()
+
+# Configure kedr_gen
+execute_process (
+    COMMAND ${CMAKE_COMMAND} 
+        -DCMAKE_INSTALL_PREFIX=${KEDR_GEN_INSTALL_PREFIX}
+        -DCMAKE_BUILD_TYPE=Release
+        -DKEDR_GEN_INSTALL_PREFIX=${KEDR_GEN_INSTALL_PREFIX}
+        "${CMAKE_CURRENT_SOURCE_DIR}/tools/kedr_gen/src"
+    WORKING_DIRECTORY ${KEDR_GEN_TEMP_BUILD}
+    RESULT_VARIABLE kedr_gen_result
+    OUTPUT_VARIABLE kedr_gen_output
+    ERROR_VARIABLE  kedr_gen_output
+)
+if (NOT kedr_gen_result EQUAL 0)
+    message ("Failed to configure \"kedr_gen\".")
+    message ("CMake output:\n${kedr_gen_output}\n")
+    message (FATAL_ERROR "Unable to build \"kedr_gen\", aborting.")
+endif ()
+
+# Build kedr_gen
+execute_process (
+    COMMAND make
+    WORKING_DIRECTORY ${KEDR_GEN_TEMP_BUILD}
+    RESULT_VARIABLE kedr_gen_result
+    OUTPUT_VARIABLE kedr_gen_output
+    ERROR_VARIABLE  kedr_gen_output
+)
+if (NOT kedr_gen_result EQUAL 0)
+    message ("Failed to build \"kedr_gen\".")
+    message ("Make output:\n${kedr_gen_output}\n")
+    message (FATAL_ERROR "Unable to build \"kedr_gen\", aborting.")
+endif ()
+
+# Install kedr_gen
+execute_process (
+    COMMAND make install
+    WORKING_DIRECTORY ${KEDR_GEN_TEMP_BUILD}
+    RESULT_VARIABLE kedr_gen_result
+    OUTPUT_VARIABLE kedr_gen_output
+    ERROR_VARIABLE  kedr_gen_output
+)
+if (NOT kedr_gen_result EQUAL 0)
+    message ("Failed to install \"kedr_gen\" to ${KEDR_GEN_INSTALL_PREFIX}.")
+    message ("Make output:\n${kedr_gen_output}\n")
+    message (FATAL_ERROR "Unable to install \"kedr_gen\", aborting.")
+endif ()
+
+# Remove the temporary build directory 
+# [NB] The temporary install directory should not be removed until 'make clean'
+execute_process (
+    COMMAND rm -rf "${KEDR_GEN_TEMP_BUILD}" 
+)
+
+# ${KEDR_GEN_TOOL} is the path to "kedr_gen". The path can be used to call
+# "kedr_gen" tool during the build of payload modules, etc.
+set (KEDR_GEN_TOOL ${KEDR_GEN_INSTALL_PREFIX}/kedr_gen)
+message (STATUS "Creating \"kedr_gen\" - done")
+
+#######################################################################
 add_subdirectory(base)
-#add_subdirectory(mist_gen)
 
 # This file will be used for tests, whether controller really intercept
 # particular functions calls

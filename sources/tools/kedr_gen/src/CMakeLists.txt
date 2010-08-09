@@ -76,7 +76,7 @@ install (TARGETS ${KEDR_GEN_APP} DESTINATION ${KEDR_GEN_INSTALL_PREFIX})
 # If it is not a temporary install (i.e. if kedr_gen is installed not for 
 # building KEDR only), create a symlink to "kedr_gen" in the directory for
 # executables (${prefix}/bin).
-if (${KEDR_GEN_INSTALL_PREFIX} STREQUAL ${KEDR_INSTALL_PREFIX_EXEC_AUX})
+if (${KEDR_GEN_INSTALL_PREFIX} STREQUAL "${KEDR_INSTALL_PREFIX_EXEC_AUX}")
     # KEDR_INSTALL_PREFIX_EXEC must also be defined in this case
     if (NOT KEDR_INSTALL_PREFIX_EXEC)
         message (FATAL_ERROR 
