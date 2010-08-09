@@ -31,7 +31,7 @@ endif ()
 if (NOT CMAKE_BUILD_TYPE)
     set (CMAKE_BUILD_TYPE "Release")
 endif ()
-message (STATUS "Build type is \"${CMAKE_BUILD_TYPE}\"")
+message (STATUS "${PROJECT_NAME}: Build type is \"${CMAKE_BUILD_TYPE}\"")
 
 #######################################################################
 # Microsoft Windows-specific stuff
@@ -90,9 +90,9 @@ else ()
 endif ()
 
 #######################################################################
-message (STATUS 
-"The package is configured to be installed to ${CMAKE_INSTALL_PREFIX}"
-)
+#message (STATUS 
+#"The package is configured to be installed to ${CMAKE_INSTALL_PREFIX}"
+#)
 
 #######################################################################
 # On Linux systems, check if the compiler supports -fvisibility option

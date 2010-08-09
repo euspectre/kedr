@@ -4,7 +4,7 @@
 #include <stdexcept>
 #include <string>
 
-#include <mist_engine/mist_engine.h>
+#include <mist_engine.h>
 
 #include "Common.h"
 

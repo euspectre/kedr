@@ -46,18 +46,21 @@ include_directories ("${CMAKE_CURRENT_BINARY_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}"
 set (MIST_BASE_NAME ${PROJECT_NAME})
 
 #######################################################################
-# MiST Engine command line tool
+# MiST Engine command line tool (built only if MiST Engine is packaged
+# standalone rather than as a part of KEDR).
 #######################################################################
-set (MIST_ENGINE_SOURCES
-    main.c 
-    grar.c 
-    smap.c
-    mist_base.c
-    mist_file_utils.c 
-    mist_string_utils.c 
-    mist_exec.c 
-)
-add_executable(${MIST_BASE_NAME} ${MIST_ENGINE_SOURCES})
+if (NOT KEDR_GEN_INSTALL_PREFIX)
+    set (MIST_ENGINE_SOURCES
+        main.c 
+        grar.c 
+        smap.c
+        mist_base.c
+        mist_file_utils.c 
+        mist_string_utils.c 
+        mist_exec.c 
+    )
+    add_executable(${MIST_BASE_NAME} ${MIST_ENGINE_SOURCES})
+endif ()
 
 #######################################################################
 # MiST Engine shared library
@@ -202,18 +205,32 @@ endif (MIST_OS_LINUX)
 #######################################################################
 # Installation: common part
 
-# Install the command line tool
-install (TARGETS ${MIST_BASE_NAME} DESTINATION bin)
+if (KEDR_GEN_INSTALL_PREFIX)
+    # When installing MiST Engine as a part of KEDR, we only need the 
+    # shared libraries.
+    
+    set (KEDR_GEN_INSTALL_MIST_PREFIX 
+        "${KEDR_GEN_INSTALL_PREFIX}/${MIST_BASE_NAME}")
+    
+    # Install the libraries
+    install (TARGETS ${MIST_LIBRARY_TARGET}
+        RUNTIME DESTINATION ${KEDR_GEN_INSTALL_MIST_PREFIX}
+        LIBRARY DESTINATION ${KEDR_GEN_INSTALL_MIST_PREFIX}
+    )
+else ()
+    # Install the command line tool
+    install (TARGETS ${MIST_BASE_NAME} DESTINATION bin)
 
-# Install the libraries
-install (TARGETS ${MIST_LIBRARY_TARGET}
-    RUNTIME DESTINATION bin
-    LIBRARY DESTINATION lib
-)
+    # Install the libraries
+    install (TARGETS ${MIST_LIBRARY_TARGET}
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+    )
 
-# Install the header files
-install (FILES 
-"${CMAKE_CURRENT_BINARY_DIR}/mist_engine.h"
-"${CMAKE_CURRENT_SOURCE_DIR}/mist_errors.h"
-    DESTINATION include/${MIST_BASE_NAME}
-)
+    # Install the header files
+    install (FILES 
+    "${CMAKE_CURRENT_BINARY_DIR}/mist_engine.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/mist_errors.h"
+        DESTINATION include/${MIST_BASE_NAME}
+    )
+endif ()
