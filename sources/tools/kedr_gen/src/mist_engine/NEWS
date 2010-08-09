@@ -1,0 +1,45 @@
+2010-05-30
+MiST Engine 1.0.1 released.
+
+This is a minor release. The most important change is that MiST Engine can 
+now be built with CMake build system both on Linux and Microsoft Windows.
+
+-----------------------------------------------------------
+
+2010-02-01
+MiST Engine 1.0.0 final released.
+
+Most important changes in this version:
+    * MiST Engine manual is now available (at last!).
+    * A couple more fixes in handling of incorrect input data and in error 
+reporting.
+
+See ChangeLog for the detailed information about the changes in this 
+version.
+-----------------------------------------------------------
+
+2010-01-17
+MiST Engine 1.0.0 beta 2 released.
+
+Note that although it is formally "beta", the engine itself should be stable. 
+It is still beta only because MiST documentation is not provided yet. It is a 
+work in progress to assemble and "polish" the documentation from several 
+sources including T2C documentation, man page for "mist_engine" command line 
+tool, comments in the public headers of MiST library describing the public API, 
+etc.
+
+Most important changes in this version:
+    * Enhancements and fixes related to handling of conditional constructs in 
+the templates (support for choosing a branch depending on whether a parameter 
+or a subtemplate has at least one non-empty value, etc.).
+    * Several fixes in handling of incorrect input data and in error reporting.
+
+See ChangeLog for the detailed information about the changes in this 
+version.
+-----------------------------------------------------------
+
+2009-12-14
+MiST Engine 1.0.0 beta 1 released.
+
+This is the first public version of MiST Engine.
+-----------------------------------------------------------

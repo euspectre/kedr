@@ -1,0 +1,343 @@
+/// mist_engine.h
+/// Main header file for Minimal String Template Engine (MiST Engine).
+
+/////////////////////////////////////////////////////////////////////////////
+// Copyright 2009-2010 
+// Institute for System Programming of the Russian Academy of Sciences (ISPRAS)
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+//    http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License. 
+/////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////
+/// MiST (Minimal String Template) Engine has limited abilities, it provides
+/// only a few basic features of a string template engine:
+/// + parsing strings and loading templates stored in them;
+/// + setting values for named parameters of a template (multi-valued parameters
+///     (MVP) are supported);
+/// + specifying a subtemplate reference instead of a named parameter;
+/// + conditional inclusion of subtemplates;
+/// + instantiating the resulting template.
+///
+/// The following features are not supported yet (some of them probably 
+/// will never be):
+/// - recursion in templates;
+/// - subtemplate references with parameters;
+/// - using complex types (structures) as parameter values;
+/// - Unicode names of the templates and parameters;
+/// - a lot of other features.
+
+#ifndef MIST_ENGINE_H_1900_INCLUDED
+#define MIST_ENGINE_H_1900_INCLUDED
+
+// Version-related definitions
+#define MIST_ENGINE_VERSION_MAJOR @MIST_ENGINE_VERSION_MAJOR@
+#define MIST_ENGINE_VERSION_MINOR @MIST_ENGINE_VERSION_MINOR@
+#define MIST_ENGINE_VERSION_MICRO @MIST_ENGINE_VERSION_MICRO@
+
+// A macro to obtain API version from the minor and micro versions of the library.
+#define MIST_ENGINE_API_VERSION(minor_, micro_) ((((minor_) << 8) | (micro_ & 0xFF)) + 1)
+
+// Maximum API version supported by the library built using this header.
+#define MIST_ENGINE_API_MAX_VERSION \
+    MIST_ENGINE_API_VERSION(MIST_ENGINE_VERSION_MINOR, MIST_ENGINE_VERSION_MICRO)
+
+////////////////////////////////////////////////////////////////////////////
+// Generic helper definitions for shared library support
+// (adapted from the example published at http://gcc.gnu.org/wiki/Visibility)
+#if defined _WIN32 || defined __CYGWIN__
+    #define MIST_ENGINE_HELPER_DLL_IMPORT __declspec(dllimport)
+    #define MIST_ENGINE_HELPER_DLL_EXPORT __declspec(dllexport)
+    #define MIST_ENGINE_HELPER_DLL_LOCAL
+#else
+    #if __GNUC__ >= 4
+        #define MIST_ENGINE_HELPER_DLL_IMPORT __attribute__ ((visibility("default")))
+        #define MIST_ENGINE_HELPER_DLL_EXPORT __attribute__ ((visibility("default")))
+        #define MIST_ENGINE_HELPER_DLL_LOCAL  __attribute__ ((visibility("hidden")))
+    #else
+        #define MIST_ENGINE_HELPER_DLL_IMPORT
+        #define MIST_ENGINE_HELPER_DLL_EXPORT
+        #define MIST_ENGINE_HELPER_DLL_LOCAL
+    #endif
+#endif
+
+// Now the generic helper definitions above can be used to define 
+// MIST_ENGINE_API and MIST_ENGINE_LOCAL.
+// MIST_ENGINE_API is used for each public API symbol. 
+// MIST_ENGINE_LOCAL can be used for non-api symbols if it is necessary to mark 
+// them as such explicitly (usually there is no need to do this).
+
+// It is not recommended to compile MiST Engine as a static library
+// but if it is necessary to do this anyway, define MIST_ENGINE_STATIC_LIB.
+#ifdef MIST_ENGINE_STATIC_LIB 
+    #define MIST_ENGINE_API
+    #define MIST_ENGINE_LOCAL
+#else // MIST_ENGINE_STATIC_LIB is not defined
+    #ifdef MIST_ENGINE_DLL_EXPORTS // defined if we are building the MIST_ENGINE DLL (instead of using it)
+        #define MIST_ENGINE_API MIST_ENGINE_HELPER_DLL_EXPORT
+    #else
+        #define MIST_ENGINE_API MIST_ENGINE_HELPER_DLL_IMPORT
+    #endif // MIST_ENGINE_DLL_EXPORTS
+    #define MIST_ENGINE_LOCAL MIST_ENGINE_HELPER_DLL_LOCAL
+#endif // MIST_ENGINE_STATIC_LIB
+
+////////////////////////////////////////////////////////////////////////////
+
+#include <stddef.h> // for size_t
+#include "mist_errors.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/// A template is little more than a string with named placeholders.
+/// Each placeholder ("a named hole in the document") can be viewed as a reference 
+/// to another template. 
+/// Each template stored the results of its evaluation and is generally 
+/// a multivalued entity.
+/// A parameter is considered a degenerate template here, i.e. the one without
+/// a string and placeholders. It just contains a collection of its values which
+/// are to be set explicitly.
+///
+/// Example. Consider a template named "My Template":
+/// "ab<$PH1$>cd<$PH2$><$PH3$>ef<$PH4$>"
+/// Here are the following string chunks: "ab", "cd", "", "ef", "";
+/// placeholders: "PH1", "PH2", "PH3", "PH4".
+/// '<$' and '$>' are begin and end markers of the placeholders.
+/// [NB] You can specify such markers when loading the template from a string.
+/// Assume all four placeholders refer to the parameters with the following values:
+///   PH1 = {"XX"}
+///   PH2 = {"YY", "ZZ", "TT"}
+///   PH3 = {"UU", "WW"}
+///   PH4 = {"VV", "SS"}
+/// The evaluated template will then have three values:
+///   {"abXXcdYYUUefVV", "abXXcdZZWWefSS", "abXXcdTTWWefSS"}
+/// That is, no cartesian product of the sets of values is used. The first resulting 
+/// value is constructed using all the first values of the parameters, the second one - 
+/// using the second ones, etc. If there are less values in a parameter than 
+/// necessary, its last value is used.
+/// 
+/// A placeholder may contain a directive to join the values of the corresponding
+/// template using a given separator, in which case the result is a single value.
+/// This can be used to create a repetitive structures like lists, etc.
+/// 
+/// Compare the following examples using the above "My Template" template.
+/// 1. "<$My Template$>" evaluates to a three-valued entity:
+///   {"abXXcdYYUUefVV", "abXXcdZZWWefSS", "abXXcdTTWWefSS"}
+/// 2. "<$My Template: join(=*=)$>" evaluates to a single-valued entity:
+///   {"abXXcdYYUUefVV=*=abXXcdZZWWefSS=*=abXXcdTTWWefSS"}
+/// 3. "<$My Template: join()$>" evaluates to a single-valued entity:
+///   {"abXXcdYYUUefVVabXXcdZZWWefSSabXXcdTTWWefSS"}
+/// 4. "<$My Template: join([+))$>" evaluates to a single-valued entity:
+///   {"abXXcdYYUUefVV[+)abXXcdZZWWefSS[+)abXXcdTTWWefSS"}
+/// 
+/// A template reference with 'join' directive has the following format:
+/// <begin_marker>[wspace]*<template_name>[wspace]*<colon>[wspace]*join[wspace]*(<separator>)[wspace]*<end_marker>,
+/// where 'wspace' is ' ', '\t', '\n' or '\r'; 'colon' is ':'; 
+/// '*' means "zero or more times".
+/// The following escaped characters are recognized in separators: "\t", "\n" and "\r".
+/// 
+/// A valid name of a template may contain only the characters allowed in a file name
+/// because a template is typically stored in a file with the same name and some extension,
+/// "tpl", for example. This also imposes additional restrictions on the length of the 
+/// template name. 
+/// In addition, the name must not begin with a dot.
+/// Of course, the name of a template must not contain begin or end marker 
+/// sequences.
+/// 
+/// A template group with common placeholders is represented by CMistTGroup 
+/// structure. The structure is opaque, its fields should not be accessed directly.
+/// There is always one main ("top-level") template in each group, the one that 
+/// is evaluated when we ask the group to evaluate itself. Other templates in  
+/// the group may also be evaluated then if they are referred to by the main 
+/// template or by the templates it refers to, etc.
+/// The result of the evaluation of a template group can be multi-valued.
+/// Usually, however, the main template should be organized so that it  
+/// evaluates to only one value, for example if the value is to be saved 
+/// to a file).
+///
+/// Each template in a group must have a unique name.
+/// 
+/// [NB] If there is a recursion in the templates contained in a group, 
+/// the behaviour of mist_tg_* functions is undefined. 
+/// Two things are guaranteed though:
+/// 1. The functions will neither hang nor crash.
+/// 2. When the group is evaluated, each template will be evaluated no more
+/// than once.
+/// That is, one can use these functions in case of resursion too but to what 
+/// exactly the group will evaluate is undefined.
+/// 
+/// Here are some examples of recursion in the templates (not all possible 
+/// cases are listed, of course):
+/// 1) template "A" has a placeholder that refers to template "A";
+/// 2) template "A" has a placeholder that refers to template "B", template "B" 
+/// has a placeholder that refers to template "A";
+/// 3) and so on, and so forth.
+
+///////////////////////////////////////////////////////////////////////////
+// MiST Engine public API
+///////////////////////////////////////////////////////////////////////////
+
+/// Unless specifically stated, if a function takes pointer as an argument 
+/// and NULL is passed to it as the value of this argument, behaviour of the 
+/// function is undefined.
+/// 
+/// For example, if a function takes 'error_descr', the latter must not be 
+/// NULL.
+/// Note that in case of failure, the function may return the description 
+/// of the error in '*error_descr' although it is not mandatory. 
+/// This string should be freed by the caller when no longer needed.
+/// If the function succeeds or just does not provide the description of the
+/// error, it will set '*error_descr' to NULL. 
+
+///////////////////////////////////////////////////////////////////////////
+/// CMistTGroup 
+/// This structure represents a template group.
+/// The structure is opaque, its fields should never be used directly because
+/// the definition of the structure may change in future versions of MiST
+struct CMistTemplateGroup_;
+typedef struct CMistTemplateGroup_ CMistTGroup;
+
+///////////////////////////////////////////////////////////////////////////
+/// CMistNameValuePair
+/// This helper structure holds two pointers to constant strings, 
+/// a (name, value) pair. 
+/// It is used to group some of the parameters passed to MiST API functions.
+/// In such a structure, 'name' points to the name of some entity (parameter,
+/// template, etc.), 'value' points to a string associated with the entity.
+/// It can be value of a parameter to be set or a string to load a template
+/// from, etc.
+typedef struct CMistNameValuePair_
+{
+    const char* name;
+    const char* val;
+} CMistNameValuePair;
+
+/// Initialize MiST Engine and request a particular version of API.
+/// Usually it is enough to just pass MIST_ENGINE_API_MAX_VERSION here - 
+/// this is the maximum API version supported by the package this header file
+/// belongs to.
+/// If the requested version is not supported, the function returns 
+/// MIST_VERSION_NOT_SUPPORTED.
+MIST_ENGINE_API EMistErrorCode
+mist_engine_init(unsigned int api_ver);
+
+/// Create a template group and return a pointer to it in '*ptg'. 
+///
+/// 'source' array contains the names of the templates to be stored
+/// in the group and the strings to load the templates from.
+///
+/// The index of the main template in 'source' array is 'main_index'. 
+/// This template will be the top-level template of the group.
+/// 'main_index' is zero-based and should be less than 'num'.
+///
+/// 'num' specifies the number of elements of this array to be processed.
+/// 'source' should contain at least one element and 'num' should not be 0:
+/// it makes no sense to create a group with no templates in it.
+/// 
+/// [NB] The function copies all necessary strings and parts of strings from 
+/// 'source' (names of templates, string chunks, etc.) rather than stores
+/// pointers to them. So, once the template group is created, it no longer
+/// depends on the contents of 'source'.
+/// 
+/// 'begin_marker' and 'end_marker' specify the placeholders in the strings 
+/// that the templates are loaded from. The markers must not be empty strings.
+///
+/// In case of failure, '*bad_index' will be the index of the template
+/// that failed to load ('source[*bad_index].name' will be its name).
+/// If no error occured or something wrong happened to the group as 
+/// a whole (out of memory, for example), '*bad_index' will be (size_t)(-1).
+MIST_ENGINE_API EMistErrorCode
+mist_tg_create(CMistTGroup** ptg,
+    const CMistNameValuePair* source, size_t num,
+    size_t main_index,
+    const char* begin_marker, const char* end_marker,
+    size_t* bad_index, char** error_descr);
+
+/// Like mist_tg_create(), except only one template is created in the group. 
+/// The name of the template is 'name' and its contents are loaded 
+/// from string 'str'.
+/// 'name' must not be an empty string.
+MIST_ENGINE_API EMistErrorCode
+mist_tg_create_single(CMistTGroup** ptg,
+    const char* name, const char* str,
+    const char* begin_marker, const char* end_marker,
+    char** error_descr);
+
+/// Destroy the template group with all its contents. 
+MIST_ENGINE_API EMistErrorCode
+mist_tg_destroy(CMistTGroup* mtg);
+
+/// Add a copy of the specified value to the template (parameter, usually) 
+/// with the given name. Does nothing if there is no template in the group that
+/// refers to such parameter - this case is not considered an error. 
+/// No parameter - no problem.
+/// 
+/// [NB] If the group has already been evaluated, mist_tg_clear_values()
+/// should be called to 'reset' it before setting new values with one or more
+/// calls of mist_tg_add_value(). Otherwise the following evaluation may
+/// give incorrect results.
+/// 
+/// 'name' must not be an empty string.
+MIST_ENGINE_API EMistErrorCode
+mist_tg_add_value(CMistTGroup* mtg, const char* name, const char* val);
+
+/// Set the values of the parameters in the template group. 
+/// <name_of_parameter, value> pairs are stored in the 'attrs' array. 
+/// 'num' is the number of its elements to be processed. If 'num' is 0,
+/// the function does nothing except checking that the library is initialized.
+/// 'attrs' MAY contain more than one <name_of_parameter, value> pair with the 
+/// same 'name_of_parameter' in which case all these values are set for this 
+/// multi-valued parameter.
+/// The function leaves previously set values intact, i.e. it can be called 
+/// several times with various sets of parameters.
+/// Like it is for mist_tg_add_value(), if there is no template in the group 
+/// that refers to a parameter from 'attrs', the function just does nothing 
+/// for this parameter and processes the remaining ones.
+/// 
+/// [NB] If the group has already been evaluated, mist_tg_clear_values()
+/// should be called to 'reset' it before setting new values with one or more
+/// calls of mist_tg_set_values(). Otherwise the following evaluation may
+/// give incorrect results.
+MIST_ENGINE_API EMistErrorCode
+mist_tg_set_values(CMistTGroup* mtg, 
+    const CMistNameValuePair* attrs, size_t num);
+
+/// Clear the values of each template contained in the group (including
+/// parameters but excluding special templates for "then" and "else" branches
+/// as well as the result of the conditionals:  their values will be cleared 
+/// automatically before evaluation of the group). 
+/// Use this function to 'reset' the group before setting new values for the
+/// parameters in it.
+MIST_ENGINE_API EMistErrorCode
+mist_tg_clear_values(CMistTGroup* mtg);
+
+/// Evaluate the group, i.e. construct the string value(s) of its main 
+/// (top-level) template performing all necessary substitutions, joining, etc.
+/// The result can be multivalued, so the function returns the values
+/// of the template in *presult ( '(*presult)[i]' being the ith string value) 
+/// and the number of these values - in '*nvals'.
+/// The array returned in '*presult' and the strings contained in it are owned 
+/// by the template group and must not be freed by the caller.
+/// The function returns MIST_OUT_OF_MEMORY if there is not enough memory to 
+/// perform the operation. In this case, '*presult' will be NULL and '*nvals'
+/// will remain unchanged.
+MIST_ENGINE_API EMistErrorCode
+mist_tg_evaluate(CMistTGroup* mtg, 
+    const char*** presult, size_t* nvals);
+
+///////////////////////////////////////////////////////////////////////////
+#ifdef __cplusplus
+}
+#endif
+
+#endif // MIST_ENGINE_H_1900_INCLUDED
