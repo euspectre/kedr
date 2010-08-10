@@ -1,5 +1,10 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+
+#include <errno.h>
+
+#include <fcntl.h>
 #include <sys/ioctl.h>
 
 #include "trigger_common.h"
@@ -24,7 +29,7 @@ int main(int argc, char** argv)
     int nr;
     if(argc != 2)
     {
-        printf("Usage:\n\n\t%s function_for_trigger\n", argv[0]);
+        printf("Usage:\n\t%s function_to_trigger\n", argv[0]);
         return 1;
     }
     function = argv[1];
@@ -36,21 +41,38 @@ int main(int argc, char** argv)
         }
     }
     printf("There is no trigger for function %s.\n", function);
-    return 1;
+    return EXIT_FAILURE;
 }
 
 int trigger_function(int nr)
 {
-    int arg = 10;//parameter of ioctl
+    int arg = 10; //parameter of ioctl
     int result;
-    int fd = open(FILENAME, "r");
-    if(fd == 0)
+
+    int fd;
+
+    errno = 0;
+    fd = open(FILENAME, O_RDWR);
+    if(fd < 0)
     {
-        printf("Cannot open file '%s'", FILENAME);
-        return 1;
+        printf("Unable to open \"%s\", errno is %d (\"%s\")\n", 
+            FILENAME, errno, strerror(errno));
+        return EXIT_FAILURE;
     }
+
+    errno = 0;
     result = ioctl(fd, TRIGGER_IOCTL_CODE(nr), &arg);
+    if (result == -1)
+    {
+        printf("ioctl() failed, errno is %d (\"%s\")\n", 
+            errno, strerror(errno));
+    }
+    else
+    {
+        result = 0;
+    }
+
     close(fd);
     return result;
-
 }
+
