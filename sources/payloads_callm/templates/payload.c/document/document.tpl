@@ -36,29 +36,29 @@ static void* repl_addrs[] = {
 };
 
 static struct kedr_payload payload = {
-	.mod 			        = THIS_MODULE,
-	.repl_table.orig_addrs 	= &orig_addrs[0],
-	.repl_table.repl_addrs 	= &repl_addrs[0],
-	.repl_table.num_addrs	= ARRAY_SIZE(orig_addrs)
+    .mod                    = THIS_MODULE,
+    .repl_table.orig_addrs  = &orig_addrs[0],
+    .repl_table.repl_addrs  = &repl_addrs[0],
+    .repl_table.num_addrs   = ARRAY_SIZE(orig_addrs)
 };
 /*********************************************************************/
 
 static void
 <$module.name$>_cleanup_module(void)
 {
-	kedr_payload_unregister(&payload);
-	printk(KERN_INFO "[<$module.name$>] Cleanup complete\n");
-	return;
+    kedr_payload_unregister(&payload);
+    KEDR_MSG("[<$module.name$>] Cleanup complete\n");
+    return;
 }
 
 static int __init
 <$module.name$>_init_module(void)
 {
-	BUG_ON(	ARRAY_SIZE(orig_addrs) != 
-		ARRAY_SIZE(repl_addrs));
-	
-	printk(KERN_INFO "[<$module.name$>] Initializing\n");
-	return kedr_payload_register(&payload);
+    BUG_ON( ARRAY_SIZE(orig_addrs) != 
+        ARRAY_SIZE(repl_addrs));
+    
+    KEDR_MSG("[<$module.name$>] Initializing\n");
+    return kedr_payload_register(&payload);
 }
 
 module_init(<$module.name$>_init_module);

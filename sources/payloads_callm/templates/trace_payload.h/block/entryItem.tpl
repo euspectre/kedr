@@ -1,1 +1,1 @@
-__entry-><$trace.param.name$>
+<$if trace.param.string$>__get_str(<$trace.param.name$>)<$else$>__entry-><$trace.param.name$><$endif$>
