@@ -4,7 +4,9 @@
 # Variables for install prefixes are named KEDR_INSTALL_PREFIX_...,
 # variables for test prefixes are named KEDR_TEST_PREFIX.
 
-set(KEDR_ALL_PATH_SUFFIXES EXEC READONLY GLOBAL_CONF LIB INCLUDE TEMP_SESSION TEMP STATE CACHE VAR DOC KMODULE KSYMVERS KINCLUDE EXAMPLES)
+set (KEDR_ALL_PATH_SUFFIXES EXEC READONLY GLOBAL_CONF LIB INCLUDE 
+    TEMP_SESSION TEMP STATE CACHE VAR DOC 
+    KMODULE KSYMVERS KINCLUDE EXAMPLES)
 
 # See conventions about paths of installed files
 # Determine type of installation
@@ -123,7 +125,7 @@ set(KEDR_INSTALL_PREFIX_KINCLUDE
 set(KEDR_INSTALL_PREFIX_EXAMPLES
 		"${KEDR_INSTALL_PREFIX_READONLY}/examples")
 
-############################################################################################################
+########################################################################
 # Path prefixes for tests
 
 set(KEDR_TEST_COMMON_PREFIX "/var/tmp/kedr/test")
@@ -147,3 +149,22 @@ macro(kedr_load_test_prefixes)
         set(KEDR_PREFIX_${var_suffix} ${KEDR_TEST_PREFIX_${var_suffix}})
     endforeach(var_suffix ${KEDR_ALL_PATH_SUFFIXES})
 endmacro(kedr_load_test_prefixes)
+
+########################################################################
+# [NB] All the "prefix" directories ending with ${KEDR_PACKAGE_NAME}
+# should be removed when uninstalling the package.
+add_custom_target (uninstall_dirs
+    COMMAND rm -rf "${KEDR_INSTALL_PREFIX_EXEC_AUX}"
+    COMMAND rm -rf "${KEDR_INSTALL_PREFIX_READONLY}"
+    COMMAND rm -rf "${KEDR_INSTALL_PREFIX_GLOBAL_CONF}"
+    COMMAND rm -rf "${KEDR_INSTALL_PREFIX_LIB_AUX}"
+    COMMAND rm -rf "${KEDR_INSTALL_PREFIX_INCLUDE}"
+    COMMAND rm -rf "${KEDR_INSTALL_PREFIX_TEMP_SESSION}"
+    COMMAND rm -rf "${KEDR_INSTALL_PREFIX_TEMP}"
+    COMMAND rm -rf "${KEDR_INSTALL_PREFIX_STATE}"
+    COMMAND rm -rf "${KEDR_INSTALL_PREFIX_CACHE}"
+    COMMAND rm -rf "${KEDR_INSTALL_PREFIX_VAR}"
+    COMMAND rm -rf "${KEDR_INSTALL_PREFIX_DOC}"
+    COMMAND rm -rf "${KEDR_TEST_COMMON_PREFIX}"
+)
+########################################################################

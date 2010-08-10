@@ -60,12 +60,22 @@ endfunction(kedr_install_symvers kmodule_name)
 
 #######################################################################
 configure_file(
-  "${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
-  IMMEDIATE @ONLY)
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
+    IMMEDIATE @ONLY
+)
 
-add_custom_target(uninstall
-  "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
+add_custom_target (uninstall_files
+    "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
+)
+
+add_custom_target (uninstall)
+
+# During uninstall process, the files should be removed first, then 
+# the directories.
+# 'uninstall_dirs' target is defined in cmake/modules/path_prefixes.cmake.
+add_dependencies (uninstall_dirs uninstall_files)
+add_dependencies (uninstall uninstall_dirs)
 
 #######################################################################
 #${CMAKE_SOURCE_DIR}/include - root of the include tree (see convensions).
@@ -97,8 +107,16 @@ endif()
 # of KEDR: it is used when KEDR is being built only.
 
 message (STATUS "Creating \"kedr_gen\"")
-set (KEDR_GEN_INSTALL_PREFIX "/var/tmp/${KEDR_PACKAGE_NAME}/kedr_gen.install")
-set (KEDR_GEN_TEMP_BUILD ${KEDR_INSTALL_PREFIX_TEMP_SESSION}/kedr_gen.build)
+set (KEDR_GEN_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/kedr_gen.install")
+set (KEDR_GEN_TEMP_BUILD "${CMAKE_CURRENT_BINARY_DIR}/kedr_gen.build")
+
+# These temporary directories will be removed during make clean
+set_property (DIRECTORY APPEND PROPERTY 
+    ADDITIONAL_MAKE_CLEAN_FILES kedr_gen.build
+)
+set_property (DIRECTORY APPEND PROPERTY 
+    ADDITIONAL_MAKE_CLEAN_FILES kedr_gen.install
+)
 
 # Create the temporary build and install directories first
 execute_process (
@@ -168,12 +186,6 @@ if (NOT kedr_gen_result EQUAL 0)
     message ("Make output:\n${kedr_gen_output}\n")
     message (FATAL_ERROR "Unable to install \"kedr_gen\", aborting.")
 endif ()
-
-# Remove the temporary build directory 
-# [NB] The temporary install directory should not be removed until 'make clean'
-execute_process (
-    COMMAND rm -rf "${KEDR_GEN_TEMP_BUILD}" 
-)
 
 # ${KEDR_GEN_TOOL} is the path to "kedr_gen". The path can be used to call
 # "kedr_gen" tool during the build of payload modules, etc.

@@ -89,6 +89,12 @@ if (${KEDR_GEN_INSTALL_PREFIX} STREQUAL "${KEDR_INSTALL_PREFIX_EXEC_AUX}")
     )
     
     install (CODE "execute_process (COMMAND ${CMD_CREATE_SYMLINK})")
+    
+    # Instructions to uninstall the symlink when uninstalling KEDR
+    add_custom_target (uninstall_kedr_gen_symlink
+        rm -f "${KEDR_INSTALL_PREFIX_EXEC}/${KEDR_GEN_APP}"
+    )
+    add_dependencies (uninstall_files uninstall_kedr_gen_symlink)
 endif ()
 
 
