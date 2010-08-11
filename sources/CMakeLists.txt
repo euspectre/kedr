@@ -114,9 +114,9 @@ set (KEDR_GEN_TEMP_BUILD "${CMAKE_CURRENT_BINARY_DIR}/kedr_gen.build")
 set_property (DIRECTORY APPEND PROPERTY 
     ADDITIONAL_MAKE_CLEAN_FILES kedr_gen.build
 )
-set_property (DIRECTORY APPEND PROPERTY 
-    ADDITIONAL_MAKE_CLEAN_FILES kedr_gen.install
-)
+#set_property (DIRECTORY APPEND PROPERTY 
+#    ADDITIONAL_MAKE_CLEAN_FILES kedr_gen.install
+#)
 
 # Create the temporary build and install directories first
 execute_process (
