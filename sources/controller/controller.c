@@ -197,6 +197,14 @@ do_process_insn(struct insn* c_insn, void* kaddr, void* end_kaddr,
 	/* Note: it is OK to stop at 'end_kaddr' but no further */
 		KEDR_MSG(COMPONENT_STRING
 	"instruction decoder stopped past the end of the section.\n");
+		insn_get_opcode(c_insn);
+		printk(KERN_ALERT COMPONENT_STRING 
+	"kaddr=%p, end_kaddr=%p, c_insn->length=%d, opcode=0x%x\n",
+			(void*)kaddr,
+			(void*)end_kaddr,
+			(int)c_insn->length,
+			(unsigned int)c_insn->opcode.value
+		);
 		WARN_ON(1);
 	}
 		
@@ -347,7 +355,20 @@ do_process_area(void* kbeg, void* kend,
 			}
 		}
 
-		if (pos >= kend)
+	/* Another heuristics based on the fact that 'call' instructions we need
+	 * to instrument are 5 bytes long on x86 and x86-64 machines. So if 
+	 * there are no more than 4 bytes left before the end, they cannot 
+	 * contain the instruction of this kind, we do not need to check these
+	 * bytes. 
+	 * This allows to avoid "decoder stopped past the end of the section"
+	 * conditions (see do_process_insn()). There, the decoder tries to chew 
+	 * the trailing 1-2 zero bytes of the section (padding) and gets past 
+	 * the end of the section.
+	 * It seems that the length of the instruction that consists of zeroes
+	 * only is 3 bytes (it is a flavour of 'add'), i.e. shorter than that 
+	 * kind of 'call' we are instrumenting.
+	 */
+		if (pos + 4 >= kend)
 		{
 			break;
 		}
