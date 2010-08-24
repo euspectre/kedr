@@ -1,0 +1,22 @@
+#! /bin/sh
+
+kmodule="@CMAKE_BINARY_DIR@/syscall_connector/kernel_part/syscall_connector.ko"
+library="@CMAKE_BINARY_DIR@/syscall_connector/user_part/syscall_connector_u.so"
+cprogram="@CMAKE_CURRENT_BINARY_DIR@/use_library"
+
+insmod $kmodule
+if test $? -ne 0; then
+    printf "Cannot insert module for test\n"
+    exit 1
+fi
+$cprogram
+if test $? -ne 0; then
+    printf "Program failed to running, or error occures while it executed.\n"
+    rmmod $kmodule
+    exit 1
+fi
+rmmod $kmodule
+if test $? -ne 0; then
+    printf "Cannot remove module in test\n"
+    exit 1
+fi

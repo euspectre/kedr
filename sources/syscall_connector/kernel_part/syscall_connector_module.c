@@ -269,7 +269,7 @@ int sc_register_callback_for_type(sc_interaction_id type,
     unsigned long flags;
     
 	new_tci = kmalloc(sizeof(*new_tci), GFP_KERNEL);
-	if(new_tci != NULL)
+	if(new_tci == NULL)
 	{
 		print_error0("Cannot allocate memory for callback.");
 		return -1;
@@ -313,18 +313,22 @@ int sc_unregister_callback_for_type(sc_interaction_id type, int need_wait)
 	if(!tci)
     {
         //callback doesn't exist
-        result = 1;
         spin_unlock_irqrestore(&callbacks_spinlock, flags);
+        print_error("No callback is registered for type %ld.", (long)type);
+        result = 1;
     }
-    else if(!uobject_try_use(&tci->obj))
+    else if(uobject_try_use(&tci->obj))
     {
         //callback is currently deleting
         spin_unlock_irqrestore(&callbacks_spinlock, flags);
-        return 1;
+        print_error("Callback registered for type %ld is already being unregistered.", (long)type);
+        result = 1;
     }
     else
-        uobject_invalidate(&tci->obj);//will not block, because we call try_use() previousely
-    spin_unlock_irqrestore(&callbacks_spinlock, flags);
+    {
+        uobject_invalidate(&tci->obj);//will not block, because we call try_use() previously
+        spin_unlock_irqrestore(&callbacks_spinlock, flags);
+    }
 
     if(result)
         return 1;
@@ -480,12 +484,15 @@ static void nl_data_ready(struct sk_buff* skb)
     {
     	interaction.in_type = msg.in_type;
     	interaction.pid = NETLINK_CB(skb).pid;
+        debug("Message for interaction (%ld, %u) is recieved.",
+            (long)interaction.in_type, (unsigned)interaction.pid);
+
         // look for callback for given interaction
     	spin_lock_irqsave(&callbacks_spinlock, flags);
         tci = type_callback_lookup(interaction.in_type);
         if(tci)
         {
-            if(uobject_try_use(&tci->obj))
+            if(!uobject_try_use(&tci->obj))
             {
                 cci = channel_callback_lookup(tci, interaction.pid);
                 if(cci)
@@ -509,10 +516,20 @@ static void nl_data_ready(struct sk_buff* skb)
         spin_unlock_irqrestore(&callbacks_spinlock, flags);
         if(result)
         {
-        	print_error("No callback is registered for message, recieved from channel (%d, %u).",
-                sc_interaction_get_type(&interaction),
-                sc_interaction_get_pid(&interaction)
-            );
+        	if(!tci)
+            {
+            	print_error("No callback is registered for message, recieved from channel (%d, %u).",
+                    sc_interaction_get_type(&interaction),
+                    sc_interaction_get_pid(&interaction)
+                );
+            }
+            else
+            {
+                print_error("Callback, registered for message, recieved from channel (%d, %u), is currently unregistered.",
+                    sc_interaction_get_type(&interaction),
+                    sc_interaction_get_pid(&interaction)
+                );
+            }
         }
     }
     if(result)
@@ -552,7 +569,7 @@ static void type_callback_invalidate_notifier(struct uobject* obj)
     
     //we are the only who has access to the list of callbacks for channels,
     //so we can iterate it without lock
-
+    debug("Callback for type %ld is invalidate.", (long)tci->in_type);
     list_for_each_entry_safe(cci, cci_tmp, &tci->channel_callbacks, list)
 	{
 		list_del(&cci->list);
@@ -890,8 +907,21 @@ static __init int syscall_connector_init(void)
 		return -1;
 	}
     
-    sc_register_callback_for_type(GLOBAL_USAGE_SERVICE_IT, global_usage_service, NULL, NULL);
-    sc_register_callback_for_type(NAMED_LIBRARIES_SERVICE_IT, named_libraries_service, NULL, NULL);
+    if(sc_register_callback_for_type(GLOBAL_USAGE_SERVICE_IT, global_usage_service, NULL, NULL))
+    {
+        netlink_kernel_release(nl_sk);
+        print_error0("Failed to register global usage service.");
+        return -1;
+    }
+    debug("Global usage service is registered at %ld.", (long)GLOBAL_USAGE_SERVICE_IT);
+    if(sc_register_callback_for_type(NAMED_LIBRARIES_SERVICE_IT, named_libraries_service, NULL, NULL))
+    {
+        sc_unregister_callback_for_type(GLOBAL_USAGE_SERVICE_IT, 1);
+        netlink_kernel_release(nl_sk);
+        print_error0("Failed to register named libraries service.");
+        return -1;
+    }
+    debug("Named libraries service is registered at %ld.", (long)NAMED_LIBRARIES_SERVICE_IT);
 
 	return 0;
 }
@@ -899,6 +929,7 @@ static __init int syscall_connector_init(void)
 static __exit void syscall_connector_exit(void)
 {
 	sc_unregister_callback_for_type(GLOBAL_USAGE_SERVICE_IT, 1);
+    sc_unregister_callback_for_type(NAMED_LIBRARIES_SERVICE_IT, 1);
     
 	BUG_ON(!list_empty(&callbacks));
 	netlink_kernel_release(nl_sk);

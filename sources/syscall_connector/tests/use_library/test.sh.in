@@ -1,0 +1,36 @@
+#! /bin/sh
+test_file="@CMAKE_CURRENT_BINARY_DIR@/user_part/test_program"
+test_module="@CMAKE_CURRENT_BINARY_DIR@/kernel_part/test_module.ko"
+sc_module="@CMAKE_BINARY_DIR@/syscall_connector/kernel_part/syscall_connector.ko"
+
+insmod $sc_module
+if test $? -ne 0; then
+    printf "Cannot load syscall_connector module for test.\n"
+    exit 1
+fi
+insmod $test_module
+if test $? -ne 0; then
+    printf "Cannot load test module.\n"
+    rmmod $sc_module
+    exit 1
+fi
+$test_file
+if test $? -ne 0; then
+    printf "Failed to run test, or errors occures while it was running.\n"
+    rmmod $sc_module
+    rmmod $test_module
+    exit 1
+fi
+
+rmmod $test_module
+if test $? -ne 0; then
+    printf "Cannot unload syscall_connector module.\n"
+    exit 1
+fi
+
+rmmod $sc_module
+if test $? -ne 0; then
+    printf "Failed to unload test module.\n"
+    exit 1
+fi
+

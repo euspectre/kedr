@@ -26,6 +26,12 @@
 #include <kedr/syscall_connector/syscall_connector.h>
 #include <kedr/syscall_connector/syscall_connector_internal.h>
 
+#define debug(str, ...) printf("Debug: %s: " str "\n", __func__, __VA_ARGS__)
+#define debug0(str) debug("%s", str)
+
+#define print_error(str, ...) printf("Error: %s: " str "\n", __func__, __VA_ARGS__)
+#define print_error0(str) print_error("%s", str)
+
 struct _sc_interaction
 {
 	sc_interaction_id in_type;
@@ -140,7 +146,7 @@ sc_send(sc_interaction* interaction, const void* buf, size_t len)
 	/* Fill the netlink message header */
 	nlh->nlmsg_len = NLMSG_SPACE(len_real);
 	nlh->nlmsg_pid = interaction->pid;	/* sender pid */
-	nlh->nlmsg_type = 0; 	/* type - none special */
+	nlh->nlmsg_type = SC_NLMSG_TYPE; 	/* type - our type */
 	nlh->nlmsg_seq = 1; 	/* arbitrary sequence number */
 	nlh->nlmsg_flags = 0; 	/* no special flags */
 	
@@ -155,7 +161,7 @@ sc_send(sc_interaction* interaction, const void* buf, size_t len)
 		printf("send returns error: %s\n", strerror(errno));
 	}
 	free(nlh);
-	return result;
+	return (result == -1) ? result : len;
 }
 
 /*
@@ -228,15 +234,22 @@ static int sc_module_try_use(__u32 pid)
     if(sc_send(interaction, GLOBAL_USAGE_SERVICE_MSG_USE, sizeof(GLOBAL_USAGE_SERVICE_MSG_USE))
         != sizeof(GLOBAL_USAGE_SERVICE_MSG_USE))
     {
+        print_error0("Error occures while sending message.");
         result = 1;//failed to send
     }
     else if(sc_recv(interaction, buf, sizeof(buf)) != sizeof(buf))
     {
+        print_error0("Error occures while recieve message.");
         result = 1;//for some reason we cannot prevent kernel module from unload
     }
     else if(strcmp(buf, GLOBAL_USAGE_SERVICE_MSG_REPLY) != 0)
     {
+        print_error0("Incorrect message content was recieved.");
         result = 1;//incorrect message was recieved
+    }
+    else
+    {
+        debug0("Module is used now.");
     }
 
     sc_interaction_destroy(interaction);
@@ -253,7 +266,7 @@ static int sc_module_unuse(__u32 pid)
     if(!interaction) return;//fail to create interaction for some reason
     
     sc_send(interaction, GLOBAL_USAGE_SERVICE_MSG_UNUSE, sizeof(GLOBAL_USAGE_SERVICE_MSG_UNUSE));
-
+    debug0("Module is unused now.");
     sc_interaction_destroy(interaction);
 }
 
@@ -290,6 +303,7 @@ sc_library_try_use(const char* library_name, __u32 pid, void* buf, size_t len)
     if((send_buf = malloc(send_len)) == NULL)
     {
         //failed to allocate buffer
+        print_error0("Cannot allocate memory for buffer.");
         result = 1;
     }
     if(result)
@@ -300,13 +314,18 @@ sc_library_try_use(const char* library_name, __u32 pid, void* buf, size_t len)
     sc_named_libraries_send_msg_put(&send_msg, send_buf);
     if(sc_send(interaction, send_buf, send_len) != send_len)
     {
+        print_error0("Error occures while sending message.");
         result = 1;//failed to send
     }
     else if(sc_recv(interaction, buf, len) != len)
     {
+        print_error0("Error occures while recieve message.");
         result = 1;//for some reason we cannot prevent kernel module from unload
     }
-
+    else
+    {
+        debug("Library %s is used now.", library_name);
+    }
     free(send_buf);
     sc_interaction_destroy(interaction);
     return result;
@@ -316,7 +335,8 @@ sc_library_try_use(const char* library_name, __u32 pid, void* buf, size_t len)
  * Mark library as unused.
  */
 
-void sc_library_unuse(const char* library_name, __u32 pid)
+HELPER_DLL_EXPORT void
+sc_library_unuse(const char* library_name, __u32 pid)
 {
     struct sc_named_libraries_send_msg send_msg;
     void* send_buf;
@@ -337,6 +357,7 @@ void sc_library_unuse(const char* library_name, __u32 pid)
     if((send_buf = malloc(send_len)) == NULL)
     {
         //failed to allocate buffer
+        print_error0("Cannot allocate memory for buffer.");
         result = 1;
     }
     if(result)
@@ -347,7 +368,12 @@ void sc_library_unuse(const char* library_name, __u32 pid)
     sc_named_libraries_send_msg_put(&send_msg, send_buf);
     if(sc_send(interaction, send_buf, send_len) != send_len)
     {
+        print_error0("Error occures while sending message.");
         result = 1;//failed to send
+    }
+    else
+    {
+        debug("Library '%s' is unused now.", library_name);
     }
     free(send_buf);
     sc_interaction_destroy(interaction);
@@ -361,7 +387,7 @@ void sc_library_unuse(const char* library_name, __u32 pid)
 static void __attribute__ ((constructor))
 syscall_connector_init(void) 
 {
-    if(sc_module_use(getpid()))
+    if(sc_module_try_use(getpid()))
         exit(1);//fail to connect with kernel module, or fail to use it.
 }
 

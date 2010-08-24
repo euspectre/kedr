@@ -1,0 +1,14 @@
+#!/bin/sh
+
+kmodule="@CMAKE_BINARY_DIR@/syscall_connector/kernel_part/syscall_connector.ko"
+
+insmod $kmodule
+if test $? -ne 0; then
+    printf "Failed to insert module into the kernel\n"
+    exit 1
+fi
+rmmod $kmodule
+if test $? -ne 0; then
+    printf "Failed to remove module from the kernel\n"
+    exit 1
+fi

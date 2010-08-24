@@ -172,6 +172,7 @@ void sc_library_unregister(const char* library_name);
 
 #else /* __KERNEL__ */
 #include <linux/types.h> /* __u32 */
+#include <sys/types.h> /*size_t, ssize_t, NULL*/
 
 typedef struct _sc_interaction sc_interaction;
 

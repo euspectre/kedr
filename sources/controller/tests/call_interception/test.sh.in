@@ -27,7 +27,7 @@ is_function_call_detected()
 }
 
 if test $# -ne 2; then
-	print "Usage:\n\n\t%s function payload\n" "$0"
+	printf "Usage:\n\n\t%s function payload\n" "$0"
 	exit 1
 fi
 
