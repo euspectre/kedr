@@ -73,7 +73,7 @@
  * 
  */
 
-enum{kedr_fsim_set_indicator_id = 0x1};
+const char* fsim_library_name = "fsim_set_indicator";
 
 
 struct kedr_fsim_set_indicator_payload
@@ -170,38 +170,5 @@ kedr_fsim_set_indicator_reply_get(
 	KEDR_FSIM_MESSAGE_GET(buf, buf_len, reply->result, int);
 	return 0;
 }
-
-/*
- *  Initialize kernel-user connection: kedr_fsim_initialize_connection
- * 
- * 	user space:
- * 1. Send message with empty payload to the kernel.
- * 	kernel space:
- * 2. Recieve message from user space.
- * 3. Prevent module to unload(using try_module_get).
- * 4. Send message with empty payload to the user space
- *  user space:
- * 5. Recieve message from kernel.
- * 6. Return 0.
- * 
- * In case of absent of the kernel module:
- * user space:
- * 5. Wait for answer for n seconds.
- * 6. Return error code.
- */
-
-enum{kedr_fsim_init_id = 0x2};
-
-/*
- *  Break kernel-user connection: kedr_fsim_break_connection
- * 
- * 	user space:
- * 1.Send message with empty payload to the kernel.
- *  kernel space:
- * 2. Recieve message from user space.
- * 3. Allow module to unload(using module_put).
- */
-
-enum{kedr_fsim_break_id = 0x3};
 
 #endif /* KEDR_KEI_COMMON_H */

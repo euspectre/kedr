@@ -20,11 +20,13 @@
 /* kernel-user spaces interaction */
 #include <kedr/syscall_connector/syscall_connector.h>
 
-#define debug(str, ...) printk(KERN_DEBUG "%s: " str, __func__, __VA_ARGS__)
+#define debug(str, ...) printk(KERN_DEBUG "%s: " str "\n", __func__, __VA_ARGS__)
 #define debug0(str) debug("%s", str)
 
-#define print_error(str, ...) printk(KERN_ERR "%s: " str, __func__, __VA_ARGS__)
+#define print_error(str, ...) printk(KERN_ERR "%s: " str "\n", __func__, __VA_ARGS__)
 #define print_error0(str) print_error("%s", str)
+//interaction type for set_indicator
+static sc_interaction_id kedr_fsim_set_indicator_id = -1;
 
 struct indicator_descriptor
 {
@@ -57,16 +59,19 @@ static void on_module_unload(struct module* m,
 	list_del(&node->list);
 	kfree(node);
 }
-// Functions for interact with user space
+// Function for interact with user space
 static void 
-communicate_set_indicator(sc_interaction* interaction,
+communicate_set_indicator(const sc_interaction* interaction,
 	const void* buf, size_t len, void* data);
-static void 
-communicate_init(sc_interaction* interaction,
-	const void* buf, size_t len, void* data);
-static void 
-communicate_break(sc_interaction* interaction,
-	const void* buf, size_t len, void* data);
+
+static int indicator_manager_library_try_use(void);
+static void indicator_manager_library_unuse(void);
+//static void 
+//communicate_init(sc_interaction* interaction,
+//	const void* buf, size_t len, void* data);
+//static void 
+//communicate_break(sc_interaction* interaction,
+//	const void* buf, size_t len, void* data);
 
 // Common used indicator functions(them required by user-space library)
 
@@ -115,7 +120,7 @@ indicator_fault_if_size_greater_init_state(const size_t* params,
 	//whether size of params buffer is correct
 	if(params_len != sizeof(*params))
 	{
-		print_error("Size of payload %zu, expected size %zu.\n",
+		print_error("Size of payload %zu, expected size %zu.",
 			params_len, sizeof(*params));
 		return -2;
 	}
@@ -144,7 +149,7 @@ int kedr_fsim_indicator_function_register(const char* indicator_name,
 	if(*indicator_name == '\0')
 	{
 		print_error0("Indicator name \"\" is reserved for "
-			"special use - clearing indicator.\n");
+			"special use - clearing indicator.");
 		return -1;
 	}
 	if(indicator_descriptor_lookup(indicator_name)) return -1;
@@ -152,7 +157,7 @@ int kedr_fsim_indicator_function_register(const char* indicator_name,
 	new_node = kmalloc(sizeof(*new_node), GFP_KERNEL);
 	if(new_node == NULL)
 	{
-		print_error0("Cannot allocate new indicator descriptor.\n");
+		print_error0("Cannot allocate new indicator descriptor.");
 		return -2;
 	}
 	new_node->indicator_name = indicator_name;
@@ -246,7 +251,7 @@ indicator_descriptor_lookup(const char* indicator_name)
 
 static __init int fault_indicator_manage_init(void)
 {
-	debug0("fault_indicator_manage module starts.\n");
+	debug0("fault_indicator_manage module starts.");
 	// Register indicator functions
 	kedr_fsim_indicator_function_register("always_fault",
 		indicator_always_fault, NULL,
@@ -264,36 +269,26 @@ static __init int fault_indicator_manage_init(void)
 			indicator_fault_if_size_greater_destroy_state);
 
 	// Register kernel part of syscall mechanism
-	if(sc_register_callback_for_type(kedr_fsim_init_id,
-		communicate_init, NULL))
+	kedr_fsim_set_indicator_id = sc_register_callback_for_unused_type(
+		communicate_set_indicator, NULL, NULL);
+	if(kedr_fsim_set_indicator_id == -1)
 	{
-		print_error0("Interaction type of initialization "
-			"communication already in use.\n");
+		print_error0("Failed to register callback for 'set_indicator' interaction.");
 		return -1;
 	}
-	if(sc_register_callback_for_type(kedr_fsim_set_indicator_id,
-		communicate_set_indicator, NULL))
-	{
-		print_error0("Interaction type of set indicator "
-			"communication already in use.\n");
-		return -1;
-
-	}
-	if(sc_register_callback_for_type(kedr_fsim_break_id,
-		communicate_break, NULL))
-	{
-		print_error0("Interaction type of finalization "
-			"communication already in use.\n");
-		return -1;
-	}
+    if(sc_library_register(fsim_library_name,
+        indicator_manager_library_try_use, indicator_manager_library_unuse,
+        &kedr_fsim_set_indicator_id, sizeof(kedr_fsim_set_indicator_id)))
+    {
+		print_error0("Failed to register fsim library.");
+        sc_unregister_callback_for_type(kedr_fsim_set_indicator_id, 1);
+    }
 	return 0;
 }
 
 static __exit void fault_indicator_manage_exit(void)
 {
-	sc_unregister_callback_for_type(kedr_fsim_init_id);
-	sc_unregister_callback_for_type(kedr_fsim_set_indicator_id);
-	sc_unregister_callback_for_type(kedr_fsim_break_id);
+	sc_unregister_callback_for_type(kedr_fsim_set_indicator_id, 1);
 	
 	while(!list_empty(&indicators))
 	{
@@ -302,12 +297,12 @@ static __exit void fault_indicator_manage_exit(void)
 		kedr_fsim_indicator_function_unregister(ind->indicator_name);
 	}		
 	
-	debug0("fault_indicator_manage module ends.\n");
+	debug0("fault_indicator_manage module ends.");
 }
 
 
 static void 
-communicate_set_indicator(sc_interaction* interaction,
+communicate_set_indicator(const sc_interaction* interaction,
 	const void* buf, size_t len, void* data)
 {
     struct kedr_fsim_set_indicator_payload payload_struct = {};
@@ -319,11 +314,11 @@ communicate_set_indicator(sc_interaction* interaction,
     if(kedr_fsim_set_indicator_payload_get(&payload_struct,
 		buf, len))
 	{
-		print_error0("Incorrect format of the message.\n");
+		print_error0("Incorrect format of the message.");
 		return;
 	}
     
-    debug("Set indicator \"%s\" for point \"%s\".\n",
+    debug("Set indicator \"%s\" for point \"%s\".",
 		payload_struct.indicator_name,
 		payload_struct.point_name);
     
@@ -342,34 +337,16 @@ communicate_set_indicator(sc_interaction* interaction,
 
 }
 
-
-static void communicate_init(sc_interaction* interaction,
-	const void* buf, size_t len, void* data)
+int indicator_manager_library_try_use()
 {
-	debug0("init communication starts.\n");
-	
-	(void) data;
-	(void) buf;//may be asserted in the future
-	(void) len;//may be asserted in the future
-	
-	try_module_get(THIS_MODULE);
-	sc_send(interaction, NULL, 0);
-
-	debug0("init communication ends.\n");
+    return try_module_get(THIS_MODULE) == 0;
+}
+void indicator_manager_library_unuse()
+{
+    module_put(THIS_MODULE);
 }
 
-static void communicate_break(sc_interaction* interaction,
-	const void* buf, size_t len, void* data)
-{
-	(void) interaction;
-	(void) data;
-	(void) buf;
-	(void) len;
 
-	debug0("break communication starts.\n");
-	module_put(THIS_MODULE);
-	debug0("break communication ends.\n");
-}
 MODULE_AUTHOR("Tsyvarev");
 MODULE_LICENSE("GPL");
 

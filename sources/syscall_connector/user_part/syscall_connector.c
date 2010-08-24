@@ -19,6 +19,8 @@
 #include <linux/netlink.h>
 #include <unistd.h> /* close() and getpid()*/
 
+#include <linux/fcntl.h> /* fcntl constants */
+
 #include <errno.h>
 
 #include <kedr/syscall_connector/syscall_connector.h>
@@ -72,6 +74,30 @@ sc_interaction_create(sc_interaction_id in_type, __u32 pid)
 	
 	return interaction;
 }
+
+HELPER_DLL_EXPORT void
+sc_interaction_set_flags(sc_interaction* interaction, long flags)
+{
+    long socket_flags = fcntl(interaction->sock_fd, F_GETFL);
+    if(flags | SC_INTERACTION_NONBLOCK)
+        socket_flags |= O_NONBLOCK;
+    else
+        socket_flags &= ~O_NONBLOCK;
+    fcntl(interaction->sock_fd, F_SETFL, socket_flags);
+}
+
+HELPER_DLL_EXPORT long
+sc_interaction_get_flags(sc_interaction* interaction)
+{
+    long flags = 0;
+    long socket_flags = fcntl(interaction->sock_fd, F_GETFL);
+    if(socket_flags |= O_NONBLOCK)
+        flags |= SC_INTERACTION_NONBLOCK;
+    else
+        flags |= ~SC_INTERACTION_NONBLOCK;
+    return flags;
+}
+
 
 HELPER_DLL_EXPORT void
 sc_interaction_destroy(sc_interaction* interaction)
@@ -181,4 +207,166 @@ sc_recv(sc_interaction* interaction, void* buf, size_t len)
 	free(nlh);
 	
 	return sc_message.payload_length;
+}
+
+//Some implementations of syscalls
+
+/*
+ * Mark module which contatin implementation of kernel part as used,
+ * in such way prevent it from unexpected unloading.
+ */
+
+static int sc_module_try_use(__u32 pid)
+{
+    char buf[sizeof(GLOBAL_USAGE_SERVICE_MSG_REPLY)];
+    int result = 0;
+    
+    sc_interaction* interaction = sc_interaction_create(GLOBAL_USAGE_SERVICE_IT, pid);
+    if(!interaction) return 1;//fail to create interaction for some reason
+    
+    sc_interaction_set_flags(interaction, SC_INTERACTION_NONBLOCK);
+    if(sc_send(interaction, GLOBAL_USAGE_SERVICE_MSG_USE, sizeof(GLOBAL_USAGE_SERVICE_MSG_USE))
+        != sizeof(GLOBAL_USAGE_SERVICE_MSG_USE))
+    {
+        result = 1;//failed to send
+    }
+    else if(sc_recv(interaction, buf, sizeof(buf)) != sizeof(buf))
+    {
+        result = 1;//for some reason we cannot prevent kernel module from unload
+    }
+    else if(strcmp(buf, GLOBAL_USAGE_SERVICE_MSG_REPLY) != 0)
+    {
+        result = 1;//incorrect message was recieved
+    }
+
+    sc_interaction_destroy(interaction);
+    return result;
+}
+
+/*
+ * Mark module as unused.
+ */
+
+static int sc_module_unuse(__u32 pid)
+{
+    sc_interaction* interaction = sc_interaction_create(GLOBAL_USAGE_SERVICE_IT, pid);
+    if(!interaction) return;//fail to create interaction for some reason
+    
+    sc_send(interaction, GLOBAL_USAGE_SERVICE_MSG_UNUSE, sizeof(GLOBAL_USAGE_SERVICE_MSG_UNUSE));
+
+    sc_interaction_destroy(interaction);
+}
+
+
+/*
+ * Mark library with given name as used, in such way prevent it from unexpected unloading.
+ *
+ * On success, return 0 and copy message, which contain information,
+ * specific for given library, into the buffer.
+ *
+ * Otherwise returns not 0.
+ *
+ */
+
+HELPER_DLL_EXPORT int
+sc_library_try_use(const char* library_name, __u32 pid, void* buf, size_t len)
+{
+    struct sc_named_libraries_send_msg send_msg;
+    void* send_buf;
+    size_t send_len;
+
+    int result = 0;
+    
+    sc_interaction* interaction = sc_interaction_create(NAMED_LIBRARIES_SERVICE_IT, pid);
+    if(!interaction) return 1;//fail to create interaction for some reason
+    
+    sc_interaction_set_flags(interaction, SC_INTERACTION_NONBLOCK);
+    
+    send_msg.control = 1;
+    send_msg.library_name = library_name;
+    
+    send_len = sc_named_libraries_send_msg_len(&send_msg);
+    
+    if((send_buf = malloc(send_len)) == NULL)
+    {
+        //failed to allocate buffer
+        result = 1;
+    }
+    if(result)
+    {
+        sc_interaction_destroy(interaction);
+        return result;
+    }
+    sc_named_libraries_send_msg_put(&send_msg, send_buf);
+    if(sc_send(interaction, send_buf, send_len) != send_len)
+    {
+        result = 1;//failed to send
+    }
+    else if(sc_recv(interaction, buf, len) != len)
+    {
+        result = 1;//for some reason we cannot prevent kernel module from unload
+    }
+
+    free(send_buf);
+    sc_interaction_destroy(interaction);
+    return result;
+}
+
+/*
+ * Mark library as unused.
+ */
+
+void sc_library_unuse(const char* library_name, __u32 pid)
+{
+    struct sc_named_libraries_send_msg send_msg;
+    void* send_buf;
+    size_t send_len;
+
+    int result = 0;
+    
+    sc_interaction* interaction = sc_interaction_create(NAMED_LIBRARIES_SERVICE_IT, pid);
+    if(!interaction) return;//fail to create interaction for some reason
+    
+    sc_interaction_set_flags(interaction, SC_INTERACTION_NONBLOCK);
+    
+    send_msg.control = 0;
+    send_msg.library_name = library_name;
+    
+    send_len = sc_named_libraries_send_msg_len(&send_msg);
+    
+    if((send_buf = malloc(send_len)) == NULL)
+    {
+        //failed to allocate buffer
+        result = 1;
+    }
+    if(result)
+    {
+        sc_interaction_destroy(interaction);
+        return;
+    }
+    sc_named_libraries_send_msg_put(&send_msg, send_buf);
+    if(sc_send(interaction, send_buf, send_len) != send_len)
+    {
+        result = 1;//failed to send
+    }
+    free(send_buf);
+    sc_interaction_destroy(interaction);
+
+    return;
+
+}
+
+
+/////////////////////////Constructor and destructor of library/////////////////////
+static void __attribute__ ((constructor))
+syscall_connector_init(void) 
+{
+    if(sc_module_use(getpid()))
+        exit(1);//fail to connect with kernel module, or fail to use it.
+}
+
+static void __attribute__ ((destructor))
+syscall_connector_destroy(void)
+{
+    sc_module_unuse(getpid());
 }

@@ -21,6 +21,8 @@
 #define MAX_PAYLOAD 1024
 
 #define MESSAGE_PID getpid()
+//interaction type for set_indicator
+static sc_interaction_id kedr_fsim_set_indicator_id = -1;
 
 //Auxuliary functions.
 
@@ -90,51 +92,11 @@ kedr_fsim_set_indicator(const char* point_name,
 }
 
 /////////////////////////////////////////////////////
-static int kedr_fsim_communication_init()
-{
-	sc_interaction* interaction = sc_interaction_create(MESSAGE_PID,
-		kedr_fsim_init_id);
-	if(!interaction)
-	{
-		printf("Cannot create interaction of type "
-			"kedr_fsim_init_id.\n");
-		return -1;
-	}
-
-	if(sc_send(interaction, NULL, 0) <= 0)
-	{
-		printf("Cannot send message.\n");
-		sc_interaction_destroy(interaction);
-		return -1;
-	}
-	
-	sc_recv(interaction, NULL, 0);
-	sc_interaction_destroy(interaction);
-	
-	return 0;
-}
-
-static void kedr_fsim_communication_break()
-{
-	sc_interaction* interaction = sc_interaction_create(MESSAGE_PID,
-		kedr_fsim_break_id);
-	if(!interaction)
-	{
-		printf("Cannot create interaction of type "
-			"kedr_fsim_init_id.\n");
-		return;
-	}
-	
-	sc_send(interaction, NULL, 0);
-	
-	sc_interaction_destroy(interaction);
-}
-
-
 void __attribute__((constructor)) my_init(void)
 {
 	printf("Constructor was called.\n");
-	if(kedr_fsim_communication_init())
+	if(sc_library_try_use(fsim_library_name, MESSAGE_PID,
+        &kedr_fsim_set_indicator_id, sizeof(kedr_fsim_set_indicator_id)))
 	{
 		printf("Cannot initialize communication with kernel module:"
 				"perhaps it isn't loaded.\n");
@@ -145,5 +107,6 @@ void __attribute__((constructor)) my_init(void)
 void __attribute__((destructor)) my_fini(void)
 {
 	printf("Destructor was called.\n");
+	sc_library_unuse(fsim_library_name, MESSAGE_PID);
 	kedr_fsim_communication_break();
 }

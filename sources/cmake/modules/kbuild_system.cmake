@@ -112,8 +112,8 @@ function(kbuild_add_module name)
 		#This situation is incorrect for kbuild system.
 		list(FIND obj_sources_noext_rel ${name} is_objects_contain_name)
 		if(is_objects_contain_name GREATER -1)
-			message(FATAL_ERROR "Module should be built"
-			"either from only one object with same name,"
+			message(FATAL_ERROR "Module should be built "
+			"either from only one object with same name, "
 			"or from objects with names, different from module name")
 		endif(is_objects_contain_name GREATER -1)
 		set(is_build_simple "FALSE")
