@@ -190,7 +190,7 @@ sc_recv(sc_interaction* interaction, void* buf, size_t len)
 	
 	if(recvmsg(interaction->sock_fd, &msg, 0) == -1)
 	{
-		printf("recieve returns error: %s", strerror(errno));
+		printf("recieve returns error: %s\n", strerror(errno));
 		return -1;
 	}
 	if(sc_msg_get(&sc_message, NLMSG_DATA(nlh), NLMSG_PAYLOAD(nlh, 0)))
@@ -224,7 +224,7 @@ sc_recv(sc_interaction* interaction, void* buf, size_t len)
 
 static int sc_module_try_use(__u32 pid)
 {
-    char buf[sizeof(GLOBAL_USAGE_SERVICE_MSG_REPLY)];
+    char buf[sizeof(GLOBAL_USAGE_SERVICE_MSG_REPLY)] = "";
     int result = 0;
     
     sc_interaction* interaction = sc_interaction_create(GLOBAL_USAGE_SERVICE_IT, pid);
@@ -234,18 +234,21 @@ static int sc_module_try_use(__u32 pid)
     if(sc_send(interaction, GLOBAL_USAGE_SERVICE_MSG_USE, sizeof(GLOBAL_USAGE_SERVICE_MSG_USE))
         != sizeof(GLOBAL_USAGE_SERVICE_MSG_USE))
     {
+        //failed to send
         print_error0("Error occures while sending message.");
-        result = 1;//failed to send
+        result = 1;
     }
     else if(sc_recv(interaction, buf, sizeof(buf)) != sizeof(buf))
     {
+        //for some reason we cannot prevent kernel module from unload
         print_error0("Error occures while recieve message.");
-        result = 1;//for some reason we cannot prevent kernel module from unload
+        result = 1;
     }
-    else if(strcmp(buf, GLOBAL_USAGE_SERVICE_MSG_REPLY) != 0)
+    else if(memcmp(buf, GLOBAL_USAGE_SERVICE_MSG_REPLY, sizeof(buf)) != 0)
     {
+        //incorrect message was recieved
         print_error0("Incorrect message content was recieved.");
-        result = 1;//incorrect message was recieved
+        result = 1;
     }
     else
     {
@@ -314,17 +317,19 @@ sc_library_try_use(const char* library_name, __u32 pid, void* buf, size_t len)
     sc_named_libraries_send_msg_put(&send_msg, send_buf);
     if(sc_send(interaction, send_buf, send_len) != send_len)
     {
+        //failed to send
         print_error0("Error occures while sending message.");
-        result = 1;//failed to send
+        result = 1;
     }
     else if(sc_recv(interaction, buf, len) != len)
     {
+        //for some reason we cannot prevent kernel module from unload
         print_error0("Error occures while recieve message.");
-        result = 1;//for some reason we cannot prevent kernel module from unload
+        result = 1;
     }
     else
     {
-        debug("Library %s is used now.", library_name);
+        debug("Library '%s' is used now.", library_name);
     }
     free(send_buf);
     sc_interaction_destroy(interaction);
@@ -368,8 +373,9 @@ sc_library_unuse(const char* library_name, __u32 pid)
     sc_named_libraries_send_msg_put(&send_msg, send_buf);
     if(sc_send(interaction, send_buf, send_len) != send_len)
     {
+        //failed to send
         print_error0("Error occures while sending message.");
-        result = 1;//failed to send
+        result = 1;
     }
     else
     {

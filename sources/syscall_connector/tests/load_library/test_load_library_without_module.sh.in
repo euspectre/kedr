@@ -1,0 +1,12 @@
+#! /bin/sh
+
+cprogram="@CMAKE_CURRENT_BINARY_DIR@/test_sc_load_library_use_library"
+
+$cprogram
+if test $? -eq 0; then
+    printf "Program was successfully executed, but it should fail,\n"
+    printf "because library should not load without kernel module.\n"
+    exit 1
+fi
+printf "It is OK, that test program was executed with failure.\n"
+printf "It is because module, implemented kernel part of syscall connector library, was not loaded.\n"

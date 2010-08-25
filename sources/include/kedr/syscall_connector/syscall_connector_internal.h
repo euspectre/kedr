@@ -124,19 +124,15 @@ static const char GLOBAL_USAGE_SERVICE_MSG_UNUSE[] = "unuse";
 /*
  * Named libraries service.
  *
- * user space: "use"|"library A"
- * kernel space: "ok", "adresses count", "adresses"
+ * user space: 1("use")|"library A"
+ * kernel space: (library_info)
  * ->prevent unloading of library "library A"
- * user space: "use"|"library A"
+ * user space: 1("use")|"library A"
  * kernel space: (nothing) 
  * ->failed to prevent library "library A" from unload
- * user space: "unuse"|"library A"
+ * user space: 0("unuse")|"library A"
  * library "library A" may be unloaded now
  */
-
-static const char NAMED_LIBRARIES_SERVICE_MSG_USE[] = "use";
-static const char NAMED_LIBRARIES_SERVICE_MSG_REPLY[] = "ok";
-static const char NAMED_LIBRARIES_SERVICE_MSG_UNUSE[] = "unuse";
 
 struct sc_named_libraries_send_msg
 {
@@ -161,7 +157,7 @@ static inline int sc_named_libraries_send_msg_get(struct sc_named_libraries_send
 	SC_MESSAGE_GET(buffer, buffer_len, msg->control, int);
 	SC_MESSAGE_GET_BYTES(buffer, buffer_len,
 		msg->library_name, buffer_len - 1);
-	return *((char*)buffer) == '\0';
+	return *((const char*)buffer) != '\0';
 }
 
 #endif /* SYSCALL_CONNECTOR_INTERNAL_H */

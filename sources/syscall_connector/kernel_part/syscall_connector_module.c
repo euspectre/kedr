@@ -110,7 +110,7 @@ struct sock *nl_sk;
  */
 
 static void type_callback_info_init(struct type_callback_info* tci,
-    sc_interaction_id in_type, sc_recv_callback_t cb,
+    sc_recv_callback_t cb,
     void* data, void (*destroy) (void*)
     );
 
@@ -163,6 +163,13 @@ type_callback_lookup(sc_interaction_id in_type);
 static struct channel_callback_info*
 channel_callback_lookup(struct type_callback_info*, __u32 pid);
 
+/*
+ * Insert record for callback for type into callbacks list.
+ *
+ * Internal function, should be executed under lock taken.
+ */
+static void add_callback_for_type_internal(struct type_callback_info*, sc_interaction_id in_type);
+
 // Callback function for the socket
 static void nl_data_ready(struct sk_buff* skb);
 
@@ -192,12 +199,16 @@ static struct list_head named_libraries = LIST_HEAD_INIT(named_libraries);//list
 static spinlock_t named_libraries_spinlock;
 
 static void named_library_init(struct named_library* library,
-    const char* library_name,
     int (*try_use)(void), void (*unuse)(void),
     void* reply_msg, size_t reply_msg_len
 );
 static void named_library_destroy(struct named_library* library);
-
+/*
+ * Add library record into the list of named libraries
+ *
+ * Internal function, should be used under lock taken.
+ */
+static void add_library_internal(struct named_library* library, const char* library_name);
 //search library with given name, should be executed under spinlock taken
 static struct named_library* named_libraries_look_for(const char* name);
 
@@ -274,7 +285,7 @@ int sc_register_callback_for_type(sc_interaction_id type,
 		print_error0("Cannot allocate memory for callback.");
 		return -1;
 	}
-    type_callback_info_init(new_tci, type, cb, data, destroy);
+    type_callback_info_init(new_tci, cb, data, destroy);
 
 	spin_lock_irqsave(&callbacks_spinlock, flags);
 	if(type_callback_lookup(type))
@@ -285,11 +296,8 @@ int sc_register_callback_for_type(sc_interaction_id type,
         kfree(new_tci);
         return 1;//already exist
     }
-    uobject_init(&new_tci->obj);
-    uobject_set_finalize_notifier(&new_tci->obj, type_callback_finalize_notifier/*destroy node or wake_up process, which wait for this*/);
-    uobject_set_invalidate_notifier(&new_tci->obj, type_callback_invalidate_notifier/*destroy(data), remove from list*/);
+    add_callback_for_type_internal(new_tci, type);
 
-	list_add_tail(&new_tci->list, &callbacks);
     spin_unlock_irqrestore(&callbacks_spinlock, flags);
 	return 0;
 }
@@ -298,7 +306,27 @@ EXPORT_SYMBOL(sc_register_callback_for_type);
 sc_interaction_id sc_register_callback_for_unused_type(
 	sc_recv_callback_t cb, void* data, void (*destroy)(void*))
 {
-    return -1;//not implemented yet
+	struct type_callback_info* new_tci;
+    unsigned long flags;
+    
+    sc_interaction_id type;
+    
+	new_tci = kmalloc(sizeof(*new_tci), GFP_KERNEL);
+	if(new_tci == NULL)
+	{
+		print_error0("Cannot allocate memory for callback.");
+		return -1;
+	}
+    type_callback_info_init(new_tci, cb, data, destroy);
+
+	spin_lock_irqsave(&callbacks_spinlock, flags);
+    //skip used types
+    for(type = in_type_hint; type_callback_lookup(type); type++);
+
+    add_callback_for_type_internal(new_tci, type);
+    
+    spin_unlock_irqrestore(&callbacks_spinlock, flags);
+    return type;
 }
 EXPORT_SYMBOL(sc_register_callback_for_unused_type);
 
@@ -598,12 +626,11 @@ static void type_callback_finalize_notifier(struct uobject* obj)
 
 
 static void type_callback_info_init(struct type_callback_info* tci,
-    sc_interaction_id in_type, sc_recv_callback_t cb,
+    sc_recv_callback_t cb,
     void* data, void (*destroy) (void*)
     )
 {
     INIT_LIST_HEAD(&tci->list);
-	tci->in_type = in_type;
 	tci->cb = cb;
 	tci->data = data;
     tci->destroy = destroy;
@@ -689,6 +716,16 @@ channel_callback_lookup(struct type_callback_info* tci, __u32 pid)
 	}
 	return NULL;
 }
+
+static void add_callback_for_type_internal(struct type_callback_info* tci, sc_interaction_id in_type)
+{
+    uobject_init(&tci->obj);
+    uobject_set_finalize_notifier(&tci->obj, type_callback_finalize_notifier/*destroy node or wake_up process, which wait for this*/);
+    uobject_set_invalidate_notifier(&tci->obj, type_callback_invalidate_notifier/*destroy(data), remove from list*/);
+
+	tci->in_type = in_type;
+	list_add_tail(&tci->list, &callbacks);
+}
 /*
  * Implementations of concrete syscalls.
  */
@@ -701,11 +738,10 @@ static void global_usage_service(const sc_interaction* interaction,
     {
         if(try_module_get(THIS_MODULE))
         {
-            char ret[] = "ok";
-            sc_send(interaction, ret, sizeof(ret));
+            sc_send(interaction, GLOBAL_USAGE_SERVICE_MSG_REPLY, sizeof(GLOBAL_USAGE_SERVICE_MSG_REPLY));
         }
     }
-    else if(strncmp(buf, "unuse", len) == 0)
+    else if(memcmp(buf, GLOBAL_USAGE_SERVICE_MSG_UNUSE, len) == 0)
     {
         module_put(THIS_MODULE);
     }
@@ -720,31 +756,30 @@ sc_library_register(const char* library_name,
 {
     unsigned long flags;
 
-    struct named_library* new_library;
+    struct named_library* new_library = kmalloc(sizeof(*new_library), GFP_KERNEL);
 
-    if((new_library = kmalloc(sizeof(*new_library), GFP_KERNEL))== NULL)
+    if(new_library == NULL)
     {
-        print_error0("Cannot allocate memory");
+        print_error0("Cannot allocate memory.");
         return 1;
     }
+    named_library_init(new_library, try_use, unuse, 
+        reply_msg, reply_msg_len);
+
     spin_lock_irqsave(&named_libraries_spinlock, flags);
     if(named_libraries_look_for(library_name))
     {
         spin_unlock_irqrestore(&named_libraries_spinlock, flags);
-        print_error0("Library with this name is already registered.");
+        print_error("Library with name '%s' is already registered.", library_name);
+        named_library_destroy(new_library);
+        kfree(new_library);
         return 1;
     }
     
-    named_library_init(new_library, library_name, try_use, unuse, 
-        reply_msg, reply_msg_len);
-
-    uobject_init(&new_library->obj);
-    uobject_set_invalidate_notifier(&new_library->obj, named_library_invalidate_notifier);
-    uobject_set_finalize_notifier(&new_library->obj, named_library_finalize_notifier);
-
-    list_add_tail(&named_libraries, &new_library->list);
+    add_library_internal(new_library, library_name);
+    
     spin_unlock_irqrestore(&named_libraries_spinlock, flags);
-
+    debug("Library with name '%s' was registered.", library_name);
     return 0;
 }
 EXPORT_SYMBOL(sc_library_register);
@@ -760,14 +795,14 @@ void sc_library_unregister(const char* library_name)
     if(library == NULL)
     {
         spin_unlock_irqrestore(&named_libraries_spinlock, flags);
-        print_error0("Library with this name is not registered.");
+        print_error("Library with name '%s' is not registered.", library_name);
         return;
     }
-    if(!uobject_try_use(&library->obj))
+    if(uobject_try_use(&library->obj))
     {
         //library is currently being deleted
         spin_unlock_irqrestore(&named_libraries_spinlock, flags);
-        print_error0("Library is already being deleted now.");
+        print_error("Library '%s' is already being deleted now.", library_name);
         return;
     }
 
@@ -779,8 +814,10 @@ void sc_library_unregister(const char* library_name)
         prepare_to_wait(&library->wait_finish, &wait, TASK_INTERRUPTIBLE);
         uobject_unuse(&library->obj);//only after adding to the waitqueue
         schedule();
+        finish_wait(&library->wait_finish, &wait);
         named_library_destroy(library);
         kfree(library);
+        debug("Library with name '%s' was unregistered.", library_name);
         return;
     }
 }
@@ -807,12 +844,10 @@ void named_library_finalize_notifier(struct uobject* obj)
 }
 
 void named_library_init(struct named_library* library,
-    const char* library_name,
     int (*try_use)(void), void (*unuse)(void),
     void* reply_msg, size_t reply_msg_len
 )
 {
-    library->name = library_name;
     library->try_use = try_use;
     library->unuse = unuse;
     library->reply_msg = reply_msg;
@@ -824,6 +859,16 @@ void named_library_init(struct named_library* library,
 void named_library_destroy(struct named_library* library)
 {
 
+}
+
+static void add_library_internal(struct named_library* library, const char* library_name)
+{
+    uobject_init(&library->obj);
+    uobject_set_invalidate_notifier(&library->obj, named_library_invalidate_notifier);
+    uobject_set_finalize_notifier(&library->obj, named_library_finalize_notifier);
+
+    library->name = library_name;//expected, that library name is static string
+    list_add_tail(&library->list, &named_libraries);
 }
 
 struct named_library* named_libraries_look_for(const char* name)
@@ -851,42 +896,56 @@ static void named_libraries_service(const sc_interaction* interaction,
     
     (void)data;//unused
     
-    if(sc_named_libraries_send_msg_get(&send_msg, buf, len)) return;//incorrect message format
-    if(send_msg.control)
+    if(sc_named_libraries_send_msg_get(&send_msg, buf, len))
+    {
+        print_error0("Incorrect message format.");
+        return;
+    }
+    if(send_msg.control == 1)
     {
         spin_lock_irqsave(&named_libraries_spinlock, flags);
         library = named_libraries_look_for(send_msg.library_name);
         if(!library)
         {
             //library name doesn't registered
+            print_error("Library '%s' is not registered.", send_msg.library_name);
             result = 1;
         }
-        else if(!uobject_try_use(&library->obj))
+        else if(uobject_try_use(&library->obj))
         {
             //library is currently being deleted
+            print_error("Library '%s' is currently being deleted.", send_msg.library_name);
             result = 1;
         }
         spin_unlock_irqrestore(&named_libraries_spinlock, flags);
         if(result)
             return;
-        if(!library->try_use())
+        if(library->try_use())
         {
+            print_error("Fail to use library '%s'.", send_msg.library_name);
             result = 1;
             uobject_unuse(&library->obj);
         }
         if(!result)
         {
             sc_send(interaction, library->reply_msg, library->reply_msg_len);
+            debug("Library '%s' is used now.", send_msg.library_name);
         }
     }
-    else
+    else if(send_msg.control == 0)
     {
         spin_lock_irqsave(&named_libraries_spinlock, flags);
         library = named_libraries_look_for(send_msg.library_name);
-        if(!library) return;//library name doesn't registered
+        if(!library)
+        {
+            print_error("Library '%s' is not registered.", send_msg.library_name);
+            result = 1;//library name doesn't registered
+        }
         spin_unlock_irqrestore(&named_libraries_spinlock, flags);
+        if(result) return;
         library->unuse();
         uobject_unuse(&library->obj);
+        debug("Library '%s' is unused now.", send_msg.library_name);
     }
 }
 

@@ -12,3 +12,4 @@ kedr_test_add_script (syscall_connector.01
 
 subdirs(load_library)
 subdirs(use_library)
+subdirs(use_named_libraries_service)

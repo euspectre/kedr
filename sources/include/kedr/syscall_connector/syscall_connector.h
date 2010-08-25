@@ -146,6 +146,8 @@ int sc_unregister_callback_for_channel(const sc_interaction* interaction);
  *
  * 'reply_msg' will be content of reply message after successfull try_use() call.
  * It may contain, e.g., interaction types for syscalls.
+ *
+ * 'library_name' is expected to be static string.
  */
 
 int 

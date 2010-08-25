@@ -1,8 +1,7 @@
 #! /bin/sh
 
 kmodule="@CMAKE_BINARY_DIR@/syscall_connector/kernel_part/syscall_connector.ko"
-library="@CMAKE_BINARY_DIR@/syscall_connector/user_part/syscall_connector_u.so"
-cprogram="@CMAKE_CURRENT_BINARY_DIR@/use_library"
+cprogram="@CMAKE_CURRENT_BINARY_DIR@/test_sc_load_library_use_library"
 
 insmod $kmodule
 if test $? -ne 0; then
