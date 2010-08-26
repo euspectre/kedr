@@ -492,8 +492,8 @@ static void nl_data_ready(struct sk_buff* skb)
     int result = 0;
     struct nlmsghdr *nlh = nlmsg_hdr(skb);
 
-    struct channel_callback_info* cci;
-    struct type_callback_info* tci;
+    struct channel_callback_info* cci = NULL;
+    struct type_callback_info* tci = NULL;
     
     sc_recv_callback_t cb = NULL;
 	void* cb_data = NULL;
