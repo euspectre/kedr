@@ -1,0 +1,2 @@
+add_subdirectory(calc_test_simple)
+add_subdirectory(calc_test_vars)

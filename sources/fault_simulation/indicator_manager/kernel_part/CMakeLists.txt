@@ -13,3 +13,5 @@ rule_copy_file("module_weak_ref.c" "${CMAKE_SOURCE_DIR}/module_weak_ref/module_w
 
 kedr_install_kmodule(${kmodule_name})
 kedr_install_symvers(${kmodule_name})
+
+add_subdirectory(calculator)
