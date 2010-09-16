@@ -1,4 +1,4 @@
-set(kmodule_name "syscall_connector")
+set(kmodule_name "kedr_syscall_connector")
 
 kbuild_add_module(${kmodule_name} "syscall_connector_module.c" "uobject.c")
 

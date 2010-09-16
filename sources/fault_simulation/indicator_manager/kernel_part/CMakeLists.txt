@@ -1,4 +1,4 @@
-set(kmodule_name "fsim_indicator_manager")
+set(kmodule_name "kedr_fsim_indicator_manager")
 
 kbuild_use_symbols(
 	"${CMAKE_BINARY_DIR}/base/Module.symvers"
@@ -15,3 +15,4 @@ kedr_install_kmodule(${kmodule_name})
 kedr_install_symvers(${kmodule_name})
 
 add_subdirectory(calculator)
+add_subdirectory(tests)

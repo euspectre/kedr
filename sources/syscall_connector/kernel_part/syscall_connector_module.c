@@ -374,6 +374,7 @@ int sc_unregister_callback_for_type(sc_interaction_id type, int need_wait)
         prepare_to_wait(&tci->wait_finish, &wait, TASK_INTERRUPTIBLE);
         uobject_unuse(&tci->obj);//only after adding to the waitqueue
         schedule();
+        finish_wait(&tci->wait_finish, &wait);
         finalize_callback_for_type(tci);
         return 0;
     }

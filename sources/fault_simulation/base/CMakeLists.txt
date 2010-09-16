@@ -1,4 +1,4 @@
-set(module_name "fsim_base")
+set(module_name "kedr_fsim_base")
 
 kbuild_add_module(${module_name}
 	"fsim_base_module.c"
@@ -8,3 +8,5 @@ rule_copy_file("module_weak_ref.c" "${CMAKE_SOURCE_DIR}/module_weak_ref/module_w
 
 kedr_install_kmodule(${module_name})
 kedr_install_symvers(${module_name})
+
+add_subdirectory(tests)

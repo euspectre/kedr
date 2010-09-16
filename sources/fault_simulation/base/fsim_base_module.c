@@ -11,6 +11,12 @@ MODULE_LICENSE("GPL");
 #include <kedr/module_weak_ref/module_weak_ref.h>
 #include <kedr/fault_simulation/fsim_base.h>
 
+#define debug(str, ...) printk(KERN_DEBUG "%s: " str "\n", __func__, __VA_ARGS__)
+#define debug0(str) debug("%s", str)
+
+#define print_error(str, ...) printk(KERN_ERR "%s: " str "\n", __func__, __VA_ARGS__)
+#define print_error0(str) print_error("%s", str)
+
 /*
  * Information about indicator, that needed for correct work of simulate
  */
@@ -26,6 +32,8 @@ struct fault_indicator_info
     //function to be called when module 'm' is unloaded
 	kedr_fsim_destroy_indicator_state destroy;
 };
+
+
 
 /*
  * Default indicator is {NULL, NULL, NULL, NULL}.
@@ -46,13 +54,18 @@ struct kedr_simulation_point
 	//taken by simulate function
 	const char* format_string;
 	//current indicator, used by point
-	struct fault_indicator_info current_indicator;
+	struct fault_indicator_info current_indicator;//really, this field should be pointer, and be protected by RCU.
 };
+//initialize and destroy functions
+void kedr_simulation_point_init(struct kedr_simulation_point* point,
+    const char* name, const char* format_string);
+void kedr_simulation_point_destroy(struct kedr_simulation_point* point);
+
 // List of simulation points.
-struct list_head sim_points;
+static LIST_HEAD(sim_points);
 
 // Spinlock which protect list of simulation points from concurrent read and write
-spinlock_t sim_points_spinlock;
+static spinlock_t sim_points_spinlock;
 /*
  * Mutex protect list from concurrent writes.
  *
@@ -60,7 +73,7 @@ spinlock_t sim_points_spinlock;
  * is not affected by this 'intermediate', but rewritting may corrupt program logic.
  * The mutex prevents such state from rewritting.
  */
-struct mutex sim_points_mutex;
+static struct mutex sim_points_mutex;
 // Auxiliary functions
 
 /*
@@ -102,32 +115,13 @@ static void fsim_indicator_clear_internal(struct kedr_simulation_point* point, u
  * Called when module, provided that indicator, is unloaded.
  *
  * This function is the only one, who can violate sim_points_mutex logic.
- * Other functions known about this.
+ * Other functions know about this.
  */
 
 static void fsim_indicator_clear_callback(struct module* m,
 	struct fault_indicator_info* current_indicator);
 
-static void
-fsim_cleanup_module(void)
-{
-	while(!list_empty(&sim_points))
-	{
-		kedr_fsim_point_unregister(list_entry(
-			sim_points.next, struct kedr_simulation_point, list));
-	}
-    mutex_destroy(&sim_points_mutex);
-	module_weak_ref_destroy();
-}
-
-static int __init
-fsim_init_module(void)
-{
-	INIT_LIST_HEAD(&sim_points);
-	spin_lock_init(&sim_points_spinlock);
-    mutex_init(&sim_points_mutex);
-	return module_weak_ref_init();
-}
+//////Implementation of exported function//////////////////////
 
 /*
  * Register simulation point with name 'point_name'.
@@ -154,31 +148,27 @@ struct kedr_simulation_point*
 kedr_fsim_point_register(const char* point_name,
 	const char* format_string)
 {
-	int is_point_exist;
     unsigned long flags;
     
 	struct kedr_simulation_point* new_point = kmalloc(sizeof(*new_point), GFP_KERNEL);
     if(new_point == NULL)
-        return NULL;//out of memory
-
-    new_point->name = point_name;
-    new_point->format_string = format_string;
-    
-    new_point->current_indicator.fi = NULL;
-	new_point->current_indicator.m = NULL;
-	new_point->current_indicator.indicator_state = NULL;
-	new_point->current_indicator.destroy = NULL;
+    {
+        print_error0("Cannot allocate 'struct kedr_simulation_point'.");
+        return NULL;
+    }
+    kedr_simulation_point_init(new_point, point_name, format_string);
     
 	spin_lock_irqsave(&sim_points_spinlock, flags);
-	is_point_exist = fsim_lookup_point(point_name) != NULL;
-	if(!is_point_exist)
-    	list_add_tail(&new_point->list, &sim_points);
-    else
+	if(fsim_lookup_point(point_name) != NULL)
+    {
+        spin_unlock_irqrestore(&sim_points_spinlock, flags);
+        print_error("Point with name '%s' already registered.", point_name);
+        kedr_simulation_point_destroy(new_point);
         kfree(new_point);
+        return NULL;
+    }
+    list_add_tail(&new_point->list, &sim_points);
     spin_unlock_irqrestore(&sim_points_spinlock, flags);
-
-	if(is_point_exist)
-        return NULL;//point with this name is already registered
 
 	return new_point;
 }
@@ -188,19 +178,21 @@ EXPORT_SYMBOL(kedr_fsim_point_register);
  * Unregister point, making its name free for use.
  * 
  * Deregistration process is perfomed automatically
- * when this module unload.
+ * when the module, declared this point, is unloaded.
  */
 
 void kedr_fsim_point_unregister(struct kedr_simulation_point* point)
 {
 	unsigned long flags;
-    
+    //Generally speaking, using simulation point concurrently with its deleting
+    // is error. But we try to correctly handle this case.
     mutex_lock(&sim_points_mutex);
     spin_lock_irqsave(&sim_points_spinlock, flags);
 	fsim_indicator_clear_internal(point, &flags);
 	list_del(&point->list);
-	kfree(point);
     spin_unlock_irqrestore(&sim_points_spinlock, flags);
+    kedr_simulation_point_destroy(point);
+	kfree(point);
     mutex_unlock(&sim_points_mutex);
 }
 EXPORT_SYMBOL(kedr_fsim_point_unregister);
@@ -300,7 +292,7 @@ int kedr_fsim_indicator_set(const char* point_name,
     if(current_indicator->m != NULL)
     {
         module_weak_ref(current_indicator->m, (destroy_notify)fsim_indicator_clear_callback,
-            current_indicator->indicator_state);
+            current_indicator);
     }
     //State is stable now, release mutex
     mutex_unlock(&sim_points_mutex);
@@ -334,7 +326,26 @@ int kedr_fsim_indicator_clear(const char* point_name)
 
 EXPORT_SYMBOL(kedr_fsim_indicator_clear);
 
-static int
+///////////Implementation of auxiliary functions//////////////////////////
+//
+void kedr_simulation_point_init(struct kedr_simulation_point* point,
+    const char* name, const char* format_string)
+{
+    point->name = name;
+    point->format_string = format_string;
+    
+    point->current_indicator.fi = NULL;
+	point->current_indicator.m = NULL;
+	point->current_indicator.indicator_state = NULL;
+	point->current_indicator.destroy = NULL;
+}
+//
+void kedr_simulation_point_destroy(struct kedr_simulation_point* point)
+{
+}
+
+
+int
 is_data_format_compatible(	const char* point_format_string,
 							const char* indicator_format_string)
 {
@@ -354,8 +365,8 @@ is_data_format_compatible(	const char* point_format_string,
 	return strncmp(point_format_string, indicator_format_string,
 		strlen(indicator_format_string)) == 0;
 }
-
-static void fsim_indicator_clear_internal(struct kedr_simulation_point* point, unsigned long *flags)
+// under mutex and lock taken
+void fsim_indicator_clear_internal(struct kedr_simulation_point* point, unsigned long *flags)
 {
     struct fault_indicator_info* current_indicator;
 
@@ -386,15 +397,16 @@ static void fsim_indicator_clear_internal(struct kedr_simulation_point* point, u
     }
 
 }
-
-static void fsim_indicator_clear_callback(struct module* m,
+//
+void fsim_indicator_clear_callback(struct module* m,
 	struct fault_indicator_info* current_indicator)
 {
 	unsigned long flags;
 	spin_lock_irqsave(&sim_points_spinlock, flags);
 
-    if(current_indicator->destroy)
-	    current_indicator->destroy(current_indicator->indicator_state);
+    //module_weak_ref shouldn't be used when indicator has no 'destroy' function
+    BUG_ON(!current_indicator->destroy);
+	current_indicator->destroy(current_indicator->indicator_state);
 	current_indicator->fi = NULL;
 	current_indicator->m = NULL;
 	current_indicator->indicator_state = NULL;
@@ -412,6 +424,27 @@ struct kedr_simulation_point* fsim_lookup_point(const char* name)
 	}
 	return NULL;
 }
+
+static void
+fsim_cleanup_module(void)
+{
+	while(!list_empty(&sim_points))
+	{
+		kedr_fsim_point_unregister(list_entry(
+			sim_points.next, struct kedr_simulation_point, list));
+	}
+    mutex_destroy(&sim_points_mutex);
+	module_weak_ref_destroy();
+}
+
+static int __init
+fsim_init_module(void)
+{
+	spin_lock_init(&sim_points_spinlock);
+    mutex_init(&sim_points_mutex);
+	return module_weak_ref_init();
+}
+
 
 module_init(fsim_init_module);
 module_exit(fsim_cleanup_module);

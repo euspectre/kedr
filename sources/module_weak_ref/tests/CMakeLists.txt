@@ -1,0 +1,1 @@
+add_subdirectory(module_weak_ref_test_simple)
