@@ -1,7 +1,7 @@
 #! /bin/sh
 test_file="@CMAKE_CURRENT_BINARY_DIR@/user_part/test_use_named_libraries_service_test_program"
 test_module="@CMAKE_CURRENT_BINARY_DIR@/kernel_part/test_use_named_libraries_service_test_module.ko"
-sc_module="@CMAKE_BINARY_DIR@/syscall_connector/kernel_part/syscall_connector.ko"
+sc_module="@CMAKE_BINARY_DIR@/syscall_connector/kernel_part/kedr_syscall_connector.ko"
 
 insmod $sc_module
 if test $? -ne 0; then

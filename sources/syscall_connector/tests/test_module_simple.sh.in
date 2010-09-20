@@ -1,6 +1,6 @@
 #!/bin/sh
 
-kmodule="@CMAKE_BINARY_DIR@/syscall_connector/kernel_part/syscall_connector.ko"
+kmodule="@CMAKE_BINARY_DIR@/syscall_connector/kernel_part/kedr_syscall_connector.ko"
 
 insmod $kmodule
 if test $? -ne 0; then
