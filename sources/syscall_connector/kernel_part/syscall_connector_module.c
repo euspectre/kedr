@@ -299,6 +299,7 @@ int sc_register_callback_for_type(sc_interaction_id type,
     add_callback_for_type_internal(new_tci, type);
 
     spin_unlock_irqrestore(&callbacks_spinlock, flags);
+    debug("Callback was registered for type %d", (int)type);
 	return 0;
 }
 EXPORT_SYMBOL(sc_register_callback_for_type);
@@ -326,6 +327,7 @@ sc_interaction_id sc_register_callback_for_unused_type(
     add_callback_for_type_internal(new_tci, type);
     
     spin_unlock_irqrestore(&callbacks_spinlock, flags);
+    debug("Callback was registered for type %d", (int)type);
     return type;
 }
 EXPORT_SYMBOL(sc_register_callback_for_unused_type);
@@ -364,7 +366,6 @@ int sc_unregister_callback_for_type(sc_interaction_id type, int need_wait)
     if(!need_wait)
     {
         uobject_unuse(&tci->obj);
-        return 0;
     }
     else
     {
@@ -376,9 +377,9 @@ int sc_unregister_callback_for_type(sc_interaction_id type, int need_wait)
         schedule();
         finish_wait(&tci->wait_finish, &wait);
         finalize_callback_for_type(tci);
-        return 0;
     }
-
+    debug("Callback was unregistered for type %d", (int)type);
+    return 0;
 
 }
 EXPORT_SYMBOL(sc_unregister_callback_for_type);

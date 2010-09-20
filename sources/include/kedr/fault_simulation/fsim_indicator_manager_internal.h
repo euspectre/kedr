@@ -171,4 +171,100 @@ kedr_fsim_set_indicator_reply_get(
 	return 0;
 }
 
+/*
+ * Encoding array of strings to the parameters of 'init_state'
+ * function for indicator.
+ *
+ * |argc|str1_offset|...|strn_offset|str1|...|strn|
+ */
+
+inline static size_t
+kedr_fsim_indicator_params_strings_len(int argc,
+    const char const** argv)
+{
+    int i;
+    size_t result = sizeof(int) + argc * sizeof(int);
+    for(i = 0; i < argc; i++) 
+        result += strlen(argv[i]) + 1;
+    return result;
+}
+
+inline static size_t
+kedr_fsim_indicator_params_strings_put(int argc,
+    const char const** argv, void* buf)
+{
+    int i;
+    int offset;
+    KEDR_FSIM_MESSAGE_WRITE(buf, argc, int);
+    for(i = 0, offset = sizeof(int) + argc * sizeof(int);
+        i < argc; offset +=strlen(argv[i]) + 1, i++)
+    {
+        KEDR_FSIM_MESSAGE_WRITE(buf, offset, int);
+    }
+    for(i = 0; i < argc; i++)
+    {
+        KEDR_FSIM_MESSAGE_WRITE_BYTES(buf, argv[i], strlen(argv[i]) + 1);
+    }
+    return 0;
+}
+
+struct kedr_fsim_indicator_params_strings
+{
+    int argc;
+    const void* buf;
+};
+
+//getter of string
+inline const char*
+kedr_fsim_indicator_params_strings_get_string(
+    const struct kedr_fsim_indicator_params_strings* arr,
+    int i)
+{
+    if((i < 0) || (i >= arr->argc)) return NULL;
+    return arr->buf + ((int*)(arr->buf + sizeof(int)))[i];
+}
+
+inline static size_t
+kedr_fsim_indicator_params_strings_get(
+    struct kedr_fsim_indicator_params_strings* arr,
+    const void* buf, size_t buf_len)
+{
+    int i, argc;
+    int prev_offset, *poffset;
+    if(buf_len < sizeof(int)) return -1;
+
+    argc = *((int*)buf);
+    
+    if(argc < 0)
+        return -1;//number of strings shouldn't be negative
+    if(argc == 0)
+    {
+        if (buf_len != sizeof(int)) return -1;
+        //no strings - this is correct
+        arr->buf = NULL;
+        arr->argc = argc;
+        return 0;
+    }
+    poffset = (int*)(buf + sizeof(int));
+    prev_offset = *poffset;
+    if(prev_offset != sizeof(int) + argc * sizeof(int))
+        return -1;//incorrect offset of first string
+    for(i = 1, ++poffset; i < argc; i++, ++poffset)
+    {
+        int offset = *poffset;
+        if(offset <= prev_offset)
+            return -1;//incorrect order of string offset
+        if(offset >= buf_len)
+            return -1;//out of boundaries
+        if(strnlen(buf + prev_offset, offset-prev_offset) != (offset-prev_offset - 1))
+            return -1;//incorrect length of string
+        prev_offset = offset;
+    }
+    if(strnlen(buf + prev_offset, buf_len - prev_offset) != (buf_len - prev_offset - 1))
+        return -1;//incorrect length of string
+    arr->argc = argc;
+    arr->buf = buf;
+    return 0;
+}
+
 #endif /* KEDR_KEI_COMMON_H */

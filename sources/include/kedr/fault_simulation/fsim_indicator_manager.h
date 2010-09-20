@@ -83,6 +83,23 @@ typedef int (*kedr_fsim_init_indicator_state)(const void* params,
 	size_t params_len, void** indicator_state);
 
 /*
+ * Parse parameters as array of strings in some representation.
+ *
+ * This function is implied to use in 'init_state' function of indicator.
+ *
+ * If it parse parameters, passed to indicator with user-space function
+ * kedr_fsim_set_indicator_with_strings(), it extract strings used in that call.
+ *
+ * If parse was successfull, return allocated (with kmalloc(*,GFP_KERNEL))
+ * array of strings and set 'argc' to number of those string.
+ * On error, return NULL.
+ *
+ * NOTE: only pointers are allocated, string itself is read from 'params'.
+ */
+ 
+const char** kedr_fsim_indicator_params_get_strings(const void* params,
+    size_t params_len, int* argc);
+/*
  * Create named indicator, which incapsulate indicator function
  * with some other attributes(see description at the top of the header).
  *
@@ -172,6 +189,21 @@ int kedr_fsim_set_indicator_by_name(const char* point_name,
 
 int kedr_fsim_set_indicator(const char* point_name,
 	const char* indicator_name, void* params, size_t params_len);
+
+/*
+ * Set indicator for particular point, using strings as parameters.
+ *
+ * It is wrapper over kedr_fsim_set_indicator(), which use 
+ * some representation of string array as parameters for indicator
+ * ('params' and 'params_len').
+ *
+ * For work with such parameters, 'init_state' function of indicator
+ * may use kedr_fsim_indicator_params_get_strings().
+ *
+ */
+
+int kedr_fsim_set_indicator_with_strings(const char* point_name,
+	const char* indicator_name, int argc, const char const** argv);
 
 /*
  * Helper functions for simple indicators.

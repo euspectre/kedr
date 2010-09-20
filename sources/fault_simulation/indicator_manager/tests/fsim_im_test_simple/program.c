@@ -2,7 +2,6 @@
 #include <linux/moduleparam.h>
 
 #include <linux/kernel.h>	/* printk() */
-#include <linux/slab.h> /* kmalloc() */
 
 #include <kedr/fault_simulation/fsim_base.h>
 #include <kedr/fault_simulation/fsim_indicator_manager.h>

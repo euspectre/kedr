@@ -289,7 +289,7 @@ int kedr_fsim_indicator_set(const char* point_name,
 
     spin_unlock_irqrestore(&sim_points_spinlock, flags);
     
-    if(current_indicator->m != NULL)
+    if((current_indicator->m != NULL) && (current_indicator->destroy != NULL))
     {
         module_weak_ref(current_indicator->m, (destroy_notify)fsim_indicator_clear_callback,
             current_indicator);
@@ -373,7 +373,7 @@ void fsim_indicator_clear_internal(struct kedr_simulation_point* point, unsigned
     current_indicator = &point->current_indicator;
     //destroy indicator state if needed, and clear indicator fields
     //But at the beginning - cancel scheduled clear function, if it was
-    if((current_indicator->m == NULL)
+    if((current_indicator->m == NULL) || (current_indicator->destroy == NULL)
         || (module_weak_unref(current_indicator->m,
                 (destroy_notify)fsim_indicator_clear_callback,
                 current_indicator) == 0)

@@ -24,8 +24,6 @@
 //interaction type for set_indicator
 static sc_interaction_id kedr_fsim_set_indicator_id = -1;
 
-//Auxuliary functions.
-
 /*
  * Set indicator for particular simulation point.
  * 
@@ -60,8 +58,8 @@ kedr_fsim_set_indicator(const char* point_name,
 	kedr_fsim_set_indicator_payload_put(&send_payload, message);
 	
 	
-	interaction = sc_interaction_create(MESSAGE_PID,
-		kedr_fsim_set_indicator_id);
+	interaction = sc_interaction_create(kedr_fsim_set_indicator_id,
+        MESSAGE_PID);
 	if(!interaction)
 	{
 		printf("Cannot create interaction of type "
@@ -91,6 +89,37 @@ kedr_fsim_set_indicator(const char* point_name,
 	return recv_payload.result;
 }
 
+/*
+ * Set indicator for particular point, using strings as parameters.
+ *
+ * It is wrapper over kedr_fsim_set_indicator(), which use 
+ * some representation of string array as parameters for indicator
+ * ('params' and 'params_len').
+ *
+ * For work with such parameters, 'init_state' function of indicator
+ * may use kedr_fsim_indicator_params_get_strings().
+ *
+ */
+
+FSIM_HELPER_DLL_EXPORT int
+kedr_fsim_set_indicator_with_strings(const char* point_name,
+	const char* indicator_name, int argc, const char const** argv)
+{
+    void* params;
+    int result;
+    size_t params_len = kedr_fsim_indicator_params_strings_len(argc, argv);
+    params = malloc(params_len);
+    if(params == 0)
+    {
+        printf("Cannot allocate memory buffer for array of strings");
+        return -1;
+    }
+    kedr_fsim_indicator_params_strings_put(argc, argv, params);
+    result = kedr_fsim_set_indicator(point_name, indicator_name, params, params_len);
+    free(params);
+    return result;
+        
+}
 /////////////////////////////////////////////////////
 void __attribute__((constructor)) my_init(void)
 {
@@ -108,5 +137,4 @@ void __attribute__((destructor)) my_fini(void)
 {
 	printf("Destructor was called.\n");
 	sc_library_unuse(fsim_library_name, MESSAGE_PID);
-	kedr_fsim_communication_break();
 }

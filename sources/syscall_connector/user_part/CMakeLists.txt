@@ -1,4 +1,4 @@
-set(library_name syscall_connector_u)
+set(library_name kedr_syscall_connector_u)
 set(VERSION_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/versions.ldscript)
 
 add_library(${library_name} SHARED syscall_connector.c)

@@ -157,6 +157,30 @@ indicator_fault_if_size_greater_destroy_state(size_t* state)
 
 ///////////////Implementation of exported functions///////////
 
+// helper function for 'init_state'
+const char** kedr_fsim_indicator_params_get_strings(const void* params,
+    size_t params_len, int* argc)
+{
+    int i;
+    const char** result = NULL;
+    struct kedr_fsim_indicator_params_strings arr;
+    if(kedr_fsim_indicator_params_strings_get(&arr, params, params_len))
+        return NULL;
+    //if argc == 0 return any not-NULL pointer.
+    result = kmalloc(sizeof(*result) * (arr.argc ? arr.argc : 1), GFP_KERNEL);
+    if(result == NULL)
+    {
+        print_error0("Cannot allocate memory for array of strings");
+        return NULL;
+    }
+    for(i = 0; i < arr.argc; i++)
+        result[i] = kedr_fsim_indicator_params_strings_get_string(&arr, i);
+
+    *argc = arr.argc;
+    return result;
+}
+EXPORT_SYMBOL(kedr_fsim_indicator_params_get_strings);
+
 /*
  * Bind indicator_name with particular indicator functions.
  */

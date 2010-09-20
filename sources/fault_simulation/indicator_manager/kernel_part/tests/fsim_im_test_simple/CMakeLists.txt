@@ -8,5 +8,5 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/test.sh.in"
     @ONLY
 )
 
-kedr_test_add_script("fault_simulation.indicator_manager.simple.01"
+kedr_test_add_script("fault_simulation.indicator_manager.kernel_part.simple.01"
     test.sh)

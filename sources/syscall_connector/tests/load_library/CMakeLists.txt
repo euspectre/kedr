@@ -1,5 +1,5 @@
 add_executable("test_sc_load_library_use_library" "use_library.c")
-target_link_libraries("test_sc_load_library_use_library" "syscall_connector_u")
+target_link_libraries("test_sc_load_library_use_library" "kedr_syscall_connector_u")
 
 kedr_test_add_target("test_sc_load_library_use_library")
 
