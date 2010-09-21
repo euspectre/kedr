@@ -14,6 +14,8 @@
 # For example, using "aaa.01" and "aaa.011" together is not allowed but
 # it is acceptable to use "aaa.001" and "aaa.011" together.
 ########################################################################
+# Scripts useful for tests
+add_subdirectory(scripts)
 
 # Path to the controller module and its name.
 set (CONTROLLER_DIR "${CMAKE_BINARY_DIR}/controller")
@@ -32,3 +34,4 @@ kedr_test_add_script (kedr.sample.01 sample.sh)
 
 # The tests for API provided by the KEDR core to the payload modules.
 add_subdirectory (payload_api)
+

@@ -5,12 +5,12 @@
 MODULE_AUTHOR("Tsyvarev");
 MODULE_LICENSE("GPL");
 
-extern void kedr_i_am_here(struct module *m);
+extern void a_register_module(struct module *m);
 
 static int __init
 module_b_init(void)
 {
-    kedr_i_am_here(THIS_MODULE);
+    a_register_module(THIS_MODULE);
     return 0;
 }
 

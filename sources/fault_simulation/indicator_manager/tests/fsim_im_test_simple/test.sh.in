@@ -6,8 +6,7 @@ module_name="fsim_im_interaction_test_module"
 module="@CMAKE_CURRENT_BINARY_DIR@/module/${module_name}.ko"
 
 device=kedr_test_device
-create_device="sh @CMAKE_CURRENT_SOURCE_DIR@/create_char_device.sh \"$device\""
-delete_device="sh @CMAKE_CURRENT_SOURCE_DIR@/delete_char_device.sh \"$device\""
+char_device_script="sh @CMAKE_BINARY_DIR@/tests/scripts/char_device.sh"
 
 fsim_base_module="@CMAKE_BINARY_DIR@/fault_simulation/base/kedr_fsim_base.ko"
 
@@ -17,7 +16,7 @@ sc_module="@CMAKE_BINARY_DIR@/syscall_connector/kernel_part/kedr_syscall_connect
 
 fsim_im_module="@CMAKE_BINARY_DIR@/fault_simulation/indicator_manager/kernel_part/kedr_fsim_indicator_manager.ko"
 
-do_commands_script="sh @CMAKE_CURRENT_SOURCE_DIR@/do_commands.sh"
+do_commands_script="sh @CMAKE_BINARY_DIR@/tests/scripts/do_commands.sh"
 
 result_file="/sys/module/$module_name/parameters/result"
 
@@ -40,8 +39,8 @@ on_unload rmmod "$fsim_im_module" || ! printf "Cannot unload indicator manager m
 on_load insmod "$module" || ! printf "Cannot load module for test into kernel.\n"
 on_unload rmmod "$module" || ! printf "Cannot unload module for test.\n"
 
-on_load $create_device || ! printf "Cannot create file for use device.\n"
-on_unload $delete_device || ! printf "Cannot delete file for use device.\n"
+on_load $char_device_script "$device" create || ! printf "Cannot create file for use device.\n"
+on_unload $char_device_script "$device" delete || ! printf "Cannot delete file for use device.\n"
 
 #Run test program
 on_load $program || ! printf "Test program cannot be run or it return error.\n"
