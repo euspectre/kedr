@@ -20,8 +20,7 @@ rule_copy_source("Kbuild")
 rule_copy_source("makefile_installed")
 rule_copy_source("kedr_sample_target")
 
-add_dependencies("build_tests" "sample_target")
-
+kedr_test_add_target("sample_target")
 
 
 install(FILES   "${CMAKE_CURRENT_SOURCE_DIR}/cfake.h"

@@ -1,0 +1,109 @@
+#!/bin/sh
+
+fault_simulation_module="@CMAKE_CURRENT_BINARY_DIR@/../kedr_fault_simulation.ko"
+#fsim_base_module="@CMAKE_CURRENT_BINARY_DIR@/../kedr_fsim_base.ko"
+
+read_point_name="kedr-read-point"
+write_point_name="kedr-write-point"
+read_indicator_name="indicator_for_read"
+write_indicator_name="indicator_for_write"
+
+module_a_name="fsim_test_module_a"
+module_a="@CMAKE_CURRENT_BINARY_DIR@/module_a/${module_a_name}.ko"
+module_b="@CMAKE_CURRENT_BINARY_DIR@/module_b/fsim_test_module_b.ko"
+current_value_file="/sys/module/${module_a_name}/parameters/current_value"
+
+device=kedr_test_device
+char_device_script="sh @CMAKE_BINARY_DIR@/tests/scripts/char_device.sh"
+
+debugfs_mount_point="@CMAKE_CURRENT_BINARY_DIR@/debugfs"
+control_root="$debugfs_mount_point/kedr_fault_simulation"
+
+# set_indicator point_name indicator_name
+set_indicator()
+{
+    printf "$2" > "$control_root/points/$1/current_indicator"
+}
+# clear_indicator point_name
+clear_indicator()
+{
+    printf "%s" "" > "$control_root/points/$1/current_indicator"
+}
+# get_indicator point_name
+# print indicator to output
+get_indicator()
+{
+    cat "$control_root/points/$1/current_indicator"
+}
+
+
+# simulate_point (read_point_name) | (write_point_name size)
+simulate_point()
+{
+if test "$1" == "$read_point_name"; then
+    dd "if=/dev/$device" of=/dev/null bs=1 count=1
+elif test "$1" == "$write_point_name"; then
+    dd "of=/dev/$device" if=/dev/zero bs=$2 count=1
+fi
+local result=$?
+current_value=`cat "$current_value_file"`
+return $result
+}
+
+commands_file="@CMAKE_CURRENT_BINARY_DIR@/commands"
+do_commands_script="sh @CMAKE_BINARY_DIR@/tests/scripts/do_commands.sh"
+
+cat > "$commands_file" << eof
+
+on_load insmod "$fault_simulation_module" || ! printf "Cannot load fault simulation module into kernel.\n"
+on_unload rmmod "$fault_simulation_module" || ! printf "Cannot unload fault simulation module.\n"
+on_load mkdir -p "$debugfs_mount_point" || ! printf "Cannot create mount point for debugfs.\n"
+on_load mount -t debugfs debugfs "$debugfs_mount_point" || ! printf "Cannot mount debufs.\n"
+on_unload umount "$debugfs_mount_point" || ! printf "Error occures while umount debufs.\n"
+on_load insmod "$module_a" || ! printf "Cannot load module 'a' into kernel.\n"
+on_unload rmmod "$module_a" || ! printf "Fail to unload module 'a'.\n"
+on_load $char_device_script "$device" create || ! printf "Cannot create file for use character device.\n"
+on_unload $char_device_script "$device" delete || ! printf "Cannot delete file for use character device.\n"
+
+eof
+
+if ! $do_commands_script "$commands_file" load; then
+    printf "Cannot initialize test.\n"
+    exit 1
+fi
+
+if ! insmod "$module_b"; then
+    printf "Cannot load module 'b' into kernel.\n"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+# Try to set write indicator for read point
+
+if set_indicator "$read_point_name" "$write_indicator_name"; then
+    printf "Indicator was set for point, which data it cannot process.\n"
+    rmmod "$module_b"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+if ! set_indicator "$read_point_name" "$read_indicator_name"; then
+    printf "Cannot set indicator for the point.\n"
+    rmmod "$module_b"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+# Try to unload module with point while we hold control file of this point opened
+{
+    #Module 'a' should cannot be unloaded at this stage
+    if rmmod "$module_a"; then
+        printf "Simulation point was deleted, but file exported by it is currently used.\n"
+        rmmod "$module_b" && insmod "$module_a" && $do_commands_script "$commands_file" unload
+        exit 1
+    fi
+    cat <&9 > /dev/null
+
+} 9<"$control_root/points/${read_point_name}/current_indicator"
+
+rmmod "$module_b" && $do_commands_script "$commands_file" unload

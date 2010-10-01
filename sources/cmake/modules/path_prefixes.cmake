@@ -133,6 +133,10 @@ set(KEDR_TEST_COMMON_PREFIX "/var/tmp/kedr/test")
 foreach(var_suffix ${KEDR_ALL_PATH_SUFFIXES})
     set(KEDR_TEST_PREFIX_${var_suffix} "${KEDR_TEST_COMMON_PREFIX}${KEDR_INSTALL_PREFIX_${var_suffix}}")
 endforeach(var_suffix ${KEDR_ALL_PATH_SUFFIXES})
+#rewrite some prefixes
+#Root of include tree in building package
+set(KEDR_TEST_PREFIX_INCLUDE "${CMAKE_SOURCE_DIR}/include")
+
 
 #kedr_load_install_prefixes()
 #Set common prefixes variables equal to ones in install mode(should be called before configure files, which use prefixes)

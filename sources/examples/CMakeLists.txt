@@ -15,3 +15,7 @@ set (KEDR_EXAMPLE_PATH "${KEDR_INSTALL_PREFIX_EXAMPLES}")
 #######################################################################
 
 add_subdirectory(sample_target)
+add_subdirectory(indicator_kmalloc)
+add_subdirectory(fsim_payload_kmalloc)
+
+add_subdirectory(tests)

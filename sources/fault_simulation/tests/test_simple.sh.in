@@ -1,0 +1,250 @@
+#!/bin/sh
+
+fault_simulation_module="@CMAKE_CURRENT_BINARY_DIR@/../kedr_fault_simulation.ko"
+#fsim_base_module="@CMAKE_CURRENT_BINARY_DIR@/../kedr_fsim_base.ko"
+
+read_point_name="kedr-read-point"
+write_point_name="kedr-write-point"
+read_indicator_name="indicator_for_read"
+write_indicator_name="indicator_for_write"
+
+module_a_name="fsim_test_module_a"
+module_a="@CMAKE_CURRENT_BINARY_DIR@/module_a/${module_a_name}.ko"
+module_b="@CMAKE_CURRENT_BINARY_DIR@/module_b/fsim_test_module_b.ko"
+current_value_file="/sys/module/${module_a_name}/parameters/current_value"
+
+device=kedr_test_device
+char_device_script="sh @CMAKE_BINARY_DIR@/tests/scripts/char_device.sh"
+
+debugfs_mount_point="@CMAKE_CURRENT_BINARY_DIR@/debugfs"
+control_root="$debugfs_mount_point/kedr_fault_simulation"
+
+# set_indicator point_name indicator_name
+set_indicator()
+{
+    printf "$2" > "$control_root/points/$1/current_indicator"
+}
+# clear_indicator point_name
+clear_indicator()
+{
+    printf "%s" "" > "$control_root/points/$1/current_indicator"
+}
+# get_indicator point_name
+# print indicator to output
+get_indicator()
+{
+    cat "$control_root/points/$1/current_indicator"
+}
+
+
+# simulate_point (read_point_name) | (write_point_name size)
+simulate_point()
+{
+if test "$1" == "$read_point_name"; then
+    dd "if=/dev/$device" of=/dev/null bs=1 count=1
+elif test "$1" == "$write_point_name"; then
+    dd "of=/dev/$device" if=/dev/zero bs=$2 count=1
+fi
+local result=$?
+current_value=`cat "$current_value_file"`
+return $result
+}
+
+commands_file="@CMAKE_CURRENT_BINARY_DIR@/commands"
+do_commands_script="sh @CMAKE_BINARY_DIR@/tests/scripts/do_commands.sh"
+
+cat > "$commands_file" << eof
+
+on_load insmod "$fault_simulation_module" || ! printf "Cannot load fault simulation module into kernel.\n"
+on_unload rmmod "$fault_simulation_module" || ! printf "Cannot unload fault simulation module.\n"
+on_load mkdir -p "$debugfs_mount_point" || ! printf "Cannot create mount point for debugfs.\n"
+on_load mount -t debugfs debugfs "$debugfs_mount_point" || ! printf "Cannot mount debufs.\n"
+on_unload umount "$debugfs_mount_point" || ! printf "Error occures while umount debufs.\n"
+on_load insmod "$module_a" || ! printf "Cannot load module 'a' into kernel.\n"
+on_unload rmmod "$module_a" || ! printf "Fail to unload module 'a'.\n"
+on_load $char_device_script "$device" create || ! printf "Cannot create file for use character device.\n"
+on_unload $char_device_script "$device" delete || ! printf "Cannot delete file for use character device.\n"
+
+eof
+
+if ! $do_commands_script "$commands_file" load; then
+    printf "Cannot initialize test.\n"
+    exit 1
+fi
+
+#Verify, that indicators isn't set
+current_indicator=`get_indicator "$read_point_name"`
+if test "$current_indicator" != ""; then
+    printf "'current_indicator' file for read point conatins '%s', but should be ''\n" "$current_indicator"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+# Test without indicator set
+
+simulate_point "$read_point_name"
+if test "$current_value" != "0"; then
+    printf "Expected, that simulation of read point returns '0'(no indicator was set), but it is '%s'.\n" "$current_value"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+
+if ! insmod "$module_b"; then
+    printf "Cannot load module 'b' into kernel.\n"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+# Try to set indicator for point
+
+if ! set_indicator "$read_point_name" "$read_indicator_name"; then
+    printf "Cannot set indicator for read point.\n"
+    rmmod "$module_b"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+# Simulate with indicator set
+simulate_point "$read_point_name"
+
+if test "$current_value" != "9"; then
+    printf "Expected, that simulation of read point returns '9', but it is '%s'.\n" "$current_value"
+    rmmod "$module_b"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+
+if ! set_indicator "$write_point_name" "$write_indicator_name"; then
+    printf "Cannot set indicator for write point.\n"
+    rmmod "$module_b"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+# Simulate with indicator set for write point
+simulate_point "$write_point_name" 25
+
+if test "$current_value" != "25"; then
+    printf "Expected, that simulation of write point returns '25'(size), but it is '%s'.\n" "$current_value"
+    rmmod "$module_b"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+#Rewrite indicator for write point
+if ! set_indicator "$write_point_name" "$read_indicator_name"; then
+    printf "Cannot set read indicator for write point.\n"
+    rmmod "$module_b"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+#Simulate write point with read indicator
+simulate_point "$write_point_name" 25
+
+if test "$current_value" != "9"; then
+    printf "Expected, that simulation of write point with read indicator returns '9', but it is '%s'.\n" "$current_value"
+    rmmod "$module_b"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+#Clear indicator for read point
+if ! clear_indicator "$read_point_name"; then
+    printf "Cannot clear indicator for read point.\n"
+    rmmod "$module_b"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+#Verify, that indicator is cleared
+current_indicator=`get_indicator "$read_point_name"`
+if test "$current_indicator" != ""; then
+    printf "'current_indicator' file for read point conatins '%s', but should be ''\n" "$current_indicator"
+    rmmod "$module_b"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+
+
+# Simulate with cleared indicator
+simulate_point "$read_point_name"
+
+if test "$current_value" != "0"; then
+    printf "Expected, that simulation of read point returns '0'(indicator was cleared), but it is '%s'.\n" "$current_value"
+    rmmod "$module_b"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+
+
+cat > /dev/null << comment1
+dd "of=/dev/$device" if=/dev/zero bs=16 count=1
+current_value=`cat "$current_value_file"`
+
+if test "$current_value" != "16"; then
+    printf "Expected, that simulation of write point returns '16', but it is '%s'.\n" "$current_value"
+    rmmod "$module_b"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+if ! rmmod "$module_b"; then
+    printf "Error occures while unload module 'b'.\n"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+
+dd "if=/dev/$device" of=/dev/null bs=1 count=1
+current_value=`cat "$current_value_file"`
+
+if test "$current_value" != "0"; then
+    printf "Expected, that simulation of read point returns '0'(indicator should be cleared), but it is '%s'.\n" "$current_value"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+dd "of=/dev/$device" if=/dev/zero bs=16 count=1
+current_value=`cat "$current_value_file"`
+
+if test "$current_value" != "0"; then
+    printf "Expected, that simulation of write point returns '0'(indicator should be cleared), but it is '%s'.\n" "$current_value"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+external_value=`cat "$external_value_file"`
+if test "$external_value" != "5"; then
+    printf "Expected, that 'external_value' for module 'a' become '5'(result of destroy function), but it is '%s'.\n" "$external_value"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+comment1
+
+if ! rmmod "$module_b"; then
+    printf "Cannot unload module_b.\n"
+    exit 1
+fi
+
+#Indicator for write point should be automatically cleared
+
+# Simulate with cleared indicator
+simulate_point "$write_point_name" 25
+
+if test "$current_value" != "0"; then
+    printf "Expected, that simulation of write point returns '0'(indicator was automatically cleared), but it is '%s'.\n" "$current_value"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+
+if ! $do_commands_script "$commands_file" unload; then
+    printf "Error occures while finalize test.\n"
+    exit 1
+fi

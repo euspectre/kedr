@@ -2,35 +2,19 @@
 #define MODULE_WEAK_REF_H
 
 /*
- * Implements weak reference functionality on kernel modules.
+ * May be rename to 'wmodule' ?
+ */
+
+/*
+ * Implements concept of kernel modules as 'wobj_t' objects.
  *
- * module_weak_ref_init() should be executed before all others 
- * functions from this header, module_weak_ref_destroy() should be executed after all,
- * and without any module weak reference currently taken(!).
+ * This object is created, when module is loaded, and destroyed,
+ * when module is unloaded. Note, that for object destruction variant
+ * wobj_unref_final() is used, so module will live until all weak reference callbacks
+ * is executed, and anyone doesn't use module via reference(strong)
  *
- * For schedule execution of some function for the moment, when module is unloaded, use
- * module_weak_ref().
- *
- * For cancel scheduling, use module_weak_unref() with same arguments, as for module_weak_ref().
- * It is important, that scheduling is canceled ONLY if this function return 0.
- *
- * Value 1, returned by module_weak_unref(), means that canceling impossible - 
- * given module is currently unloading, and it execute given callback function at that moment.
- * Note, that this is not mean, that callback function is finished at the moment,
- * when module_weak_unref() is returned. Moreover, it is assumed that caller block execution
- * of callback function at some step, e.g. taking mutex, before call of module_weak_unref().
- *
- * If the fact, that callback will be eventually executed in the near moment, 
- * is insufficient for program logic, you should release all mechanismes, which may block callback execution,
- * and call module_weak_ref_wait(). After this function returns, callback is garanteed to be finished.
- *
- * NOTE: without call to module_weak_unref(), call to module_weak_ref_wait() meaningless - 
- * it is required only that this call eventually returns, no more.
- *
- * After call module_weak_unref(), module_weak_ref_wait() is garanteed to wait only callback, that
- * pointed in module_weak_unref() call. But it is correct to call module_weak_ref_wait() after several
- * module_weak_unref() calls - when it returns, all previously pointed callbacks has finished.
- *
+ * (Compare this with try_module_get() and module_put() kernel mechanism, in which try_module_get()
+ * prevent unloading state to start.)
  */
 
 #ifndef __KERNEL__
@@ -38,12 +22,7 @@
 #endif
 
 #include <linux/module.h> /* struct module definition */
-
-/*
- * Type of the callback function, which is called when module is unloaded.
- */
-
-typedef void (*destroy_notify)(struct module* m, void* user_data);
+#include <kedr/wobject/wobject.h>
 
 /*
  *  Should be called for use weak reference functionality on module.
@@ -59,40 +38,34 @@ int module_weak_ref_init(void);
 
 void module_weak_ref_destroy(void);
 
-/*
- * Schedule 'destroy' function to call when module 'm' will be unloaded.
- *
- * If called while module 'm' is being unloaded(or has already been unloaded),
- * behaviour unspecified.
- *
- * One may assume, that this call is wrapped out by try_module_get(m)/module_put(m).
- *
- * Cannot be used in the interrupt context.
- */
+//reference of module should be performed only via weak reference objects.
 
-void module_weak_ref(struct module* m,
-	destroy_notify destroy, void* user_data);
+//void wmodule_ref(struct module* m);
 
 /*
- * Cancel sheduling.
+ * May be safetly used in atomic context, because callback functions
+ * of weak references will be done in the process, which unloads module.
  *
- * Returns 0, if 'destroy' function will canceling and will not be called in the future.
- * Returns 1, if canceling of 'destroy' function impossible - it is executed at that moment.
- *
- * If called with incorrect parameters(e.g., this callback is already finished to execute),
- * behaviour is unspecified.
- *
- * May be used in the interrupt context.
- */
-int module_weak_unref(struct module* m,
-	destroy_notify destroy, void* user_data);
-
-/*
- * Block current process until all calls to callbacks,
- * pointed by previous module_weak_unref() calls, has finished.
+ * wmodule_unref() is intended to use after successfull wmodule_weak_ref_get
+ * (wmodule_ref() is disabled).
  */
 
-void module_weak_ref_wait(void);
+void wmodule_unref(struct module* m);
 
+//reuse weak reference type from wobject
+typedef wobj_weak_ref_t wmodule_weak_ref_t;
+
+void wmodule_weak_ref_init(wmodule_weak_ref_t* wmodule_weak_ref, struct module* m,
+    void (*destroy_weak_ref)(wmodule_weak_ref_t* wmodule_weak_ref));
+
+struct module* wmodule_weak_ref_get(wmodule_weak_ref_t* wmodule_weak_ref);
+
+void wmodule_weak_ref_clear(wmodule_weak_ref_t* wmodule_weak_ref);
+
+//reuse waiting mechanism from wobject
+typedef wobj_wait_callback_t wmodule_wait_callback_t;
+
+void wmodule_wait_callback_prepare(wmodule_wait_callback_t* wait_callback, wmodule_weak_ref_t* wmodule_weak_ref);
+void wmodule_wait_callback_wait(wmodule_wait_callback_t* wait_callback);
 
 #endif /* MODULE_WEAK_REF_H */

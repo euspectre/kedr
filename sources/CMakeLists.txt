@@ -202,6 +202,7 @@ add_subdirectory(controller)
 
 # For tests only
 add_subdirectory(module_weak_ref)
+add_subdirectory(wobject)
 
 add_subdirectory(syscall_connector)
 add_subdirectory(fault_simulation)
