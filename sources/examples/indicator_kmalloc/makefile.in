@@ -8,7 +8,7 @@ PWD=`pwd`
 all: ${module_name}.ko
 
 ${module_name}.ko: indicator_kmalloc.c calculator/calculator.c ${fault_simulation_symbols}
-	cp "${fault_simulation_symbols}" Modules.symvers
+	cp "${fault_simulation_symbols}" ./Module.symvers
 	make -C ${KBUILD_DIR} M=${PWD} modules
 
 clean:

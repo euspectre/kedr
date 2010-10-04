@@ -48,12 +48,12 @@ install(FILES   "${CMAKE_CURRENT_SOURCE_DIR}/fsim_payload_kmalloc.c"
         DESTINATION "${KEDR_EXAMPLE_PATH}/fsim_payload_kmalloc"
 )
 
-install(FILES   "${CMAKE_CURRENT_SOURCE_DIR}/makefile_installed"
+install(FILES   "${CMAKE_CURRENT_BINARY_DIR}/makefile_installed"
         DESTINATION "${KEDR_EXAMPLE_PATH}/fsim_payload_kmalloc"
         RENAME makefile
 )
 
-install(FILES   "${CMAKE_CURRENT_SOURCE_DIR}/Kbuild_installed"
+install(FILES   "${CMAKE_CURRENT_BINARY_DIR}/Kbuild_installed"
         DESTINATION "${KEDR_EXAMPLE_PATH}/fsim_payload_kmalloc"
         RENAME Kbuild
 )

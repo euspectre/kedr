@@ -62,12 +62,12 @@ install(FILES   "${CMAKE_CURRENT_SOURCE_DIR}/calculator/calculator.c"
 )
 
 
-install(FILES   "${CMAKE_CURRENT_SOURCE_DIR}/makefile_installed"
+install(FILES   "${CMAKE_CURRENT_BINARY_DIR}/makefile_installed"
         DESTINATION "${KEDR_EXAMPLE_PATH}/indicator_kmalloc"
         RENAME makefile
 )
 
-install(FILES   "${CMAKE_CURRENT_SOURCE_DIR}/Kbuild_installed"
+install(FILES   "${CMAKE_CURRENT_BINARY_DIR}/Kbuild_installed"
         DESTINATION "${KEDR_EXAMPLE_PATH}/indicator_kmalloc"
         RENAME Kbuild
 )
