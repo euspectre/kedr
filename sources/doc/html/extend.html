@@ -1,0 +1,260 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><title>5. Customizing and Extending KEDR</title><link rel="stylesheet" href="kedr-doc.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.75.2"><link rel="home" href="index.html" title="KEDR 0.1 Reference Manual"><link rel="up" href="index.html" title="KEDR 0.1 Reference Manual"><link rel="prev" href="using_kedr.html" title="4. Using KEDR"><link rel="next" href="glossary.html" title="Glossary"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">5. Customizing and Extending KEDR</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="using_kedr.html">Prev</a> </td><th width="60%" align="center"> </th><td width="20%" align="right"> <a accesskey="n" href="glossary.html">Next</a></td></tr></table><hr></div><div class="section" title="5. Customizing and Extending KEDR"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="extend"></a>5. Customizing and Extending KEDR</h2></div></div></div><div class="toc"><dl><dt><span class="section"><a href="extend.html#custom_functions">5.1. Custom Target Functions</a></span></dt><dt><span class="section"><a href="extend.html#payload_api">5.2. API for Payload Modules</a></span></dt><dd><dl><dt><span class="section"><a href="extend.html#payload_api.header">5.2.1. Header file</a></span></dt><dt><span class="section"><a href="extend.html#payload_api.rtable">5.2.2. struct kedr_repl_table</a></span></dt><dt><span class="section"><a href="extend.html#payload_api.payload">5.2.3. struct kedr_payload</a></span></dt><dt><span class="section"><a href="extend.html#payload_api.register">5.2.4. kedr_payload_register()</a></span></dt><dt><span class="section"><a href="extend.html#payload_api.unregister">5.2.5. kedr_payload_unregister()</a></span></dt><dt><span class="section"><a href="extend.html#payload_api.in_init">5.2.6. kedr_target_module_in_init()</a></span></dt><dt><span class="section"><a href="extend.html#payload_api.stub">5.2.7. A Stub of a Payload Module</a></span></dt></dl></dd><dt><span class="section"><a href="extend.html#custom_fsim_scenarios">5.3. Custom Fault Simulation Scenarios</a></span></dt><dt><span class="section"><a href="extend.html#custom_analysis">5.4. Implementing New Types of Analysis</a></span></dt></dl></div>
+
+TODO: describe how implement custom types of analysis on top of KEDR. 
+Describe the API for payload modules too. 
++Example: at least a stub for a payload module (with templates, data files, etc.) - 
+a starting point for those who writes payload modules of custom types.
+
+<div class="section" title="5.1. Custom Target Functions"><div class="titlepage"><div><div><h3 class="title"><a name="custom_functions"></a>5.1. Custom Target Functions</h3></div></div></div>
+
+TODO: how to add support for custom target functions (with default templates 
+or without them)
+
+</div><div class="section" title="5.2. API for Payload Modules"><div class="titlepage"><div><div><h3 class="title"><a name="payload_api"></a>5.2. API for Payload Modules</h3></div></div></div><p>
+This section describes the interface that the KEDR core provides for <a class="link" href="glossary.html#payload_module" title="Payload module">payload modules</a>. Technically, the API is 
+provided by <code class="filename">kedr-base</code> module.
+</p><div class="important" title="Important" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Important</h3><p>
+When interacting with the KEDR core, the payload modules should rely only on
+the API described here. Other types, functions, macros, constants, etc., 
+that can be found in the headers and the source files of KEDR system are for
+internal use only and subject to change.
+</p></div><div class="section" title="5.2.1. Header file"><div class="titlepage"><div><div><h4 class="title"><a name="payload_api.header"></a>5.2.1. Header file</h4></div></div></div><p>
+The API is declared in the header file that a payload module should #include:
+</p><pre class="programlisting">
+#include &lt;kedr/base/common.h&gt;
+</pre></div><div class="section" title="5.2.2. struct kedr_repl_table"><div class="titlepage"><div><div><h4 class="title"><a name="payload_api.rtable"></a>5.2.2. struct kedr_repl_table</h4></div></div></div><p>
+<code class="code">struct kedr_repl_table</code> represents a <em class="firstterm">replacement 
+table</em> that defines which <a class="link" href="glossary.html#replacement_function" title="Replacement function">replacement function</a> should be 
+called instead of each particular <a class="link" href="glossary.html#target_function" title="Target function">target function</a> in the module under 
+analysis.
+</p><pre class="programlisting">
+struct kedr_repl_table
+{
+	void** orig_addrs; 
+	void** repl_addrs; 
+	unsigned int num_addrs;
+};
+</pre><p>
+<code class="code">orig_addrs</code> - an array of the addresses of target functions 
+(<span class="quote">“<span class="quote">what to replace</span>”</span>).
+</p><p>
+<code class="code">repl_addrs</code> - an array of addresses of replacement functions 
+(<span class="quote">“<span class="quote">with what to replace</span>”</span>).
+</p><p>
+<code class="code">num_addrs</code> - number of elements to process in each of the two 
+arrays above.
+</p><p>
+Each payload module has usually a single global instance of this structure 
+(see the example in <a class="xref" href="extend.html#payload_api.payload" title="5.2.3. struct kedr_payload">Section 5.2.3, “struct kedr_payload”</a>).
+</p><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
+There are no additional restrictions on the names of replacement 
+functions. The KEDR core will use their addresses rather than the names.
+</p></div></div><div class="section" title="5.2.3. struct kedr_payload"><div class="titlepage"><div><div><h4 class="title"><a name="payload_api.payload"></a>5.2.3. struct kedr_payload</h4></div></div></div><p>
+<code class="code">struct kedr_payload</code> represents a payload module from the 
+point of view of the KEDR core. 
+</p><pre class="programlisting">
+struct kedr_payload
+{
+	struct module* mod;
+	struct kedr_repl_table repl_table;
+};
+</pre><p>
+<code class="code">mod</code> - the payload module itself. This field is usually 
+initialized with <code class="code">THIS_MODULE</code> value.
+</p><p>
+<code class="code">repl_table</code> - <a class="link" href="extend.html#payload_api.rtable" title="5.2.2. struct kedr_repl_table">the 
+replacement table</a>.
+</p><p>
+Each payload module has usually a single global instance of this structure 
+and passes its address when registering and unregistering itself with the 
+KEDR core.
+</p><p>
+Example:
+</p><pre class="programlisting">
+/* Addresses of the functions of interest (target functions) */
+static void* orig_addrs[] = {
+	(void*)&amp;_copy_to_user,
+	(void*)&amp;_copy_from_user
+};
+
+/* Addresses of the replacement functions */
+static void* repl_addrs[] = {
+	(void*)&amp;repl__copy_to_user,
+	(void*)&amp;repl__copy_from_user
+};
+
+static struct kedr_payload payload = {
+	.mod                    = THIS_MODULE,
+	.repl_table.orig_addrs  = &amp;orig_addrs[0],
+	.repl_table.repl_addrs  = &amp;repl_addrs[0],
+	.repl_table.num_addrs   = ARRAY_SIZE(orig_addrs)
+};
+</pre></div><div class="section" title="5.2.4. kedr_payload_register()"><div class="titlepage"><div><div><h4 class="title"><a name="payload_api.register"></a>5.2.4. kedr_payload_register()</h4></div></div></div><pre class="programlisting">
+int 
+kedr_payload_register(struct kedr_payload* payload);
+</pre><p>
+This function registers a payload module with the KEDR core. 
+</p><p>
+<code class="code">payload</code> is the address of the <code class="code">kedr_payload</code> 
+instance identifying the payload module (see <a class="xref" href="extend.html#payload_api.payload" title="5.2.3. struct kedr_payload">Section 5.2.3, “struct kedr_payload”</a>).
+</p><p>
+The function returns 0 if successful, an error code otherwise (the general 
+rules of the kernel functions apply here too).
+</p><p>
+The function is usually called in the init function of the payload module.
+</p></div><div class="section" title="5.2.5. kedr_payload_unregister()"><div class="titlepage"><div><div><h4 class="title"><a name="payload_api.unregister"></a>5.2.5. kedr_payload_unregister()</h4></div></div></div><pre class="programlisting">
+void 
+kedr_payload_unregister(struct kedr_payload* payload);
+</pre><p>
+This function unregisters the payload module from the KEDR core. After 
+this is done, KEDR no longer uses this payload module (unless it 
+registers itself again).
+</p><p>
+<code class="code">payload</code> should be the same address as it was in the corresponding 
+call to <a class="link" href="extend.html#payload_api.register" title="5.2.4. kedr_payload_register()">kedr_payload_register()</a>.
+</p><p>
+The function is usually called in the cleanup (exit) function of the payload
+module.
+</p></div><div class="section" title="5.2.6. kedr_target_module_in_init()"><div class="titlepage"><div><div><h4 class="title"><a name="payload_api.in_init"></a>5.2.6. kedr_target_module_in_init()</h4></div></div></div><pre class="programlisting">
+int
+kedr_target_module_in_init(void);
+</pre><p>
+This function returns nonzero if the target module is currently loaded and 
+is executing its init function at the moment, 0 otherwise.
+</p><p>
+In fact, the function just checks whether the target module has already
+dropped its <code class="code"><span class="quote">“<span class="quote">.init.*</span>”</span></code> sections (what the modules 
+do after they have completed their initialization). Therefore the function 
+will always return 0 if the init function was not marked as 
+<code class="code"><span class="quote">“<span class="quote">__init</span>”</span></code> in the 
+target module. This should not be a big problem though.
+</p><p>
+This function can be useful to implement particular fault simulation 
+scenarios (like <span class="quote">“<span class="quote">fail everything after init</span>”</span>), etc.
+</p><p>
+Note however that there is a chance that the target module will complete
+its initialization after kedr_target_module_in_init() has determined that
+the target is in init but before the return value of 
+kedr_target_module_in_init() is used. It is up to the user of the target
+module to ensure that no request is made to the module until its 
+initialization is properly handled.
+</p><p>
+It is allowed to call this function from atomic context.
+</p></div><div class="section" title="5.2.7. A Stub of a Payload Module"><div class="titlepage"><div><div><h4 class="title"><a name="payload_api.stub"></a>5.2.7. A Stub of a Payload Module</h4></div></div></div><p>
+Here is what a simple payload module may look like (this is a stub rather 
+than a real module, of course).
+</p><pre class="programlisting">
+/*********************************************************************
+ * Module: stub_payload
+ * 
+ * Target kernel functions: 
+ * 
+ *   unsigned long kfoo(void *) 
+ *   void* kbar(void *, unsigned int) 
+ *   int kbaz(void)
+ *
+ * The replacement functions provided by this module have the same 
+ * signatures as the respective target functions but different names.
+ *********************************************************************/
+#include &lt;linux/module.h&gt;
+#include &lt;linux/init.h&gt;
+
+MODULE_AUTHOR("&lt;Some name here&gt;");
+MODULE_LICENSE("&lt;Some license here&gt;");
+/*********************************************************************/
+
+#include &lt;kedr/base/common.h&gt;
+/* #include other necessary header files here */
+
+/*********************************************************************
+ * Replacement functions
+ *********************************************************************/
+static unsigned long
+repl_kfoo(void *arg)
+{
+    unsigned long returnValue;
+    
+    /* Call the target function (optional)*/
+    returnValue = kfoo(arg);
+    
+    /* Process the results if necessary, dump data to a trace, etc. */
+    /* ... */
+
+    /* What the replacement function should return is also up to the provider
+     * of the function. Here, it is the return value of the target function 
+     * but, generally, it is not mandatory.
+     */
+    return returnValue;
+}
+
+static void*
+repl_kbar(void *arg, unsigned int n)
+{
+/* The replacement function is not required to call the target function at 
+ * all. It is up to the provider of the replacement function.
+ */
+    if (n &gt;= SOME_THRESHOLD) {
+        return NULL; /* this may simulate a failure */
+    } else {
+        return kbar(arg, n);
+    }
+}
+
+static int
+repl_kbaz(void)
+{
+/* The replacement function is not required to do anything at all. */
+    return 777;
+}
+
+/*********************************************************************/
+
+/* Addresses of the functions of interest (target functions) */
+static void* orig_addrs[] = {
+    (void*)&amp;kfoo,
+    (void*)&amp;kbar,    
+    (void*)&amp;kbaz
+};
+
+/* Addresses of the replacement functions */
+static void* repl_addrs[] = {
+    (void*)&amp;repl_kfoo,
+    (void*)&amp;repl_kbar,    
+    (void*)&amp;repl_kbaz
+};
+
+static struct kedr_payload payload = {
+    .mod                    = THIS_MODULE,
+    .repl_table.orig_addrs  = &amp;orig_addrs[0],
+    .repl_table.repl_addrs  = &amp;repl_addrs[0],
+    .repl_table.num_addrs   = ARRAY_SIZE(orig_addrs)
+};
+/*********************************************************************/
+
+static void
+stub_payload_cleanup_module(void)
+{
+    kedr_payload_unregister(&amp;payload);
+    /* do other cleanup work */
+    return;
+}
+
+static int __init
+stub_payload_init_module(void)
+{
+    /* initialize other necessary facilities */
+    return kedr_payload_register(&amp;payload);
+}
+
+module_init(kedr_cm_user_space_access_init_module);
+module_exit(stub_payload_cleanup_module);
+/*********************************************************************/
+</pre></div></div><div class="section" title="5.3. Custom Fault Simulation Scenarios"><div class="titlepage"><div><div><h3 class="title"><a name="custom_fsim_scenarios"></a>5.3. Custom Fault Simulation Scenarios</h3></div></div></div>
+
+TODO
+
+</div><div class="section" title="5.4. Implementing New Types of Analysis"><div class="titlepage"><div><div><h3 class="title"><a name="custom_analysis"></a>5.4. Implementing New Types of Analysis</h3></div></div></div>
+
+TODO
+
+</div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="using_kedr.html">Prev</a> </td><td width="20%" align="center"> </td><td width="40%" align="right"> <a accesskey="n" href="glossary.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">4. Using KEDR </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Glossary</td></tr></table></div></body></html>

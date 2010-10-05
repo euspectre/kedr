@@ -1,0 +1,161 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><title>2. Overview</title><link rel="stylesheet" href="kedr-doc.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.75.2"><link rel="home" href="index.html" title="KEDR 0.1 Reference Manual"><link rel="up" href="index.html" title="KEDR 0.1 Reference Manual"><link rel="prev" href="intro.html" title="1. Introduction"><link rel="next" href="getting_started.html" title="3. Getting Started"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2. Overview</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="intro.html">Prev</a> </td><th width="60%" align="center"> </th><td width="20%" align="right"> <a accesskey="n" href="getting_started.html">Next</a></td></tr></table><hr></div><div class="section" title="2. Overview"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="overview"></a>2. Overview</h2></div></div></div><div class="toc"><dl><dt><span class="section"><a href="overview.html#overview.general">2.1. General</a></span></dt><dt><span class="section"><a href="overview.html#overview.analysis">2.2. Types of Analysis KEDR Supports</a></span></dt><dt><span class="section"><a href="overview.html#overview.sys_req">2.3. System Requirements</a></span></dt><dt><span class="section"><a href="overview.html#overview.use_case">2.4. Common Use Case</a></span></dt><dt><span class="section"><a href="overview.html#overview.technologies">2.5. Key Technologies KEDR Relies Upon</a></span></dt><dt><span class="section"><a href="overview.html#overview.limit">2.6. Limitations</a></span></dt></dl></div><div class="section" title="2.1. General"><div class="titlepage"><div><div><h3 class="title"><a name="overview.general"></a>2.1. General</h3></div></div></div><p>
+KEDR is a system for the analysis of Linux drivers (kernel modules) in 
+runtime. The kinds of analysis performed by KEDR vary from simply 
+collecting the statistics on the kernel functions used by a particular 
+driver to revealing subtle errors in the driver via fault simulation 
+techniques - and may go even beyond that in the future.
+</p><p>
+KEDR system will probably be useful mostly for driver developers and 
+maintainers. It could be of help for the certification systems for Linux 
+drivers as well, where, among other things, a driver is subjected to a 
+series of tests to estimate its reliability.
+</p><p>
+One of the main goals of KEDR is to provide a reliable runtime analysis 
+engine for drivers on Linux, easy to use and easy to build custom 
+applications upon.
+</p><p>
+Currently, there is a variety of tools in the kernel itself that allow 
+analyzing drivers: kmemcheck, kmemleak, fault injection framework, various 
+debugging facilities and so forth. Many of these tools operate on the 
+kernel as a whole rather than on a particular driver. KEDR may 
+complement such systems well because it allows to analyse only the kernel 
+modules chosen by the user and strives to affect other parts of the kernel 
+as little as possible.
+</p><p>
+The ideas behind KEDR are really not very new. One could mention at least 
+two other systems that analyze the selected drivers in runtime and help 
+reveal problems in these drivers: <a class="ulink" href="http://msdn.microsoft.com/en-us/library/ff545448(VS.85).aspx" target="_top">Microsoft Driver Verifier for Windows</a>
+and <span class="quote">“<span class="quote">Impostor</span>”</span> (<span class="quote">“<span class="quote">Call Swapping</span>”</span>) facilities used 
+by <a class="ulink" href="http://developer.novell.com/devnet/yes/" target="_top">Novell YES Tools 
+for Linux</a>. Both systems seem to monitor the operation of a target 
+driver including its interaction with the rest of the kernel.
+</p><p>
+At the core of KEDR lies its ability to intercept function calls made by 
+the target driver. If the driver uses a function exported by the kernel 
+proper or by some other module, KEDR can instrument the calls to this 
+function in the driver. This allows to find out with what arguments the 
+function was called by the driver, what value it returned, etc. This also 
+allows to alter the execution of the driver, for example, to simulate a 
+situaton when memory allocation fails or to allocate memory from some 
+special tracked pool instead of the default one and so on.
+</p></div><div class="section" title="2.2. Types of Analysis KEDR Supports"><div class="titlepage"><div><div><h3 class="title"><a name="overview.analysis"></a>2.2. Types of Analysis KEDR Supports</h3></div></div></div><div class="itemizedlist"><p>
+Currently, the means to conduct two kinds of analysis are provided with 
+KEDR itself: 
+    </p><ul class="itemizedlist" type="disc"><li class="listitem"><p>
+<a class="link" href="using_kedr.html#call_mon" title="4.4. Call Monitoring"><em class="firstterm">Call monitoring</em></a> 
+During the operation of the module under analysis, the information is 
+collected about the calls to <a class="link" href="glossary.html#target_function" title="Target function">target 
+functions</a>: arguments, return values, etc. This information can be 
+saved to a file for future analysis in the user space.
+    </p></li><li class="listitem"><p>
+<a class="link" href="using_kedr.html#fault_sim" title="4.5. Fault Simulation"><em class="firstterm">Fault simulation</em></a> 
+KEDR makes some of the calls made by the target driver to fail. In fact,
+KEDR simulates the failure without actually calling the respective 
+<a class="link" href="glossary.html#target_function" title="Target function">target function</a>. The scenarios 
+(the calls to what functions must fail in what conditions) can be 
+controlled and customized by the user.
+    </p></li></ul></div><p>
+Other types of analysis can be implemented with the help of KEDR. See 
+<a class="xref" href="extend.html#custom_analysis" title="5.4. Implementing New Types of Analysis">Section 5.4, “Implementing New Types of Analysis”</a> for details.
+</p></div><div class="section" title="2.3. System Requirements"><div class="titlepage"><div><div><h3 class="title"><a name="overview.sys_req"></a>2.3. System Requirements</h3></div></div></div><p>
+KEDR system supports Linux kernel versions 2.6.31 or newer. Of all kernel 
+facilities it relies upon, trace events currently have the highest requirements
+for the version of the kernel.
+</p><p>
+For the present time, only x86 and x86-64 architectures are supported.
+</p><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
+Note that, in its <a class="link" href="overview.html#overview.use_case" title="2.4. Common Use Case">common use case</a>, 
+KEDR does not rely on <em class="firstterm">kernel probes</em> (KProbes) to do 
+its work. It just employs instruction decoding facilities used to 
+implement KProbes. So it can operate even on the systems where support for 
+kernel probes is disabled in the kernel. 
+</p></div></div><div class="section" title="2.4. Common Use Case"><div class="titlepage"><div><div><h3 class="title"><a name="overview.use_case"></a>2.4. Common Use Case</h3></div></div></div>
+
+Here is what a common use case for the runtime analysis of a driver with 
+KEDR may look like. This is just <span class="quote">“<span class="quote">a big picture</span>”</span>, see <a class="xref" href="getting_started.html" title="3. Getting Started">Section 3, “Getting Started”</a> for a detailed description which commands are 
+executed at each step.
+
+The steps listed below can be performed manually or perhaps by a user-space 
+application.
+
+<div class="procedure"><ol class="procedure" type="1"><li class="step" title="Step 1"><p>
+At the beginning, the target module is not loaded.
+</p></li><li class="step" title="Step 2"><p>
+The user loads the core components of KEDR system along with the appropriate 
+<a class="link" href="glossary.html#payload_module" title="Payload module">payload modules</a> and specifies the 
+name of the target module. KEDR begins watching for the target module to load.
+</p></li><li class="step" title="Step 3"><p>
+The user loads the target module or plugs in a device that as the system 
+knows, should be handled by the target module. Or (s)he does something else 
+that results in loading of the target module. 
+    </p><p>
+When the target module is loaded but before it begins to perform its 
+initialization, KEDR detects that and hooks into the target module 
+(instruments it) for the payload modules to be able to work.
+    </p></li><li class="step" title="Step 4"><p>
+The user performs actions on the target module: reads data from the 
+corresponding device file and/or writes data to it, performs ioctl() calls 
+or any other operation (s)he wants to. As this is being done, the payload 
+modules collect the information about the operation of the module, perform 
+fault simulation, etc.
+</p><p>
+The tests checking various operations with the driver can also be run at 
+this step. The goal is to make the driver execute all the paths in its 
+code that the user wants to check.
+</p></li><li class="step" title="Step 5"><p>
+If necessary, the user may save (<span class="quote">“<span class="quote">capture</span>”</span>) the trace output by
+the payload modules to a file and analyze the trace to determine if the 
+module operates correctly. On the other hand, the analysis of the trace could
+be postponed if necessary, until the target module is unloaded.
+</p></li><li class="step" title="Step 6"><p>
+The user unloads the target module or does something else that results in 
+unloading of the module: unplugs the corresponding device, etc. 
+</p></li><li class="step" title="Step 7"><p>
+The user (or, likely, an application chosen by the user) analyzes the trace 
+and/or any other results output by the payload modules and decides whether 
+the target module behaved as it was required.
+</p></li><li class="step" title="Step 8"><p>
+If it is necessary to analyze the target module once more (may be, perform 
+a different type of checks, etc.), the process can be repeated. If the analysis
+is done, the user unloads the payload modules and KEDR core or just reboots 
+the operating system.
+</p></li></ol></div><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
+Currently, it is not possible for KEDR to analyze an already loaded, 
+initialized and running target module. It is planned to implement this 
+functionality in the future versions of the system.
+</p></div></div><div class="section" title="2.5. Key Technologies KEDR Relies Upon"><div class="titlepage"><div><div><h3 class="title"><a name="overview.technologies"></a>2.5. Key Technologies KEDR Relies Upon</h3></div></div></div><div class="itemizedlist"><p>
+The core components of KEDR have been developed based on the technologies 
+heavily used in the kernel itself, for example:
+</p><ul class="itemizedlist" type="disc"><li class="listitem"><p>
+<em class="firstterm">instruction decoding facilities</em> used in the kernel 
+to implement KProbes;
+</p></li><li class="listitem"><p>
+<em class="firstterm">trace points</em> and <em class="firstterm">trace events</em> - 
+the basis of various data collection systems used in the kernel;
+</p></li><li class="listitem"><p>
+<em class="firstterm">netlink</em> as the mechanism for data exchange between 
+the kernel space and the user space.
+</p></li></ul></div></div><div class="section" title="2.6. Limitations"><div class="titlepage"><div><div><h3 class="title"><a name="overview.limit"></a>2.6. Limitations</h3></div></div></div><div class="itemizedlist"><p>
+The ideas KEDR is based upon and the technologies it currently uses impose 
+some limitations on what it can do.
+</p><ul class="itemizedlist" type="disc"><li class="listitem"><p>
+KEDR operates on the binary interface used by a target driver (ABI rather 
+than API) like many other runtime analysis systems. This not bad per se 
+but one of the consequences of this is that KEDR cannot detect, for example, 
+a call to <code class="code">kmalloc()</code> because it is usually a macro or an 
+inline function rather than an ordinary function. Sometimes this can be 
+inconvenient. KEDR, however, <span class="emphasis"><em>can</em></span> detect the calls to 
+<code class="code">__kmalloc()</code>, <code class="code">kmem_cache_alloc()</code> and other 
+functions to which <code class="code">kmalloc()</code> eventually expands.
+    </p></li><li class="listitem"><p>
+KEDR can only detect the calls directly made from the target driver. This 
+is because it is only the target driver that is instrumented by KEDR, the 
+rest of the kernel is not affected. 
+    </p><p>
+Suppose the target driver calls function <code class="code">create_foo()</code> exported 
+by some other driver or by the kernel. Let that function allocate memory for 
+some structure with <code class="code">kmalloc()</code>, initialize the structure and 
+return a pointer to it. In this case, KEDR is unaware that a memory 
+allocation has taken place. You need to tell KEDR explicitly to intercept 
+the calls to <code class="code">create_foo()</code> too to be able to track this.
+    </p></li></ul></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="intro.html">Prev</a> </td><td width="20%" align="center"> </td><td width="40%" align="right"> <a accesskey="n" href="getting_started.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">1. Introduction </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 3. Getting Started</td></tr></table></div></body></html>

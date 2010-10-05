@@ -1,0 +1,96 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><title>3. Getting Started</title><link rel="stylesheet" href="kedr-doc.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.75.2"><link rel="home" href="index.html" title="KEDR 0.1 Reference Manual"><link rel="up" href="index.html" title="KEDR 0.1 Reference Manual"><link rel="prev" href="overview.html" title="2. Overview"><link rel="next" href="using_kedr.html" title="4. Using KEDR"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">3. Getting Started</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="overview.html">Prev</a> </td><th width="60%" align="center"> </th><td width="20%" align="right"> <a accesskey="n" href="using_kedr.html">Next</a></td></tr></table><hr></div><div class="section" title="3. Getting Started"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="getting_started"></a>3. Getting Started</h2></div></div></div><div class="toc"><dl><dt><span class="section"><a href="getting_started.html#getting_started.install">3.1. Installation</a></span></dt><dt><span class="section"><a href="getting_started.html#getting_started.example">3.2. A Simple Example</a></span></dt></dl></div><p>
+This section shows how to install KEDR framework and how to use it to analyse a simple kernel module.
+</p><div class="section" title="3.1. Installation"><div class="titlepage"><div><div><h3 class="title"><a name="getting_started.install"></a>3.1. Installation</h3></div></div></div><p>
+It is recommended to build KEDR from source. This allows to avoid a lot of issues concerning the differences between many versions and variants of Linux kernel. For the present, there is no official binary distribution of KEDR. 
+</p><p>
+The source code of the framework can be downloaded from the <a class="ulink" href="http://developer.berlios.de/projects/kedr/" target="_top">project site</a> at BerliOS Developer.
+</p><div class="itemizedlist"><p>
+To be able to build KEDR, you need the following:
+</p><ul class="itemizedlist" type="disc"><li class="listitem"><p>
+Your Linux system should have kernel version 2.6.31 or newer (<span class="command"><strong>uname -r</strong></span> command should tell you what kernel version you are currently using)
+</p></li><li class="listitem"><p>
+CMake build system (<a class="ulink" href="http://cmake.org/" target="_top">http://cmake.org/</a>) version 2.6 or newer (version 2.8 or newer is preferable), 
+</p></li><li class="listitem"><p>
+GNU C and C++ compilers - version 4.0 or newer is recommended
+</p></li><li class="listitem"><p>
+GNU Make
+</p></li><li class="listitem"><p>
+Other tools and packages necessary to build kernel modules: on some systems it can be <span class="quote">“<span class="quote">kernel-*-devel</span>”</span>, <span class="quote">“<span class="quote">kernel-*-source</span>”</span>, <span class="quote">“<span class="quote">kernel-*-syms</span>”</span> or some other packages, on some systems you may need to install <span class="quote">“<span class="quote">DKMS</span>”</span> package as well, etc.
+</p></li></ul></div><p>
+After all the prerequisites have been met, unpack the archive with the sources (<code class="filename">kedr-&lt;version&gt;.tar.bz2</code>) and create another directory, say, <code class="filename">kedr-build</code> where KEDR will be built.
+</p><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
+It is highly recommended to use an out-of-source build, i.e. not to build KEDR from the directory containing its sources. With an out-of-source build, you leave the source tree of KEDR unchanged, which can be convenient. You can also configure and build the framework from different build directories with different options if you want to. An in-source build would make this impossible.
+</p></div><p>
+Change current directory to <code class="filename">kedr-build</code> and configure the package using the following command:
+</p><pre class="programlisting">
+cmake -DCMAKE_INSTALL_PREFIX=&lt;install_directory&gt; &lt;path-to-kedr-sources&gt;
+</pre><p>
+The package will be configured to be installed to <em class="replaceable"><code>&lt;install_directory&gt;</code></em>. For example:
+</p><pre class="programlisting">
+cmake -DCMAKE_INSTALL_PREFIX=/opt/kedr/ ../kedr-0.1/
+</pre><p>
+If the configuration stage completes successfully, you can type <span class="command"><strong>make</strong></span> to build the package and <span class="command"><strong>make install</strong></span> - to install it to the configured location (<code class="filename">/opt/kedr/</code> in the example above). You may need to execute <span class="command"><strong>make install</strong></span> as a root user.
+</p><p>
+If you would like to install KEDR to the default location (usually, <code class="filename">/usr/local/</code>), you can omit that <code class="code">CMAKE_INSTALL_PREFIX</code> stuff and configure the package as follows:
+</p><pre class="programlisting">
+cmake ../kedr-0.1/
+</pre><p>
+To remove the files installed with <span class="command"><strong>make install</strong></span>, you can use <span class="command"><strong>make uninstall</strong></span> command.
+</p><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
+Currently, <span class="command"><strong>make uninstall</strong></span> does not remove directories, only files. That is why it can be convenient to install KEDR to a custom location like <code class="filename">/opt/kedr/</code> rather than to <code class="filename">/usr/local/</code> or the like. In the former case it is easier to cleanup after the package: <span class="command"><strong>make uninstall</strong></span> followed by <span class="command"><strong>rm -rf /opt/kedr</strong></span> will do the job.
+</p></div><p>
+KEDR package also contains a set of tests for KEDR framework. You may want to run these tests after KEDR is built but before it is installed to see if the tools provided by the framework correctly operate on your system. To do so, just execute <span class="command"><strong>make check</strong></span> (as root user).
+</p></div><div class="section" title="3.2. A Simple Example"><div class="titlepage"><div><div><h3 class="title"><a name="getting_started.example"></a>3.2. A Simple Example</h3></div></div></div><p>
+Show how to use KEDR for call monitoring for a simple kernel module.
+</p><p>
+As a simple kernel module you can take <span class="quote">“<span class="quote">sample_target</span>”</span> module from installed examples. Copy contents of the directory <code class="filename">sample_target</code> into your own place, and run 'make' in that place. You should get file <code class="filename">kedr_sample_target.ko</code> there. It is a kernel module, which we will use to demonstrate abilities of the KEDR.
+</p><p>
+Run script
+    </p><pre class="programlisting">
+kedr start kedr_sample_target
+    </pre><p>
+from the binary directory of installed KEDR. It will starts KEDR modules and prepare them to watch for kernel module with name <span class="quote">“<span class="quote">kedr_sample_target</span>”</span>. Also, it loads default call monitor payloads, which trace information about calls for the some of widely used kernel functions. Note, that <span class="quote">“<span class="quote">kedr_sample_target</span>”</span> itself is not loading at this stage.
+</p><p>
+Information about kernel function calls is output into debugfs filesystem, so to see this information, you need to have this filesystem mounted to some node of you filesystem.
+Usually, it mounted by default to <code class="filename">/sys/kernel/debug</code>. If it is not you case, you can mount it, executing
+    </p><pre class="programlisting">
+mount debugfs -t debugfs /sys/kernel/debug
+    </pre><p>
+</p><p>
+You can force to output information about kernel function calls into you own file, instead system-special temporary one. For doing this, execute from binary KEDR directory
+    </p><pre class="programlisting">
+kedr_capture_trace start <em class="replaceable"><code>file-to-store-trace</code></em>
+    </pre><p>
+From this moment, all tracing information will be stored into file <em class="replaceable"><code>file-to-store-trace</code></em>.
+</p><p>
+Now, everything is ready to load kernel module which we will watch for. It is better to do this by executing
+    </p><pre class="programlisting">
+kedr_sample_target load
+    </pre><p>
+from the directory with the compiled <span class="quote">“<span class="quote">kedr_sample_target</span>”</span> module. The thing is that <span class="quote">“<span class="quote">kedr_sample_target</span>”</span> module really create character device, and aside from the loading module itself, the script creates <code class="filename">/dev/cfake</code> node, which represents this character device in the your filesystem.
+</p><p>
+Do something with character device, creating by the module. E.g., write zeroes into it:
+    </p><pre class="programlisting">
+dd if=/dev/zero of=/dev/cfake bs=1 count=10
+    </pre><p>
+</p><p>
+Now, open file with trace (which path you pass to <span class="command"><strong>kedr_capture_trace</strong></span> script). TODO: what user will see in the trace file.
+</p><p>
+Unload driver module, using command
+    </p><pre class="programlisting">
+kedr_sample_target unload
+    </pre><p>
+Line, containing string 'target_session_ends', should appear in the trace file. There will be nothing to new in this file, until target will be loaded again. So, stop redirection of the trace into our file:
+    </p><pre class="programlisting">
+kedr_capture_trace stop
+    </pre><p>
+</p><p>
+Last step - stopping KEDR modules.
+    </p><pre class="programlisting">
+kedr stop
+    </pre><p>
+</p>
+
+TODO: how to use KEDR for call monitoring and fault simulation for a simple kernel module
+
+</div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="overview.html">Prev</a> </td><td width="20%" align="center"> </td><td width="40%" align="right"> <a accesskey="n" href="using_kedr.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">2. Overview </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 4. Using KEDR</td></tr></table></div></body></html>
