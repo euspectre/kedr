@@ -51,6 +51,8 @@ return $result
 }
 
 commands_file="@CMAKE_CURRENT_BINARY_DIR@/commands"
+#Commands for load and unload module 'a;
+commands_file_module_a="@CMAKE_CURRENT_BINARY_DIR@/commands_a"
 do_commands_script="sh @CMAKE_BINARY_DIR@/tests/scripts/do_commands.sh"
 
 cat > "$commands_file" << eof
@@ -60,6 +62,10 @@ on_unload rmmod "$fault_simulation_module" || ! printf "Cannot unload fault simu
 on_load mkdir -p "$debugfs_mount_point" || ! printf "Cannot create mount point for debugfs.\n"
 on_load mount -t debugfs debugfs "$debugfs_mount_point" || ! printf "Cannot mount debufs.\n"
 on_unload umount "$debugfs_mount_point" || ! printf "Error occures while umount debufs.\n"
+eof
+
+cat > "$commands_file_module_a" << eof
+
 on_load insmod "$module_a" || ! printf "Cannot load module 'a' into kernel.\n"
 on_unload rmmod "$module_a" || ! printf "Fail to unload module 'a'.\n"
 on_load $char_device_script "$device" create || ! printf "Cannot create file for use character device.\n"
@@ -72,9 +78,15 @@ if ! $do_commands_script "$commands_file" load; then
     exit 1
 fi
 
+if ! $do_commands_script "$commands_file_module_a" load; then
+    printf "Cannot load module a corretly.\n"
+    exit 1
+fi
+
+
 if ! insmod "$module_b"; then
     printf "Cannot load module 'b' into kernel.\n"
-    $do_commands_script "$commands_file" unload
+    $do_commands_script "$commands_file_module_a" unload && $do_commands_script "$commands_file" unload
     exit 1
 fi
 
@@ -83,27 +95,42 @@ fi
 if set_indicator "$read_point_name" "$write_indicator_name"; then
     printf "Indicator was set for point, which data it cannot process.\n"
     rmmod "$module_b"
-    $do_commands_script "$commands_file" unload
+	$do_commands_script "$commands_file_module_a" unload    
+	$do_commands_script "$commands_file" unload
+	
     exit 1
 fi
 
 if ! set_indicator "$read_point_name" "$read_indicator_name"; then
     printf "Cannot set indicator for the point.\n"
     rmmod "$module_b"
-    $do_commands_script "$commands_file" unload
+	
+	$do_commands_script "$commands_file" unload
+	
     exit 1
 fi
 
 # Try to unload module with point while we hold control file of this point opened
 {
-    #Module 'a' should cannot be unloaded at this stage
-    if rmmod "$module_a"; then
-        printf "Simulation point was deleted, but file exported by it is currently used.\n"
-        rmmod "$module_b" && insmod "$module_a" && $do_commands_script "$commands_file" unload
+    #Module 'a' should correctly unload even with file opened
+    if ! $do_commands_script "$commands_file_module_a" unload; then
+        printf "Cannot remove module 'a' with indicator control file opened.\n"
+        rmmod "$module_b"
+		$do_commands_script "$commands_file" unload
         exit 1
     fi
+
+	#Operations with file may fail, but shouldn't crash kernel
     cat <&9 > /dev/null
+	echo "$write_indicator_name"  >&8 
 
-} 9<"$control_root/points/${read_point_name}/current_indicator"
+	if ! $do_commands_script "$commands_file_module_a" load; then
+		printf "Fail to load module 'a' again.\n"
+        rmmod "$module_b"
+		$do_commands_script "$commands_file" unload
+		exit 1
+	fi
 
-rmmod "$module_b" && $do_commands_script "$commands_file" unload
+} 9<"$control_root/points/${read_point_name}/current_indicator" 8>"$control_root/points/${read_point_name}/current_indicator"
+
+rmmod "$module_b" && $do_commands_script "$commands_file_module_a" unload && $do_commands_script "$commands_file" unload

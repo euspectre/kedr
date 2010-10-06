@@ -80,13 +80,13 @@ static void delete_device(void)
 static int __init
 module_a_init(void)
 {
-    read_point = kedr_fsim_point_register(read_point_name, NULL, THIS_MODULE);
+    read_point = kedr_fsim_point_register(read_point_name, NULL);
     if(read_point == NULL)
     {
         printk(KERN_ERR "Cannot register simulation point for read() for test.\n");
         return -1;
     }
-    write_point = kedr_fsim_point_register(write_point_name, "size_t", THIS_MODULE);
+    write_point = kedr_fsim_point_register(write_point_name, "size_t");
     if(write_point == NULL)
     {
         printk(KERN_ERR "Cannot register simulation point for write() for test.\n");

@@ -27,7 +27,7 @@ set_indicator()
 # clear_indicator point_name
 clear_indicator()
 {
-    printf "%s" "" > "$control_root/points/$1/current_indicator"
+    printf "%s" "none" > "$control_root/points/$1/current_indicator"
 }
 # get_indicator point_name
 # print indicator to output
@@ -74,8 +74,8 @@ fi
 
 #Verify, that indicators isn't set
 current_indicator=`get_indicator "$read_point_name"`
-if test "$current_indicator" != ""; then
-    printf "'current_indicator' file for read point conatins '%s', but should be ''\n" "$current_indicator"
+if test "$current_indicator" != "none"; then
+    printf "'current_indicator' file for read point conatins '%s', but should be 'none'\n" "$current_indicator"
     $do_commands_script "$commands_file" unload
     exit 1
 fi
@@ -161,8 +161,8 @@ fi
 
 #Verify, that indicator is cleared
 current_indicator=`get_indicator "$read_point_name"`
-if test "$current_indicator" != ""; then
-    printf "'current_indicator' file for read point conatins '%s', but should be ''\n" "$current_indicator"
+if test "$current_indicator" != "none"; then
+    printf "'current_indicator' file for read point conatins '%s', but should be 'none'\n" "$current_indicator"
     rmmod "$module_b"
     $do_commands_script "$commands_file" unload
     exit 1

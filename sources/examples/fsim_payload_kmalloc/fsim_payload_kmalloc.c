@@ -48,7 +48,7 @@ static int __init
 fsim_payload_kmalloc_init(void)
 {
     point_kmalloc = kedr_fsim_point_register(point_kmalloc_name,
-        "size_t,gfp_flags", THIS_MODULE);
+        "size_t,gfp_flags");
     
     if(point_kmalloc == NULL)
     {

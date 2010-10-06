@@ -49,19 +49,14 @@ struct kedr_simulation_point;
  *
  * If this name has already used for another point, returns NULL.
  *
- * module 'm' is prevented to unload while some operations with point
- * are performed via files on debugfs.
  */
 
 struct kedr_simulation_point* 
 kedr_fsim_point_register(const char* point_name,
-	const char* format_string, struct module* m);
+	const char* format_string);
 
 /*
  * Unregister point, making its name free for use, and release resources.
- * 
- * It is recommended, that this function will be called from the exit() procedure
- * of the module, which passed to kedr_fsim_point_register().
  */
 
 void kedr_fsim_point_unregister(struct kedr_simulation_point* point);
