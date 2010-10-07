@@ -5,6 +5,7 @@ point_kmalloc_name=sample_point_kmalloc
 indicator_kmalloc_name=sample_indicator_kmalloc
 
 current_indicator_file="${debugfs_mount_point}/kedr_fault_simulation/points/${point_kmalloc_name}/current_indicator"
+indicator_expression_file="${debugfs_mount_point}/kedr_fault_simulation/points/${point_kmalloc_name}/expression"
 
 sample_target_module_name=kedr_sample_target
 sample_target_script="sh @CMAKE_BINARY_DIR@/examples/sample_target/kedr_sample_target"
@@ -51,16 +52,16 @@ if test $? -eq 0; then
 	exit 1
 fi
 
-printf "%s %s" "${indicator_kmalloc_name}" "size > 10000" > "$current_indicator_file"
+printf "%s" "size > 10000" > "$indicator_expression_file"
 if test $? -ne 0; then
-	printf "Cannot set indicator for the point.\n"
+	printf "Cannot change indicator parameters via writting to the file.\n"
 	$do_commands_script "$commands_file" unload
 	exit 1
 fi
 
 echo 123 > "$sample_target_device"
 if test $? -ne 0 ; then
-	printf "Expected, that writting to the device, created by sample target, will succeed(indicator changed). But it failed.\n"
+	printf "Expected, that writting to the device, created by sample target, will succeed(indicator parameters changed). But it failed.\n"
 	$do_commands_script "$commands_file" unload
 	exit 1
 fi

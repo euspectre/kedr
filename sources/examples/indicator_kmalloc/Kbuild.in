@@ -1,5 +1,6 @@
 module_name=@module_name@
 
 ccflags-y :=  -I$(src) -I@KEDR_PREFIX_INCLUDE@
+CFLAGS_indicator_kmalloc.o := -DDEBUG
 obj-m := ${module_name}.o
 ${module_name}-y := indicator_kmalloc.o calculator/calculator.o

@@ -348,22 +348,17 @@ EXPORT_SYMBOL(kedr_fsim_indicator_register);
 
 void kedr_fsim_indicator_unregister(struct kedr_simulation_indicator* indicator)
 {
-    debug0("Start...");
     if(mutex_lock_killable(&points_mutex))
     {
         debug0("Was killed");
         return;
     }
-    debug0("Deleting indicator...");
     list_del(&indicator->list);
-    debug0("Before deleting files...");
     delete_indicator_files(indicator);
-    debug0("wait until indicator instances become unused deleting files...");
     wobj_unref_final(&indicator->obj);
     kfree(indicator);
 
     mutex_unlock(&points_mutex);
-    debug0("Finish...");
 }
 EXPORT_SYMBOL(kedr_fsim_indicator_unregister);
 
@@ -634,7 +629,7 @@ int kedr_fsim_point_set_indicator_internal(struct kedr_simulation_point* point,
     //Because we take mutex, which protect indicator from deleting, we may safetly use this indicator
     if(indicator->create_instance)
     {
-        if(indicator->create_instance(&instance->indicator_state, params, NULL/*should be fixed*/))
+        if(indicator->create_instance(&instance->indicator_state, params, point->control_dir))
         {
             print_error("Fail to create instance of indicator '%s'.", indicator_name);
             kfree(instance);

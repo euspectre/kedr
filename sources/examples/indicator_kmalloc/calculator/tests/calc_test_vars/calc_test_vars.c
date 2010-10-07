@@ -58,11 +58,11 @@ calc_simple_test_init(void)
     kedr_calc_t* calc = NULL;
     if(expr == NULL || x_str == NULL || y_str == NULL)
     {
-        printk(KERN_ERR "Parameters 'expr', 'x' and 'y' should be passed to the module.\n");
+        pr_err("Parameters 'expr', 'x' and 'y' should be passed to the module.\n");
         return -1;
     }
     
-    printk(KERN_INFO "Expression is '%s'.", expr);
+    pr_debug("Expression is '%s'.", expr);
     
     calc = kedr_calc_parse(expr, all_constants_size, all_constants, 2, vars);
 
@@ -79,7 +79,7 @@ calc_simple_test_init(void)
     }
     if(evaluate_str(y_str, &values[1]))
     {
-        printk(KERN_ERR "Cannot evaluate 'y'");
+        pr_err("Cannot evaluate 'y'");
         kedr_calc_delete(calc);
         return -1;
     }

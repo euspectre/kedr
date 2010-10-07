@@ -6,10 +6,10 @@
 #include <linux/ctype.h> /* character classes*/
 
 // Macros for unify output information to the kernel log file
-#define debug(str, ...) printk(KERN_DEBUG "%s: " str "\n", __func__, __VA_ARGS__)
+#define debug(str, ...) pr_debug("%s: " str, __func__, __VA_ARGS__)
 #define debug0(str) debug("%s", str)
 
-#define print_error(str, ...) printk(KERN_ERR "%s: " str "\n", __func__, __VA_ARGS__)
+#define print_error(str, ...) pr_err("%s: " str, __func__, __VA_ARGS__)
 #define print_error0(str) print_error("%s", str)
 
 
