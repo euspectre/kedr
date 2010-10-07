@@ -216,6 +216,8 @@ set(kedr_cm_conf_file_data "${CMAKE_BINARY_DIR}/tools/control/kedr_cm.conf.data"
 add_subdirectory(tools)
 add_subdirectory(payloads_callm)
 
+add_subdirectory(payloads_fsim)
+
 add_subdirectory(examples)
 # Documentation
 add_subdirectory(doc)

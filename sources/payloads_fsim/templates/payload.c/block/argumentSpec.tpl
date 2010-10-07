@@ -1,0 +1,1 @@
+<$if concat(arg.name)$><$arg : join(, )$><$else$>void<$endif$>

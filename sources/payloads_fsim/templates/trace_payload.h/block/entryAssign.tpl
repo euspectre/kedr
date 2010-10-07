@@ -1,0 +1,1 @@
+<$if trace.param.string$>__assign_str(<$trace.param.name$>, <$trace.param.name$>)<$else$>__entry-><$trace.param.name$> = <$trace.param.name$><$endif$>;

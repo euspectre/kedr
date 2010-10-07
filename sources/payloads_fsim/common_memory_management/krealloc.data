@@ -1,0 +1,45 @@
+[group]
+	# Name and return type of the target function
+	function.name = krealloc
+	returnType = void*
+
+	# Names and types of the arguments of the target function
+	arg.type = const void*
+	arg.name = p
+
+	arg.type = size_t
+	arg.name = size
+
+	arg.type = gfp_t
+	arg.name = flags
+	
+	# The parameters to be output to the trace. 
+	trace.param.type = const void*
+	trace.param.name = p
+
+	trace.param.type = size_t
+	trace.param.name = size
+
+	trace.param.type = unsigned int
+	trace.param.name = flags
+
+	trace.param.type = void*
+	trace.param.name = returnValue
+
+	# The format string to be used for trace output.
+	trace.formatString = "arguments: (%p, %zu, %x), result: %p"
+	
+	# Fault Simulation
+	fpoint.reuse_point = __kmalloc
+
+	fpoint.param.type = size_t
+	fpoint.param.name = size
+
+	fpoint.param.type = gfp_t
+	fpoint.param.name = flags
+
+	fpoint.fault_code =	returnValue = NULL;
+
+# End of the group of definitions for krealloc().
+
+#######################################################################

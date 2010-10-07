@@ -1,0 +1,1 @@
+<$if concat(trace.param.name)$><$traceParamCast : join(, )$><$else$>(int)0<$endif$>
