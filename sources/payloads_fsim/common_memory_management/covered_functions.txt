@@ -1,5 +1,4 @@
 __kmalloc
 krealloc
 kmem_cache_alloc
-kmem_cache_alloc_node
 kmem_cache_alloc_notrace

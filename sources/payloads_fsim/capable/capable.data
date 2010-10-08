@@ -1,0 +1,28 @@
+[group]
+	# Name and return type of the target function
+	function.name = capable
+	returnType = int
+
+	# Names and types of the arguments of the target function
+	arg.type = int
+	arg.name = cap
+
+	# The parameters to be output to the trace. 
+	trace.param.type = int
+	trace.param.name = cap
+
+	trace.param.type = int
+	trace.param.name = returnValue
+
+	# The format string to be used for trace output.
+	trace.formatString = "arguments: (%d), result: %d"
+
+	# Fault Simulation
+	fpoint.fault_code =	returnValue = 0;
+
+	fpoint.param.type = int
+	fpoint.param.name = cap
+
+# End of the group of definitions for capable().
+
+#######################################################################
