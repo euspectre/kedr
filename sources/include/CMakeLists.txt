@@ -2,14 +2,8 @@
 set(KEDR_INCLUDE_FILES
 	base/common.h
 
-    module_weak_ref/module_weak_ref.h
-
-    syscall_connector/syscall_connector.h
-#    syscall_connector/syscall_connector_internal.h
-
-    fault_simulation/fsim_base.h
-    fault_simulation/fsim_indicator_manager.h
-#    fault_simulation/fsim_indicator_manager_internal.h
+    fault_simulation/fault_simulation.h
+	fault_simulation/calculator.h
 )
 
 # Install rules for each include file

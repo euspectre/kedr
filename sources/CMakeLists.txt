@@ -201,10 +201,8 @@ set(function_triggers_file "${CMAKE_BINARY_DIR}/controller/tests/call_intercepti
 add_subdirectory(controller)
 
 # For tests only
-add_subdirectory(module_weak_ref)
 add_subdirectory(wobject)
 
-add_subdirectory(syscall_connector)
 add_subdirectory(fault_simulation)
 
 add_subdirectory(include)

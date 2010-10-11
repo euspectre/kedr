@@ -1,1 +1,0 @@
-add_subdirectory("fsim_im_test_simple")
