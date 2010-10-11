@@ -1,6 +1,6 @@
 // Implementation of the expression evaluator.
 
-#include "calculator.h"
+#include <@CALCULATOR_HEADER@>
 
 #include <linux/slab.h> /* kmalloc & kfree */
 #include <linux/ctype.h> /* character classes*/
@@ -104,6 +104,7 @@ enum calc_essence_type
 {
     calc_essence_type_value,
     calc_essence_type_variable,
+    calc_essence_type_weak_variable,
 
     calc_essence_type_binary_not,
     calc_essence_type_logical_not,
@@ -158,6 +159,14 @@ struct calc_essence_var
     struct calc_essence base;
     unsigned int index;
 };
+
+//Essence which evaluated as weak variable with given index
+struct calc_essence_weak_var
+{
+    struct calc_essence base;
+    unsigned int index;
+};
+
 //Essence which evaluated as some unary operation of its operand
 struct calc_essence_1op
 {
@@ -191,6 +200,9 @@ calc_essence_val_create(kedr_calc_int_t value);
 //Create filled instance of calc_essence_var
 static struct calc_essence*
 calc_essence_var_create(unsigned int index);
+//Create filled instance of calc_essence_var
+static struct calc_essence*
+calc_essence_weak_var_create(unsigned int index);
 //Create filled instance of calc_essence_1op
 static struct calc_essence*
 calc_essence_1op_create(enum calc_essence_type type, struct calc_essence* op);
@@ -202,16 +214,25 @@ static struct calc_essence*
 calc_essence_3op_create(enum calc_essence_type type,
     struct calc_essence* op1, struct calc_essence* op2, struct calc_essence* op3);
 
-// Evaluate(possibly, recursively) essence, using given values of variables
-static kedr_calc_int_t calc_essence_evaluate(const struct calc_essence* essence, const kedr_calc_int_t* var_values);
+//Auxiliary structure, joined all data needed for evaluating expression
+struct evaluate_data
+{
+    const kedr_calc_int_t* var_values;
+    const struct kedr_calc_weak_var* weak_vars;
+};
+
+// Evaluate(possibly, recursively) essence, using given values of variables and weak_variables computation functions
+static kedr_calc_int_t calc_essence_evaluate(const struct calc_essence* essence, const struct evaluate_data* evaluate_data);
 // Free(possibly, recursively) all resources, used by essence.
 static void calc_essence_free(struct calc_essence* essence);
 
 //Object which used at evaluate stage.
 struct kedr_calc
 {
-    //only reference to the top-most essence
+    //reference to the top-most essence
     struct calc_essence* top_essence;
+    //'weak' variables
+    const struct kedr_calc_weak_var* weak_vars;
 };
 //Type of tokens, used in parsing process
 enum token_type
@@ -224,6 +245,7 @@ enum token_type
     token_type_value, // immediate value
     token_type_constant, // named constant
     token_type_variable, // variable
+    token_type_weak_variable, // weak variable
 
     token_type_open_parenthesis, // '('
     token_type_close_parenthesis, // ')'
@@ -274,15 +296,20 @@ struct parse_data
     
     int var_n;
     const char* const* var_names;
+
+    int weak_vars_n;
+    const struct kedr_calc_weak_var* weak_vars;
+
     // current token..
     enum token_type current_token_type;
     // ..and its additional caracteristic, if needed
     union
     {
         kedr_calc_int_t current_token_value;//for value and constant type of token
-        int current_token_index;//for variable token type
+        int current_token_index;//for variable and weak variable token types
     };
 };
+
 /*
  * Advance to the next token in the string and return its type.
  * Shouldn't be called in error or eof state(token_type_error or token_type_eof types of current token)
@@ -301,7 +328,7 @@ parse_data_next_token(struct parse_data* data);
  * ...'current-token before call' ['fully processed tokens'] 'current token after return'...
  */
 
-static struct calc_essence* 
+static struct calc_essence*
 parse_data_parse(struct parse_data* data, int priority);
 
 /*
@@ -311,7 +338,7 @@ parse_data_parse(struct parse_data* data, int priority);
  * If constant with this name is not exist, return not 0.
  */
 
-static int 
+static int
 parse_data_search_const(const struct parse_data* data,
     const char* constant_name, int constant_name_len, kedr_calc_int_t* value);
 
@@ -322,9 +349,13 @@ parse_data_search_const(const struct parse_data* data,
  * If variable with this name is not exist, return not 0.
  */
 
-static int 
+static int
 parse_data_search_variable(const struct parse_data* data,
     const char* variable_name, int variable_name_len, int* index);
+
+static int
+parse_data_search_weak_variable(const struct parse_data* data,
+    const char* weak_variable_name, int weak_variable_name_len, int* index);
 
 /* 
  * Get value of string representation of the number
@@ -352,7 +383,8 @@ int parse_number(const char* number, int number_len, kedr_calc_int_t* value);
 kedr_calc_t* 
 kedr_calc_parse(const char* expr,
     int const_vec_n, const struct kedr_calc_const_vec* const_vec,
-    int var_n, const char* const* var_names)
+    int var_n, const char* const* var_names,
+    int weak_vars_n, const struct kedr_calc_weak_var* weak_vars)
 {
     struct kedr_calc* calc = NULL;
     struct parse_data parse_data;
@@ -365,6 +397,9 @@ kedr_calc_parse(const char* expr,
     
     parse_data.var_n = var_n;
     parse_data.var_names = var_names;
+    
+    parse_data.weak_vars = weak_vars;
+    parse_data.weak_vars_n = weak_vars_n;
     
     parse_data.current_token_type = token_type_start;
     //value and index undefined - shouln't be used with current token_type
@@ -388,6 +423,8 @@ kedr_calc_parse(const char* expr,
         kfree(calc);
         return NULL;
     }
+    calc->weak_vars = weak_vars;
+    
     return calc;
 }
 
@@ -400,8 +437,11 @@ kedr_calc_parse(const char* expr,
 
 kedr_calc_int_t kedr_calc_evaluate(const kedr_calc_t* calc, const kedr_calc_int_t* var_values)
 {
-    //simply call evaluate for its 'top_essence' field
-    return calc_essence_evaluate(calc->top_essence, var_values);
+    struct evaluate_data evaluate_data;
+    evaluate_data.var_values = var_values;
+    evaluate_data.weak_vars = calc->weak_vars;
+    //
+    return calc_essence_evaluate(calc->top_essence, &evaluate_data);
 }
 
 /*
@@ -451,6 +491,17 @@ calc_essence_var_create(unsigned int index)
     result->index = index;
     return (struct calc_essence*)result;
 }
+//Create filled instance of calc_essence_var
+struct calc_essence*
+calc_essence_weak_var_create(unsigned int index)
+{
+    struct calc_essence_weak_var* result = calc_essence_alloc(sizeof(*result));
+    if(result == NULL) return NULL;
+    result->base.type = calc_essence_type_weak_variable;
+    result->index = index;
+    return (struct calc_essence*)result;
+}
+
 //Create filled instance of calc_essence_1op
 struct calc_essence*
 calc_essence_1op_create(enum calc_essence_type type, struct calc_essence* op)
@@ -543,16 +594,18 @@ calc_essence_3op_create(enum calc_essence_type type,
 }
 //
 kedr_calc_int_t 
-calc_essence_evaluate(const struct calc_essence* essence, const kedr_calc_int_t* var_values)
+calc_essence_evaluate(const struct calc_essence* essence, const struct evaluate_data* evaluate_data)
 {
     switch(essence->type)
     {
     case calc_essence_type_value:
         return ((struct calc_essence_val*)essence)->value;
     case calc_essence_type_variable:
-        return var_values[((struct calc_essence_var*)essence)->index];
+        return evaluate_data->var_values[((struct calc_essence_var*)essence)->index];
+    case calc_essence_type_weak_variable:
+        return evaluate_data->weak_vars[((struct calc_essence_weak_var*)essence)->index].compute();
 // Helper macro for calculate value of operand for one-operand essence
-#define OP1_1 (calc_essence_evaluate(((struct calc_essence_1op*)(essence))->op, var_values))
+#define OP1_1 (calc_essence_evaluate(((struct calc_essence_1op*)(essence))->op, evaluate_data))
     case calc_essence_type_unary_plus:
         return OP1_1;
     case calc_essence_type_unary_minus:
@@ -564,8 +617,8 @@ calc_essence_evaluate(const struct calc_essence* essence, const kedr_calc_int_t*
         return !OP1_1;
 #undef OP1_1
 // Same for two-operand essence
-#define OP2_1 (calc_essence_evaluate(((struct calc_essence_2op*)(essence))->op1, var_values))
-#define OP2_2 (calc_essence_evaluate(((struct calc_essence_2op*)(essence))->op2, var_values))
+#define OP2_1 (calc_essence_evaluate(((struct calc_essence_2op*)(essence))->op1, evaluate_data))
+#define OP2_2 (calc_essence_evaluate(((struct calc_essence_2op*)(essence))->op2, evaluate_data))
     case calc_essence_type_multiply:
         return OP2_1 * OP2_2;
     case calc_essence_type_divide:
@@ -611,9 +664,9 @@ calc_essence_evaluate(const struct calc_essence* essence, const kedr_calc_int_t*
 #undef OP2_1
 #undef OP2_2
 // Same for three-operand essence
-#define OP3_1 (calc_essence_evaluate(((struct calc_essence_3op*)(essence))->op1, var_values))
-#define OP3_2 (calc_essence_evaluate(((struct calc_essence_3op*)(essence))->op2, var_values))
-#define OP3_3 (calc_essence_evaluate(((struct calc_essence_3op*)(essence))->op3, var_values))
+#define OP3_1 (calc_essence_evaluate(((struct calc_essence_3op*)(essence))->op1, evaluate_data))
+#define OP3_2 (calc_essence_evaluate(((struct calc_essence_3op*)(essence))->op2, evaluate_data))
+#define OP3_3 (calc_essence_evaluate(((struct calc_essence_3op*)(essence))->op3, evaluate_data))
     case calc_essence_type_cond:
         return OP3_1 ? OP3_2 : OP3_3;
 #undef OP3_1
@@ -636,6 +689,7 @@ calc_essence_free(struct calc_essence* essence)
     //essences without operands
     case calc_essence_type_value:
     case calc_essence_type_variable:
+    case calc_essence_type_weak_variable:
         break;
     //essences with one operand
     case calc_essence_type_unary_plus:
@@ -713,6 +767,10 @@ parse_data_next_token(struct parse_data* data)
         else if(!parse_data_search_variable(data, name, name_len, &data->current_token_index))
         {
             data->current_token_type = token_type_variable;
+        }
+        else if(!parse_data_search_weak_variable(data, name, name_len, &data->current_token_index))
+        {
+            data->current_token_type = token_type_weak_variable;
         }
         else
         {
@@ -838,7 +896,11 @@ static struct calc_essence* parse_data_parse(struct parse_data* data, int priori
             if(result) parse_data_next_token(data);// advance to the next token
             break;
         case token_type_variable:
-            result = calc_essence_var_create(data->current_token_value);
+            result = calc_essence_var_create(data->current_token_index);
+            if(result) parse_data_next_token(data);// advance to the next token
+            break;
+        case token_type_weak_variable:
+            result = calc_essence_weak_var_create(data->current_token_index);
             if(result) parse_data_next_token(data);// advance to the next token
             break;
         case token_type_open_parenthesis:
@@ -1046,6 +1108,22 @@ parse_data_search_variable(const struct parse_data* data,
     }
     return 1;
 }
+int
+parse_data_search_weak_variable(const struct parse_data* data,
+    const char* variable_name, int variable_name_len, int* index)
+{
+    int var_index;
+    for(var_index = 0; var_index < data->weak_vars_n; var_index++)
+    {
+        if(strncmp(data->weak_vars[var_index].name, variable_name, variable_name_len) == 0)
+        {
+             *index = var_index;
+             return 0;
+        }
+    }
+    return 1;
+}
+
 int
 parse_number(const char* str, int str_len, kedr_calc_int_t* value)
 {

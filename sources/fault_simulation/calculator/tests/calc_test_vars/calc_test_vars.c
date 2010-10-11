@@ -4,7 +4,7 @@
 #include <linux/kernel.h>	/* printk() */
 #include <linux/slab.h>		/* kmalloc() */
 
-#include <calculator.h>
+#include <kedr/fault_simulation/calculator.h>
 
 MODULE_AUTHOR("Tsyvarev");
 MODULE_LICENSE("GPL");
@@ -36,7 +36,7 @@ const int all_constants_size = sizeof(all_constants) / sizeof(all_constants[0]);
 // Return 0 on success.
 static int evaluate_str(const char* str, kedr_calc_int_t *value)
 {
-    kedr_calc_t* calc = kedr_calc_parse(str, all_constants_size, all_constants, 0, NULL);
+    kedr_calc_t* calc = kedr_calc_parse(str, all_constants_size, all_constants, 0, NULL, 0, NULL);
     if(calc == NULL)
     {
         printk(KERN_ERR "Cannot evaluate expression '%s'", str);
@@ -64,7 +64,7 @@ calc_simple_test_init(void)
     
     pr_debug("Expression is '%s'.", expr);
     
-    calc = kedr_calc_parse(expr, all_constants_size, all_constants, 2, vars);
+    calc = kedr_calc_parse(expr, all_constants_size, all_constants, 2, vars, 0, NULL);
 
     if(calc == NULL)
     {

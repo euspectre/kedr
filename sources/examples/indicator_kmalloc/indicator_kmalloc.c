@@ -12,7 +12,10 @@
 #include <linux/mutex.h>
 
 #include <kedr/fault_simulation/fault_simulation.h>
-#include "calculator/calculator.h"
+#include "calculator.h"
+
+#include <kedr/base/common.h> /* in_init */
+#include <linux/sched.h> /* task_pid */
 
 
 // Macros for unify output information to the kernel log file
@@ -42,13 +45,29 @@ static const struct kedr_calc_const gfp_flags_const[] =
 
 static const struct kedr_calc_const_vec indicator_kmalloc_constants =
 {
-    .n_elems=sizeof(gfp_flags_const) / sizeof(gfp_flags_const[0]),//
-    .elems=gfp_flags_const,
-    
+    .n_elems = ARRAY_SIZE(gfp_flags_const),
+    .elems   = gfp_flags_const,
 };
 
-static const char* var_names[]= {"size", "flags"};
+static const char* var_names[]= {
+    "size",
+    "flags",
+    "times",//local variable of indicator state
+};
 
+kedr_calc_int_t pid_weak_var_compute(void)
+{
+    return (kedr_calc_int_t)task_pid(current);
+}
+kedr_calc_int_t in_init_weak_var_compute(void)
+{
+    return (kedr_calc_int_t)kedr_target_module_in_init();
+}
+
+static const struct kedr_calc_weak_var weak_vars[] = {
+    { .name = "PID", .compute = pid_weak_var_compute },
+    { .name = "in_init", .compute = in_init_weak_var_compute }
+};
 
 const char* indicator_kmalloc_name = "sample_indicator_kmalloc";
 //According to convensions of 'format_string' of fault simulation
@@ -62,6 +81,7 @@ struct indicator_kmalloc_state
 {
     kedr_calc_t* calc;
     char* expression;
+    atomic_t times;
     struct dentry* expression_file;
 };
 //Protect from concurrent access all except read from 'struct indicator_kmalloc_state'.'calc'.
@@ -130,9 +150,13 @@ int indicator_kmalloc_simulate(void* indicator_state, void* user_data)
     struct indicator_kmalloc_state* indicator_kmalloc_state =
         (struct indicator_kmalloc_state*)indicator_state;
     
-    kedr_calc_int_t vars[2];
+    
+    kedr_calc_int_t vars[3];
     vars[0] = (kedr_calc_int_t)point_data->size;
     vars[1] = (kedr_calc_int_t)point_data->flags;
+    vars[2] = atomic_inc_return(&indicator_kmalloc_state->times);
+
+    BUILD_BUG_ON(ARRAY_SIZE(vars) != ARRAY_SIZE(var_names));
     
     rcu_read_lock();
     result = kedr_calc_evaluate(rcu_dereference(indicator_kmalloc_state->calc), vars);
@@ -184,7 +208,8 @@ indicator_state_expression_init(struct indicator_kmalloc_state* state, const cha
 {
     state->calc = kedr_calc_parse(expression,
         1, &indicator_kmalloc_constants,
-        ARRAY_SIZE(var_names), var_names);
+        ARRAY_SIZE(var_names), var_names,
+        ARRAY_SIZE(weak_vars), weak_vars);
     if(state->calc == NULL)
     {
         pr_err("Cannot parse string expression.");
@@ -198,6 +223,7 @@ indicator_state_expression_init(struct indicator_kmalloc_state* state, const cha
         return -1;
     }
     strcpy(state->expression, expression);
+    atomic_set(&state->times, 0);
     return 0;
 
 }
@@ -211,7 +237,8 @@ indicator_state_expression_set_internal(struct indicator_kmalloc_state* state, c
     
     new_calc = kedr_calc_parse(expression,
         1, &indicator_kmalloc_constants,
-        ARRAY_SIZE(var_names), var_names);
+        ARRAY_SIZE(var_names), var_names,
+        ARRAY_SIZE(weak_vars), weak_vars);
     if(new_calc == NULL)
     {
         pr_err("Cannot parse expression");
@@ -228,6 +255,8 @@ indicator_state_expression_set_internal(struct indicator_kmalloc_state* state, c
     strcpy(new_expression, expression);
     
     old_calc = state->calc;
+    atomic_set(&state->times, 0);
+    
     rcu_assign_pointer(state->calc, new_calc);
     
     kfree(state->expression);

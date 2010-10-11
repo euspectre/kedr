@@ -71,6 +71,27 @@ struct kedr_calc_const_vec
 };
 
 /*
+ * In the middle of constants and variables.
+ *
+ * Like constant, this parameter should be pointed only on parse() stage
+ * (not at evaluate stage), but, like variable, this parameter will be computed
+ * only at evaluate stage.
+ *
+ * Key factor - computation of such parameter is delayed until evaluate stage and
+ * computation only when it really used in expression.
+ *
+ * Useful for gathering some runtime information about process, or for variable,
+ * which take a long time to compute.
+ */
+
+struct kedr_calc_weak_var
+{
+    const char* name;
+    kedr_calc_int_t (*compute)(void);
+};
+
+
+/*
  * Parse given expression, which may contain given constans and variables,
  * and create its internal representation.
  *
@@ -87,7 +108,8 @@ struct kedr_calc_const_vec
 kedr_calc_t* 
 kedr_calc_parse(const char* expr,
     int const_vec_n, const struct kedr_calc_const_vec* const_vec,
-    int var_n, const char* const* var_names);
+    int var_n, const char* const* var_names,
+    int weak_vars_n, const struct kedr_calc_weak_var* weak_vars);
 
 /*
  * Evaluate internal representation of the expression with given values of variables.

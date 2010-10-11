@@ -1,0 +1,36 @@
+#!/bin/sh
+
+#./test.sh expr sub_expr result_expected
+# Expression may contain reference to weak variable sub_expr 
+# If referenced in expr, 'sub_expr' should be computable
+kmodule_name="kedr_calc_test_weak_vars"
+kmodule="@CMAKE_CURRENT_BINARY_DIR@/${kmodule_name}.ko"
+result_file="/sys/module/${kmodule_name}/parameters/result"
+
+if test $# -ne 3; then
+    printf "Usage: ./test.sh expr sub_expr result_expected\n"
+    exit 1
+fi
+
+expr="$1"
+sub_expr="$2"
+result_expected="$3"
+
+insmod "$kmodule" "expr=\"$expr\"" "sub_expr=\"$sub_expr\""
+if test $? -ne 0; then
+    printf "Failed to insert module into the kernel\n"
+    exit 1
+fi
+
+result=`cat "$result_file"`
+
+rmmod $kmodule
+if test $? -ne 0; then
+    printf "Failed to remove module from the kernel\n"
+    exit 1
+fi
+
+if test "$result_expected" != "$result"; then
+    printf "Expected result of evaluating of the expression %s, but module write %s\n" "$result_expected" "$result"
+    exit 1
+fi

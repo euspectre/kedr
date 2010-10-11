@@ -1,5 +1,5 @@
 kbuild_add_module("kedr_calc_test_vars" "calc_test_vars.c" "calculator.c")
-rule_copy_file("${CMAKE_CURRENT_BINARY_DIR}/calculator.c" "${CMAKE_CURRENT_SOURCE_DIR}/../../calculator.c")
+rule_copy_file("${CMAKE_CURRENT_BINARY_DIR}/calculator.c" "${CMAKE_CURRENT_BINARY_DIR}/../../calculator.c")
 
 kedr_test_add_target("kedr_calc_test_vars")
 

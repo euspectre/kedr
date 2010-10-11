@@ -1,17 +1,18 @@
 module_name=kedr_indicator_kmalloc
 
-fault_simulation_symbols=@fault_simulation_symbols@
+fault_simulation_symbols := @fault_simulation_symbols@
+kedr_base_symbols := @kedr_base_symbols@
 
 KBUILD_DIR=/lib/modules/`uname -r`/build
 PWD=`pwd`
 
-all: ${module_name}.ko
+all: $(module_name).ko
 
-${module_name}.ko: indicator_kmalloc.c calculator/calculator.c ${fault_simulation_symbols}
-	cp "${fault_simulation_symbols}" ./Module.symvers
-	make -C ${KBUILD_DIR} M=${PWD} modules
+$(module_name).ko: indicator_kmalloc.c calculator.c $(fault_simulation_symbols) $(kedr_base_symbols)
+	cat "$(fault_simulation_symbols)" "$(kedr_base_symbols)" > ./Module.symvers
+	make -C $(KBUILD_DIR) M=$(PWD) modules
 
 clean:
-	make -C ${KBUILD_DIR} M=${PWD} clean
+	make -C $(KBUILD_DIR) M=$(PWD) clean
 
 .PHONY: all clean

@@ -4,7 +4,7 @@
 #include <linux/kernel.h>	/* printk() */
 #include <linux/slab.h>		/* kmalloc() */
 
-#include <calculator.h>
+#include <kedr/fault_simulation/calculator.h>
 
 MODULE_AUTHOR("Tsyvarev");
 MODULE_LICENSE("GPL");
@@ -26,7 +26,7 @@ calc_simple_test_init(void)
     }
     
     printk(KERN_INFO "Expression is '%s'.", expr);
-    calc = kedr_calc_parse(expr, 0, NULL, 0, NULL);
+    calc = kedr_calc_parse(expr, 0, NULL, 0, NULL, 0, NULL);
     if(calc == NULL)
     {
         printk(KERN_ERR "Cannot parse expression for some reason.\n");
