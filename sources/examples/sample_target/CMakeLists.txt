@@ -1,5 +1,9 @@
 set(module_name "kedr_sample_target")
 
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/makefile_installed.in"
+	"${CMAKE_CURRENT_BINARY_DIR}/makefile_installed"
+	@ONLY)
+
 #For testing
 add_custom_target("sample_target"
         DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${module_name}.ko"
@@ -17,7 +21,6 @@ add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${module_name}.ko"
 rule_copy_source("cfake.c")
 rule_copy_source("cfake.h")
 rule_copy_source("Kbuild")
-rule_copy_source("makefile_installed")
 rule_copy_source("kedr_sample_target")
 
 kedr_test_add_target("sample_target")
@@ -32,7 +35,7 @@ install(FILES   "${CMAKE_CURRENT_SOURCE_DIR}/kedr_sample_target"
         DESTINATION "${KEDR_EXAMPLE_PATH}/sample_target"
         PERMISSIONS  OWNER_WRITE OWNER_READ GROUP_READ WORLD_READ OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE
 )
-install(FILES   "${CMAKE_CURRENT_SOURCE_DIR}/makefile_installed"
+install(FILES   "${CMAKE_CURRENT_BINARY_DIR}/makefile_installed"
         DESTINATION "${KEDR_EXAMPLE_PATH}/sample_target"
         RENAME makefile
 )

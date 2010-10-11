@@ -1,6 +1,6 @@
 module_name=kedr_sample_target
 
-KBUILD_DIR=/lib/modules/`uname -r`/build
+KBUILD_DIR=@KBUILD_BUILD_DIR@
 PWD=`pwd`
 
 all: ${module_name}.ko

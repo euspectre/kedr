@@ -5,7 +5,7 @@
 # KBUILD_INCLUDE_DIR - /usr/src/linux-headers-${KBUILD_VERSION_STRING}/include
 # KBUILD_FOUND - TRUE if all correct, FALSE otherwise
 
-set(KBUILD_VERSION_STRING "${CMAKE_SYSTEM_VERSION}")
+set(KBUILD_VERSION_STRING ${CMAKE_SYSTEM_VERSION} CACHE STRING "Kernel version for which KEDR is builded.")
 set(KBUILD_BUILD_DIR "/lib/modules/${KBUILD_VERSION_STRING}/build")
 set(KBUILD_INCLUDE_DIRS "/usr/src/linux-headers-${KBUILD_VERSION_STRING}/include")
 
