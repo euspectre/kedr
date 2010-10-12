@@ -63,11 +63,11 @@ kedr_test_add_target("indicator_kmalloc")
 
 #add_subdirectory(tests)
 
-install(FILES   "${CMAKE_CURRENT_BINARY_DIR}/indicator_kmalloc.c"
+install(FILES   "${CMAKE_CURRENT_SOURCE_DIR}/indicator_kmalloc.c"
 				"${CMAKE_CURRENT_BINARY_DIR}/calculator.c"
-				"${CMAKE_CURRENT_BINARY_DIR}/calculator.h"
+				"${CMAKE_SOURCE_DIR}/include/kedr/fault_simulation/calculator.h"
 				"${CMAKE_CURRENT_BINARY_DIR}/control_file.c"
-				"${CMAKE_CURRENT_BINARY_DIR}/control_file.h"
+				"${CMAKE_SOURCE_DIR}/include/kedr/control_file/control_file.h"
         DESTINATION "${KEDR_EXAMPLE_PATH}/indicator_kmalloc"
 )
 
