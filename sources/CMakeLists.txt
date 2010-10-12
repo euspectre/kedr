@@ -102,7 +102,7 @@ endif()
 # This is only necessary to build KEDR itself.
 # This should be done before the first add_subdirectory() command.
 
-# The temporary install directory must be persistent and in must not be 
+# The temporary install directory must be persistent and it must not be 
 # KEDR_INSTALL_PREFIX_TEMP because it has nothing to do with the installation 
 # of KEDR: it is used when KEDR is being built only.
 
@@ -110,17 +110,47 @@ message (STATUS "Creating \"kedr_gen\"")
 set (KEDR_GEN_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/kedr_gen.install")
 set (KEDR_GEN_TEMP_BUILD "${CMAKE_CURRENT_BINARY_DIR}/kedr_gen.build")
 
-# These temporary directories will be removed during make clean
+# The temporary build directory should be removed during 'make clean'
+# Note that the temporary install directory containing 'kedr_gen' must 
+# survive as kedr_gen will be necessary if the user wants to rebuild KEDR 
+# after 'make clean' without reconfiguring.
 set_property (DIRECTORY APPEND PROPERTY 
     ADDITIONAL_MAKE_CLEAN_FILES kedr_gen.build
 )
-#set_property (DIRECTORY APPEND PROPERTY 
-#    ADDITIONAL_MAKE_CLEAN_FILES kedr_gen.install
-#)
 
-# Create the temporary build and install directories first
+# Remove the old temporary build and install directories first and 
+# (re)create them.
+
+# [NB] Note that if several commands are specified in execute_process() 
+# call, it is equivalent to executing a pipeline in the shell:
+#   command1 | command2 | ...
+# Generally, there are no restrictions on the order in which the commands 
+# will be executed and on whether some of the commands will execute 
+# concurrently. Therefore, here is the rule of thumb:
+# [!!!] Specify 2 or more commands in a single execute_process() statement
+# if and only if the pipeline of the commands is what you want or if it is 
+# not important whether they will actually run simultaneously. 
+# Otherwise, you should use separate execute_process() statements.
+#
+# For example, using execute_process() like this is definitely looking 
+# for trouble:
+#   execute_process (
+#       COMMAND rm -rf "some_dir" 
+#       COMMAND mkdir -p "some_dir" 
+#   )
+# The order in which these commands will do their work is unspecified. 
+# It may happen that 'mkdir' will finish before 'rm' will begin removing
+# "some_dir". This is probably not what you expect here.
+
 execute_process (
     COMMAND rm -rf "${KEDR_GEN_TEMP_BUILD}" 
+    COMMAND rm -rf "${KEDR_GEN_INSTALL_PREFIX}" 
+)
+
+# [NB] After the command is executed, the variable specified 
+# in RESULT_VARIABLE may contain either numeric return code or a string 
+# describing the error.
+execute_process (
     COMMAND mkdir -p "${KEDR_GEN_TEMP_BUILD}" 
     RESULT_VARIABLE kedr_gen_result
 )
@@ -131,7 +161,6 @@ if (NOT kedr_gen_result EQUAL 0)
 endif ()
 
 execute_process (
-    COMMAND rm -rf "${KEDR_GEN_INSTALL_PREFIX}" 
     COMMAND mkdir -p "${KEDR_GEN_INSTALL_PREFIX}" 
     RESULT_VARIABLE kedr_gen_result
 )
@@ -156,7 +185,7 @@ execute_process (
 if (NOT kedr_gen_result EQUAL 0)
     message ("Failed to configure \"kedr_gen\".")
     message ("CMake output:\n${kedr_gen_output}\n")
-    message ("CMake exit code:\n${kedr_gen_result}\n")
+    message ("CMake result:\n${kedr_gen_result}\n")
     message (FATAL_ERROR "Unable to build \"kedr_gen\", aborting.")
 endif ()
 
@@ -171,6 +200,7 @@ execute_process (
 if (NOT kedr_gen_result EQUAL 0)
     message ("Failed to build \"kedr_gen\".")
     message ("Make output:\n${kedr_gen_output}\n")
+    message ("Make result:\n${kedr_gen_result}\n")
     message (FATAL_ERROR "Unable to build \"kedr_gen\", aborting.")
 endif ()
 
@@ -185,6 +215,7 @@ execute_process (
 if (NOT kedr_gen_result EQUAL 0)
     message ("Failed to install \"kedr_gen\" to ${KEDR_GEN_INSTALL_PREFIX}.")
     message ("Make output:\n${kedr_gen_output}\n")
+    message ("Make result:\n${kedr_gen_result}\n")
     message (FATAL_ERROR "Unable to install \"kedr_gen\", aborting.")
 endif ()
 
