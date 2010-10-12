@@ -156,6 +156,7 @@ execute_process (
 if (NOT kedr_gen_result EQUAL 0)
     message ("Failed to configure \"kedr_gen\".")
     message ("CMake output:\n${kedr_gen_output}\n")
+    message ("CMake exit code:\n${kedr_gen_result}\n")
     message (FATAL_ERROR "Unable to build \"kedr_gen\", aborting.")
 endif ()
 
