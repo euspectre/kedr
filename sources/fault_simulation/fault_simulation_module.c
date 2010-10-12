@@ -14,6 +14,8 @@
 #include <linux/ctype.h> /* isspace() */
 
 #include <linux/string.h> /* memcpy */
+
+#include <kedr/control_file/control_file.h>
     
 MODULE_AUTHOR("Tsyvarev");
 MODULE_LICENSE("GPL");
@@ -650,216 +652,18 @@ int kedr_fsim_point_set_indicator_internal(struct kedr_simulation_point* point,
     return 0;
 }
 
-///////////////////////////Files hierarchy///////////////////////
+///////////////////////////Files operations///////////////////////
+static char* point_indicator_file_get_str(struct inode* inode);
+static int point_indicator_file_set_str(const char* str, struct inode* inode);
 
-// Helper functions, which used in implementation of file operations
+CONTROL_FILE_OPS(point_indicator_file_operations, 
+    point_indicator_file_get_str, point_indicator_file_set_str);
 
-//Helper for read operation of file. 'As if' it reads file, contatining string.
-static ssize_t string_operation_read(const char* str, char __user *buf, size_t count, 
-	loff_t *f_pos);
+static char* point_format_string_file_get_str(struct inode* inode);
 
-//Helper for llseek operation of file. Help to user space utilities to find out size of file.
-static loff_t string_operation_llseek (const char* str, loff_t *f_pos, loff_t offset, int whence);
+CONTROL_FILE_OPS(point_format_string_file_operations, 
+    point_format_string_file_get_str, NULL);
 
-// Helper function for write operation of file. Allocate buffer, which contain writting string.
-// On success(non-negative value is returned), out_str should be freed when no longer needed.
-static ssize_t
-string_operation_write(char** out_str, const char __user *buf,
-    size_t count, loff_t *f_pos);
-
-/////////////////////real operations///////////////
-static loff_t
-point_indicator_file_llseek(struct file *filp, loff_t off, int whence)
-{
-    loff_t result;
-    
-    struct kedr_simulation_point* point;
-   
-    if(mutex_lock_killable(&points_mutex))
-    {
-        debug0("Operation was killed");
-        return -EINTR;
-    }
-
-    point = filp->f_dentry->d_inode->i_private;
-    if(point)
-    {
-        struct indicator_instance* instance = point->current_instance;
-        const char* str = instance ? instance->indicator->name : indicator_name_not_set;
-        result = string_operation_llseek(str, &filp->f_pos, off, whence);
-    }
-    else
-    {
-        result = -EINVAL;//'device', corresponed to file, is not exist
-    }
-    mutex_unlock(&points_mutex);
-    
-    return result;
-}
-
-static ssize_t 
-point_indicator_file_read(struct file *filp, char __user *buf, size_t count, 
-	loff_t *f_pos)
-{
-    ssize_t result;
-    
-    struct kedr_simulation_point* point;
-   
-    if(mutex_lock_killable(&points_mutex))
-    {
-        debug0("Operation was killed");
-        return -EINTR;
-    }
-
-    point = filp->f_dentry->d_inode->i_private;
-    if(point)
-    {
-        struct indicator_instance* instance = point->current_instance;
-        const char* str = instance ? instance->indicator->name : indicator_name_not_set;
-        result = string_operation_read(str, buf, count, f_pos);
-    }
-    else
-    {
-        result = -EINVAL;//'device', corresponed to file, is not exist
-    }
-    mutex_unlock(&points_mutex);
-    
-    return result;
-}
-//real control function for point
-static ssize_t 
-point_indicator_file_write(struct file *filp, const char __user *buf,
-    size_t count, loff_t *f_pos)
-{
-    char* write_str;
-
-    struct kedr_simulation_point* point;
-    const char* indicator_name;
-    const char* params;
-
-    ssize_t result;
-    
-    result = string_operation_write(&write_str, buf, count, f_pos);
-    
-    if(result < 0) return result;
-
-    //parce writting string
-    indicator_name = write_str;
-    //trim leading spaces from indicator name
-    while(isspace(*indicator_name)) indicator_name++;
-    //look for beginning of params
-    for(params = indicator_name; *params != '\0'; params++)
-    {
-        if(isspace(*params))
-        {
-            //separate indicator_name from parameters
-            write_str[params - write_str]= '\0';
-            //trim leading spaces in params
-            params++;
-            while(isspace(*params)) params++;
-            break;
-        }
-    }
-
-    if(mutex_lock_killable(&points_mutex))
-    {
-        debug0("Was killed");
-        kfree(write_str);
-        return -EINTR;
-    }
-
-    point = filp->f_dentry->d_inode->i_private;
-    if(point)
-    {
-        if(strcmp(indicator_name, indicator_name_not_set) == 0)
-        {
-            clear_indicator_internal(point);
-            result = 0;
-        }
-        else
-            result = kedr_fsim_point_set_indicator_internal(point, indicator_name, params);
-    }
-    else
-    {
-        result = -EINVAL;
-    }
-    mutex_unlock(&points_mutex);
-
-    kfree(write_str);
-    return result ? -EINVAL : count;
-}
-
-static struct file_operations point_indicator_file_operations =
-{
-    .owner = THIS_MODULE,//
-    .llseek = point_indicator_file_llseek, //size
-    .read = point_indicator_file_read, //get current indicator
-    .write = point_indicator_file_write, //set current indicator
-};
-
-
-static loff_t
-point_format_string_file_llseek(struct file *filp, loff_t off, int whence)
-{
-    loff_t result;
-    
-    struct kedr_simulation_point* point;
-   
-    if(mutex_lock_killable(&points_mutex))
-    {
-        debug0("Operation was killed");
-        return -EINTR;
-    }
-
-    point = filp->f_dentry->d_inode->i_private;
-    if(point)
-    {
-        result = string_operation_llseek(point->format_string, &filp->f_pos, off, whence);
-    }
-    else
-    {
-        result = -EINVAL;//'device', corresponed to file, is not exist
-    }
-    mutex_unlock(&points_mutex);
-    
-    return result;
-}
-
-static ssize_t 
-point_format_string_file_read(struct file *filp, char __user *buf, size_t count, 
-	loff_t *f_pos)
-{
-    ssize_t result;
-    
-    struct kedr_simulation_point* point;
-   
-    if(mutex_lock_killable(&points_mutex))
-    {
-        debug0("Operation was killed");
-        return -EINTR;
-    }
-
-    point = filp->f_dentry->d_inode->i_private;
-    if(point)
-    {
-        result = string_operation_read(point->format_string, buf, count, f_pos);
-    }
-    else
-    {
-        result = -EINVAL;//'device', corresponed to file, is not exist
-    }
-    mutex_unlock(&points_mutex);
-
-    return result;
-}
-
-
-static struct file_operations point_format_string_file_operations =
-{
-    .owner = THIS_MODULE,//
-    .llseek = point_format_string_file_llseek, //size
-    .read = point_format_string_file_read, //read format string
-};
 
 /*
  * Create directories and files for new point.
@@ -953,8 +757,6 @@ void fsim_point_remove_format_string_file(struct kedr_simulation_point* point)
     debugfs_remove(point->format_string_file);
 }
 
-
-
 /*
  * Create directory for indicator
  */
@@ -1017,106 +819,109 @@ kedr_fault_simulation_exit(void)
 module_init(kedr_fault_simulation_init);
 module_exit(kedr_fault_simulation_exit);
 
-////////////////////////////
-
-//Helper for read operation of file. 'As if' it reads file, contatining string.
-ssize_t string_operation_read(const char* str, char __user *buf, size_t count, 
-	loff_t *f_pos)
+/////////////////Setters and getters for file operations/////////////////////
+char* point_indicator_file_get_str(struct inode* inode)
 {
-    //length of 'file'(include terminating '\0')
-    size_t size = strlen(str) + 1;
-    //whether position out of range
-    if((*f_pos < 0) || (*f_pos > size)) return -EINVAL;
-    if(*f_pos == size) return 0;// eof
-
-    if(count + *f_pos > size)
-        count = size - *f_pos;
-    if(copy_to_user(buf, str + *f_pos, count) != 0)
-        return -EFAULT;
-    
-    *f_pos += count;
-    return count;
-}
-
-//Helper for llseek operation of file. Help to user space utilities to find out size of file.
-loff_t string_operation_llseek (const char* str, loff_t *f_pos, loff_t offset, int whence)
-{
-    loff_t new_offset;
-    size_t size = strlen(str) + 1;
-    switch(whence)
+    char* str;
+    struct kedr_simulation_point* point;
+   
+    if(mutex_lock_killable(&points_mutex))
     {
-    case 0: /* SEEK_SET */
-        new_offset = offset;
-    break;
-    case 1: /* SEEK_CUR */
-        new_offset = *f_pos + offset;
-    break;
-    case 2: /* SEEK_END */
-        new_offset = size + offset;
-    break;
-    default: /* can't happen */
-        return -EINVAL;
-    };
-    if(new_offset < 0) return -EINVAL;
-    if(new_offset > size) new_offset = size;//eof
-    
-    *f_pos = new_offset;
-    //returning value is offset from the beginning, filp->f_pos, generally speaking, may be any.
-    return new_offset;
-}
-
-ssize_t
-string_operation_write(char** out_str, const char __user *buf,
-    size_t count, loff_t *f_pos)
-{
-    char* buffer;
-
-    if(count == 0)
-    {
-        pr_err("write: 'count' shouldn't be 0.");
-        return -EINVAL;
+        debug0("Operation was killed");
+        return NULL;
     }
 
-    /*
-     * Feature of control files.
-     *
-     * Because writting to such files is really command to the module to do something,
-     * and successive reading from this file return total effect of this command.
-     * it is meaningless to process writting not from the start.
-     *
-     * In other words, writting always affect to the global content of the file.
-     */
-    if(*f_pos != 0)
+    point = inode->i_private;
+    if(point)
     {
-        pr_err("Partial rewritting is not allowed.");
-        return -EINVAL;
+        struct indicator_instance* instance = point->current_instance;
+        str = kstrdup(instance ? instance->indicator->name : indicator_name_not_set,
+                GFP_KERNEL);
     }
-    //Allocate buffer for writting value - for its preprocessing.
-    buffer = kmalloc(count + 1, GFP_KERNEL);
-    if(buffer == NULL)
+    else
     {
-        pr_err("Cannot allocate buffer.");
+        str = NULL;//'device', corresponed to file, is not exist
+    }
+    mutex_unlock(&points_mutex);
+    
+    return str;
+}
+int point_indicator_file_set_str(const char* str, struct inode* inode)
+{
+    struct kedr_simulation_point* point;
+    char* indicator_name;
+    const char* indicator_name_start, *indicator_name_end;
+    const char* params;
+
+    int error;
+    //parce writting string
+    indicator_name_start = str;
+    //trim leading spaces from indicator name
+    while(isspace(*indicator_name_start)) indicator_name_start++;
+    //look for the end of indicator name
+    indicator_name_end = indicator_name_start;
+    while((*indicator_name_end != '\0') && !isspace(*indicator_name_end)) indicator_name_end++;
+    //trim leading spaces from params
+    params = indicator_name_end;
+    while(isspace(*params)) params++;
+
+    indicator_name = kstrndup(indicator_name_start,
+        indicator_name_end - indicator_name_start, GFP_KERNEL);
+    if(indicator_name == NULL)
+    {
+        pr_err("Cannot allocated indicator name.\n");
         return -ENOMEM;
     }
 
-    if(copy_from_user(buffer, buf, count) != 0)
+    if(mutex_lock_killable(&points_mutex))
     {
-        pr_err("copy_from_user return error.");
-        kfree(buffer);
-        return -EFAULT;
+        debug0("Was killed");
+        kfree(indicator_name);
+        return -EINTR;
     }
-    // For case, when one try to write not null-terminated sequence of bytes,
-    // or omit terminated null-character.
-    buffer[count] = '\0';
 
-    /*
-     * Usually, writting to the control file is performed via 'echo' command,
-     * which append new-line symbol to the writting string.
-     *
-     * Because, this symbol is usually not needed, we trim it.
-     */
-    if(buffer[count - 1] == '\n') buffer[count - 1] = '\0';
+    point = inode->i_private;
+    if(point)
+    {
+        if(strcmp(indicator_name, indicator_name_not_set) == 0)
+        {
+            clear_indicator_internal(point);
+            error = 0;
+        }
+        else
+            error = kedr_fsim_point_set_indicator_internal(point, indicator_name, params);
+    }
+    else
+    {
+        error = -EINVAL;
+    }
+    mutex_unlock(&points_mutex);
+    kfree(indicator_name);
+    
+    return error;
+}
 
-    *out_str = buffer;
-    return count;
+char* point_format_string_file_get_str(struct inode* inode)
+{
+    char* str;
+    struct kedr_simulation_point* point;
+   
+    if(mutex_lock_killable(&points_mutex))
+    {
+        debug0("Operation was killed");
+        return NULL;
+    }
+
+    point = inode->i_private;
+    if(point)
+    {
+        str = kstrdup(point->format_string, GFP_KERNEL);
+    }
+    else
+    {
+        str = NULL;//'device', corresponed to file, is not exist
+    }
+    mutex_unlock(&points_mutex);
+    
+    return str;
 }

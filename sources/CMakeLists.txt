@@ -202,6 +202,7 @@ add_subdirectory(controller)
 
 # For tests only
 add_subdirectory(wobject)
+add_subdirectory(control_file)
 
 add_subdirectory(fault_simulation)
 

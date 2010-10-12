@@ -7,12 +7,11 @@
 
 #include <linux/debugfs.h>
 
-#include <linux/uaccess.h> /* copy_*_user functions */
-
 #include <linux/mutex.h>
 
 #include <kedr/fault_simulation/fault_simulation.h>
 #include "calculator.h"
+#include "control_file.h"
 
 #include <kedr/base/common.h> /* in_init */
 #include <linux/sched.h> /* task_pid */
@@ -276,121 +275,12 @@ indicator_state_expression_destroy(struct indicator_kmalloc_state* state)
 }
 
 /////////////////////Files implementation/////////////////////////////
-// Helper functions, which used in implementation of file operations
+static char* indicator_expression_file_get_str(struct inode* inode);
+static int indicator_expression_file_set_str(const char* str, struct inode* inode);
 
-//Helper for read operation of file. 'As if' it reads file, contatining string.
-static ssize_t string_operation_read(const char* str, char __user *buf, size_t count, 
-	loff_t *f_pos);
+CONTROL_FILE_OPS(indicator_expression_file_operations,
+    indicator_expression_file_get_str, indicator_expression_file_set_str);
 
-//Helper for llseek operation of file. Help to user space utilities to find out size of file.
-static loff_t string_operation_llseek (const char* str, loff_t *f_pos, loff_t offset, int whence);
-
-// Helper function for write operation of file. Allocate buffer, which contain writting string.
-// On success(non-negative value is returned), out_str should be freed when no longer needed.
-static ssize_t
-string_operation_write(char** out_str, const char __user *buf,
-    size_t count, loff_t *f_pos);
-
-
-/////////////////////real operations///////////////
-static loff_t
-indicator_expression_file_llseek(struct file *filp, loff_t off, int whence)
-{
-    loff_t result;
-    
-    struct indicator_kmalloc_state* state;
-   
-    if(mutex_lock_killable(&indicator_mutex))
-    {
-        debug0("Operation was killed");
-        return -EINTR;
-    }
-
-    state = filp->f_dentry->d_inode->i_private;
-    if(state)
-    {
-        result = string_operation_llseek(state->expression, &filp->f_pos, off, whence);
-    }
-    else
-    {
-        result = -EINVAL;//'device', corresponed to file, is not exist
-    }
-    mutex_unlock(&indicator_mutex);
-    
-    return result;
-}
-
-static ssize_t 
-indicator_expression_file_read(struct file *filp, char __user *buf, size_t count, 
-	loff_t *f_pos)
-{
-    ssize_t result;
-
-    struct indicator_kmalloc_state* state;
-   
-    if(mutex_lock_killable(&indicator_mutex))
-    {
-        debug0("Operation was killed");
-        return -EINTR;
-    }
-
-    state = filp->f_dentry->d_inode->i_private;
-    if(state)
-    {
-        result = string_operation_read(state->expression, buf, count, f_pos);
-    }
-    else
-    {
-        result = -EINVAL;//'device', corresponed to file, is not exist
-    }
-    mutex_unlock(&indicator_mutex);
-    
-    return result;
-}
-
-static ssize_t 
-indicator_expression_file_write(struct file *filp, const char __user *buf,
-    size_t count, loff_t *f_pos)
-{
-    ssize_t result;
-    char* write_str;
-
-    struct indicator_kmalloc_state* state;
-    
-    result = string_operation_write(&write_str, buf, count, f_pos);
-    
-    if(result < 0) return result;
-   
-    if(mutex_lock_killable(&indicator_mutex))
-    {
-        debug0("Operation was killed");
-        kfree(write_str);
-        return -EINTR;
-    }
-
-    state = filp->f_dentry->d_inode->i_private;
-    if(state)
-    {
-        result = indicator_state_expression_set_internal(state, write_str);
-    }
-    else
-    {
-        result = -EINVAL;//'device', corresponed to file, is not exist
-    }
-    mutex_unlock(&indicator_mutex);
-    kfree(write_str);    
-    return result ? result : count;
-
-}
-
-struct file_operations indicator_expression_file_operations =
-{
-    .owner = THIS_MODULE,//
-    .llseek = indicator_expression_file_llseek,//
-    .read = indicator_expression_file_read,//
-    .write = indicator_expression_file_write
-};
-//
 int indicator_create_expression_file(struct indicator_kmalloc_state* state, struct dentry* dir)
 {
     state->expression_file = debugfs_create_file("expression",
@@ -413,105 +303,51 @@ void indicator_remove_expression_file(struct indicator_kmalloc_state* state)
 
     debugfs_remove(state->expression_file);
 }
-//
-//Helper for read operation of file. 'As if' it reads file, contatining string.
-ssize_t string_operation_read(const char* str, char __user *buf, size_t count, 
-	loff_t *f_pos)
+/////Implementation of getter and setter for file operations/////////////
+char* indicator_expression_file_get_str(struct inode* inode)
 {
-    //length of 'file'(include terminating '\0')
-    size_t size = strlen(str) + 1;
-    //whether position out of range
-    if((*f_pos < 0) || (*f_pos > size)) return -EINVAL;
-    if(*f_pos == size) return 0;// eof
+    char *str;
+    struct indicator_kmalloc_state* state;
+   
+    if(mutex_lock_killable(&indicator_mutex))
+    {
+        debug0("Operation was killed");
+        return NULL;
+    }
 
-    if(count + *f_pos > size)
-        count = size - *f_pos;
-    if(copy_to_user(buf, str + *f_pos, count) != 0)
-        return -EFAULT;
+    state = inode->i_private;
+    if(state)
+    {
+        str = kstrdup(state->expression, GFP_KERNEL);
+    }
+    else
+    {
+        str = NULL;//'device', corresponed to file, is not exist
+    }
+    mutex_unlock(&indicator_mutex);
     
-    *f_pos += count;
-    return count;
+    return str;
 }
-
-//Helper for llseek operation of file. Help to user space utilities to find out size of file.
-loff_t string_operation_llseek (const char* str, loff_t *f_pos, loff_t offset, int whence)
+int indicator_expression_file_set_str(const char* str, struct inode* inode)
 {
-    loff_t new_offset;
-    size_t size = strlen(str) + 1;
-    switch(whence)
-    {
-    case 0: /* SEEK_SET */
-        new_offset = offset;
-    break;
-    case 1: /* SEEK_CUR */
-        new_offset = *f_pos + offset;
-    break;
-    case 2: /* SEEK_END */
-        new_offset = size + offset;
-    break;
-    default: /* can't happen */
-        return -EINVAL;
-    };
-    if(new_offset < 0) return -EINVAL;
-    if(new_offset > size) new_offset = size;//eof
+    int error;
+    struct indicator_kmalloc_state* state;
     
-    *f_pos = new_offset;
-    //returning value is offset from the beginning, filp->f_pos, generally speaking, may be any.
-    return new_offset;
-}
-
-ssize_t
-string_operation_write(char** out_str, const char __user *buf,
-    size_t count, loff_t *f_pos)
-{
-    char* buffer;
-
-    if(count == 0)
+    if(mutex_lock_killable(&indicator_mutex))
     {
-        pr_err("write: 'count' shouldn't be 0.");
-        return -EINVAL;
+        debug0("Operation was killed");
+        return -EINTR;
     }
 
-    /*
-     * Feature of control files.
-     *
-     * Because writting to such files is really command to the module to do something,
-     * and successive reading from this file return total effect of this command.
-     * it is meaningless to process writting not from the start.
-     *
-     * In other words, writting always affect to the global content of the file.
-     */
-    if(*f_pos != 0)
+    state = inode->i_private;
+    if(state)
     {
-        pr_err("Partial rewritting is not allowed.");
-        return -EINVAL;
+        error = indicator_state_expression_set_internal(state, str);
     }
-    //Allocate buffer for writting value - for its preprocessing.
-    buffer = kmalloc(count + 1, GFP_KERNEL);
-    if(buffer == NULL)
+    else
     {
-        pr_err("Cannot allocate buffer.");
-        return -ENOMEM;
+        error = -EINVAL;//'device', corresponed to file, is not exist
     }
-
-    if(copy_from_user(buffer, buf, count) != 0)
-    {
-        pr_err("copy_from_user return error.");
-        kfree(buffer);
-        return -EFAULT;
-    }
-    // For case, when one try to write not null-terminated sequence of bytes,
-    // or omit terminated null-character.
-    buffer[count] = '\0';
-
-    /*
-     * Usually, writting to the control file is performed via 'echo' command,
-     * which append new-line symbol to the writting string.
-     *
-     * Because, this symbol is usually not needed, we trim it.
-     */
-    if(buffer[count - 1] == '\n') buffer[count - 1] = '\0';
-
-    *out_str = buffer;
-    return count;
+    mutex_unlock(&indicator_mutex);
+    return error;
 }

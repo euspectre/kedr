@@ -2,4 +2,4 @@ module_name=@module_name@
 
 ccflags-y :=  -I$(src) -I@KEDR_PREFIX_INCLUDE@
 obj-m := $(module_name).o
-$(module_name)-y := indicator_kmalloc.o calculator.o
+$(module_name)-y := indicator_kmalloc.o calculator.o control_file.o

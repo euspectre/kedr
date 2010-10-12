@@ -4,6 +4,7 @@ set(KEDR_INCLUDE_FILES
 
     fault_simulation/fault_simulation.h
 	fault_simulation/calculator.h
+	control_file/control_file.h
 )
 
 # Install rules for each include file

@@ -23,6 +23,8 @@ add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${module_name}.ko"
         DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/indicator_kmalloc.c"
                 "${CMAKE_CURRENT_BINARY_DIR}/calculator.h"
                 "${CMAKE_CURRENT_BINARY_DIR}/calculator.c"
+				"${CMAKE_CURRENT_BINARY_DIR}/control_file.h"
+                "${CMAKE_CURRENT_BINARY_DIR}/control_file.c"
                 "${CMAKE_CURRENT_BINARY_DIR}/makefile_installed"
                 "${CMAKE_CURRENT_BINARY_DIR}/Kbuild"
                 )
@@ -42,8 +44,15 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/makefile.in"
 
 rule_copy_source("indicator_kmalloc.c")
 rule_copy_file("calculator.h" "${CMAKE_SOURCE_DIR}/include/kedr/fault_simulation/calculator.h")
+rule_copy_file("control_file.h" "${CMAKE_SOURCE_DIR}/include/kedr/control_file/control_file.h")
 
-#Configure calculator implementation for use by kedr-user
+# Configure control file implementation for use by kedr-user
+set(CONTROL_FILE_HEADER "control_file.h")
+configure_file("${CMAKE_SOURCE_DIR}/control_file/control_file.c.in"
+	"${CMAKE_CURRENT_BINARY_DIR}/control_file.c"
+	@ONLY)
+
+# Configure calculator implementation for use by kedr-user
 set(CALCULATOR_HEADER "calculator.h")
 configure_file("${CMAKE_SOURCE_DIR}/fault_simulation/calculator/calculator.c.in"
 	"${CMAKE_CURRENT_BINARY_DIR}/calculator.c"
@@ -57,6 +66,8 @@ kedr_test_add_target("indicator_kmalloc")
 install(FILES   "${CMAKE_CURRENT_BINARY_DIR}/indicator_kmalloc.c"
 				"${CMAKE_CURRENT_BINARY_DIR}/calculator.c"
 				"${CMAKE_CURRENT_BINARY_DIR}/calculator.h"
+				"${CMAKE_CURRENT_BINARY_DIR}/control_file.c"
+				"${CMAKE_CURRENT_BINARY_DIR}/control_file.h"
         DESTINATION "${KEDR_EXAMPLE_PATH}/indicator_kmalloc"
 )
 
