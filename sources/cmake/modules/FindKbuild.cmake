@@ -9,6 +9,9 @@ set(KBUILD_VERSION_STRING ${CMAKE_SYSTEM_VERSION} CACHE STRING "Kernel version f
 set(KBUILD_BUILD_DIR "/lib/modules/${KBUILD_VERSION_STRING}/build")
 set(KBUILD_INCLUDE_DIRS "/usr/src/linux-headers-${KBUILD_VERSION_STRING}/include")
 
+# Note: only KBUILD_BUILD_DIR variable is really used in the project.
+# Others variables defined only for FindModule architecture of CMake.
+
 # Handle the QUIETLY and REQUIRED arguments and set KBUILD_FOUND to TRUE if 
 # all listed variables are TRUE
 

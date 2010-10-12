@@ -22,7 +22,7 @@ add_custom_target("fsim_payload_kmalloc"
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${module_name}.ko"
         COMMAND make -f makefile_test
         DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/fsim_payload_kmalloc.c"
-                "${CMAKE_CURRENT_BINARY_DIR}/makefile_installed"
+                "${CMAKE_CURRENT_BINARY_DIR}/makefile_test"
                 "${CMAKE_CURRENT_BINARY_DIR}/Kbuild"
                 )
 
