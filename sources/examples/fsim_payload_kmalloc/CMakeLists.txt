@@ -1,6 +1,5 @@
 set(module_name "kedr_fsim_payload_kmalloc")
 
-kedr_load_install_prefixes()
 set(KEDR_INCLUDE_DIR "${KEDR_INSTALL_INCLUDE_DIR}")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Kbuild.in"
     "${CMAKE_CURRENT_BINARY_DIR}/Kbuild_installed"
@@ -26,7 +25,6 @@ add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${module_name}.ko"
                 "${CMAKE_CURRENT_BINARY_DIR}/Kbuild"
                 )
 
-kedr_load_test_prefixes()
 set(KEDR_INCLUDE_DIR "${KEDR_TEST_INCLUDE_DIR}")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Kbuild.in"
     "${CMAKE_CURRENT_BINARY_DIR}/Kbuild"
