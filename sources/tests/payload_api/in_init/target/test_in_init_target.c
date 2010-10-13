@@ -19,7 +19,7 @@ module_param(in_init, int, S_IRUGO);
 module_param(in_atomic, int, S_IRUGO);
 
 /* A spinlock to simulate an atomic context */
-spinlock_t test_lock;
+DEFINE_SPINLOCK(test_lock);
 
 /* ================================================================ */
 static void
