@@ -21,6 +21,7 @@
         <!ENTITY kedr_custom_fsim_scenarios SYSTEM "custom_fsim_scenarios.xml">
         <!ENTITY kedr_custom_analysis SYSTEM "custom_analysis.xml">
         <!ENTITY kedr_extend SYSTEM "extend.xml">
+        <!ENTITY kedr_reference SYSTEM "reference.xml">
         
         <!ENTITY kedr_glossary SYSTEM "glossary.xml">
     ]
@@ -69,6 +70,9 @@
 
 <!-- Tips and Tricks - TODO -->
 <!-- &kedr_tips; -->
+
+<!-- Reference -->
+&kedr_reference;
 
 <!-- Glossary -->
 &kedr_glossary;
