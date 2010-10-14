@@ -1,0 +1,5 @@
+module_name=kedr_sample_target
+
+ccflags-y :=  -I$(src)
+obj-m := ${module_name}.o
+${module_name}-y := cfake.o

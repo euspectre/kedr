@@ -1,0 +1,14 @@
+module_name=kedr_sample_target
+
+KBUILD_DIR=@KBUILD_BUILD_DIR@
+PWD=`pwd`
+
+all: ${module_name}.ko
+
+${module_name}.ko: cfake.c
+	make -C ${KBUILD_DIR} M=${PWD} modules
+
+clean:
+	make -C ${KBUILD_DIR} M=${PWD} clean
+
+.PHONY: all clean
