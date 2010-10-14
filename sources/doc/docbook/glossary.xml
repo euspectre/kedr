@@ -85,4 +85,35 @@ KEDR allows to perform fault simulation on the target module. The scenarios (wha
     </para>
 </glossdef>
 </glossentry>
+
+<glossentry id="fault_simulation_point">
+<glossterm><emphasis>Fault simulation point</emphasis></glossterm>
+
+<glossdef>
+    <para>
+Program code branching, where decision should be made, whether program should execute 'normal' path, or error path. The key factor of it is a scenario, or a model, according to which decision should be performed. Unlike to the standard code branching with paths with the same meanings (normal and error),
+scenario for simulation point may be contrived, and may do not express possibility/impossibility of the normal path.
+    </para>
+    <para>
+E.g., 'standard' allocation manager in responce to the memory chunk request may return error only in case, when there are not such memory chunk available.
+But one may write allocation manager, which use simulation point with scenario "execute error path every second time".
+    </para>
+    <para>
+KEDR use fault simulation point in replacement functions for <link linkend="fault_simulation">fault simulation</link> functionality.
+    </para>
+</glossdef>
+</glossentry>
+
+<glossentry id="fault_simulation_indicator">
+<glossterm><emphasis>Fault simulation indicator</emphasis></glossterm>
+
+<glossdef>
+    <para>
+Function, or even program, which used in <link linkend="fault_simulation_point">fault simulation point</link> for make decision, whether execute 'normal' or error code path. You might say, that fault simulation indicator implements scenario for fault simulation point.
+    </para>
+    <para>
+In KEDR implementation fault simulation points and indicator are almost fully independent in that sence, that any fault simulation point may use any indicator, which may be easy changed at runtime. The only restriction - if some indicator expects some parameters from point at simulation stage, this indicator may not be set for the point, which do not provide that parameters.
+    </para>
+</glossdef>
+</glossentry>
 </glossary>
