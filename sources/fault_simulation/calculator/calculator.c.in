@@ -774,7 +774,7 @@ parse_data_next_token(struct parse_data* data)
         }
         else
         {
-            print_error("Name %*s doesn't correspond to the name of constant or variable.",
+            print_error("Name '%.*s' doesn't correspond to the name of the constant or variable.",
                 name_len, name);
             data->current_token_type = token_type_error;
         }
@@ -1071,7 +1071,12 @@ if(priority > priority_##left_priority_pure) return result;\
     }
     return result;
 }
-// helpres for get additional attributes for token
+// helpers for get additional attributes for token
+static int is_substr_equal(const char* str, int len, const char* orig)
+{
+    return (strncmp(str, orig, len) == 0) && (orig[len] == '\0');
+}
+
 int
 parse_data_search_const(const struct parse_data* data,
     const char* constant_name, int constant_name_len, kedr_calc_int_t* value)
@@ -1084,7 +1089,7 @@ parse_data_search_const(const struct parse_data* data,
         for(constant_index = 0; constant_index < vec->n_elems; constant_index++)
         {
             const struct kedr_calc_const* const_def = &vec->elems[constant_index];
-            if(strncmp(const_def->name, constant_name, constant_name_len) == 0)
+            if(is_substr_equal(constant_name, constant_name_len, const_def->name))
             {
                 *value = const_def->value;
                 return 0;
@@ -1100,7 +1105,7 @@ parse_data_search_variable(const struct parse_data* data,
     int var_index;
     for(var_index = 0; var_index < data->var_n; var_index++)
     {
-        if(strncmp(data->var_names[var_index], variable_name, variable_name_len) == 0)
+        if(is_substr_equal(variable_name, variable_name_len, data->var_names[var_index]))
         {
              *index = var_index;
              return 0;
@@ -1115,7 +1120,7 @@ parse_data_search_weak_variable(const struct parse_data* data,
     int var_index;
     for(var_index = 0; var_index < data->weak_vars_n; var_index++)
     {
-        if(strncmp(data->weak_vars[var_index].name, variable_name, variable_name_len) == 0)
+        if(is_substr_equal(variable_name, variable_name_len, data->weak_vars[var_index].name))
         {
              *index = var_index;
              return 0;

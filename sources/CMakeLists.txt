@@ -248,6 +248,7 @@ add_subdirectory(tools)
 add_subdirectory(payloads_callm)
 
 add_subdirectory(payloads_fsim)
+add_subdirectory(fault_indicators)
 
 add_subdirectory(examples)
 # Documentation

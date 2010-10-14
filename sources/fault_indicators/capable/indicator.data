@@ -1,0 +1,50 @@
+# This module implements indicator for capable() functions.
+
+module.author = Tsyvarev
+module.license = GPL
+
+global =>>
+#include <linux/capability.h>      /* capability constants */
+<<
+
+indicator.name = capable
+
+indicator.parameters.type = int
+indicator.parameters.name = cap
+
+expression.constants.c_name = CAP_CHOWN
+expression.constants.c_name = CAP_DAC_OVERRIDE
+expression.constants.c_name = CAP_DAC_READ_SEARCH
+expression.constants.c_name = CAP_FOWNER
+expression.constants.c_name = CAP_FSETID
+expression.constants.c_name = CAP_KILL
+expression.constants.c_name = CAP_SETGID
+expression.constants.c_name = CAP_SETUID
+expression.constants.c_name = CAP_SETPCAP
+expression.constants.c_name = CAP_LINUX_IMMUTABLE
+expression.constants.c_name = CAP_NET_BIND_SERVICE
+expression.constants.c_name = CAP_NET_BROADCAST
+expression.constants.c_name = CAP_NET_ADMIN
+expression.constants.c_name = CAP_NET_RAW
+expression.constants.c_name = CAP_IPC_LOCK
+expression.constants.c_name = CAP_IPC_OWNER
+expression.constants.c_name = CAP_SYS_MODULE
+expression.constants.c_name = CAP_SYS_RAWIO
+expression.constants.c_name = CAP_SYS_CHROOT
+expression.constants.c_name = CAP_SYS_PTRACE
+expression.constants.c_name = CAP_SYS_PACCT
+expression.constants.c_name = CAP_SYS_ADMIN
+expression.constants.c_name = CAP_SYS_BOOT
+expression.constants.c_name = CAP_SYS_NICE
+expression.constants.c_name = CAP_SYS_RESOURCE
+expression.constants.c_name = CAP_SYS_TIME
+expression.constants.c_name = CAP_SYS_TTY_CONFIG
+expression.constants.c_name = CAP_MKNOD
+expression.constants.c_name = CAP_LEASE
+expression.constants.c_name = CAP_AUDIT_WRITE
+expression.constants.c_name = CAP_AUDIT_CONTROL
+expression.constants.c_name = CAP_SETFCAP
+expression.constants.c_name = CAP_MAC_OVERRIDE
+expression.constants.c_name = CAP_MAC_ADMIN
+
+expression.vars.pname = cap

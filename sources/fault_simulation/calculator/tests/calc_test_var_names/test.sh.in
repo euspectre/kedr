@@ -1,0 +1,50 @@
+#!/bin/sh
+
+#./test.sh expr var_name1 var_name2 [result_expected]
+# Expression may contain reference given variable names, which value is 1 and 2.
+# If result_expected is set, result of computation should be equal to it.
+# Otherwise expected, that module is failed to insert(parsing should fail)
+kmodule_name="kedr_calc_test_var_names"
+kmodule="@CMAKE_CURRENT_BINARY_DIR@/${kmodule_name}.ko"
+result_file="/sys/module/${kmodule_name}/parameters/result"
+
+if test $# -gt 4 || test $# -lt 3; then
+    printf "Usage: ./test.sh expr var_name1 var_name2 [result_expected]\n"
+    exit 1
+fi
+
+expr="$1"
+var_name1="$2"
+var_name2="$3"
+if test $# -eq 4; then
+	result_expected="$4"
+else
+	result_expected=""
+fi
+
+insmod "$kmodule" "expr=\"$expr\"" "var_name1=\"$var_name1\"" "var_name2=\"$var_name2\""
+if test $? -ne 0; then
+    if test "$result_expected" == ""; then
+		printf "Failed to insert module into kernel. This is expected behaviour.\n"
+		exit 0
+	fi
+	printf "Failed to insert module into the kernel.\n"
+    exit 1
+elif test "$result_expected" == ""; then
+	printf "Module was successfully inserted into kernel, but it was expected to fail.\n"
+	rmmod $kmodule
+	exit 1
+fi
+
+result=`cat "$result_file"`
+
+rmmod $kmodule
+if test $? -ne 0; then
+    printf "Failed to remove module from the kernel\n"
+    exit 1
+fi
+
+if test "$result_expected" != "$result"; then
+    printf "Expected result of evaluating of the expression %s, but module write %s\n" "$result_expected" "$result"
+    exit 1
+fi
