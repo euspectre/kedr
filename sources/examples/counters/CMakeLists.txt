@@ -45,7 +45,7 @@ rule_copy_source("counters.h")
 
 kedr_test_add_target("counters_module")
 
-#add_subdirectory(tests)
+add_subdirectory(tests)
 
 #######################################################################
 install(FILES   "${CMAKE_CURRENT_SOURCE_DIR}/counters.c"

@@ -1,0 +1,205 @@
+#!/bin/sh
+
+########################################################################
+# A function to check prerequisites: whether the necessary files exist, etc.
+########################################################################
+checkPrereqs()
+{
+    if test ! -f "${TARGET_MODULE}"; then
+        printf "Target module is missing: ${TARGET_MODULE}\n"
+        exit 1
+    fi
+    
+    if test ! -f "${TARGET_SCRIPT}"; then
+        printf "Target control script is missing: ${TARGET_SCRIPT}\n"
+        exit 1
+    fi
+    
+    if test ! -f "${CONTROL_SCRIPT}"; then
+        printf "KEDR control script is missing: ${CONTROL_SCRIPT}\n"
+        exit 1
+    fi
+    
+    if test ! -f "${CONF_FILE}"; then
+        printf "KEDR configuration file is missing: ${CONF_FILE}\n"
+        exit 1
+    fi
+}
+
+########################################################################
+# Cleanup function
+########################################################################
+cleanupAll()
+{
+    lsmod | grep "${TARGET_NAME}" > /dev/null 2>&1
+    if test $? -eq 0; then
+        sh "${TARGET_SCRIPT}" unload
+    fi
+    
+    sh ${CONTROL_SCRIPT} stop
+}
+
+##########################################################################
+# checkValue()
+# Usage: 
+#   checkValue <string> <value>
+# This helper function checks if the value given in the specified string 
+# after the colon is the same as <value>.
+# This can be used to check correctness of the records like 
+#   "Memory allocation attempts: 128"
+##########################################################################
+checkValue()
+{
+    test_str="$1"
+    test_val="$2"
+    
+# Strip the part of the string up to the value
+    stripped_str=$(echo "${test_str}" | sed -e 's/^[^:]*:[ \t]*//')
+    
+    if test "${stripped_str}" != "${test_val}"; then
+        printf "The record \"${test_str}\" contains wrong value.\n"
+        printf "The expected value is ${test_val}\n"
+        
+        cleanupAll
+        exit 1
+    fi
+}
+
+##########################################################################
+# Check if the final values of the counters match the expected ones
+##########################################################################
+checkFinalCounters()
+{
+    record=$(cat "${COUNTERS_DIR}/alloc_total")
+    checkValue "${record}" "${EXP_ALLOC_TOTAL}"
+    
+    record=$(cat "${COUNTERS_DIR}/alloc_failed")
+    checkValue "${record}" "${EXP_ALLOC_FAILED}"
+    
+    record=$(cat "${COUNTERS_DIR}/alloc_max_size")
+    checkValue "${record}" "${EXP_ALLOC_MAX_SIZE}"
+    
+    record=$(cat "${COUNTERS_DIR}/mutex_locks")
+    checkValue "${record}" "${EXP_MUTEX_LOCKS}"
+    
+    record=$(cat "${COUNTERS_DIR}/mutex_balance")
+    checkValue "${record}" "${EXP_MUTEX_BALANCE}"
+}
+
+########################################################################
+doTest()
+{
+    cd "${WORK_DIR}"
+    
+    # Load KEDR core and the payload module, mount debugfs
+    sh ${CONTROL_SCRIPT} start ${TARGET_NAME} "${CONF_FILE}" || exit 1
+    
+    # Check if the necessary files have been created in debugfs
+    if test ! -d "${COUNTERS_DIR}"; then
+        printf "Directory for the counters was not created in debugfs.\n"
+        cleanupAll
+        exit 1
+    fi
+    
+    for cc in ${COUNTERS}; do
+        cat "${COUNTERS_DIR}/${cc}" > /dev/null
+        if test $? -ne 0; then
+            printf "The file for \"${cc}\" counter is missing or not readable.\n"
+            cleanupAll
+            exit 1
+        fi
+        
+        # Default value of each counter must be 0 
+        record=$(cat "${COUNTERS_DIR}/${cc}")
+        checkValue "${record}" "0"
+    done
+    
+    # Load the target and perform some actions with its fake devices
+    sh "${TARGET_SCRIPT}" load
+    if test $? -ne 0; then
+        printf "Failed to load target module\n"
+        cleanupAll
+        exit 1
+    fi
+    
+    echo "12345" > /dev/cfake0
+    if test $? -ne 0; then
+        printf "Writing to /dev/cfake0 failed.\n"
+        cleanupAll
+        exit 1
+    fi
+    
+    dd if=/dev/cfake0 ibs=1 count=4 > /dev/null 2>&1
+    if test $? -ne 0; then
+        printf "Reading from /dev/cfake0 failed.\n"
+        cleanupAll
+        exit 1
+    fi
+        
+    echo "aBrAcAdAbRa" > /dev/cfake1
+    if test $? -ne 0; then
+        printf "Writing to /dev/cfake1 failed.\n"
+        cleanupAll
+        exit 1
+    fi
+    
+    dd if=/dev/cfake1 ibs=1 count=10 > /dev/null 2>&1
+    if test $? -ne 0; then
+        printf "Reading from /dev/cfake1 failed.\n"
+        cleanupAll
+        exit 1
+    fi
+    
+    for cc in ${COUNTERS}; do
+        cat "${COUNTERS_DIR}/${cc}" > /dev/null
+        if test $? -ne 0; then
+            printf "The file for \"${cc}\" counter is missing or not readable.\n"
+            cleanupAll
+            exit 1
+        fi
+    done
+
+    checkFinalCounters
+    
+    # Unload the target
+    sh "${TARGET_SCRIPT}" unload
+    if test $? -ne 0; then
+        printf "Errors occured while trying to unload target module\n"
+        cleanupAll
+        exit 1
+    fi
+    
+    # Check if the counters persist
+    checkFinalCounters
+}
+
+########################################################################
+# main
+########################################################################
+WORK_DIR=@CMAKE_CURRENT_BINARY_DIR@
+
+TARGET_NAME="kedr_sample_target"
+TARGET_DIR="${WORK_DIR}/../../sample_target_2"
+TARGET_MODULE="${TARGET_DIR}/${TARGET_NAME}.ko"
+TARGET_SCRIPT="${TARGET_DIR}/kedr_sample_target"
+
+CONTROL_SCRIPT="@KEDR_TOOLS_DIR@/control/kedr_test"
+CONF_FILE="${WORK_DIR}/counters.conf"
+
+COUNTERS_DIR="${WORK_DIR}/debugfs/kedr_counters_example"
+COUNTERS="alloc_total alloc_failed alloc_max_size mutex_locks mutex_balance"
+
+# Expected values 
+# We expect that the system has enough memory for the allocations not to fail.
+EXP_ALLOC_TOTAL=3
+EXP_ALLOC_FAILED=0
+EXP_ALLOC_MAX_SIZE=4000
+EXP_MUTEX_LOCKS=16
+EXP_MUTEX_BALANCE=0
+
+checkPrereqs
+doTest
+cleanupAll
+
+# test passed
+exit 0
