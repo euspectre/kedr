@@ -1,0 +1,6 @@
+# This module implements common indicator, which doesn't use parameters.
+
+module.author = Tsyvarev
+module.license = GPL
+
+indicator.name = common

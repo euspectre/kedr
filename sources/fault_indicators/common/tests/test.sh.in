@@ -1,0 +1,156 @@
+#!/bin/sh
+
+kedr_base_module="@CMAKE_BINARY_DIR@/base/kedr_base.ko"
+fault_simulation_module="@CMAKE_BINARY_DIR@/fault_simulation/kedr_fault_simulation.ko"
+
+indicator_module="@CMAKE_CURRENT_BINARY_DIR@/../kedr_fsim_indicator_common.ko"
+indicator_name="common"
+
+simulation_module="@CMAKE_CURRENT_BINARY_DIR@/module/kedr_indicator_common_test_module.ko"
+point_name="common"
+
+
+debugfs="@CMAKE_CURRENT_BINARY_DIR@/debugfs"
+
+point_dir="${debugfs}/kedr_fault_simulation/points/${point_name}"
+
+simulate()
+{
+	echo 123 > "${debugfs}/kedr_indicator_common_test_module/simulate"
+}
+
+
+do_commands_script="sh @CMAKE_BINARY_DIR@/tests/scripts/do_commands.sh"
+commands_file="@CMAKE_CURRENT_BINARY_DIR@/commands.txt"
+
+cat > "$commands_file" << eof
+
+on_load insmod "${kedr_base_module}" || ! printf "Cannot load kedr base module into kernel.\n"
+on_unload rmmod "${kedr_base_module}" || ! printf "Cannot unload kedr base module.\n"
+on_load insmod "${fault_simulation_module}" || ! printf "Cannot load fault simulation module into kernel.\n"
+on_unload rmmod "${fault_simulation_module}" || ! printf "Cannot unload fault simulation module.\n"
+on_load insmod "${simulation_module}" || ! printf "Cannot load module with simulation point into kernel.\n"
+on_unload rmmod "${simulation_module}" || ! printf "Cannot unload module with simulation point.\n"
+on_load insmod "${indicator_module}" || ! printf "Cannot load indicator module into kernel.\n"
+on_unload rmmod "${indicator_module}" || ! printf "Cannot unload indicator module.\n"
+
+on_load mkdir -p "${debugfs}"
+on_load mount -t debugfs debugfs "${debugfs}"
+on_unload umount "${debugfs}"
+
+eof
+
+if ! $do_commands_script "$commands_file" load; then
+	printf "Cannot initialize test.\n"
+	exit 1
+fi
+
+##
+echo "$indicator_name" > "${point_dir}/current_indicator"
+
+if test $? -ne 0; then
+	printf "Cannot set indicator for the point.\n"
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+if ! simulate; then
+	printf "Simulate should't fail with default instance of indicator.\n"
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+##
+echo "$indicator_name" "1" > "${point_dir}/current_indicator"
+
+if test $? -ne 0; then
+	printf "Cannot set indicator with parameter \"1\" for the point.\n"
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+if  simulate; then
+	printf "Simulate should fail with "1" expression.\n"
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+##
+echo "1" > "${point_dir}/expression"
+
+if test $? -ne 0; then
+	printf "Cannot set expression for the indicator.\n"
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+if  simulate; then
+	printf "Simulate should fail with "1" expression.\n"
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+##Cannot test in_init, because it is not target module ;)
+cat > /dev/null << comment
+echo "in_init" > "${point_dir}/expression"
+
+if test $? -ne 0; then
+	printf "Cannot set expression for the indicator.\n"
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+if  ! simulate; then
+	printf "Simulate shouldn't fail with "in_init" expression.\n"
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+comment
+##
+echo "$indicator_name" "times % 2" > "${point_dir}/current_indicator"
+
+if test $? -ne 0; then
+	printf "Cannot set expression for the indicator.\n"
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+if  simulate; then
+	printf "First call of simulate should fail with "times %% 2" expression.\n"
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+if  ! simulate; then
+	printf "Second call of simulate shouldn't fail with "times %% 2" expression.\n"
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+if  simulate; then
+	printf "Third call of simulate should fail with "times %% 2" expression.\n"
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+##
+echo "$indicator_name" "1" > "${point_dir}/current_indicator"
+echo $$ > "${point_dir}/pid"
+
+if test $? -ne 0; then
+	printf "Cannot set 'pid' constraint on the indicator.\n"
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+if  simulate; then
+	printf "Simulate should fail within shell, which set its pid for indicator.\n"
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+if ! $do_commands_script "$commands_file" unload; then
+	printf "Error occures while finalize test.\n"
+	exit 1
+fi

@@ -142,10 +142,11 @@ set_property (DIRECTORY APPEND PROPERTY
 # It may happen that 'mkdir' will finish before 'rm' will begin removing
 # "some_dir". This is probably not what you expect here.
 
-execute_process (
-    COMMAND rm -rf "${KEDR_GEN_TEMP_BUILD}" 
-    COMMAND rm -rf "${KEDR_GEN_INSTALL_PREFIX}" 
-)
+#Do not destroy previously installed generator
+#execute_process (
+#    COMMAND rm -rf "${KEDR_GEN_TEMP_BUILD}" 
+#    COMMAND rm -rf "${KEDR_GEN_INSTALL_PREFIX}" 
+#)
 
 # [NB] After the command is executed, the variable specified 
 # in RESULT_VARIABLE may contain either numeric return code or a string 
@@ -248,6 +249,7 @@ add_subdirectory(tools)
 add_subdirectory(payloads_callm)
 
 add_subdirectory(payloads_fsim)
+add_subdirectory(fault_indicators)
 
 add_subdirectory(examples)
 # Documentation
