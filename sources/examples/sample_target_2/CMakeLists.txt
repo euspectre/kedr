@@ -39,4 +39,4 @@ install(FILES   "${CMAKE_CURRENT_BINARY_DIR}/makefile_installed"
         RENAME makefile
 )
 
-#add_subdirectory(tests)
+add_subdirectory(tests)
