@@ -99,7 +99,7 @@ int target_in_init = 0;
  * context too (kedr_target_module_in_init() can be called from a replacement
  * function executing in atomic context).
  */
-spinlock_t target_in_init_lock;
+DEFINE_SPINLOCK(target_in_init_lock);
 
 /* If nonzero, module load and unload notifications will be handled,
  * if 0, they will not.
