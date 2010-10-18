@@ -189,7 +189,7 @@ dd if=/dev/zero of=/dev/cfake bs=1 count=10
 <para>
 Now, open file with trace (which path you pass to <command>kedr_capture_trace</command> script). Here you may found lines like
     <programlisting>
-insmod-709 [000] 99689.618433: target_session_begins: target_module: "kedr_sample_target
+insmod-709 [000] 99689.618433: target_session_begins: target_module: "kedr_sample_target"
 insmod-709 [000] 99689.627529: called___kmalloc: arguments(184, d0), result: d80c3600
 dd-743 [000] 99861.116151: called___kmalloc: arguments(4000, d0), result: decaa000
 dd-743 [000] 99861.116614: called_copy_from_user: arguments(decaa000, 09b00000, 1), result: 0
@@ -208,7 +208,7 @@ kedr_sample_target unload
     </programlisting>
 Line like 
     <programlisting>
-rmmod-17250 [000] 102326.651693: target_session_ends: target_module: "kedr_sample_target
+rmmod-17250 [000] 102326.651693: target_session_ends: target_module: "kedr_sample_target"
     </programlisting>
 should appear in the trace file. There will be nothing to new in this file, until target will be loaded again. So, stop redirection of the trace into our file:
     <programlisting>

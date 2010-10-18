@@ -470,7 +470,7 @@ int str_to_pid(const char* str, pid_t* pid)
 char* indicator_pid_file_get_str(struct inode* inode)
 {
     struct indicator_real_state* state;
-    pid_t pid;
+    pid_t pid = 0;
    
     if(mutex_lock_killable(&indicator_mutex))
     {
