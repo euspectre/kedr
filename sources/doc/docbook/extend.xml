@@ -15,6 +15,9 @@ a starting point for those who writes payload modules of custom types.
 <!-- Custom Call Monitor Payloads -->
 &kedr_custom_callm_payloads;
 
+<!-- Custom Fault Simulation Payloads -->
+&kedr_custom_fsim_payloads;
+
 <!-- Custom Fault Simulation Scenarios -->
 &kedr_custom_fsim_scenarios;
 

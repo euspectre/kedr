@@ -249,7 +249,7 @@ where <replaceable>path-to-conf-file</replaceable> should be set to the full nam
 <para>
 Now we choose scenario, according to which we will fail __kmalloc call. For doing this, load module, which implements some scenario:
     <programlisting>
-insmod /lib/modules/'uname -r'/misc/kedr_fsim_indicator_common_memory_management.ko
+insmod /lib/modules/'uname -r'/misc/kedr_fsim_indicator_kmalloc.ko
     </programlisting>
 and inform KEDR, that we want to use this scenario for __kmalloc:
     <programlisting>
@@ -310,7 +310,7 @@ will cancel fault simulation of __kmalloc(test it by yourself).
 <para>
 Now unload scenario module
     <programlisting>
-rmmod kedr_fsim_indicator_common_memory_management.ko
+rmmod kedr_fsim_indicator_kmalloc.ko
     </programlisting>
 Scenario for the __kmalloc will be cleared automatically(with cleared scenario function will always succeed).
 </para>

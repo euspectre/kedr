@@ -1,5 +1,5 @@
 #name of module created
-set(kmodule_name "kedr_fsim_indicator_common_memory_management")
+set(kmodule_name "kedr_fsim_indicator_kmalloc")
 
 kbuild_add_module(${kmodule_name} "indicator.c" "calculator.c" "control_file.c")
 
