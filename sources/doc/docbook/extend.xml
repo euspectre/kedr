@@ -12,6 +12,9 @@ a starting point for those who writes payload modules of custom types.
 <!-- API for Payload Modules -->
 &kedr_payload_api;
 
+<!-- How to use Generator -->
+&kedr_using_gen;
+
 <!-- Custom Call Monitor Payloads -->
 &kedr_custom_callm_payloads;
 

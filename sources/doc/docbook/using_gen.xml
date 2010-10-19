@@ -1,0 +1,191 @@
+﻿<section id="using_gen">
+<title>Using Generator for create custom modules</title>
+    <para>
+For creating multiple modules with simular functionality, KEDR actively use generation of files from templates. This approach makes it possible to split implementation of such modules into general implementation of the modules functionality and definition of the specific functionality of each module.
+    </para>
+    <para>
+So, implementation of the new module requires only to write short definition of what this module is supposed to do in extent of the base functionality. Creation of source file(s) for this module will be performed automatically by <quote>generator</quote>.
+    </para>
+    <para>
+Aside from using this mechanizm inside KEDR, it may be used for creating custom specialized modules for different purposes: call monitor payloads, fault simulation payloads, fault simulation indicators. This way for create custom modules has many advantages:
+<variablelist>
+    <varlistentry><term>it fast</term>
+        <listitem>e.g., implementation of new call monitor payload require about 10 lines in 'definition' file for 'header' (it contain name of module, which will be generated, author, license...) , and about 10 lines for every replacement function (description of function arguments, and format of how them should be stored in the string)</listitem>
+    </varlistentry>
+    <varlistentry><term>it clear</term>
+        <listitem>all features of your module are described in one place (not scattered over different files or over one long file); every line in the 'definition' file is self explanatory</listitem>
+    </varlistentry>
+    <varlistentry><term>it use high level of abstraction</term>
+        <listitem>while writting 'definition' file, you shouldn't be aware of what file(s) will be generating from them, and how exactly one or another feature will be implemented</listitem>
+    </varlistentry>
+    <varlistentry><term>it error free</term>
+        <listitem>If 'definition' file is written correctly, it should generate correct code of the module; the most lines in the 'definition' file simply introduce names of some essences - such lines are always correct; rare interline dependencies may be easy debugged in clear and short 'definition' file, same for rare code chunks definitions.</listitem>
+    </varlistentry>
+    <varlistentry><term>it produce easy updatable modules</term>
+        <listitem>If templates is updated to implement some new base functionality, or to change implementation, or to fix some errors, simple call 'generator' with new templates will update you module.</listitem>
+    </varlistentry>
+</variablelist>
+    </para>
+    <para>
+Of course, using 'generator' is not an universal means for extending functionality of standard KEDR modules. If some functionality extension is not provided by the templates, it cannot be implemented in this way. But if it is, it is recommended to use 'generator'.
+    </para>
+    <para>
+Next, describe common format of 'definition' file. 'Generator' is based on MiST Engine library from <ulink url="http://template2code.sourceforge.net"><citetitle>Template2Code 
+project</citetitle></ulink>, and is very similar to 'mist_gen' example from it. As result, format of the 'definition' file, accepted by the 'generator', is the same as format of the configuration file, accepted by 'mist_gen'. Last format is fully described <ulink url="http://template2code.sourceforge.net/mist-doc/param.html"><citetitle>here</citetitle></ulink>. The only one difference - 'definition' file may contatin strings <code>[block]</code>, which introduce additional division of file by blocks.
+    </para>
+    <para>
+Every 'definition' file is treated as array of lines. Lines which contain only white space characters (spaces and tabs) and lines, which first non-whitespace character is <code>#</code> are ignored:
+    <programlisting>
+# Next line is empty, so it will be ignored
+
+    # This line will be ignored too.
+    </programlisting>
+Lines like 
+    <programlisting>
+&lt;parameter-name&gt; = &lt;value&gt;
+    </programlisting>
+define parameter with name <code>&lt;parameter-name&gt;</code> and assign string <code>&lt;value&gt;</code> to it. Only one restriction on <code>&lt;parameter-name&gt;</code> - is shouldn't contain whitespace characters. Whitespace characters surrounding <code>&lt;parameter-name&gt;</code> and <code>&lt;value&gt;</code> are ignored.
+    <programlisting>
+# Define parameter with name 'a' to '135'
+a = 135
+# Define parameter with name 'b' to 'some string'
+b = some string
+# Define parameter with name 'expression' to '2 + 3 = 5'
+expression = 2 + 3 = 5
+    </programlisting>
+There is a way to define parameter with long value:
+    <programlisting>
+# Define parameter with name 'long-string' to 'string1 string2 string3'
+# Note, that leading whitespace characters are ignored.
+long-string = string1 \
+    string2 \
+    string3
+    </programlisting>
+Also, parameters with multiline value may be defined:
+    <programlisting>
+multi-line-parameter =&lt;&lt;
+    line1
+    line2
+    ...
+    lineN
+&gt;&gt;
+    </programlisting>
+Value of 'multi-line-parameter' is precisely
+    <programlisting>
+    line1
+    line2
+    ...
+    lineN
+    </programlisting>
+Note, that new-line character should follow immidiatly after <code>&lt;&lt;</code> delimiter, and delimiter <code>&gt;&gt;</code> should be  the only one on the line except whitespace characters.
+    <programlisting>
+# Correct definition of multiline parameter, contained &gt;&gt;
+multi-line-parameter =&lt;&lt;
+    &lt;&lt;a&gt;&gt;
+    &lt;&lt;b&gt;&gt;
+    &gt;&gt;
+    </programlisting>
+    </para>
+    <para>
+The only information, which generator extracts from 'definition' file, is set of parameters with assigned values. Order of this parameters in the file has no sence, so 'definition' files
+    <programlisting>
+a = 5
+b = 10
+    </programlisting>
+and
+    <programlisting>
+b = 10
+a = 5
+    </programlisting>
+means efficiently the same: <code>a='5', b='10'</code>.
+    </para>
+    <para>
+But when several definitions assign values to the same parameter, parameter became multi-valued, and order of the assignments become valuable.
+    <programlisting>
+a = 5
+a = 10
+    </programlisting>
+means <code>a={'5','10'}</code>, but
+    <programlisting>
+a = 10
+a = 5
+    </programlisting>
+means <code>a={'10','5'}</code>. Depended on the meaning of the parameter,  difference in order of assignments to it may have sence (e.g, order of the function parameters is critical), or may not (e.g. order of the replacement functions in the file)
+    </para>
+    <para>
+As a rule, order between two multi-valued parameters assignments make a sence only in case, when these parameters describe one-value attributes of same object:
+    <programlisting>
+obj.name = object1
+obj.description = This is object1
+obj.name = object2
+obj.description = This is object2
+    </programlisting>
+define <code>obj.name</code> as 
+<simplelist type='inline'>
+<member>object1</member>
+<member>object2</member>
+</simplelist>,
+ <code>obj.description</code> as
+ <simplelist type='inline'>
+<member>This is object1</member>
+<member>This is object2</member>
+</simplelist>,
+and this may meen two object instances with attributes
+ <simplelist type='inline'>
+<member>object1</member>
+<member>This is object1</member>
+</simplelist> and 
+<simplelist type='inline'>
+<member>object2</member>
+<member>This is object2</member>
+</simplelist>
+    <programlisting>
+obj.name = object1
+obj.description = This is object2
+obj.name = object2
+obj.description = This is object1
+    </programlisting>
+define <code>obj.name</code> as 
+<simplelist type='inline'>
+<member>object1</member>
+<member>object2</member>
+</simplelist>,
+ <code>obj.description</code> as
+<simplelist type='inline'>
+<member>This is object2</member>
+<member>This is object1</member>
+</simplelist>,
+and this may meen two object instances with attributes
+<simplelist type='inline'>
+<member>object1</member>
+<member>This is object2</member>
+</simplelist> and 
+<simplelist type='inline'>
+<member>object2</member>
+<member>This is object1</member>
+</simplelist>,
+which probably is not what you want. Simple way to not get confused in ordering - define all attributes for one instance, and only then define attributes for another one.
+    </para>
+    <para>
+If some object has non-constant set of attributes (e.g., one of its attribute may have multiple values, or one of its attribute is optional), then you cannot define several instances of this object in one 'definition' file. This is because generator cannot determine, which instance has particular value of attribute. For this case, <code>[group]</code> keyword was introduced into 'definition' file format. This keyword introduce new group of definitions, which starts just after this keyword, and ends before the next occurence of same keyword, or at the end of the file.
+<programlisting>
+module_name = Arrays
+[group]
+array.name = array1
+array.values = val1
+[group]
+array.name = array2
+array.values = val2
+array.values = val3
+[group]
+array.name = array3
+    </programlisting>
+There are 3 groups in this file. First define <code>array.name='array1'</code> and <code>array.values='val1'</code>, second - <code>array.name='array2'</code> and <code>array.values={'val2', 'val3'}</code>, third - <code>array.name='array3'</code>. Each group may be interpret as array object, object <code>array1</code> contains one element <code>val1</code>, object <code>array2</code> contains two elements <code>val2</code> and <code>val3</code>, object <code>array3</code> contains none elements.
+    </para>
+    <para>
+<code>[group]</code> keyword doesn't cancelling gathering of all parameters assignments - global meaning of this file is <code>module_name='Arrays'</code>, <code>array.name={'array1', 'array2', 'array3'}</code> and <code>array.values={'val1', 'val2', val3'}</code>. And this infomation will be processed by the generator, using one set of templates. But also information for every group will be processed, using another set of templates. And this processing will result in new multi value parameter, which values are results of particular group processing. This parameter is reffered as 'block', as the set of templates, used for its generation. And it may be used at the top level of processing, set of templates for which is reffered as 'document'.
+    </para>
+    <para>
+This is a basic information, which is needed for write you own 'definition' files for custom modules with KEDR templates. For more information - see documentation on 'generator'.
+    </para>
+</section>

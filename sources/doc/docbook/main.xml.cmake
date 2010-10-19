@@ -18,7 +18,8 @@
         
         <!ENTITY kedr_custom_functions SYSTEM "custom_functions.xml">
         <!ENTITY kedr_payload_api SYSTEM "payload_api.xml">
-        <!ENTITY kedr_custom_callm_payloads SYSTEM "custom_callm_payloads.xml">
+		<!ENTITY kedr_using_gen SYSTEM "using_gen.xml">        
+		<!ENTITY kedr_custom_callm_payloads SYSTEM "custom_callm_payloads.xml">
         <!ENTITY kedr_custom_fsim_payloads SYSTEM "custom_fsim_payloads.xml">
 		<!ENTITY kedr_custom_fsim_scenarios SYSTEM "custom_fsim_scenarios.xml">
         <!ENTITY kedr_custom_analysis SYSTEM "custom_analysis.xml">
