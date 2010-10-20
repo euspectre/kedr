@@ -16,10 +16,6 @@
 #include "cfake.h"
 
 MODULE_AUTHOR("Eugene");
-
-/* Because this module uses the instruction decoder which is distributed
- * under GPL, I have no choice but to distribute this module under GPL too.
- * */
 MODULE_LICENSE("GPL");
 
 /* parameters */
