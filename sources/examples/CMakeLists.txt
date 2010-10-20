@@ -18,5 +18,6 @@ add_subdirectory(fsim_payload_kmalloc)
 add_subdirectory(counters)
 add_subdirectory(custom_payload_callm)
 add_subdirectory(custom_payload_fsim)
+add_subdirectory(custom_indicator_fsim)
 
 add_subdirectory(tests)

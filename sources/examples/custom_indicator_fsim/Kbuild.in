@@ -1,0 +1,5 @@
+module_name=@module_name@
+
+ccflags-y :=  -I$(src) -I@KEDR_INCLUDE_DIR@
+obj-m := $(module_name).o
+$(module_name)-y := indicator.o calculator.o control_file.o
