@@ -1,3 +1,65 @@
-TODO
-TODO
+"Counters" example
 ========================================================================
+
+This example demonstrates that it is quite easy to implement custom types 
+of analysis of kernel modules with KEDR.
+
+Apart from call monitoring and fault simulation facilities supported 
+out-of-the-box, KEDR provides the means to use its call interception 
+mechanism in many other ways.
+
+In this example, a custom payload module is prepared that provides the 
+following information about the target module ("counters"):
+
+- total number of memory allocation attempts;
+- number of memory allocation attempts that have failed;
+- size of the biggest memory block requested to be allocated;
+- total number of mutex lock operations;
+- mutex balance, i.e. the difference between the total numbers of lock and 
+unlock operations.
+
+This data is made available via special files in debugfs (in 
+"kedr_counters_example" directory), one file per counter.
+
+Note that it is somewhat similar to what Driver Verifier does (among many 
+other things) on Microsoft Windows systems. It also provides a set of 
+counters accessible from use space that contain information about the 
+target kernel module.
+
+The payload module from "Counters" example uses API provided by KEDR core. 
+It relies neither on call tracing facilities nor on fault simulation. The 
+part of the API it uses actually consists of only two functions, 
+kedr_payload_register() and kedr_payload_unregister().
+========================================================================
+
+Usage:
+1. If debugfs is not mounted (usually its directory is /sys/kernel/debug/), 
+mount it first to a directory of your choice. For example,
+	mount debugfs -t debugfs some_dir/debugfs" 
+
+2. Load KEDR core and "kedr_counters.ko" payload module. The easiest way is 
+probably to create a configuration file, say, 'my.conf' with the following 
+contents
+	payload path_to_example_directory/kedr_counters.ko
+and use 'kedr start' with that file:
+	kedr start name_of_target my.conf
+
+Replace "name_of_target" with the name of the module to be analysed, 
+of course.
+
+See KEDR manual for detailed information about 'kedr start', etc.
+
+3. Load target module and do something with it. While it is working (and 
+also after it is unloaded), you can check how the counters are shown in the 
+files in "kedr_counters_example" subdirectory in debugfs. 
+=======================================================================
+
+Limitations:
+1. As always with KEDR, only function calls are taken into account (but not 
+macros, inline functions or the like) and only those calls that are made 
+directly by the target kernel module.  
+
+2. Only a few memory allocation functions are processed (__kmalloc, 
+krealloc, kmem_cache_alloc). If the target module uses other means to 
+allocate memory, it will go unnoticed by the analysis system in this 
+example. However, it can be extended to handle these too.
