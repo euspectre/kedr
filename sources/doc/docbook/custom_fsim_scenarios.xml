@@ -1,6 +1,179 @@
 ﻿<section id="custom_fsim_scenarios">
-<title>Custom Fault Simulation Scenarios</title>
+<title>Writing Custom Scenarios for Fault Simulation</title>
+    <para>
+This is a description, how to write module which will implement new scenario for fault simulation, using KEDR tool for generation files from templates. Common abilities of this tool are detailed descibed in <xref linkend="using_gen"/> ...
+    </para>
+    <para>
+Whole infrastructure, which is needed for building payload module from 'definition' file is located in <filename class='directory'>custom_indicator_fsim</filename> directory under installed expamples. Here is its content:
+<variablelist>
+    <varlistentry><term><filename>indicator.data</filename></term>
+        <listitem>'definition' file for creating module, which will implement fault simulation indicator</listitem>
+    </varlistentry>
+    <varlistentry><term><filename>makefile</filename></term>
+        <listitem>file for common build infrastructure for <command>make</command> utility</listitem>
+    </varlistentry>
+    <varlistentry><term><filename>Kbuild</filename></term>
+        <listitem>file for building kernel module from c-sources</listitem>
+    </varlistentry>
+    <varlistentry><term><filename class='directory'>templates</filename></term>
+        <listitem>directory which contatin templates files, used for generating sources from 'definition' file</listitem>
+    </varlistentry>
+    <varlistentry><term><filename>calculator.c</filename>, <filename>calculator.h</filename>, <filename>control_file.c</filename>, <filename>control_file.h</filename></term>
+        <listitem>Additional source files and header which implements parts of indicator functionality. These files are used for building module.</listitem>
+    </varlistentry>
+</variablelist>
+Copy contents of this directory into you own place.
+    </para>
+    <para>
+The first, and the main step - rewrite file <filename>indicator.data</filename> for reflecting definitions of you own indicator module.
+    </para>
+    <para>
+As opposed to the payloads for call monitoring and fault simulation, which may implements replacement functions for several target ones in one module, every fault simulation indicator should be implemented in different module. So, groups are not used in 'definition' file for indicator module, and only global set of parameters is make sence.
+    </para>
+    <para>
+Indicator module should contain definitions for next parameters:
+<variablelist>
+    <varlistentry><term>module.author</term>
+        <listitem>author of the module</listitem>
+    </varlistentry>
+    <varlistentry><term>module.licence</term>
+        <listitem>licence for the module</listitem>
+    </varlistentry>
+    <varlistentry><term>indicator.name</term>
+        <listitem>name of the indicator, exported by the module. This name should be used, when one need to assign indicator for some function.</listitem>
+    </varlistentry>
+    <varlistentry><term>indicator.parameters.type</term>
+        <listitem>types (multi value) of the values, which accept indicator function. This is important part of the indicator, and will be fully described later. May be not assigned at all - in this case, indicator function will not accept parameters. </listitem>
+    </varlistentry>
+    <varlistentry><term>indicator.parameters.name</term>
+        <listitem>names (multi value) of the values, which accept indicator function.</listitem>
+    </varlistentry>
+    <varlistentry><term>expression.vars.name</term>
+        <listitem>variable names (multi value), which may be used in expression for set particular scenario for indicator. This names themselves doesn't concerned with variable names, used in indicator function. Order of this names has no sence. May be not assigned at all - there are another ways to declare expression variables.</listitem>
+    </varlistentry>
+    <varlistentry><term>expression.vars.values</term>
+        <listitem>values (multi value) of corresponding expression variables, which will be used at expression evaluate stage (that is, when indicator function will be called). Typically, this values refer to the indicator function parameters.</listitem>
+    </varlistentry>
+    <varlistentry><term>expression.vars.pname</term>
+        <listitem>names (multi value) of indicator function parameters, which may be used in expression for set particular scenario for indicator. <code><varname>expression.vars.pname</varname> = <literal>var_a</literal></code> is equivalent to <code><varname>expression.vars.name</varname> = <literal>var_a</literal></code> + <code><varname>expression.vars.value</varname> = <literal>var_a</literal></code>. May be not assigned at all - there are another ways to declare expression variables.</listitem>
+    </varlistentry>
+</variablelist>
+    </para>
+    <para>
+The main characteristic of fault simulation indicator is a set of scenarios, which it can implement. Aside from <varname>pid</varname> parameter, which may be used for every generated indicator, and which simply restrict area of fault simulation, <varname>expression</varname> is the only indicator's parameter, which may affect on the fault simulation scenario. Expression, which use only constant integers as arguments, may implement only "always simulate fail" or "never simulate fail" scenarious. But if expression can use variables, which may have different values at different expression evaluation stages, the set of scenarios is dramatically increased.
+    </para>
+    <para>
+One type of variable, which may be used in expression, is parameter of the target function. E.g., expression <code>(<varname>size</varname> &gt; 100)</code>, where <varname>size</varname> corresponds to the target function parameter, implements scenario "simulate fail when <varname>size</varname> is greater than <literal>100</literal>". There is only way for indicator to implement such using of target function's parameter: declare this parameter as parameter of indicator function. So, corresponded replacement function should pass this parameter to the indicator function, whenever it should choose, whether it need to simulate fail. This indicator's behaviour is achived by ( assume that <varname>size</varname> parameter of the target function has type <literal>size_t</literal>):
+    <programlisting>
+indicator.parameters.type = size_t
+indicator.parameters.name = size
+    </programlisting>
+    </para>
+    <para>
+This fragment only define, that indicator function itself accept parameter <varname>size</varname>, but for permitting this parameter to be usable in expression,
+    <programlisting>
+expression.vars.pname = size
+    </programlisting>
+should be used.
+    </para>
+    <para>
+Parameters <varname>expression.vars.name</varname> and <varname>expression.vars.value</varname> may be useful for such cases:
+    <programlisting>
+...
+indicator.parameters.type = const char*
+indicator.parameters.name = str
+...
+# Expression may use variable only with integer values, so we cannot use string parameter in it.
+# But we can use length of this string as parameter 'len'
+expression.vars.name = len
+expression.vars.value = strlen(str)
+...
+    </programlisting>
+    <programlisting>
+...
+indicator.parameters.type = size_t
+# Cannot use 'strlen' as name of the parameter, because strlen is the kernel function.
+indicator.parameters.name = len
+...
+# But here 'strlen' is available - this is not a name of c-variable.
+expression.vars.name = strlen
+# We only need to bind expression variable with its value.
+expression.vars.value = len
+...
+    </programlisting>
+    </para>
+    <para>
+But if we declare that indicator function accepts parameter <varname>size</varname> of type <type>size_t</type>, we make this indicator inapplicable for that target functions, which do not accept parameter of that type. Or more exactly, indicator is not applicable for replace functions, which do not provide parameter of this type to indicator function. This limitation is work even if this parameter is not really used in the current scenario.
+    </para>
+    <para>
+Though it is acceptable for indicator to use in expression variables, which is not derived from indicator parameters, like 
+    <programlisting>
+expression.vars.name = prob50
+expression.vars.value = random() % 2
+    </programlisting>
+it is not recommended, because there is more effective way to doing this. The thing is that, such type of variables is evaluated every time indicator function is called, whenever this variable is used in expression or not. And this evaluation may take relative long time. There is another type of variables, which is applicable in such case - runtime variables. Format of declaration of such variables is:
+    <programlisting>
+expression.rvars.name = prob50
+expression.rvars.code =&gt;&gt;
+    return random() % 2;
+&lt;&lt;
+    </programlisting>
+<varname>expression.rvars.code</varname> parameter is provide code of the function, which will be used, whenever value of variable is <emphasis>really</emphasis> needed. Costs for such optimisation - function call instead inlined code, when value of variable is needed, and inability to use local variables of indicator function (and parameters of this function).
+    </para>
+    <para>
+For simple writting expression, some named constants may be introduces to it.
+There are two ways for doing this:
+    <programlisting>
+expression.constants.name = constant_100
+expression.constants.value = 100
+    </programlisting>
+make available to use in the expression constant <varname>constant_100</varname>, which evaluated to 100.
+    <programlisting>
+expression.constants.cname = GFP_ATOMIC
+    </programlisting>
+make available to use in the expression constant <varname>GFP_ATOMIC</varname>, which evaluated to GFP_ATOMIC. Expression <code>flags == GFP_ATOMIC</code> is more clear, than <code>flags == 32</code>, isn't it?
+    </para>
+    <para>
+Additionally, next parameters may be defined:
+<variablelist>
+    <varlistentry><term>global</term>
+        <listitem>code (may be multi lined), which will be inserted at the global scope and its definitions will be visible in any parameter. Usually, this code contains '#include' directives, for header files which define types of parameters of the indicator, and functions, which is used in parameters.</listitem>
+    </varlistentry>
+</variablelist>
+Example of indicator for <function>kstrdup</function> function:
+    <programlisting>
+# This module implements indicator for kmalloc-like functions.
 
-TODO
+module.author = Tsyvarev
+module.license = GPL
+
+global =&gt;&gt;
+#include &gt;linux/gfp.h&lt;      /* gfp_flags constants */
+#include &gt;linux/types.h&lt;      /* size_t */
+&lt;&lt;
+
+indicator.name = kmalloc
+
+indicator.parameters.type = size_t
+indicator.parameters.name = size
+
+indicator.parameters.type = gfp_t
+indicator.parameters.name = flags
+
+expression.constants.c_name = GFP_NOWAIT
+expression.constants.c_name = GFP_KERNEL
+expression.constants.c_name = GFP_USER
+expression.constants.c_name = GFP_ATOMIC
+
+expression.vars.pname = size
+expression.vars.pname = flags
+    </programlisting>
+    </para>
+    <para>
+After writing <filename>indicator.data</filename> file, you may rewrite value of module_name variable in the <filename>makefile</filename> and <filename>Kbuild</filename> according to one you wish to use as module name.
+    </para>
+    <para>
+Next, and the last step is running <command>make</command> utility. It generate sources for indicator module, and then build this module. That is all.
+    </para>
 
 </section>

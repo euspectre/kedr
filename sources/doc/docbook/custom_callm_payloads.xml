@@ -79,7 +79,7 @@ Each group should contain definitions for next parameters:
         <listitem>variable names (multi-value), which values will be output into the trace. This variables should be accessible in replacement function(see below). At least, one value should be output (otherwise this replacement function is meaningless).</listitem>
     </varlistentry>
     <varlistentry><term>trace.param.type</term>
-        <listitem>types (multi-value) of the values, which will be output into the trace. This types will be used in casting values before they will be output(so, these types may differ from real type of variables, which values are used to output).</listitem>
+        <listitem>types (multi-value) of the values, which will be output into the trace. This types will be used for casting variable values before they will be output(so, these types may differ from real type of variables).</listitem>
     </varlistentry>
     <varlistentry><term>trace.formatString</term>
         <listitem>format string which is used for printf-like output values from replacement function (see parameters <quote>trace.param.name</quote> and <quote>trace.param.type</quote>)</listitem>
@@ -88,13 +88,13 @@ Each group should contain definitions for next parameters:
 Additionally, next parameters may be defined at group level:
 <variablelist>
     <varlistentry><term>prologue</term>
-        <listitem>code (may be multi lined) which will be inserted to the start of replacement function (before call of target function). May use variable declarations. Usually, this code declare variables, which will be used in output and next code sections(see below).</listitem>
+        <listitem>code (may be multi lined) which will be inserted to the start of replacement function (before call of target function). May use variable declarations. Usually, this code declare variables, which will be used in output and next code sections (see below).</listitem>
     </varlistentry>
     <varlistentry><term>middleCode</term>
-        <listitem>code (may be multi lined) which will be inserted after call of the target function and before output variables). May not use variable declarations. Usually, this code calculate variables, which will be used in output.</listitem>
+        <listitem>code (may be multi lined) which will be inserted after call of the target function and before output variables. May not use variable declarations. Usually, this code calculate variables, which will be used in output.</listitem>
     </varlistentry>
     <varlistentry><term>epilogue</term>
-        <listitem>code (may be multi lined) which will be inserted at the end of replacement function (after output values). If <code>prologue</code> or <code>middleCode</code> requests some resources from the kernel, this code may used for returning this resources back.</listitem>
+        <listitem>code (may be multi lined) which will be inserted at the end of replacement function (after output values). If <code>prologue</code> or <code>middleCode</code> requests some resources from the kernel, this code may be used for returning this resources back.</listitem>
     </varlistentry>
 </variablelist>
 Visibility of variables in different parts of code of the replacement function may be described as pseudocode:

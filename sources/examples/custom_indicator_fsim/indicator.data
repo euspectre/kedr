@@ -1,0 +1,27 @@
+# This module implements indicator for kstrdup() function.
+
+module.author = Tsyvarev
+module.license = GPL
+
+global =>>
+#include <linux/gfp.h>      /* gfp_flags constants */
+#include <linux/types.h>    /* size_t */
+<<
+
+indicator.name = kstrdup
+
+indicator.parameters.type = size_t
+indicator.parameters.name = len
+
+indicator.parameters.type = gfp_t
+indicator.parameters.name = flags
+
+expression.constants.c_name = GFP_NOWAIT
+expression.constants.c_name = GFP_KERNEL
+expression.constants.c_name = GFP_USER
+expression.constants.c_name = GFP_ATOMIC
+
+expression.vars.name = strlen
+expression.vars.value = len
+
+expression.vars.pname = flags
