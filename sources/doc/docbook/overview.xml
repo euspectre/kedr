@@ -219,7 +219,7 @@ the basis of various data collection systems used in the kernel;
 </para></listitem>
 
 <listitem><para>
-<firstterm>netlink</firstterm> as the mechanism for data exchange between 
+<firstterm>debugfs</firstterm> file system as the mechanism for data exchange between 
 the kernel space and the user space.
 </para></listitem>
 </itemizedlist>
