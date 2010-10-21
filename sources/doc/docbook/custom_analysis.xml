@@ -1,6 +1,278 @@
 ﻿<section id="custom_analysis">
-<title>Implementing New Types of Analysis</title>
+<title>Implementing Custom Types of Analysis</title>
 
-TODO
+<para>
+KEDR is not only a system to perform call monitoring and fault simulation for the target kernel modules. It is a framework that allows to implement different kinds of analysis based on the information about the function calls made by the target module.
+</para>
+
+<para>
+In this section, we will show how to create a custom analysis system on top of KEDR. The system we are going to use as an example is rather simple: it maintains a set of counters accessible from user space that provide some information about the actions of the target module.
+</para>
+
+<para>
+This analysis system will use neither call monitoring nor fault simulation facilities of KEDR. It will only rely on KEDR core and on the <link linkend="payload_api">API</link> it provides. Other types of analysis could be implemented in a way similar to this example.
+</para>
+
+<para>
+In general, a custom analysis system based on KEDR can be created in the following steps.
+</para>
+
+<orderedlist>
+<listitem><para>Determine which information about the actions of the target module should be processed by your analysis system. Decide whether it is enough to process (and may be alter to some extent) the function calls to collect this information. If so, KEDR could be of help here.</para></listitem>
+
+<listitem><para>Determine the calls to which functions your system needs to intercept to collect the necessary data or alter the behaviour of the target module in a required way. Note that it is only ordinary functions that count here rather than macros or inlines.</para></listitem>
+
+<listitem><para>Prepare the source code of the payload module for KEDR that will process these intercepted functions. The examples we provide with KEDR as well as the <link linkend="payload_api.stub">skeleton of a payload module</link> described in this manual can be helpful here.</para></listitem>
+
+<listitem><para>Build the payload module. This is done in almost the same way as for any other kernel module.</para></listitem>
+</orderedlist>
+
+<para>
+Once the above steps are completed, KEDR utilities can be used to load your payload module along with the KEDR core. You can now load the target module and your system will start analyzing it.
+</para>
+
+<note><para>
+The source code of the analysis system developed in this example is available in <filename class="directory">&lt;kedr_install_dir&gt;/share/kedr/examples/counters/</filename>.
+</para></note>
+<!-- ============================================================== -->
+
+<section id="custom_analysis.basics">
+<title>Choosing the Counters and the Functions to Process</title>
+
+<para>
+Suppose the following counters are going to be supported by our analysis system:
+</para>
+
+<itemizedlist>
+<listitem><para>total number of memory allocation attempts;</para></listitem>
+<listitem><para>number of memory allocation attempts that have failed;</para></listitem>
+<listitem><para>size of the largest memory block requested to be allocated;</para></listitem>
+<listitem><para>total number of mutex lock operations;</para></listitem>
+<listitem><para>mutex balance, i.e. the difference between the total numbers of lock and unlock operations.</para></listitem>
+</itemizedlist>
+
+<para>
+To make the counters accessible from the user space, we can, for example, provide a file in <filename class="directory">kedr_counters_example</filename> directory in debugfs for each one of them.
+</para>
+
+<para>
+Once we have decided which data concerning a target kernel module our system will be collecting and processing, we need to determine which function calls made by the module the system should intercept.
+</para>
+
+<para>
+Consider the first three counters. All of them are related to memory allocation. To collect necessary data when the target module operates, we can  use call interception facilities provided by KEDR. When the target module calls some function that allocates memory, the corresponding function provided by our analysis system will be called instead with the same arguments. 
+</para>
+
+<para>
+There is a number of memory allocation functions available for kernel modules. Assume for simplicity that we choose to process only the calls to the following ones:
+</para>
+
+<itemizedlist>
+<listitem><para><code>void* __kmalloc(size_t size, gfp_t flags)</code></para></listitem>
+<listitem><para><code>void* krealloc(const void* p, size_t size, gfp_t flags)</code></para></listitem>
+<listitem><para><code>void* kmem_cache_alloc(struct kmem_cache* mc, gfp_t flags)</code></para></listitem>
+</itemizedlist>
+
+<note><para>
+It should not be very hard to extend this example to support other functions that allocate memory like <code>vmalloc()</code>, <code>kstrdup()</code>, etc.
+</para></note>
+
+<para>
+To collect data necessary to provide the remaining two counters, our system needs to process the calls to the operations with mutexes:
+</para>
+
+<itemizedlist>
+<listitem><para><code>void mutex_lock(struct mutex* lock)</code></para></listitem>
+<listitem><para><code>int mutex_lock_interruptible(struct mutex* lock)</code></para></listitem>
+<listitem><para><code>int mutex_lock_killable(struct mutex* lock)</code></para></listitem>
+<listitem><para><code>int mutex_trylock(struct mutex* lock)</code></para></listitem>
+<listitem><para><code>void mutex_unlock(struct mutex* lock)</code></para></listitem>
+</itemizedlist>
+
+<note><para>
+Note that the functions may be different for different variants and versions of the Linux kernel. There is no stable binary interface in the Linux kernel anyway. Please choose memory allocation operations and mutex-related functions appropriate for your kernel.
+</para></note>
+
+</section>
+<!-- ============================================================== -->
+
+<section id="custom_analysis.payload">
+<title>Creating the Payload Module</title>
+
+<para>
+To implement our analysis system, we need to create <link linkend="payload_module">a payload module</link> for KEDR. As a starting point, we can use, for example, the skeleton of a module given in <xref linkend="payload_api.stub"/>. The module should provide <link linkend="replacement_function">a replacement function</link> for each functon we have chosen above.
+</para>
+
+<para>
+The instance of <code>struct kedr_payload</code> could be filled as follows (this structure should be used when registering and unregistering the payload module with KEDR core):
+</para>
+
+<programlisting><![CDATA[
+/* Names and addresses of the functions of interest */
+static void* orig_addrs[] = {
+    (void*)&__kmalloc,
+    (void*)&krealloc,
+    (void*)&kmem_cache_alloc,
+    (void*)&mutex_lock,
+    (void*)&mutex_lock_interruptible,
+    (void*)&mutex_lock_killable,
+    (void*)&mutex_trylock,
+    (void*)&mutex_unlock
+};
+
+/* Addresses of the replacement functions - must go 
+ * in the same order as for the original functions.
+ */
+static void* repl_addrs[] = {
+    (void*)&repl___kmalloc,
+    (void*)&repl_krealloc,
+    (void*)&repl_kmem_cache_alloc,
+    (void*)&repl_mutex_lock,
+    (void*)&repl_mutex_lock_interruptible,
+    (void*)&repl_mutex_lock_killable,
+    (void*)&repl_mutex_trylock,
+    (void*)&repl_mutex_unlock
+};
+
+static struct kedr_payload counters_payload = {
+    .mod                    = THIS_MODULE,
+    .repl_table.orig_addrs  = &orig_addrs[0],
+    .repl_table.repl_addrs  = &repl_addrs[0],
+    .repl_table.num_addrs   = ARRAY_SIZE(orig_addrs)
+};
+]]></programlisting>
+
+<para>
+The initial value of each counter is 0. The replacement functions actually update the counters. They do this with special locks held to avoid some of the concurrency issues. For example, the replacement function for <code>__kmalloc()</code> looks like this:
+</para>
+
+<programlisting><![CDATA[
+static void*
+repl___kmalloc(size_t size, gfp_t flags)
+{
+    unsigned long irq_flags;
+    void* returnValue;
+    
+    /* Call the target function */
+    returnValue = __kmalloc(size, flags);
+    
+    spin_lock_irqsave(&spinlock_alloc_total, irq_flags);
+    ++cnt_alloc_total;
+    spin_unlock_irqrestore(&spinlock_alloc_total, irq_flags);
+    
+    spin_lock_irqsave(&spinlock_alloc_failed, irq_flags);
+    if (returnValue == NULL) ++cnt_alloc_failed;
+    spin_unlock_irqrestore(&spinlock_alloc_failed, irq_flags);
+    
+    spin_lock_irqsave(&spinlock_alloc_max_size, irq_flags);
+    if (size > cnt_alloc_max_size) cnt_alloc_max_size = size;
+    spin_unlock_irqrestore(&spinlock_alloc_max_size, irq_flags);
+
+    return returnValue;
+}
+]]></programlisting>
+
+<para>
+This replacement function calls <code>__kmalloc()</code> (<link linkend="target_function">target function</link>) and records its return value. After that, it updates the variables corresponding to the relevant counters, <code>cnt_alloc_total</code>, <code>cnt_alloc_failed</code> and <code>cnt_alloc_max_size</code>. It is not generally mandatory to call the target function there (for example, see <xref linkend="fault_sim"/>) but it is necessary for the kind of analysis we implement in this example.
+</para>
+
+<para>
+The technical details concerning the creation of files for the counters in debugfs, are not described here. If you are interested in these details, see the source code of <quote>Counters</quote> example.
+</para>
+
+<note>
+<para>
+Note that it is not mandatory to implement all the counters in a single payload module. For example, we could provide a module that implements the counters related to memory allocation and another one for those dealing with mutexes. As long as the sets of the <link linkend="target_function">target functions</link> do not intersect with each other, we may create a separate module for each set and use all these modules at the same time to analyse the target module. 
+</para>
+
+<para>
+For simplicity, we implement all the counters in a single payload module in this example.
+</para>
+</note>
+
+</section>
+<!-- ============================================================== -->
+
+<section id="custom_analysis.build">
+<title>Building the Payload Module</title>
+
+<para>
+The payload module that we have prepared can be built much in the same way as any other kernel module. Still, there is a couple of things to take into account.
+</para>
+
+<para>
+First, the module uses header files provided by KEDR, so the top include directory of KEDR should be specified in <code>-I</code> compiler option. The directory is usually <filename class="directory">&lt;kedr_install_dir&gt;/include/</filename>.
+</para>
+
+<para>
+Second, each payload module uses functions exported by KEDR core and therefore needs the appropriate .symvers file. Before building the module, you should copy <filename>kedr_base.symvers</filename> file provided by KEDR to the directory of the payload module and rename it to <filename>Module.symvers</filename>. <filename>kedr_base.symvers</filename> is usually located in <filename class="directory">/lib/modules/`uname -r`/symvers/</filename> or in <filename class="directory">&lt;kedr_install_dir&gt;/lib/modules/`uname -r`/symvers/</filename> in case of a non-global installation of KEDR.
+</para>
+
+<para>
+You can look at <filename>Kbuild</filename> and <filename>makefile</filename> files to see how the payload is built in <quote>Counters</quote> example.
+</para>
+
+</section>
+<!-- ============================================================== -->
+
+<section id="custom_analysis.use">
+<title>Using the Payload Module</title>
+
+<para>
+Now that the payload module for our analysis system is built, we can use it to see how the values of the counters change as the target module operates. You can chose any kernel module as a target if you know how to properly load it and to make it operate.
+</para>
+
+<important><para>
+It is not recommended to simultaneously use payload modules implementing different types of analysis. That is, it is better not to mix the payload module from <quote>Counters</quote> example with those intended for call monitoring, fault simulation, etc. One of the problems that may arise here is the conflicting sets of target functions. Currently, KEDR does not detect whether the sets of target functions that the payload modules process intersect or not. If a target function is processed by more than one payload module that are currently loaded, the behaviour of KEDR is undefined.
+</para></important>
+
+<para>
+Our analysis system makes the counters available via the files in debugfs. So if debugfs is not mounted (usually its directory is <filename class="directory">/sys/kernel/debug/</filename>), mount it first to a directory of your choice. For example,
+</para>
+
+<programlisting><![CDATA[
+mount debugfs -t debugfs some_dir/debugfs
+]]></programlisting>
+	
+<para>
+Now it is time to load KEDR core and <filename>kedr_counters.ko</filename> payload module that we have built before. The easiest way is 
+probably to create a configuration file, say, <filename>my.conf</filename>, with the following contents:
+</para>
+
+<programlisting><![CDATA[
+payload path_to_example_directory/kedr_counters.ko
+]]></programlisting>
+	
+<para>
+and use <command>kedr start</command> with that file:
+</para>
+
+<programlisting><![CDATA[
+kedr start <name_of_target_module> my.conf
+]]></programlisting>
+
+<para>
+See <xref linkend="kedr_control"/> for a detailed information about the configuration files, <command>kedr start</command>, etc.
+</para>
+
+<para>
+Load target module and do something with it. While it is working (and also after it is unloaded), you can check how the counters are shown in the 
+files in <filename class="directory">kedr_counters_example</filename> subdirectory in debugfs.
+</para>
+
+<programlisting><![CDATA[
+tester@lab-x86:> cd /sys/kernel/debug/kedr_counters_example/
+tester@lab-x86:> ls
+alloc_failed  alloc_max_size  alloc_total  mutex_balance  mutex_locks
+
+tester@lab-x86:> cat alloc_max_size 
+Maximum size of a memory chunk requested: 48
+]]></programlisting>
+
+<note><para>
+Note that if you unload the target module and then load it again while the analysis system (KEDR core modules and <filename>kedr_counters.ko</filename> payload module) is loaded, the counters will not be reset. This is a known limitation of this example.
+</para></note>
+</section>
+<!-- ============================================================== -->
 
 </section>
