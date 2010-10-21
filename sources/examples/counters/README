@@ -63,3 +63,8 @@ directly by the target kernel module.
 krealloc, kmem_cache_alloc). If the target module uses other means to 
 allocate memory, it will go unnoticed by the analysis system in this 
 example. However, it can be extended to handle these too.
+
+3. If the target module is loaded and unloaded more than once during the 
+operation of the analysis system, the counters are not reset. That is, they 
+will show the total values, no matter how many times the target module was 
+loaded.
