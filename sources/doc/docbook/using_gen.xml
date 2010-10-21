@@ -16,7 +16,7 @@ Aside from using this mechanizm inside KEDR, it may be used for creating custom 
         <listitem>all features of your module are described in one place (not scattered over different files or over one long file); every line in the 'definition' file is self explanatory</listitem>
     </varlistentry>
     <varlistentry><term>it use high level of abstraction</term>
-        <listitem>while writting 'definition' file, you shouldn't be aware of what file(s) will be generating from them, and how exactly one or another feature will be implemented</listitem>
+        <listitem>while writing 'definition' file, you shouldn't be aware of what file(s) will be generating from them, and how exactly one or another feature will be implemented</listitem>
     </varlistentry>
     <varlistentry><term>it error free</term>
         <listitem>If 'definition' file is written correctly, it should generate correct code of the module; the most lines in the 'definition' file simply introduce names of some essences - such lines are always correct; rare interline dependencies may be easy debugged in clear and short 'definition' file, same for rare code chunks definitions.</listitem>

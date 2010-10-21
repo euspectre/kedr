@@ -1,5 +1,5 @@
 ﻿<section id="custom_callm_payloads">
-<title>Writting Custom Payloads for Call Monitoring</title>
+<title>Writing Custom Payloads for Call Monitoring</title>
     <para>
 This is a description, how to write new payload module for call monitoring, using KEDR tool for generation files from templates. Common abilities of this tool are detailed descibed in <xref linkend="using_gen"/> ...
     </para>
@@ -196,7 +196,7 @@ size_t size = kmem_cache_size(mc);
     </programlisting>
     </para>
     <para>
-After writting <filename>payload.data</filename> file, you may rewrite value of module_name variable in the <filename>makefile</filename> and <filename>Kbuild</filename> according to one you use as value of <quote>module.name</quote> parameter. In the future, this step may be implemented in the <filename>makefile</filename> itself.
+After writing <filename>payload.data</filename> file, you may rewrite value of module_name variable in the <filename>makefile</filename> and <filename>Kbuild</filename> according to one you use as value of <quote>module.name</quote> parameter. In the future, this step may be implemented in the <filename>makefile</filename> itself.
     </para>
 Next, and the last step is running <command>make</command> utility. It generate sources for payload module, and then build this module. That is all.
     <para>

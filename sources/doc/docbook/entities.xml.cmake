@@ -4,7 +4,7 @@
 
 <!-- release- and version-related stuff -->
 <!ENTITY rel-version "@KEDR_VERSION_MAJOR@.@KEDR_VERSION_MINOR@">
-<!ENTITY rel-date    "November 21, 2010">
+<!ENTITY rel-date    "November 23, 2010">
 <!ENTITY kedr-lifespan   "2010">
 
 <!-- email addresses -->

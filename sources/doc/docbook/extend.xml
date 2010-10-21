@@ -1,18 +1,7 @@
 ﻿<section id="extend">
 <title>Customizing and Extending KEDR</title>
 
-TODO: describe how implement custom types of analysis on top of KEDR. 
-Describe the API for payload modules too. 
-+Example: at least a stub for a payload module (with templates, data files, etc.) - 
-a starting point for those who writes payload modules of custom types.
-
-<!-- Custom Target Functions -->
-&kedr_custom_functions;
-
-<!-- API for Payload Modules -->
-&kedr_payload_api;
-
-<!-- How to use Generator -->
+<!-- How to Use the Generator -->
 &kedr_using_gen;
 
 <!-- Custom Call Monitor Payloads -->

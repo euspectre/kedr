@@ -197,7 +197,7 @@ dd-743 [000] 99861.116614: called_copy_from_user: arguments(decaa000, 09b00000, 
     </programlisting>
 First line says, that KEDR is determine, that target module is loaded.
 Second line shows information about the first detected call of kernel function - __kmalloc, and show parameters, which has passed to it(size=184, flags=0xd0) and value, which this call has returned (adresss 0xd80c3600). According to the process name - 'insmod' - we may assume, that this call has done at initialization stage of the module.
-Third line also shows detected call of __kmalloc, but at the writting stage - process name is 'dd'.
+Third line also shows detected call of __kmalloc, but at the writing stage - process name is 'dd'.
 Forth line shows detected call of another kernel function - copy_from_user.
 And so on.
 </para>

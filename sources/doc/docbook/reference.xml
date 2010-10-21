@@ -1,5 +1,10 @@
 ﻿<section id="reference">
 <title>KEDR Reference</title>
 
+<!-- API for Payload Modules -->
+&kedr_payload_api;
+
+<!-- 
 TODO: Precise information about components
+-->
 </section>
