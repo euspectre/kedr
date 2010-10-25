@@ -39,7 +39,9 @@ static struct kedr_payload payload = {
     .mod                    = THIS_MODULE,
     .repl_table.orig_addrs  = &orig_addrs[0],
     .repl_table.repl_addrs  = &repl_addrs[0],
-    .repl_table.num_addrs   = ARRAY_SIZE(orig_addrs)
+    .repl_table.num_addrs   = ARRAY_SIZE(orig_addrs),
+    .target_load_callback   = NULL, /* TODO */
+    .target_unload_callback = NULL  /* TODO */
 };
 /*********************************************************************/
 

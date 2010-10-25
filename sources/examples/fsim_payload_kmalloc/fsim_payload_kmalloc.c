@@ -42,6 +42,8 @@ struct kedr_payload fsim_payload_kmalloc =
         .repl_addrs = &p_repl___kmalloc,//
         .num_addrs = 1,
     },
+    .target_load_callback   = NULL,
+    .target_unload_callback = NULL
 };
 
 static int __init

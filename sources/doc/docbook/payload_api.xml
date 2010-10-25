@@ -43,9 +43,9 @@ analysis.
 <programlisting><![CDATA[
 struct kedr_repl_table
 {
-	void** orig_addrs; 
-	void** repl_addrs; 
-	unsigned int num_addrs;
+    void** orig_addrs; 
+    void** repl_addrs; 
+    unsigned int num_addrs;
 };
 ]]></programlisting>
 
@@ -88,8 +88,10 @@ point of view of the KEDR core.
 <programlisting><![CDATA[
 struct kedr_payload
 {
-	struct module* mod;
-	struct kedr_repl_table repl_table;
+    struct module* mod;
+    struct kedr_repl_table repl_table;
+    void (*target_load_callback)(struct module*);
+    void (*target_unload_callback)(struct module*);
 };
 ]]></programlisting>
 
@@ -101,6 +103,15 @@ initialized with <code>THIS_MODULE</code> value.
 <para>
 <code>repl_table</code> - <link linkend="payload_api.rtable">the 
 replacement table</link>.
+</para>
+
+<para>
+<code>target_load_callback</code> and <code>target_unload_callback</code>. If 
+not NULL, these callbacks are called by KEDR core after the target module is loaded (but 
+before it begins its initialization) and, respectively, when the target module 
+has done cleaning up and is about to unload. The callbacks are passed the 
+pointer to the target module as an argument. If a callback is NULL, it is 
+ignored.
 </para>
 
 <para>
@@ -116,21 +127,23 @@ Example:
 <programlisting><![CDATA[
 /* Addresses of the functions of interest (target functions) */
 static void* orig_addrs[] = {
-	(void*)&_copy_to_user,
-	(void*)&_copy_from_user
+    (void*)&_copy_to_user,
+    (void*)&_copy_from_user
 };
 
 /* Addresses of the replacement functions */
 static void* repl_addrs[] = {
-	(void*)&repl__copy_to_user,
-	(void*)&repl__copy_from_user
+    (void*)&repl__copy_to_user,
+    (void*)&repl__copy_from_user
 };
 
 static struct kedr_payload payload = {
-	.mod                    = THIS_MODULE,
-	.repl_table.orig_addrs  = &orig_addrs[0],
-	.repl_table.repl_addrs  = &repl_addrs[0],
-	.repl_table.num_addrs   = ARRAY_SIZE(orig_addrs)
+    .mod                    = THIS_MODULE,
+    .repl_table.orig_addrs  = &orig_addrs[0],
+    .repl_table.repl_addrs  = &repl_addrs[0],
+    .repl_table.num_addrs   = ARRAY_SIZE(orig_addrs),
+    .target_load_callback   = NULL,
+    .target_unload_callback = NULL
 };
 ]]></programlisting>
 

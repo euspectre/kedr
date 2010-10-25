@@ -4,10 +4,10 @@
  * to allow call interception.
  *
  * Copyright (C) 2010 Institute for System Programming 
- *		              of the Russian Academy of Sciences (ISPRAS)
+ *                    of the Russian Academy of Sciences (ISPRAS)
  * Authors: 
- *		Eugene A. Shatokhin <spectre@ispras.ru>
- *		Andrey V. Tsyvarev  <tsyvarev@ispras.ru>
+ *      Eugene A. Shatokhin <spectre@ispras.ru>
+ *      Andrey V. Tsyvarev  <tsyvarev@ispras.ru>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -111,11 +111,6 @@ int handle_module_notifications = 0;
  * kedr-base) 
  */
 struct kedr_repl_table repl_table;
-
-/* The combined replacement table  
-void** orig_addrs = NULL;
-void** repl_addrs = NULL;
-unsigned int num_addrs = 0;*/
 
 /* ================================================================ */
 /* Helpers */
@@ -444,8 +439,16 @@ on_module_load(struct module *mod)
 	target_in_init = 1;
 	spin_unlock_irqrestore(&target_in_init_lock, flags);
 	
+	trace_target_session_begins(target_name);
+    /* Until this function finishes, no replacement function will be called
+	 * because the target module has not completed loading yet. That means,
+	 * no tracepoint will be triggered in the target module before the 
+	 * tracepoint above is triggered. The order of the messages in the trace
+	 * is still up to the tracing system.
+	 */
+	
 	/* Notify the base and request the combined replacement table */
-	ret = kedr_impl_on_target_load(&repl_table);
+	ret = kedr_impl_on_target_load(target_module, &repl_table);
 	if (ret != 0)
 	{
 		KEDR_MSG(COMPONENT_STRING
@@ -454,14 +457,6 @@ on_module_load(struct module *mod)
 	}
 	
 	replace_calls_in_module(mod);
-	trace_target_session_begins(target_name);
-	
-	/* Until this function finishes, no replacement function will be called
-	 * because the target module has not completed loading yet. That means,
-	 * no tracepoint will be triggered in the target module before the 
-	 * tracepoint above is triggered. The order of the messages in the trace
-	 * is still up to the tracing system.
-	 */
 	return;
 }
 
@@ -498,7 +493,7 @@ on_module_unload(struct module *mod)
 	spin_unlock_irqrestore(&target_in_init_lock, flags);
 	
 	/* Notify the base */
-	ret = kedr_impl_on_target_unload();
+	ret = kedr_impl_on_target_unload(target_module);
 	if (ret != 0)
 	{
 		KEDR_MSG(COMPONENT_STRING

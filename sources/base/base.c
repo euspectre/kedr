@@ -54,7 +54,7 @@ MODULE_LICENSE("GPL");
 struct payload_module_list
 {
 	struct list_head list;
-	struct kedr_payload* payload;
+	struct kedr_payload *payload;
 };
 /* ================================================================ */
 
@@ -70,7 +70,7 @@ int deny_payload_register = 0;
 struct kedr_repl_table combined_repl_table;
 
 /* The current controller */
-struct kedr_impl_controller* current_controller = NULL;
+struct kedr_impl_controller *current_controller = NULL;
 
 /* A mutex to protect access to the global data of kedr-base*/
 DEFINE_MUTEX(base_mutex);
@@ -79,7 +79,7 @@ DEFINE_MUTEX(base_mutex);
 /* Free the combined replacement table, reset the pointers to NULL and 
  * the number of elements - to 0. */
 static void
-free_repl_table(struct kedr_repl_table* repl_table)
+free_repl_table(struct kedr_repl_table *repl_table)
 {
 	BUG_ON(repl_table == NULL);
 	
@@ -98,9 +98,9 @@ free_repl_table(struct kedr_repl_table* repl_table)
  * the number of elements in each one is returned in '*pnum_funcs'.
  * */
 static int
-create_repl_table(struct kedr_repl_table* repl_table)
+create_repl_table(struct kedr_repl_table *repl_table)
 {
-	struct payload_module_list* entry;
+	struct payload_module_list *entry;
 	struct list_head *pos;
 	unsigned int i;
 	
@@ -169,7 +169,7 @@ base_cleanup_module(void)
 	/* If some payload modules failed to unregister themselves by now,
 	 * give warnings and unregister them now.
 	 */
-	struct payload_module_list* entry;
+	struct payload_module_list *entry;
 	struct list_head *pos, *tmp;
 	list_for_each_safe(pos, tmp, &payload_modules)
 	{
@@ -220,9 +220,9 @@ module_exit(base_exit_module);
 
 /* Look for a given element in the list. */
 static struct payload_module_list* 
-payload_find(struct kedr_payload* payload)
+payload_find(struct kedr_payload *payload)
 {
-	struct payload_module_list* entry;
+	struct payload_module_list *entry;
 	struct list_head *pos;
 	
 	list_for_each(pos, &payload_modules)
@@ -239,10 +239,10 @@ payload_find(struct kedr_payload* payload)
 /* ================================================================ */
 
 int 
-kedr_payload_register(struct kedr_payload* payload)
+kedr_payload_register(struct kedr_payload *payload)
 {
 	int result = 0;
-	struct payload_module_list* new_elem = NULL;
+	struct payload_module_list *new_elem = NULL;
 	
 	BUG_ON(payload == NULL);
     
@@ -294,9 +294,9 @@ out:
 EXPORT_SYMBOL(kedr_payload_register);
 
 void 
-kedr_payload_unregister(struct kedr_payload* payload)
+kedr_payload_unregister(struct kedr_payload *payload)
 {
-	struct payload_module_list* doomed = NULL;
+	struct payload_module_list *doomed = NULL;
 	BUG_ON(payload == NULL);
 
 	if (mutex_lock_interruptible(&base_mutex))
@@ -353,7 +353,7 @@ EXPORT_SYMBOL(kedr_target_module_in_init);
 
 /**********************************************************************/
 int 
-kedr_impl_controller_register(struct kedr_impl_controller* controller)
+kedr_impl_controller_register(struct kedr_impl_controller *controller)
 {
 	int result = 0;
 	KEDR_MSG(COMPONENT_STRING
@@ -391,7 +391,7 @@ out:
 EXPORT_SYMBOL(kedr_impl_controller_register);
 
 void
-kedr_impl_controller_unregister(struct kedr_impl_controller* controller)
+kedr_impl_controller_unregister(struct kedr_impl_controller *controller)
 {
 	KEDR_MSG(COMPONENT_STRING
 	"kedr_impl_controller_unregister()\n");
@@ -435,16 +435,19 @@ kedr_impl_controller_unregister(struct kedr_impl_controller* controller)
 EXPORT_SYMBOL(kedr_impl_controller_unregister);
 
 int
-kedr_impl_on_target_load(struct kedr_repl_table* ptable)
+kedr_impl_on_target_load(struct module *target_module, 
+    struct kedr_repl_table *ptable)
 {
 	int result = 0;
-	struct payload_module_list* entry;
+	struct payload_module_list *entry;
 	struct list_head *pos;
+    struct kedr_payload *payload;
 	
 	KEDR_MSG(COMPONENT_STRING
 	"kedr_impl_on_target_load()\n");
 	
 	BUG_ON(ptable == NULL);
+    BUG_ON(target_module == NULL);
 	
 	result = mutex_lock_interruptible(&base_mutex);
 	if (result != 0)
@@ -474,20 +477,25 @@ kedr_impl_on_target_load(struct kedr_repl_table* ptable)
 	list_for_each(pos, &payload_modules)
 	{
 		entry = list_entry(pos, struct payload_module_list, list);
-		BUG_ON(entry->payload->mod == NULL);
+        payload = entry->payload;
+		BUG_ON(payload->mod == NULL);
 		
 		KEDR_MSG(COMPONENT_STRING
 		"calling try_module_get() for payload module \"%s\".\n",
-			module_name(entry->payload->mod));
+			module_name(payload->mod));
 		
-		if(try_module_get(entry->payload->mod) == 0)
+		if (try_module_get(payload->mod) == 0)
 		{
 			KEDR_MSG(COMPONENT_STRING
 		"try_module_get() failed for payload module \"%s\".\n",
-				module_name(entry->payload->mod));
+				module_name(payload->mod));
 			result = -EFAULT; 
 			goto out;
 		}
+        
+        /* Notify the payload module that the target has just loaded */
+        if (payload->target_load_callback != NULL)
+            (*(payload->target_load_callback))(target_module);
 	}
 	
 	/* Make the controller stay loaded as long as the target stays loaded */
@@ -508,14 +516,17 @@ out:
 EXPORT_SYMBOL(kedr_impl_on_target_load);
 
 int
-kedr_impl_on_target_unload(void)
+kedr_impl_on_target_unload(struct module *target_module)
 {
 	int result;
-	struct payload_module_list* entry;
+	struct payload_module_list *entry;
 	struct list_head *pos;
+    struct kedr_payload *payload;
 	
 	KEDR_MSG(COMPONENT_STRING
 	"kedr_impl_on_target_unload()\n");
+    
+    BUG_ON(target_module == NULL);
 	
 	result = mutex_lock_interruptible(&base_mutex);
 	if (result != 0)
@@ -533,12 +544,17 @@ kedr_impl_on_target_unload(void)
 	list_for_each(pos, &payload_modules)
 	{
 		entry = list_entry(pos, struct payload_module_list, list);
-		BUG_ON(entry->payload->mod == NULL);
+        payload = entry->payload;
+		BUG_ON(payload->mod == NULL);
+		
+		/* Notify the payload module that the target is about to unload */
+        if (payload->target_unload_callback != NULL)
+            (*(payload->target_unload_callback))(target_module);
 		
 		KEDR_MSG(COMPONENT_STRING
 			"module_put() for payload module \"%s\".\n",
-			module_name(entry->payload->mod));
-		module_put(entry->payload->mod);
+			module_name(payload->mod));
+		module_put(payload->mod);
 	}
 	
 	/* Release the controller module as well */

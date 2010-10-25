@@ -40,6 +40,17 @@ struct kedr_payload
 	
 	/* function replacement table */ 
 	struct kedr_repl_table repl_table;
+    
+    /* If not NULL, these callbacks are called after the target module is
+     * loaded (but before it begins its initialization) and, respectively,
+     * when the target module has done cleaning up and is about to unload.
+     * The callbacks are passed the pointer to the target module as 
+     * an argument. 
+     * 
+     * If a callback is NULL, it is ignored.
+     */
+    void (*target_load_callback)(struct module*);
+    void (*target_unload_callback)(struct module*);
 };
 
 /*
@@ -61,7 +72,7 @@ struct kedr_payload
  * This function is usually called in the init function of a payload module.
  * */
 int 
-kedr_payload_register(struct kedr_payload* payload);
+kedr_payload_register(struct kedr_payload *payload);
 
 /* Unregisters a payload module, the controller will not use it any more.
  * 'payload' should be the same as passed to the corresponding call to
@@ -71,7 +82,7 @@ kedr_payload_register(struct kedr_payload* payload);
  * module.
  * */
 void 
-kedr_payload_unregister(struct kedr_payload* payload);
+kedr_payload_unregister(struct kedr_payload *payload);
 
 /* Returns nonzero if a target module is currently loaded and it executes 
  * its init function at the moment, 0 otherwise (0 is returned even if there
@@ -151,20 +162,21 @@ struct kedr_impl_controller
  * The function returns 0 if successful, an error code otherwise.
  */
 int 
-kedr_impl_controller_register(struct kedr_impl_controller* controller);
+kedr_impl_controller_register(struct kedr_impl_controller *controller);
 
 /* 
  * Unregisters the controller (should be called in the controller's cleanup
  * function).
  */
 void
-kedr_impl_controller_unregister(struct kedr_impl_controller* controller);
+kedr_impl_controller_unregister(struct kedr_impl_controller *controller);
 
 /*
  * This function is called by the controller to inform the base that 
  * a target module has been loaded into memory and is about to be 
  * instrumented.
- * The base can use this to lock the payload modules in memory, etc.
+ * The base can use this to lock the payload modules in memory, notify 
+ * them, etc.
  * The base also fills the combined replacement table (*ptable).
  * In case of failure, the contents of the table are undefined.
  *
@@ -172,10 +184,15 @@ kedr_impl_controller_unregister(struct kedr_impl_controller* controller);
  * registered payloads. The contents of the table are owned by the base and 
  * must not be modified by the caller.
  *
+ * When calling kedr_impl_on_target_*() functions, the controller passes 
+ * the pointer to the target module as the parameter. The base passed this 
+ * pointer to the load/unload callbacks registered by payload modules.
+ *
  * The function returns 0 if successful, an error code otherwise.
  */
 int
-kedr_impl_on_target_load(struct kedr_repl_table* ptable);
+kedr_impl_on_target_load(struct module *target_module, 
+    struct kedr_repl_table* ptable);
 	
 /*
  * This function is called by the controller to inform the base that 
@@ -184,7 +201,7 @@ kedr_impl_on_target_load(struct kedr_repl_table* ptable);
  * The function returns 0 if successful or an error code in case of failure.
  */
 int
-kedr_impl_on_target_unload(void);
+kedr_impl_on_target_unload(struct module *target_module);
 
 /**********************************************************************/
 #endif /* COMMON_H_1739_INCLUDED */

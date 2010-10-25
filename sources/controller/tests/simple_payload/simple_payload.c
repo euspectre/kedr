@@ -2,10 +2,10 @@
  * A simple payload module - for testing purposes only.
  *
  * Copyright (C) 2010 Institute for System Programming 
- *		              of the Russian Academy of Sciences (ISPRAS)
+ *                    of the Russian Academy of Sciences (ISPRAS)
  * Authors: 
- *		Eugene A. Shatokhin <spectre@ispras.ru>
- *		Andrey V. Tsyvarev  <tsyvarev@ispras.ru>
+ *      Eugene A. Shatokhin <spectre@ispras.ru>
+ *      Andrey V. Tsyvarev  <tsyvarev@ispras.ru>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,66 +42,68 @@ MODULE_LICENSE("GPL");
 static void*
 repl___kmalloc(size_t size, gfp_t flags)
 {
-	void* returnValue;
-	
-	printk(KERN_INFO 
-	"[simple_payload] __kmalloc called from \"%s\" part of the target code.\n",
-		(kedr_target_module_in_init() ? "init" : "core" )
-	);
-	
-	
-	/* Call the target function */
-	returnValue = __kmalloc(size, flags);
+    void* returnValue;
+    
+    printk(KERN_INFO 
+    "[simple_payload] __kmalloc called from \"%s\" part of the target code.\n",
+        (kedr_target_module_in_init() ? "init" : "core" )
+    );
+    
+    
+    /* Call the target function */
+    returnValue = __kmalloc(size, flags);
     /* Do nothing more */
 
-	return returnValue;
+    return returnValue;
 }
 
 static void
 repl_kfree(void* p)
 {
     /* Call the target function */
-	kfree(p);
-	return;
+    kfree(p);
+    return;
 }
 /*********************************************************************/
 
 /* Names and addresses of the functions of interest */
 static void* orig_addrs[] = {
-	(void*)&__kmalloc,
-	(void*)&kfree
+    (void*)&__kmalloc,
+    (void*)&kfree
 };
 
 /* Addresses of the replacement functions */
 static void* repl_addrs[] = {
-	(void*)&repl___kmalloc,
-	(void*)&repl_kfree
+    (void*)&repl___kmalloc,
+    (void*)&repl_kfree
 };
 
 static struct kedr_payload payload = {
-	.mod 							= THIS_MODULE,
-	.repl_table.orig_addrs 	= &orig_addrs[0],
-	.repl_table.repl_addrs 	= &repl_addrs[0],
-	.repl_table.num_addrs		= ARRAY_SIZE(orig_addrs)
+    .mod                    = THIS_MODULE,
+    .repl_table.orig_addrs  = &orig_addrs[0],
+    .repl_table.repl_addrs  = &repl_addrs[0],
+    .repl_table.num_addrs   = ARRAY_SIZE(orig_addrs),
+    .target_load_callback   = NULL,
+    .target_unload_callback = NULL
 };
 /*********************************************************************/
 
 static void
 simple_payload_cleanup_module(void)
 {
-	kedr_payload_unregister(&payload);
-	printk(KERN_INFO "[simple_payload] Cleanup complete\n");
-	return;
+    kedr_payload_unregister(&payload);
+    printk(KERN_INFO "[simple_payload] Cleanup complete\n");
+    return;
 }
 
 static int __init
 simple_payload_init_module(void)
 {
-	BUG_ON(	ARRAY_SIZE(orig_addrs) != 
-		ARRAY_SIZE(repl_addrs));
-	
-	printk(KERN_INFO "[simple_payload] Initializing\n");
-	return kedr_payload_register(&payload);
+    BUG_ON( ARRAY_SIZE(orig_addrs) != 
+        ARRAY_SIZE(repl_addrs));
+    
+    printk(KERN_INFO "[simple_payload] Initializing\n");
+    return kedr_payload_register(&payload);
 }
 
 module_init(simple_payload_init_module);
