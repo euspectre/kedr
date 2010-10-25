@@ -63,12 +63,12 @@ long-string = string1 \
     </programlisting>
 Also, parameters with multiline value may be defined:
     <programlisting>
-multi-line-parameter =&lt;&lt;
+multi-line-parameter =&gt;&gt;
     line1
     line2
     ...
     lineN
-&gt;&gt;
+&lt;&lt;
     </programlisting>
 Value of 'multi-line-parameter' is precisely
     <programlisting>
@@ -77,13 +77,13 @@ Value of 'multi-line-parameter' is precisely
     ...
     lineN
     </programlisting>
-Note, that new-line character should follow immidiatly after <code>&lt;&lt;</code> delimiter, and delimiter <code>&gt;&gt;</code> should be  the only one on the line except whitespace characters.
+Note, that new-line character should follow immediately after <code>&gt;&gt;</code> delimiter, and delimiter <code>&lt;&lt;</code> should be  the only one on the line except whitespace characters.
     <programlisting>
-# Correct definition of multiline parameter, contained &gt;&gt;
-multi-line-parameter =&lt;&lt;
+# Correct definition of multiline parameter, containing &gt;&gt;
+multi-line-parameter =&gt;&gt;
     &lt;&lt;a&gt;&gt;
     &lt;&lt;b&gt;&gt;
-    &gt;&gt;
+    &lt;&lt;
     </programlisting>
     </para>
     <para>
