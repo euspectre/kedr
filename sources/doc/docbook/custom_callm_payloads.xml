@@ -37,10 +37,10 @@ At global level (not inside groups) this file should contain definitions for nex
         <listitem>licence for the module</listitem>
     </varlistentry>
 </variablelist>
-Additionally, next parameters may be defined at global level:
+In addition, the following parameters may be defined at global level:
 <variablelist>
     <varlistentry><term>header</term>
-        <listitem>code (may be multi lined), which will be inserted before definition of replacement functions. Usually, this code contains '#include' directives, for header files which define target functions and types of its parameters.</listitem>
+        <listitem>the code (may be multiline) to be inserted before the definition of replacement functions. This code usually contains &apos;#include&apos; directives for header files which define target functions and types of its parameters.</listitem>
     </varlistentry>
 </variablelist>
 Example of global section of the <filename>payload.data</filename>:
