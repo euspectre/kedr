@@ -1,6 +1,6 @@
 #!/bin/sh
 
-debugfs_mount_point="@CMAKE_CURRENT_BINARY_DIR}@/debugfs"
+debugfs_mount_point="@CMAKE_CURRENT_BINARY_DIR@/debugfs"
 point_kmalloc_name=sample_point_kmalloc
 indicator_kmalloc_name=sample_indicator_kmalloc
 
