@@ -20,6 +20,48 @@ MODULE_LICENSE("<$module.license$>");
 #include "trace_payload.h" /* trace event facilities */
 
 /*********************************************************************
+ * Areas in the memory image of the target module (used to output 
+ * addresses and offsets of the calls made by the module)
+ *********************************************************************/
+/* Start address and size of "core" area: .text, etc. */
+static void *target_core_addr = NULL;
+static unsigned int target_core_size = 0;
+
+/* Start address and size of "init" area: .init.text, etc. */
+static void *target_init_addr = NULL;
+static unsigned int target_init_size = 0;
+
+/*********************************************************************
+ * The callbacks to be called after the target module has just been
+ * loaded and, respectively, when it is about to unload.
+ *********************************************************************/
+static void
+target_load_callback(struct module *target_module)
+{
+    BUG_ON(target_module == NULL);
+
+    target_core_addr = target_module->module_core;
+    target_core_size = target_module->core_text_size;
+
+    target_init_addr = target_module->module_init;
+    target_init_size = target_module->init_text_size;
+    return;
+}
+
+static void
+target_unload_callback(struct module *target_module)
+{
+    BUG_ON(target_module == NULL);
+    
+    target_core_addr = NULL;
+    target_core_size = 0;
+
+    target_init_addr = NULL;
+    target_init_size = 0;
+    return;
+}
+
+/*********************************************************************
  * Replacement functions
  *********************************************************************/
 <$block : join(\n\n)$>
@@ -40,8 +82,8 @@ static struct kedr_payload payload = {
     .repl_table.orig_addrs  = &orig_addrs[0],
     .repl_table.repl_addrs  = &repl_addrs[0],
     .repl_table.num_addrs   = ARRAY_SIZE(orig_addrs),
-    .target_load_callback   = NULL, /* TODO */
-    .target_unload_callback = NULL  /* TODO */
+    .target_load_callback   = target_load_callback,
+    .target_unload_callback = target_unload_callback
 };
 /*********************************************************************/
 
