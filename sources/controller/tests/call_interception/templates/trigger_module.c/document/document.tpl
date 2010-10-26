@@ -46,8 +46,6 @@ trigger_cleanup_module(void)
 {
 	dev_t devno = MKDEV(trigger_major, 0);
 	
-	printk(KERN_ALERT "[trigger_module] Cleaning up\n");
-	
     cdev_del(&trigger_device);
 
 	unregister_chrdev_region(devno, 1);
