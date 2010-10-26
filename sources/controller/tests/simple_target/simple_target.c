@@ -85,7 +85,8 @@ static void kedr_test_setup_cdevice(struct kedr_test_dev *dev, int index)
 	err = cdev_add(&dev->cdevice, devno, 1);
 	if (err)
 	{
-		printk(KERN_NOTICE "[simple_target] Error %d while trying to add kedr_test%d",
+		printk(KERN_WARNING "[simple_target] "
+            "Error %d while trying to add kedr_test%d",
 			err, index);
 	}
 	else
@@ -101,8 +102,6 @@ kedr_test_cleanup_module(void)
 {
 	int i;
 	dev_t devno = MKDEV(kedr_test_major, kedr_test_minor);
-	
-	printk(KERN_ALERT "[simple_target] Cleaning up\n");
 	
 	/* Get rid of our char dev entries */
 	if (kedr_test_devices) {
@@ -127,8 +126,6 @@ kedr_test_init_module(void)
 	int result = 0;
 	int i;
 	dev_t dev = 0;
-	
-	printk(KERN_ALERT "[simple_target] Initializing\n");
 	
 	if (kedr_test_ndevices <= 0)
 	{
@@ -196,8 +193,6 @@ kedr_test_open(struct inode *inode, struct file *filp)
 	
 	struct kedr_test_dev *dev = NULL;
 	
-	printk(KERN_WARNING "[simple_target] open() for MJ=%d and MN=%d\n", mj, mn);
-	
 	if (mj != kedr_test_major || mn < kedr_test_minor || 
 		mn >= kedr_test_minor + kedr_test_ndevices)
 	{
@@ -235,8 +230,6 @@ kedr_test_open(struct inode *inode, struct file *filp)
 int 
 kedr_test_release(struct inode *inode, struct file *filp)
 {
-	printk(KERN_WARNING "[simple_target] release() for MJ=%d and MN=%d\n", 
-		imajor(inode), iminor(inode));
 	return 0;
 }
 
@@ -247,9 +240,6 @@ kedr_test_read(struct file *filp, char __user *buf, size_t count,
 	struct kedr_test_dev *dev = (struct kedr_test_dev *)filp->private_data;
 	ssize_t retval = 0;
 	
-	printk(KERN_WARNING "[simple_target] read() for MJ=%d and MN=%d\n", 
-		imajor(filp->f_dentry->d_inode), iminor(filp->f_dentry->d_inode));
-
 	if (down_interruptible(&dev->sem))
 	{
 		return -ERESTARTSYS;
@@ -290,9 +280,6 @@ kedr_test_write(struct file *filp, const char __user *buf, size_t count,
 {
 	struct kedr_test_dev *dev = (struct kedr_test_dev *)filp->private_data;
 	ssize_t retval = 0;
-	
-	printk(KERN_WARNING "[simple_target] write() for MJ=%d and MN=%d\n", 
-		imajor(filp->f_dentry->d_inode), iminor(filp->f_dentry->d_inode));
 	
 	if (down_interruptible(&dev->sem))
 	{
@@ -338,9 +325,6 @@ kedr_test_ioctl(struct inode *inode, struct file *filp,
 	unsigned int block_size = 0;
 	struct kedr_test_dev *dev = (struct kedr_test_dev *)filp->private_data;
 	
-	printk(KERN_WARNING "[simple_target] ioctl() for MJ=%d and MN=%d\n", 
-		imajor(inode), iminor(inode));
-
 	/*
 	 * extract the type and number bitfields, and don't decode
 	 * wrong cmds: return ENOTTY (inappropriate ioctl) before access_ok()
@@ -406,7 +390,8 @@ kedr_test_ioctl(struct inode *inode, struct file *filp,
 		dev->block_size = block_size;
 		break;
 	
-	default:  /* redundant, as 'cmd' was checked against KEDR_TEST_IOCTL_NCODES */
+	default:  
+        /* redundant, as 'cmd' was checked against KEDR_TEST_IOCTL_NCODES */
 		retval = -ENOTTY;
 	}
 	
@@ -420,9 +405,6 @@ kedr_test_llseek(struct file *filp, loff_t off, int whence)
 {
 	struct kedr_test_dev *dev = (struct kedr_test_dev *)filp->private_data;
 	loff_t newpos = 0;
-	
-	printk(KERN_WARNING "[simple_target] read() for MJ=%d and MN=%d\n", 
-		imajor(filp->f_dentry->d_inode), iminor(filp->f_dentry->d_inode));
 	
 	switch(whence) {
 	  case 0: /* SEEK_SET */

@@ -98,8 +98,6 @@ cfake_cleanup_module(void)
 	int i;
 	dev_t devno = MKDEV(cfake_major, cfake_minor);
 	
-	printk(KERN_ALERT "[cr_target] Cleaning up\n");
-	
 	/* Get rid of our char dev entries */
 	if (cfake_devices) {
 		for (i = 0; i < cfake_ndevices; ++i) {
@@ -123,8 +121,6 @@ cfake_init_module(void)
 	int result = 0;
 	int i;
 	dev_t dev = 0;
-	
-	printk(KERN_ALERT "[cr_target] Initializing\n");
 	
 	if (cfake_ndevices <= 0)
 	{
@@ -192,8 +188,6 @@ cfake_open(struct inode *inode, struct file *filp)
 	
 	struct cfake_dev *dev = NULL;
 	
-	printk(KERN_WARNING "[cr_target] open() for MJ=%d and MN=%d\n", mj, mn);
-	
 	if (mj != cfake_major || mn < cfake_minor || 
 		mn >= cfake_minor + cfake_ndevices)
 	{
@@ -231,8 +225,6 @@ cfake_open(struct inode *inode, struct file *filp)
 int 
 cfake_release(struct inode *inode, struct file *filp)
 {
-	printk(KERN_WARNING "[cr_target] release() for MJ=%d and MN=%d\n", 
-		imajor(inode), iminor(inode));
 	return 0;
 }
 
@@ -243,9 +235,6 @@ cfake_read(struct file *filp, char __user *buf, size_t count,
 	struct cfake_dev *dev = (struct cfake_dev *)filp->private_data;
 	ssize_t retval = 0;
 	
-	printk(KERN_WARNING "[cr_target] read() for MJ=%d and MN=%d\n", 
-		imajor(filp->f_dentry->d_inode), iminor(filp->f_dentry->d_inode));
-
 	if (down_interruptible(&dev->sem))
 	{
 		return -ERESTARTSYS;
@@ -286,9 +275,6 @@ cfake_write(struct file *filp, const char __user *buf, size_t count,
 {
 	struct cfake_dev *dev = (struct cfake_dev *)filp->private_data;
 	ssize_t retval = 0;
-	
-	printk(KERN_WARNING "[cr_target] write() for MJ=%d and MN=%d\n", 
-		imajor(filp->f_dentry->d_inode), iminor(filp->f_dentry->d_inode));
 	
 	if (down_interruptible(&dev->sem))
 	{
@@ -334,9 +320,6 @@ cfake_ioctl(struct inode *inode, struct file *filp,
 	unsigned int block_size = 0;
 	struct cfake_dev *dev = (struct cfake_dev *)filp->private_data;
 	
-	printk(KERN_WARNING "[cr_target] ioctl() for MJ=%d and MN=%d\n", 
-		imajor(inode), iminor(inode));
-
 	/*
 	 * extract the type and number bitfields, and don't decode
 	 * wrong cmds: return ENOTTY (inappropriate ioctl) before access_ok()
@@ -416,9 +399,6 @@ cfake_llseek(struct file *filp, loff_t off, int whence)
 {
 	struct cfake_dev *dev = (struct cfake_dev *)filp->private_data;
 	loff_t newpos = 0;
-	
-	printk(KERN_WARNING "[cr_target] read() for MJ=%d and MN=%d\n", 
-		imajor(filp->f_dentry->d_inode), iminor(filp->f_dentry->d_inode));
 	
 	switch(whence) {
 	  case 0: /* SEEK_SET */

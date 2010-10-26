@@ -100,8 +100,6 @@ cfake_cleanup_module(void)
 	int i;
 	dev_t devno = MKDEV(cfake_major, cfake_minor);
 	
-	printk(KERN_ALERT "[cr_target] Cleaning up\n");
-	
 	/* Get rid of our char dev entries */
 	if (cfake_devices) {
 		for (i = 0; i < cfake_ndevices; ++i) {
@@ -125,8 +123,6 @@ cfake_init_module(void)
 	int result = 0;
 	int i;
 	dev_t dev = 0;
-	
-	printk(KERN_ALERT "[cr_target] Initializing\n");
 	
 	if (cfake_ndevices <= 0)
 	{

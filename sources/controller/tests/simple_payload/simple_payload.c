@@ -44,12 +44,6 @@ repl___kmalloc(size_t size, gfp_t flags)
 {
     void* returnValue;
     
-    printk(KERN_INFO 
-    "[simple_payload] __kmalloc called from \"%s\" part of the target code.\n",
-        (kedr_target_module_in_init() ? "init" : "core" )
-    );
-    
-    
     /* Call the target function */
     returnValue = __kmalloc(size, flags);
     /* Do nothing more */
@@ -92,7 +86,7 @@ static void
 simple_payload_cleanup_module(void)
 {
     kedr_payload_unregister(&payload);
-    printk(KERN_INFO "[simple_payload] Cleanup complete\n");
+    /*printk(KERN_INFO "[simple_payload] Cleanup complete\n");*/
     return;
 }
 
@@ -102,7 +96,7 @@ simple_payload_init_module(void)
     BUG_ON( ARRAY_SIZE(orig_addrs) != 
         ARRAY_SIZE(repl_addrs));
     
-    printk(KERN_INFO "[simple_payload] Initializing\n");
+    /*printk(KERN_INFO "[simple_payload] Initializing\n");*/
     return kedr_payload_register(&payload);
 }
 
