@@ -10,6 +10,8 @@ MODULE_LICENSE("<$module.license$>");
 
 #include <kedr/base/common.h>
 
+#include <linux/stacktrace.h>
+
 <$if concat(fpoint.fault_code)$>#include <kedr/fault_simulation/fault_simulation.h><$endif$>
 
 <$header$>

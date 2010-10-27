@@ -1,1 +1,1 @@
-<$if concat(trace.param.name)$><$traceParamCast : join(, )$><$else$>(int)0<$endif$>
+abs_addr, section_id, rel_addr<$if concat(trace.param.name)$>, <$traceParamCast : join(, )$><$endif$>
