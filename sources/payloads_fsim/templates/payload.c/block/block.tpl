@@ -1,3 +1,4 @@
+<$if fpoint.fault_code$>
 <$if fpoint.reuse_point$>
 //Registration of point should't occures.
 #define fsim_point_<$function.name$> fake_fsim_point
@@ -15,14 +16,14 @@ struct fsim_point_data_<$function.name$>
 };
 	<$endif$>
 <$endif$>
-
-static <$returnSpec$>
+<$endif$>
+static <$if returnType$><$returnType$><$else$>void<$endif$>
 repl_<$function.name$>(<$argumentSpec$>)
-{<$if returnsVoid$><$else$>
+{<$if returnType$>
 	<$returnType$> returnValue;<$endif$>
-    <$if concat(fpoint.param.name)$>struct fsim_point_data_<$function.name$> fsim_point_data;<$endif$>
+    <$if fpoint.fault_code$><$if concat(fpoint.param.name)$>struct fsim_point_data_<$function.name$> fsim_point_data;<$endif$><$endif$>
 <$prologue$>
-<$if concat(fpoint.param.name)$><$fsimDataMemberInitialize : join(\n)$>
+<$if fpoint.fault_code$><$if concat(fpoint.param.name)$><$fsimDataMemberInitialize : join(\n)$>
 	if(kedr_fsim_point_simulate(fsim_point_<$function.name$>, &fsim_point_data))
 <$else$>    if(kedr_fsim_point_simulate(fsim_point_<$function.name$>, NULL))
 <$endif$>
@@ -34,10 +35,11 @@ repl_<$function.name$>(<$argumentSpec$>)
 		/* Call the target function */
 		<$targetCall$>
 	}
+<$else$>    <$targetCall$><$endif$>
 <$middleCode$>
 
 	<$tracePoint$>
 
 <$epilogue$>
-	<$returnStatement$>
+	return<$if returnType$> returnValue<$endif$>;
 }

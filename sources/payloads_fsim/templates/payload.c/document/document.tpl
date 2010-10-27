@@ -10,7 +10,7 @@ MODULE_LICENSE("<$module.license$>");
 
 #include <kedr/base/common.h>
 
-#include <kedr/fault_simulation/fault_simulation.h>
+<$if concat(fpoint.fault_code)$>#include <kedr/fault_simulation/fault_simulation.h><$endif$>
 
 <$header$>
 
@@ -21,7 +21,7 @@ MODULE_LICENSE("<$module.license$>");
 #define CREATE_TRACE_POINTS
 #include "trace_payload.h" /* trace event facilities */
 
-<$if concat(fpoint.reuse_point)$>
+<$if concat(fpoint.fault_code)$><$if concat(fpoint.reuse_point)$>
 /*
  * For reusing simulation points
  * 
@@ -29,7 +29,7 @@ MODULE_LICENSE("<$module.license$>");
  * Otherwise, it should declare point variable.
  */
 static struct kedr_simulation_point* fake_fsim_point;
-<$endif$>
+<$endif$><$endif$>
 
 /*********************************************************************
  * Areas in the memory image of the target module (used to output 
@@ -88,7 +88,7 @@ static void* orig_addrs[] = {
 static void* repl_addrs[] = {
 <$replFunctionAddress : join(,\n)$>
 };
-//Arrays of simulation points and its parameters for register
+<$if concat(fpoint.fault_code)$>//Arrays of simulation points and its parameters for register
 static struct kedr_simulation_point** sim_points[] = {
 <$simPointAddress : join(,\n)$>
 };
@@ -119,7 +119,7 @@ static void unregister_point_i(int i)
 <$endif$>        
     kedr_fsim_point_unregister(*(sim_points[i]));
 }
-
+<$endif$>
 
 static struct kedr_payload payload = {
     .mod                    = THIS_MODULE,
@@ -134,11 +134,11 @@ static struct kedr_payload payload = {
 static void
 <$module.name$>_cleanup_module(void)
 {
-    int i;
+<$if concat(fpoint.fault_code)$>    int i;
     for(i = 0; i < ARRAY_SIZE(sim_points); i++)
 	{
 		unregister_point_i(i);
-	}
+	}<$endif$>
     kedr_payload_unregister(&payload);
     KEDR_MSG("[<$module.name$>] Cleanup complete\n");
     return;
@@ -147,23 +147,19 @@ static void
 static int __init
 <$module.name$>_init_module(void)
 {
-    int i;
-	int result;
+<$if concat(fpoint.fault_code)$>    int i;
+<$endif$>    int result;
 
 	BUILD_BUG_ON( ARRAY_SIZE(orig_addrs) != 
         ARRAY_SIZE(repl_addrs));
-    BUILD_BUG_ON( ARRAY_SIZE(sim_points) !=
+<$if concat(fpoint.fault_code)$>    BUILD_BUG_ON( ARRAY_SIZE(sim_points) !=
 		ARRAY_SIZE(sim_point_names));
 	BUILD_BUG_ON( ARRAY_SIZE(sim_points) !=
-		ARRAY_SIZE(sim_point_formats));
-
+		ARRAY_SIZE(sim_point_formats));<$endif$>
 
 	KEDR_MSG("[<$module.name$>] Initializing\n");
 
-    result = kedr_payload_register(&payload);
-	if(result) return result;
-
-	for(i = 0; i < ARRAY_SIZE(sim_points); i++)
+<$if concat(fpoint.fault_code)$>	for(i = 0; i < ARRAY_SIZE(sim_points); i++)
 	{
         if(register_point_i(i)) break;
 	}
@@ -174,9 +170,19 @@ static int __init
 		{
             unregister_point_i(i);
         }
-        kedr_payload_unregister(&payload);
         return -1;
 	}
+
+<$endif$>    result = kedr_payload_register(&payload);
+<$if concat(fpoint.fault_code)$>    if(result)
+    {
+		for(--i; i>=0 ; i--)
+		{
+            unregister_point_i(i);
+        }
+        return result;
+    }<$else$>    if(result) return result;
+<$endif$>
 	return 0;
 }
 

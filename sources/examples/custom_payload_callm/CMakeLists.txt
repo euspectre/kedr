@@ -19,11 +19,11 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/makefile.in"
 )
 
 # Copy templates files into build dir
-set(templates_root_dir_src "${CMAKE_SOURCE_DIR}/payloads_callm/templates")
+set(templates_root_dir_src "${CMAKE_SOURCE_DIR}/payloads_fsim/templates")
 set(templates_root_dir_dst "${CMAKE_CURRENT_BINARY_DIR}/templates")
 
 set(templates_dirs "payload.c/block" "payload.c/document" "trace_payload.h/block" "trace_payload.h/document")
-#message("Relative template dirs:" "${templates_dirs}")
+
 set(templates_dirs_src)
 set(templates_dirs_dst)
 set(templates_files_glob_expr)
@@ -33,11 +33,8 @@ foreach(template_dir ${templates_dirs})
 	list(APPEND templates_dirs_dst "${templates_root_dir_dst}/${template_dir}")
 	list(APPEND templates_files_glob_expr "${templates_root_dir_src}/${template_dir}/*.tpl")
 endforeach(template_dir ${templates_dirs})
-#message("Source template dirs:" "${templates_dirs_src}")
-#message("Glob expression:" "${templates_files_glob_expr}")
-file(GLOB custom_payload_templates_files RELATIVE "${templates_root_dir_src}" ${templates_files_glob_expr})
-#message("Template files:" ${custom_payload_templates_files})
 
+file(GLOB custom_payload_templates_files RELATIVE "${templates_root_dir_src}" ${templates_files_glob_expr})
 
 set(custom_payload_templates_files_dst)
 set(custom_payload_templates_files_src)

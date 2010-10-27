@@ -1,4 +1,5 @@
-set(KEDR_GEN_TEMPLATES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/templates/") 
+# Share templates with fault simulation
+set(KEDR_GEN_TEMPLATES_DIR "${CMAKE_SOURCE_DIR}/payloads_fsim/templates/") 
 
 kbuild_use_symbols("${CMAKE_BINARY_DIR}/base/Module.symvers")
 
