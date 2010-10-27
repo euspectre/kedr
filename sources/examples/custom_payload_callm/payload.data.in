@@ -1,6 +1,6 @@
 # This module processes the calls to module_put function.
 
-module.name = @kmodule_name@
+module.name = @module_name@
 module.author = Tsyvarev
 module.license = GPL
 
