@@ -88,7 +88,8 @@ a:hover
 .programlisting, .screen
 {
 	border: thin solid #54C571; 
-	background-color: #C3FDB8; 
+	background-color: #E1FDDA; 
+	/*background-color: #C3FDB8; */
 	font-family: monospace;
 }
 
