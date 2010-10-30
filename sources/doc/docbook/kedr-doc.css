@@ -85,7 +85,7 @@ a:hover
 	font-size: 100%;
 }
 
-.programlisting, .screen
+.programlisting, .screen, .synopsis
 {
 	border: thin solid #54C571; 
 	background-color: #E1FDDA; 
@@ -188,12 +188,12 @@ img
 .synopsis
 {
 	font-size: 100%;
-	font-family: monospace;
+	/*font-family: monospace;*/
 	/*margin-left: 0.5in;
 	margin-right: 0.5in;*/
 		
-	border: thin solid #cccccc; 
-	background-color: #C3FDB8;
+	/*border: thin solid #cccccc; 
+	background-color: #C3FDB8;*/
 }
 
 /* This style is used to emphasize a word or a part of a word.
