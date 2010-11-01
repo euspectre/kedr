@@ -178,8 +178,15 @@ fail:
 	return result;
 }
 
+static void __exit
+cfake_exit_module(void)
+{
+	cfake_cleanup_module();
+	return;
+}
+
 module_init(cfake_init_module);
-module_exit(cfake_cleanup_module);
+module_exit(cfake_exit_module);
 /* ================================================================ */
 
 int 
