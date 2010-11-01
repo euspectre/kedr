@@ -27,6 +27,12 @@ MODPROBE=/sbin/modprobe
 INSMOD=/sbin/insmod
 RMMOD=/sbin/rmmod
 
+RMMOD_ONLY_ONE=rmmod_only_one
+rmmod_only_one()
+{
+	${RMMOD} "$1"
+}
+
 # directory for temporary files
 tmp_dir=@KEDR_PREFIX_TEMP_SESSION@/control
 # Point for mount debugfs filesystem for enable tracing points in controller module
@@ -116,6 +122,11 @@ regex_parse_conf="  /^#/ d;\
 
 alias_alphabet="[^\.\/[:blank:]]"
 regex_is_alias="/^${alias_alphabet}\{1,\}\([[:blank:]]\|$\)/ b alias; b notalias"
+# For process string 
+# 'module'/'payload' <module_name> <params...>
+# in unload mode and when need payloads list - cut <params...>
+# Informal: s/\s[^`]*(`[^`]*`[^`]*)*$//
+regex_up_to_space="s/[[:blank:]][^\`]\{0,\}\(\`[^\`]\{0,\}\`[^\`]\{0,\}\)\{0,\}$//"
 
 # parse_conf_payloads conf_file
 #
@@ -124,22 +135,23 @@ regex_is_alias="/^${alias_alphabet}\{1,\}\([[:blank:]]\|$\)/ b alias; b notalias
 # 'm' - module name, 'a' - probably, alias(or module name).
 parse_conf_payloads()
 {
-    sed -n -e  "${regex_parse_conf}" -e ":payload; s/[[:blank:]].\{0,\}//;" -e "${regex_is_alias}" \
+    sed -n -e  "${regex_parse_conf}" -e ":payload; ${regex_up_to_space};" -e "${regex_is_alias}" \
             -e ":alias; s/^/a\n/p; d; :notalias; s/^.\{0,\}\///; s/\..\{0,\}$//; s/^/m\n/p; d" \
             -e ":on_load; :on_unload; :module; :error; d" "$1"
 }
 
 # parse_conf_on_load conf_file
 #
-# Translate config file to the list of commands for loading KEDR.
-# Each command string is prepended with a string, contains ordinal number of the source string.
+# Translate config file to the shell-script, which execute list of commands for loading KEDR.
+# this script accepts as parameter filename, to which line number should be stored in case of error.
 parse_conf_on_load()
 {
     sed -n -e "${regex_parse_conf}" -e ":module; :payload; ${regex_is_alias};" \
-            -e ":alias; s!^!/sbin/modprobe !; b out; :notalias; s!^!/sbin/insmod !; b out;" \
+            -e ":alias; s!^!${MODPROBE} !; b out; :notalias; s!^!${INSMOD} !; b out;" \
             -e ":on_load; b out; :on_unload; d" \
-            -e ":error; s/^/printf \"%s\\\\n\" \"Incorrect config line '/; s/$/'\"/;" \
-            -e ":out; =; p; " "$1"
+            -e ":error; s/^/printf \"%s\\\\n\" \"Incorrect config line '/; s/$/'\"/; p; d;" \
+            -e ":out; i\line=\\\\" -e" =;" -e "s/^\(.\{0,\}\)$/cat << \"EOF\"\n\\1\nEOF\n\\1/; p;" \
+			-e "a result=\$?\nif test \$result -ne 0; then echo \$line > \$1; exit \$result; fi\n" "$1"
 }
 
 # parse_conf_on_unload conf_file [line_number]
@@ -149,16 +161,12 @@ parse_conf_on_load()
 # only up to 'line_number' line(exclusive) in the configuration file.
 parse_conf_on_unload()
 {
-    if test $2; then
-        up_to_line="${2}q"
-    else
-        up_to_line=":start"
-    fi
-    sed -n  -e ${up_to_line} -e "${regex_parse_conf}" -e ":module; :payload; s/[[:blank:]].\{0,\}//; ${regex_is_alias};"\
-            -e ":alias; s!^!/sbin/modprobe -r !; b out; :notalias; s!^!/sbin/rmmod !; b out;"\
-            -e ":on_unload; b out; :on_load; d"\
-            -e ":error; s/^/printf \"%s\\\\n\" \"Incorrect config line '/; s/$/'\"/;"\
-            -e ":out; p; " "$1" | sed '1!G;h;$!d'
+    { if test $2; then head -n $(($2 - 1)) "$1"; else cat "$1"; fi; } | sed '1!G;h;$!d' | \
+	sed -n  -e "${regex_parse_conf}" -e ":module; :payload; ${regex_up_to_space}; ${regex_is_alias};" \
+            -e ":alias; s!^!${MODPROBE} -r !; b out; :notalias; s!^!${RMMOD} !; b out;" \
+            -e ":on_unload; b out; :on_load; d" \
+            -e ":error; s/^/printf \"%s\\\\n\" \"Incorrect config line '/; s/$/'\"/; p; d;" \
+            -e ":out; s/^\(.\{0,\}\)$/cat << \"EOF\"\n\\1\nEOF\n\\1/; p;"  
 }
 
 # list_loaded_payloads conf_file
@@ -195,56 +203,40 @@ list_loaded_payloads()
 # Execute lines in the configuration file in 'on_load' mode.
 execute_conf_on_load()
 {
-    OLD_IFS=${IFS}
-    IFS="$newline"
     # Output parsing results into file for debugging purposes.
-    parse_conf_on_load "$1" > ${tmp_dir}/commands_tmp.txt
-    line_number=
-    for LINE in `cat ${tmp_dir}/commands_tmp.txt`; do
-        IFS=${OLD_IFS}
-        if test -z ${line_number}; then
-            # Store executed line for rollback in case of error, when this line will be executed.
-            line_number="${LINE}"
-        else
-            if ! execute ${LINE}; then 
-                printf "Fail to execute commands for start.. rollback.\n"
-                rollback "${start_conf_file}" "$line_number"
-                return 1
-            fi
-            line_number=
-        fi
-        IFS="$newline"
-    done;
-    IFS=${OLD_IFS}
+    if ! parse_conf_on_load "$1" > ${tmp_dir}/commands_tmp.txt; then
+		printf "Fail to parse configuration file.\n"        
+		return 1
+	fi
+    if ! sh ${tmp_dir}/commands_tmp.txt "${tmp_dir}/line.txt"; then
+		printf "Fail to execute commands for start.. rollback.\n"        
+		line_number=`cat "${tmp_dir}/line.txt"`
+        rollback "${start_conf_file}" "$line_number"
+        return 1
+	fi
 }
 
 # execute_conf_on_unload conf_file
 #
-# Execute lines in the configuration file in 'on_load' mode.
+# Execute lines in the configuration file in 'on_unload' mode.
 execute_conf_on_unload()
 {
-    OLD_IFS=${IFS}
-    IFS="$newline"
-    for LINE in `parse_conf_on_unload $1`; do
-        IFS=${OLD_IFS}
-        execute ${LINE}
-        IFS="$newline"
-    done;
-    IFS=${OLD_IFS}
+	if ! parse_conf_on_unload "$1" > ${tmp_dir}/commands_unload_tmp.txt; then
+		printf "Fail to parse configuration file.\n"        
+		return 1
+	fi
+	sh ${tmp_dir}/commands_unload_tmp.txt
 }
 # rollback conf_file string_number
 #
 # Rollback first 'string_number' commands from the config files(performs unload operation for them)
 rollback()
 {
-    OLD_IFS=${IFS}
-    IFS="$newline"
-    for LINE in `parse_conf_on_unload ${start_conf_file} $2`; do
-        IFS=${OLD_IFS}
-        execute ${LINE}
-        IFS="$newline"
-    done;
-    IFS=${OLD_IFS}
+	if ! parse_conf_on_unload "$1" "$2"> ${tmp_dir}/commands_rollback_tmp.txt; then
+		printf "Fail to parse configuration file.\n"        
+		return 1
+	fi
+	sh ${tmp_dir}/commands_rollback_tmp.txt
 }
 
 
@@ -326,9 +318,14 @@ stop)
         exit 1
     fi
     printf "Stopping KEDR...\n"
-    execute_conf_on_unload "${start_conf_file}"
-    rm -f "${start_conf_file}"
-    printf "%s\n" "KEDR stopped."
+    execute_conf_on_unload "${start_conf_file}";
+	if is_module_running $base_name; then
+    	printf "Unloading KEDR was failed.\n"
+		printf "Please, fix errors occured while unloading, and retry.\n"
+		exit 1
+	fi
+	rm -f "${start_conf_file}"
+	printf "KEDR stopped.\n"
     ;;
 status)
     if test ${base_is_running} -ne 0; then
