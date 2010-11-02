@@ -40,19 +40,10 @@ static struct kedr_simulation_point* fake_fsim_point;
  *
  * All parameters should be lvalue.
  */
-#if defined(CONFIG_STACKTRACE) && defined(CONFIG_FRAME_POINTER)
 
 #define get_caller_address(abs_addr, section_id, rel_addr)      \
 do {                                                            \
-    unsigned long stack_entry;                                  \
-	struct stack_trace trace = {                                \
-		.nr_entries = 0,                                        \
-		.entries = &stack_entry,                                \
-		.max_entries = 1,                                       \
-		.skip = 2                                               \
-	};                                                          \
-    save_stack_trace(&trace);                                   \
-	abs_addr = (void*)stack_entry;                              \
+	abs_addr = __builtin_return_address(0);                     \
 	if((target_core_addr != NULL)                               \
         && (abs_addr >= target_core_addr)                       \
         && (abs_addr < target_core_addr + target_core_size))    \
@@ -73,14 +64,6 @@ do {                                                            \
 		rel_addr = abs_addr - (void*)0;                         \
 	}                                                           \
 }while(0)
-#else /* if defined(CONFIG_STACKTRACE) && defined(CONFIG_FRAME_POINTER)*/
-#define get_caller_address(abs_addr, section_id, rel_addr)      \
-do {                                                            \
-    abs_addr = 0;                                            \
-    section_id = 3;                                             \
-    rel_addr = 0;                                               \
-}while(0)
-#endif /* if defined(CONFIG_STACKTRACE) && defined(CONFIG_FRAME_POINTER)*/
 
 /*********************************************************************
  * Areas in the memory image of the target module (used to output 
