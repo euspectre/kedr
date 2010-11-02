@@ -24,35 +24,12 @@ repl_<$function.name$>(<$argumentSpec$>)
 	void *abs_addr; 
 	ptrdiff_t rel_addr;
 	int section_id;
-	unsigned long stack_entry;
-	struct stack_trace trace = {
-		.nr_entries = 0,
-		.entries = &stack_entry,
-		.max_entries = 1,
-		.skip = 2
-	};
 	<$if fpoint.fault_code$><$if concat(fpoint.param.name)$>
 	struct fsim_point_data_<$function.name$> fsim_point_data;<$endif$><$endif$>
 
 <$prologue$>
 	// Determine caller address (absolute and relative in the section)
-	save_stack_trace(&trace);
-	abs_addr = (void*)stack_entry;
-	if((target_core_addr != NULL) && (abs_addr >= target_core_addr) && (abs_addr < target_core_addr + target_core_size))
-	{
-		section_id = 2;
-		rel_addr = abs_addr - target_core_addr;
-	}
-	else if((target_init_addr != NULL) && (abs_addr >= target_init_addr) && (abs_addr < target_init_addr + target_init_size))
-	{
-		section_id = 1;
-		rel_addr = abs_addr - target_init_addr;
-	}
-	else
-	{
-		section_id = 0;
-		rel_addr = abs_addr - (void*)0;
-	}
+	get_caller_address(abs_addr, section_id, rel_addr);
 
 <$if fpoint.fault_code$><$if concat(fpoint.param.name)$><$fsimDataMemberInitialize : join(\n)$>
 	if(kedr_fsim_point_simulate(fsim_point_<$function.name$>, &fsim_point_data))
