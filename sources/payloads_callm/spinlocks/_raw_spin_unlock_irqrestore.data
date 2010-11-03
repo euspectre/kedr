@@ -16,8 +16,10 @@
 
 	trace.param.type = unsigned long
 	trace.param.name = flags
-	# Happens-before relationship
+
+	# Happens-before relationship with lock
 	trace.happensBefore = yes
+
 	# The format string to be used for trace output.
 	trace.formatString = "arguments: (%p, %lu)"
 

@@ -31,7 +31,9 @@ repl_<$function.name$>(<$argumentSpec$>)
 	// Determine caller address (absolute and relative in the section)
 	get_caller_address(abs_addr, section_id, rel_addr);
 
-<$if fpoint.fault_code$><$if concat(fpoint.param.name)$><$fsimDataMemberInitialize : join(\n)$>
+<$if trace.happensBefore$><$if returnType$>#error "Happens before relationship cannot be used for functions which return values."
+<$endif$>    <$tracePoint$>
+<$endif$><$if fpoint.fault_code$><$if concat(fpoint.param.name)$><$fsimDataMemberInitialize : join(\n)$>
 	if(kedr_fsim_point_simulate(fsim_point_<$function.name$>, &fsim_point_data))
 <$else$>    if(kedr_fsim_point_simulate(fsim_point_<$function.name$>, NULL))
 <$endif$>
@@ -46,8 +48,8 @@ repl_<$function.name$>(<$argumentSpec$>)
 <$else$>    <$targetCall$><$endif$>
 <$middleCode$>
 
-	<$tracePoint$>
-
+<$if trace.happensBefore$><$else$>    <$tracePoint$>
+<$endif$>
 <$epilogue$>
 	return<$if returnType$> returnValue<$endif$>;
 }
