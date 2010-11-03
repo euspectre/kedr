@@ -44,7 +44,7 @@ In addition, the following parameters may be defined at global level:
     </varlistentry>
 </variablelist>
 Example of global section of the <filename>payload.data</filename>:
-    <programlisting>
+<programlisting>
 # This module processes the calls to module_put function.
 
 module.name = payload_callm_module_put
@@ -54,7 +54,7 @@ module.license = GPL
 header =&gt;&gt;
 #include &lt;linux/module.h&gt;
 &lt;&lt;
-    </programlisting>
+</programlisting>
     </para>
     <para>
 For each target function, which is intended to replace, group should be defined.
@@ -98,7 +98,7 @@ Additionally, next parameters may be defined at group level:
     </varlistentry>
 </variablelist>
 Visibility of variables in different parts of code of the replacement function may be described as pseudocode:
-    <programlisting>
+<programlisting>
 <symbol>returnType</symbol> replacement_function(<symbol>arg.name</symbol>...)
 {
     <symbol>prologue</symbol>
@@ -109,7 +109,7 @@ Visibility of variables in different parts of code of the replacement function m
     }
     <symbol>epilogue</symbol>
 }
-    </programlisting>
+</programlisting>
 If target function return non-void value, variable <varname>returnValue</varname> may be used as name of variable to output (<symbol>arg.name</symbol>) and in the <symbol>middleCode</symbol>.
     </para>
     <para>
@@ -132,9 +132,9 @@ Example of the group section for module_put() target function:
 	trace.formatString = "arguments: (%p)"
 
 # End of the group of definitions for module_put().
-    </programlisting>
+</programlisting>
 Example of the group section for __kmalloc() target function (note using <varname>returnValue</varname> variable):
-    <programlisting>
+<programlisting>
 [group]
 	# Name and return type of the target function
 	function.name = __kmalloc
@@ -161,9 +161,9 @@ Example of the group section for __kmalloc() target function (note using <varnam
 	trace.formatString = "arguments: (%zu, %x), result: %p"
 
 # End of the group of definitions for __kmalloc().
-    </programlisting>
+</programlisting>
 Example of the group section for __kmalloc() target function (note implementation <symbol>prologue</symbol> parameter):
-    <programlisting>
+<programlisting>
     [group]
 	# Name and return type of the target function
 	function.name = kmem_cache_alloc
@@ -193,7 +193,7 @@ size_t size = kmem_cache_size(mc);
 	trace.formatString = "arguments: (%zu, %x), result: %p"
 
 # End of the group of definitions for kmem_cache_alloc().
-    </programlisting>
+</programlisting>
     </para>
     <para>
 After writing <filename>payload.data</filename> file, you may rewrite value of module_name variable in the <filename>makefile</filename> and <filename>Kbuild</filename> according to one you use as value of <quote>module.name</quote> parameter. In the future, this step may be implemented in the <filename>makefile</filename> itself.

@@ -16,4 +16,6 @@
 <!-- Fault Simulation -->
 &kedr_fault_sim;
 
+<!-- Analyzing the Trace -->
+&kedr_analyze_trace;
 </section>

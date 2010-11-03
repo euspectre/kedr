@@ -2,9 +2,8 @@
 <title>How KEDR Works</title>
 
 <para>
-The interaction between the software components involved in driver 
-analysis with KEDR is outlined at the figure below. The logical components 
-related to KEDR are colored in green.
+The interaction between the software components involved in 
+analysis of Linux kernel modules with KEDR is outlined at the figure below. The logical components related to KEDR are colored in green.
 </para>
 
 <mediaobject>
@@ -17,13 +16,19 @@ related to KEDR are colored in green.
 </mediaobject>
 
 <para>
-The user controls the analysis process via convenience API and tools 
-(<firstterm><quote>Kernel Module Analysis API + Tools</quote></firstterm> 
-on the figure) - either manually or via a user-space application. 
+KEDR core (<firstterm><quote>Loading Detector</quote></firstterm> and <firstterm><quote>Call Instrumentation Facilities</quote></firstterm> on the figure) detect when the module to be analyzed (<firstterm>target module</firstterm>) is loaded. The notification system provided by the Linux kernel is used to do this. 
 </para>
 
 <para>
-The actual analysis of the target kernel module (driver) is performed by 
+When the target has been loaded but before it begins its initialization, KEDR core takes control and instruments it, that is, it changes the memory image of that module in a special way. In particular, the calls to the functions that should be intercepted are now replaced with the calls to the functions with the same signatures provided by <link linkend="payload_module">payload modules</link>. A payload module should register itself with KEDR core for this to work.
+</para>
+
+<para>
+After the instrumentation is done, the target module is allowed to begin its initialization.
+</para>
+
+<para>
+The actual analysis of the target kernel module is performed by 
 <link linkend="payload_module">payload modules</link> of different types. 
 </para>
 
@@ -54,22 +59,18 @@ and can then be analyzed by user-space applications.
 <listitem>
     <para>
 Simulate the situations when the kernel seems to fail to satisfy some of 
-the requests made by the target driver 
+the requests made by the target module 
 (<firstterm><quote>Fault Similator</quote></firstterm> on the 
 figure). That is, simulate low memory conditions, etc. Fault simulation is 
 performed according to the <firstterm>scenarios</firstterm> selected by the 
-user. It can be used to check if the driver is still reliable in error 
+user. It can be used to check if the module is still reliable in error 
 conditions, if possible failures of the called functions are properly 
-handled by the driver, etc. 
+handled by the module, etc. 
     </para>
-    <para>
-The <firstterm><quote>Control Interface</quote></firstterm> is used here, 
-for example, to manage the fault simulation scenarios, etc.
-</para>
 </listitem>
 
 <listitem><para>
-Check various requirements for the operation of the driver 
+Check various requirements for the operation of the module 
 (<firstterm><quote>Base Checker</quote></firstterm> on the figure): whether 
 it properly copies data to and from user space, whether it 
 uses virtual memory facilities in a right way, etc. 
@@ -94,16 +95,14 @@ When loaded, payload modules register themselves with the KEDR core
 </para>
 
 <para>
-For the payload modules to be able to work, the KEDR core must instrument 
-the calls in the memory image of the target driver. The KEDR core has the 
-means to detect loading of the target driver (<firstterm><quote>Loading 
-Detector</quote></firstterm> on the figure). After the driver is loaded but 
-before it begins to execute its initialization function, the KEDR core 
-instruments the calls in it (<firstterm><quote>Call Instrumentation 
-Facilities</quote></firstterm> on the figure). Technically, loading detection
-and call instrumentation are performed by <filename>kedr-controller</filename> 
-module.
+The user controls the analysis process via convenience API and tools 
+(<firstterm><quote>Kernel Module Analysis API + Tools</quote></firstterm> 
+on the figure) - either manually or via a user-space application. 
 </para>
+
+<note><para>
+Note that the term <quote>API</quote> is used here in a rather broad sense. Currently, it is not a set of functions or classes provided for the applications written in some programming language. It rather consists of all the means that KEDR provides for the user-space applications to start the analysis process, to control it and to retrieve the results. These means include the parameters of the kernel modules from KEDR, the special files that allow to configure fault simulation scenarios, etc. All these facilities are described in the respective sections of this manual.
+</para></note>
 
 <orderedlist>
 <para>

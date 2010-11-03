@@ -1,104 +1,149 @@
 ﻿<section id="call_mon">
 <title>Call Monitoring</title>
     <para>
-Call monitoring is a way of using replacement function to collect statistics about target functions calls.
+Call monitoring facilities provided by KEDR allow to collect data about the calls to the functions of interest (target functions) made by a kernel module. In this case, each <link linkend="replacement_function">replacement function</link> calls the corresponding <link linkend="replacement_function">target function</link> and outputs its arguments and return value to a trace.
     </para>
     <para>
-KEDR contains collection of payloads, which may be used for call monitoring purpose. They store information about what kernel functions was called from the target module and in what order, parameters, which was passed to this functions and result returned. Then this information may be used by user-space application at runtime with the help of <link linkend="capture_trace">kedr_capture_trace</link> tool.
+KEDR contains a set of payload modules intended to perform call monitoring. They collect information about which kernel functions were called by the target module and in what order, about the parameters passed to these functions and about the return values. This information is output to a trace and can then be used by user-space applications in runtime with the help of <link linkend="capture_trace">kedr_capture_trace</link> tool.
     </para>
     <para>
-Format of information stored is similar to the trace format of the ftrace tool.
-Here is example of such trace (header line is shown only for description purpose):
-    <programlisting>
-  TASK-PID CPU#  TIMESTAMP     FUNCTION
+The format of the output data is similar to the trace format of the <command>ftrace</command> system.
+Here is an example of such trace (the header line is shown only for the purpose of description):
+    </para>
+<programlisting><![CDATA[
+  TASK-PID  CPU#  TIMESTAMP   FUNCTION
 --------------------------------------------------------------------
-insmod-709 [000] 99689.618433: target_session_begins: target_module: "kedr_sample_target"
-insmod-709 [000] 99689.627529: called___kmalloc: arguments(184, d0), result: d80c3600
-dd-743 [000] 99861.116151: called___kmalloc: arguments(4000, d0), result: decaa000
-dd-743 [000] 99861.116614: called_copy_from_user: arguments(decaa000, 09b00000, 1), result: 0
+insmod-6416 [001] 805.997320: target_session_begins: target module: "kedr_sample_target"
+insmod-6416 [001] 805.997615: called___kmalloc: ([<ffffffffa00e70b9>] init+0xb9) 
+    arguments: (320, d0), result: ffff8800165a8000
+dd-6438     [000] 858.641942: called___kmalloc: ([<ffffffffa01d661e>] core+0x61e) 
+    arguments: (4000, d0), result: ffff88001659e000
+dd-6438     [000] 858.642074: called_copy_from_user: ([<ffffffffa01d642a>] core+0x42a) 
+    arguments: (ffff88001659e000, 000000000137d000, 1), result: 0
 ...
-rmmod-17250 [000] 102326.651693: target_session_ends: target_module: "kedr_sample_target"
-    </programlisting>
-'FUNCTION' field has format <code>called_&lt;function-name&gt;: arguments(&lt;arguments-list&gt;), result:&lt;value-returned&gt;</code> for functions calls and <code>target_session_&lt;begins|end&gt;: target_module: "&lt;target-module-name&gt;"</code> for markers of load and unload target module.
-    </para>
+rmmod-6441  [001] 869.438875: called_kfree: ([<ffffffffa01d60d8>] core+0xd8) 
+    arguments: (ffff88001659e000)
+rmmod-6441  [001] 869.438879: called_kfree: ([<ffffffffa01d60d8>] core+0xd8) 
+    arguments: ((null))
+rmmod-6441  [001] 869.438881: called_kfree: ([<ffffffffa01d6108>] core+0x108) 
+    arguments: (ffff8800165a8000)
+rmmod-6441  [001] 869.438885: target_session_ends: target module: "kedr_sample_target"
+]]></programlisting>
+
     <para>
-Only calls to the subset of all kernel functions is detected, but this subset may be easy extended by implemented you own modules (see <xref linkend="custom_callm_payloads"/>). Here is a full list of the payload modules, which may be used for call monitoring, and lists of functions, detected by each module. (Function name in '[' and ']' means, that this function is detected only if it is exported by the kernel; only one of functions, delimited by '/', is detected, depended on which of them is exported by the kernel).
+<code>FUNCTION</code> field has the following format for the records corresponding to the detected function calls:
+    </para>
+
+<synopsis>
+called_&lt;function-name&gt;: (&lt;call_address&gt;) arguments(&lt;arguments-list&gt;), result:&lt;value-returned&gt;
+</synopsis> 
+
+<para>
+<code>&lt;call_address&gt;</code> specifies the address of the next instruction after the call to the target function. This field has the following format:
+</para>
+
+<synopsis>
+[&lt;absolute_address&gt;] &lt;area&gt;+&lt;offset&gt;
+</synopsis> 
+
+<para>
+<code>&lt;absolute_address&gt;</code> is the absolute address of the instruction immediately following the call in the memory image of the target module. <code>&lt;area&gt;</code> can be <quote>init</quote> or <quote>core</quote>. It is the name of the area containing the executable code of the module (these terms are used by module loader in the Linux kernel). An area may contain one or more sections (ELF sections) of the module. <code>&lt;offset&gt;</code> is the offset of the instruction from the beginning of the area. 
+</para>
+
+<para>
+If you would like to find the lines in the source code of the target module corresponding to the addresses given in the trace records, see <xref linkend="analyze_trace"/> for details.
+</para>
+
+<note><para>
+On some systems, you can see the address fields in the trace records with the contents similar to the following: <code>([&lt;(null)&gt;] not_supported+0x0)</code>. This means that KEDR was unable to obtain the address of the call. This can happen, for example, if the kernel has been built without <code>CONFIG_STACKTRACE</code> or <code>CONFIG_FRAME_POINTER</code> defined. To make debugging of kernel modules (and the kernel proper) easier, it is recommended to rebuild the kernel with these parameters set to <quote>y</quote>.
+</para></note>
+
+<para>
+A different format is used for marker records indicating loading and unloading of the target module:
+</para>
+
+<synopsis>
+target_session_&lt;begins|end&gt;: target_module: "&lt;target-module-name&gt;"
+</synopsis> 
+
+    <para>
+Only calls to the subset of all kernel functions are detected. This subset however can be easy extended by implementing your own modules (see <xref linkend="custom_callm_payloads"/>). Here is a full list of the payload modules that currently may be used for call monitoring, and the lists of the functions detected by each module. A function name in square brackets means that this function is detected only if it is exported by the kernel (it may or may not be exported in each particular system). Only one of the functions separated by a slash is detected depending on which one of them is actually exported by the kernel.
     </para>
     <para>
 <itemizedlist mark='opencircle'>
-<listitem>kedr_cm_cmm.ko:
+<listitem><phrase role="emphasized">kedr_cm_cmm.ko:</phrase>
     <simplelist type='vert'>
     <member>__kmalloc</member>
-	<member>krealloc</member>
-	<member>kfree</member>
-	<member>kmem_cache_alloc</member>
-	<member>[kmem_cache_alloc_notrace]</member>
-	<member>kmem_cache_free</member>
+    <member>krealloc</member>
+    <member>kfree</member>
+    <member>kmem_cache_alloc</member>
+    <member>[kmem_cache_alloc_notrace]</member>
+    <member>kmem_cache_free</member>
     </simplelist>
 </listitem>
-<listitem>kedr_cm_user_space_access.ko:
+<listitem><phrase role="emphasized">kedr_cm_user_space_access.ko:</phrase>
     <simplelist type='vert'>
     <member>copy_to_user/_copy_to_user</member>
     <member>copy_from_user/_copy_from_user</member>
     </simplelist>
 </listitem>
-<listitem>kedr_cm_mutexes.ko:
+<listitem><phrase role="emphasized">kedr_cm_mutexes.ko:</phrase>
     <simplelist type='vert'>
     <member>__mutex_init</member>
-	<member>mutex_lock</member>
-	<member>mutex_lock_interruptible</member>
-	<member>mutex_trylock</member>
-	<member>mutex_unlock</member>
+    <member>mutex_lock</member>
+    <member>mutex_lock_interruptible</member>
+    <member>mutex_trylock</member>
+    <member>mutex_unlock</member>
     </simplelist>
 </listitem>
-<listitem>kedr_cm_spinlocks.ko:
+<listitem><phrase role="emphasized">kedr_cm_spinlocks.ko:</phrase>
     <simplelist type='vert'>
     <member>_spin_lock_irqsave/_raw_spin_lock_irqsave</member>
-	<member>_spin_unlock_irqrestore/_raw_spin_unlock_irqrestore</member>
+    <member>_spin_unlock_irqrestore/_raw_spin_unlock_irqrestore</member>
     </simplelist>
-    additionally, with "enable_full_spinlock" option set,
+    additionally, if KEDR was configured with <quote>enable_full_spinlock</quote> option set,
     <simplelist type='vert'>
     <member>_spin_lock/_raw_spin_lock</member>
     <member>_spin_lock_irq/_raw_spin_lock_irq</member>
-	<member>_spin_unlock/_raw_spin_unlock</member>
+    <member>_spin_unlock/_raw_spin_unlock</member>
     <member>_spin_unlock_irq/_raw_spin_unlock_irq</member>
     </simplelist>
 </listitem>
-<listitem>kedr_cm_waitqueue.ko:
+<listitem><phrase role="emphasized">kedr_cm_waitqueue.ko:</phrase>
     <simplelist type='vert'>
-	<member>__wake_up</member>
-	<member>init_waitqueue_head/__init_waitqueue_head</member>
-	<member>prepare_to_wait</member>
-	<member>finish_wait</member>
-	<member>remove_wait_queue</member>
-	<member>add_wait_queue</member>
-	<member>add_wait_queue_exclusive</member>
+    <member>__wake_up</member>
+    <member>init_waitqueue_head/__init_waitqueue_head</member>
+    <member>prepare_to_wait</member>
+    <member>finish_wait</member>
+    <member>remove_wait_queue</member>
+    <member>add_wait_queue</member>
+    <member>add_wait_queue_exclusive</member>
     </simplelist>
 </listitem>
-<listitem>kedr_cm_capable.ko:
+<listitem><phrase role="emphasized">kedr_cm_capable.ko:</phrase>
     <simplelist type='vert'>
-    <member>capable></member>
+    <member>capable</member>
     </simplelist>
 </listitem>
-<listitem>kedr_cm_vmm.ko:
+<listitem><phrase role="emphasized">kedr_cm_vmm.ko:</phrase>
     <simplelist type='vert'>
     <member>vmalloc</member>
-	<member>__vmalloc</member>
-	<member>vmalloc_user</member>
-	<member>vmalloc_node</member>
-	<member>vmalloc_32</member>
-	<member>vfree</member>
+    <member>__vmalloc</member>
+    <member>vmalloc_user</member>
+    <member>vmalloc_node</member>
+    <member>vmalloc_32</member>
+    <member>vfree</member>
     </simplelist>
 </listitem>
-<listitem>kedr_cm_schedule.ko:
+<listitem><phrase role="emphasized">kedr_cm_schedule.ko:</phrase>
     <simplelist type='vert'>
-	<member>schedule</member>
-	<member>[preempt_schedule]</member>
-	<member>_cond_resched</member>
-	<member>schedule_timeout</member>
-	<member>schedule_timeout_uninterruptible</member>
-	<member>schedule_timeout_interruptible</member>
-	<member>io_schedule</member>
+    <member>schedule</member>
+    <member>[preempt_schedule]</member>
+    <member>_cond_resched</member>
+    <member>schedule_timeout</member>
+    <member>schedule_timeout_uninterruptible</member>
+    <member>schedule_timeout_interruptible</member>
+    <member>io_schedule</member>
     <member>cond_resched_lock/__cond_resched_lock</member>
     </simplelist>
 </listitem>

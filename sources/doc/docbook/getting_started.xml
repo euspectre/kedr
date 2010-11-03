@@ -186,26 +186,34 @@ dd if=/dev/zero of=/dev/cfake bs=1 count=10
 Open the file with the trace. This is the file the path to which you passed to <command>kedr_capture_trace</command> script. You can find the records like the following ones there:
 </para>
 
-<programlisting>
-insmod-709 [000] 99689.618433: target_session_begins: target_module: &quot;kedr_sample_target&quot;
-insmod-709 [000] 99689.627529: called___kmalloc: arguments(184, d0), result: d80c3600
-dd-743 [000] 99861.116151: called___kmalloc: arguments(4000, d0), result: decaa000
-dd-743 [000] 99861.116614: called_copy_from_user: arguments(decaa000, 09b00000, 1), result: 0
+<programlisting><![CDATA[
+insmod-6416 [001] 805.997320: target_session_begins: target module: "kedr_sample_target"
+insmod-6416 [001] 805.997615: called___kmalloc: ([<ffffffffa00e70b9>] init+0xb9) 
+    arguments: (320, d0), result: ffff8800165a8000
+dd-6438     [000] 858.641942: called___kmalloc: ([<ffffffffa01d661e>] core+0x61e) 
+    arguments: (4000, d0), result: ffff88001659e000
+dd-6438     [000] 858.642074: called_copy_from_user: ([<ffffffffa01d642a>] core+0x42a) 
+    arguments: (ffff88001659e000, 000000000137d000, 1), result: 0
 ...
-</programlisting>
+]]></programlisting>
 
 <para>
-The first line says that KEDR detected loading of the target module.
+The first record says that KEDR has detected the loading of the target module.
 </para>
 
 <para>
-The second line shows information about the first detected call to a kernel function, <code>__kmalloc</code>. It shows the values of the parameters passed to the function (size=184, flags=0xd0) and its return value (address 0xd80c3600). According to the name of the process (<quote>insmod</quote>) in which context the operation was performed, we may assume that this call was made at the initialization stage of the module.
+The second line shows information about the first detected call to a kernel function, <code>__kmalloc</code>. It shows the values of the parameters passed to the function (size=320, flags=0xd0) and its return value (address 0xffff8800165a8000). The operation was performed in the context of <quote>insmod</quote> process.
+</para>
+
+<note><para>
+<code>([&lt;ffffffffa00e70b9&gt;] init+0xb9)</code> specifies the memory address of that call to <code>__kmalloc</code> (0xffffffffa00e70b9). To be exact, it is technically the address of the next instruction after that call. <code>init+0xb9</code> indicates that the call instruction is located in <quote>init</quote> area of the module (and hence it is executed during the initialization of the module) right before the offset <code>0xb9</code>. If the target module has debug information, this allows to determine the place in the source code of the module where the call is made. This may significantly simplify the analysis of the trace. The detailed explanation of how to analyze the trace and find the fragments of the source code corresponding to the trace records is given in <xref linkend="analyze_trace"/>.
+</para></note>
+
+<para>
+The third record shows another detected call to <code>__kmalloc</code>. It was made when we were writing zeroes to <filename>/dev/cfake</filename> (it follows from the fact that the call was made in the context of <quote>dd</quote> process that we had launched).
 </para>
 <para>
-The third line also shows a detected call to <code>__kmalloc</code>. It was made when we were writing zeroes to /dev/cfake (it follows from the fact that the call was made in the context of <quote>dd</quote> process that we had launched).
-</para>
-<para>
-The fourth line shows a detected call to another kernel function, <code>copy_from_user</code>, which was also made when we were writing data to /dev/cfake with <command>dd</command>.
+The fourth record shows a detected call to another kernel function, <code>copy_from_user</code>, which was also made when we were writing data to <filename>/dev/cfake</filename> with <command>dd</command>.
 </para>
 
 <para>
@@ -217,15 +225,26 @@ Unload the target module using the following command:
 <programlisting>
 kedr_sample_target unload
 </programlisting>
-After that, a line like the following one should appear in the trace file:
-<programlisting>
-rmmod-17250 [000] 102326.651693: target_session_ends: target_module: &quot;kedr_sample_target&quot;
-</programlisting>
+After that, the lines like the following ones should appear in the trace file:
+</para>
+
+<programlisting><![CDATA[
+rmmod-6441 [001] 869.438875: called_kfree: ([<ffffffffa01d60d8>] core+0xd8) 
+    arguments: (ffff88001659e000)
+rmmod-6441 [001] 869.438879: called_kfree: ([<ffffffffa01d60d8>] core+0xd8) 
+    arguments: ((null))
+rmmod-6441 [001] 869.438881: called_kfree: ([<ffffffffa01d6108>] core+0x108) 
+    arguments: (ffff8800165a8000)
+rmmod-6441 [001] 869.438885: target_session_ends: target module: "kedr_sample_target"
+]]></programlisting>
+
+<para>
 There will be no new records in the trace file until the target module is loaded again. You can stop recording the trace to your file:
 <programlisting>
 /usr/local/bin/kedr_capture_trace stop
 </programlisting>
 </para>
+
 <para>
 The last step is stopping KEDR and unloading its components:
 <programlisting>

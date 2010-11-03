@@ -45,7 +45,7 @@ Additionally, next parameters may be defined at global level:
     </varlistentry>
 </variablelist>
 Example of global section of the <filename>payload.data</filename>:
-    <programlisting>
+<programlisting>
 # This module processes the calls to kstrdup function.
 
 module.name = payload_fsim_kstrdup
@@ -55,7 +55,7 @@ module.license = GPL
 header =&gt;&gt;
 #include &lt;linux/string.h&gt;
 &lt;&lt;
-    </programlisting>
+</programlisting>
     </para>
     <para>
 For each target function, which is intended to replace, group should be defined.
@@ -112,7 +112,7 @@ Additionally, next parameters may be defined at group level. Them similar to the
     </varlistentry>
 </variablelist>
 Visibility of variables in different parts of code of the replacement function may be described as pseudocode:
-    <programlisting>
+<programlisting>
 <symbol>returnType</symbol> replacement_function(<symbol>arg.name</symbol>...)
 {
     <symbol>prologue</symbol>
@@ -131,7 +131,7 @@ Visibility of variables in different parts of code of the replacement function m
     }
     <symbol>epilogue</symbol>
 }
-    </programlisting>
+</programlisting>
 If target function return non-void value, variable <varname>returnValue</varname> may be used as name of variable to output (<symbol>arg.name</symbol>) and in the <symbol>middleCode</symbol>. Also, this variable should be assigned in the <symbol>fpoint.error_code</symbol>.
     </para>
     <para>
@@ -172,9 +172,9 @@ Example of the group section for __kmalloc target function:
 	fpoint.fault_code =	returnValue = NULL;
 
 # End of the group of definitions for __kmalloc().
-    </programlisting>
+</programlisting>
 Example of the group section for kstrdup() target function (note using <varname>len</varname> variable for fault simulation as derived parameter from target function parameter <varname>str</varname>):
-    <programlisting>
+<programlisting>
 [group]
 	# Name and return type of the target function
 	function.name = kstrdup
@@ -213,7 +213,7 @@ Example of the group section for kstrdup() target function (note using <varname>
 	fpoint.fault_code =	returnValue = NULL;
 
 # End of the group of definitions for kstrdup().
-    </programlisting>
+</programlisting>
     </para>
     <para>
 There is an ability to different replacement functions to share same indicator function (and, therefore, share scenario). This is more than simple using same indicator functions, because this functions may use some data, which is privare for each indicator instance. In the case if sharing, these indicator function' s data will be also sharing.
@@ -223,7 +223,7 @@ Such sharing indicator function may be used, e.g., for target functions, which i
     </para>
     <para>
 For say, that function <function>g</function> should share fault simulation scenario with <function>f</function>, you should assign parameter <symbol>fpoint.reuse_point</symbol> for group of function <function>g</function> to <code>f</code>. In this case, group definition of function <function>f</function> should precede the group definition of function <function>g</function>. Example of sharing fault simulation scenario for <function>__kmalloc</function> and <function>krealloc</function>:
-    <programlisting>
+<programlisting>
     ...
 [group]
 	# Name and return type of the target function
@@ -279,7 +279,7 @@ For say, that function <function>g</function> should share fault simulation scen
 	fpoint.fault_code = returnValue = NULL;
 
 # End of the group of definitions for krealloc().
-    </programlisting>
+</programlisting>
 Note, that in group definition for <function>krealloc</function> function we use same names and types for variables, which is intended to pass to indicator function, as for <function>__kmaloc</function>.
     </para>
     <para>

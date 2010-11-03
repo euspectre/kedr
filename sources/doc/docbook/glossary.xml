@@ -84,7 +84,7 @@ Fault simulation is one of the many ways to check reliability of a target kernel
 KEDR allows to perform fault simulation on the target module. The scenarios (what function calls to make fail and in what conditions) can be provided and configured by the user as well. A number of common scenarios is already supported by KEDR by default.
     </para>
     <para>
-The fault simulation scenarios are defined by the <link linkend="fault_simulation_point">fault simulation points</link> (<quote>what to make fail</quote>) and <link linkend="fault_simulation_indicator">fault simulation indicators</link> (<quote>in what conditions should this fail</quote>).
+The fault simulation scenarios are defined by the <link linkend="fault_simulation_point">fault simulation points</link> (<quote>What to make fail?</quote>) and <link linkend="fault_simulation_indicator">fault simulation indicators</link> (<quote>In what conditions should this fail?</quote>).
     </para>
 </glossdef>
 </glossentry>
@@ -110,10 +110,10 @@ In KEDR, fault simulation points are used in the replacement functions. This all
 
 <glossdef>
     <para>
-A fault simulation indicator is usually a function used in a <link linkend="fault_simulation_point">fault simulation point</link> to make a decision, whether to execute <quote>normal</quote> or <quote>error path</quote> in the code. More often than not, it is a boolean function which return values correspond to <quote>make fail</quote> and <quote>do not make fail</quote> decisions. One might say that an indicator implements the scenario for a fault simulation point (<quote>in what conditions should this fail</quote>). 
+A fault simulation indicator is usually a function used in a <link linkend="fault_simulation_point">fault simulation point</link> to make a decision, whether to execute <quote>normal</quote> or <quote>error path</quote> in the code. More often than not, it is a boolean function which returns values corresponding to <quote>make fail</quote> and <quote>do not make fail</quote> decisions. One might say that an indicator implements the scenario for a fault simulation point (i.e., it answers to the question, <quote>In what conditions should this fail?</quote>). 
     </para>
     <para>
-In KEDR, fault simulation points and indicators are largely independent on one another. That is, any fault simulation point may use almost any indicator and the indicator can be easily changed at runtime. The only restriction is that if an indicator expects some parameters from the point, the indicator can not be set for the point that does not provide that parameters. For example, consider an indicator implementing the following scenario <quote>make this fail if <code>size</code> parameter is greater than 1024</quote>. If a particular fault simulation point corresponding to some target function has nothing like <code>size</code> parameter, it makes no sense to use that indicator for this point.
+In KEDR, fault simulation points and indicators are largely independent on one another. That is, a fault simulation point may use almost any indicator and the indicator can be easily changed at runtime. The only restriction is that if an indicator expects some parameters from the point, the indicator can not be set for the point that does not provide these parameters. For example, consider an indicator implementing the following scenario <quote>make this fail if <code>size</code> parameter is greater than 1024</quote>. If a particular fault simulation point corresponding to some target function has nothing like <code>size</code> parameter, KEDR will not allow to use that indicator for this point (it makes no sense anyway).
     </para>
 </glossdef>
 </glossentry>
