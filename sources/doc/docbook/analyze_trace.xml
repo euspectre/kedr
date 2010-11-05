@@ -222,18 +222,18 @@ Let us locate the call mentioned in the trace record #2. Its position is right b
 </para>
 
 <programlisting><![CDATA[
- 610:	48 8b 7b 08          	mov    0x8(%rbx),%rdi
- 614:	be d0 00 00 00       	mov    $0xd0,%esi
- 619:	e8 00 00 00 00       	callq  61e <cfake_open+0x7e>
+ 610:   48 8b 7b 08             mov    0x8(%rbx),%rdi
+ 614:   be d0 00 00 00          mov    $0xd0,%esi
+ 619:   e8 00 00 00 00          callq  61e <cfake_open+0x7e>
 cfake_open():
 /home/tester/work/kedr/other/sample_target/cfake.c:222
-	if (dev->data == NULL)
-	{
-		dev->data = (unsigned char*)kmalloc(
-			dev->buffer_size, 
-			GFP_KERNEL);
-		if (dev->data == NULL)
- 61e:	48 85 c0             	test   %rax,%rax
+    if (dev->data == NULL)
+    {
+        dev->data = (unsigned char*)kmalloc(
+            dev->buffer_size, 
+            GFP_KERNEL);
+        if (dev->data == NULL)
+ 61e:   48 85 c0                test   %rax,%rax
 ]]></programlisting>
 
 <para>

@@ -18,10 +18,10 @@
         <!ENTITY kedr_using SYSTEM "using_kedr.xml">
         
         <!ENTITY kedr_payload_api SYSTEM "payload_api.xml">
-		<!ENTITY kedr_using_gen SYSTEM "using_gen.xml">        
-		<!ENTITY kedr_custom_callm_payloads SYSTEM "custom_callm_payloads.xml">
+        <!ENTITY kedr_using_gen SYSTEM "using_gen.xml">        
+        <!ENTITY kedr_custom_callm_payloads SYSTEM "custom_callm_payloads.xml">
         <!ENTITY kedr_custom_fsim_payloads SYSTEM "custom_fsim_payloads.xml">
-		<!ENTITY kedr_custom_fsim_scenarios SYSTEM "custom_fsim_scenarios.xml">
+        <!ENTITY kedr_custom_fsim_scenarios SYSTEM "custom_fsim_scenarios.xml">
         <!ENTITY kedr_custom_analysis SYSTEM "custom_analysis.xml">
         <!ENTITY kedr_extend SYSTEM "extend.xml">
         <!ENTITY kedr_reference SYSTEM "reference.xml">
@@ -35,16 +35,16 @@
 <articleinfo>
     <releaseinfo>KEDR &rel-version; Reference Manual (&rel-date;)</releaseinfo>
     <authorgroup>
-	    <author>
-	        <firstname>Eugene</firstname>
-	        <surname>Shatokhin</surname>
-	        <email>spectre@ispras.ru</email>
-	    </author>
-	    <author>
-	        <firstname>Andrey</firstname>
-	        <surname>Tsyvarev</surname>
-	        <email>tsyvarev@ispras.ru</email>
-	    </author>
+        <author>
+            <firstname>Eugene</firstname>
+            <surname>Shatokhin</surname>
+            <email>spectre@ispras.ru</email>
+        </author>
+        <author>
+            <firstname>Andrey</firstname>
+            <surname>Tsyvarev</surname>
+            <email>tsyvarev@ispras.ru</email>
+        </author>
     </authorgroup>
     <copyright>
         <year>&kedr-lifespan;</year>

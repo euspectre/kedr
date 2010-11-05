@@ -291,8 +291,8 @@ If you would like to extend <quote>common</quote> indicator to support more type
     </para>
     <para>
 Here is the list of payload modules for fault simulation provided with KEDR:
-	</para>
-	
+    </para>
+    
 <variablelist>
 <varlistentry>
     <term><filename>kedr_fsim_capable.ko</filename></term>

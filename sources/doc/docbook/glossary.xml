@@ -95,8 +95,8 @@ The fault simulation scenarios are defined by the <link linkend="fault_simulatio
 <glossdef>
     <para>
 Fault simulation point is a location in a kernel module where it should be decided whether to continue execution as usual (<quote>normal path</quote>) or go to a path provided to handle an error of some kind (<quote>error path</quote>) or something else. This is similar to an ordinary conditional construct in a module. The decision, however, is made based on some predefined scenario rather than on the actual presence of the error conditions. 
-	</para>
-	<para>
+    </para>
+    <para>
 A scenario for a simulation point may be contrived. Sometimes, it does not even take into account whether the normal path and the error path are possible. For example, the default memory allocation manager may return error only if there is no memory chunk of appropriate size. A custom allocation manager, however, may contain a fault simulation point with a scenario that additionally prescribes to make every second allocation  request fail, no matter the requested size.
     </para>
     <para>

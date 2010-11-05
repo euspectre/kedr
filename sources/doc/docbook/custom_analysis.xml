@@ -235,7 +235,7 @@ Our analysis system makes the counters available via the files in debugfs. So if
 <programlisting><![CDATA[
 mount debugfs -t debugfs some_dir/debugfs
 ]]></programlisting>
-	
+    
 <para>
 Now it is time to load KEDR core and <filename>kedr_counters.ko</filename> payload module that we have built before. The easiest way is 
 probably to create a configuration file, say, <filename>my.conf</filename>, with the following contents:
@@ -244,7 +244,7 @@ probably to create a configuration file, say, <filename>my.conf</filename>, with
 <programlisting><![CDATA[
 payload path_to_example_directory/kedr_counters.ko
 ]]></programlisting>
-	
+    
 <para>
 and use <command>kedr start</command> with that file:
 </para>
