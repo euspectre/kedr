@@ -161,7 +161,7 @@ img
     font-style: italic;
 }
 
-.emphasis /*, .firstterm*/
+.emphasis, .term /*, .firstterm*/
 {
 	font-weight: bold;
 }
