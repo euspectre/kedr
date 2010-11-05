@@ -2,12 +2,12 @@
 <title>Analyzing the Trace</title>
 
 <para>
-This section describes one of the ways to analyze the trace output by payload modules for call monitoring or fault simulation. In particular, it shows how to find out which place in the source code of the target module each particular trace record corresponds to.
+This section describes one of the techniques that can be used when analyzing the traces output by payload modules for call monitoring or fault simulation. In particular, it shows how to find out which place in the source code of the target module each particular trace record corresponds to.
 </para>
 
 <note>
 <para>
-Please check if the kernel of your system is built with <code>CONFIG_STACKTRACE</code> and <code>CONFIG_FRAME_POINTER</code> parameters set to <quote>y</quote>. This is not the case on some systems by default. If these parameters are not defined, KEDR is currently unable to find the addresses of the calls to the target functions. Something like <code>([&lt;(null)&gt;] not_supported+0x0)</code> will be in the trace instead of real addresses in this case.
+Please check if the kernel of your system is built with <code>CONFIG_STACKTRACE</code> and <code>CONFIG_FRAME_POINTER</code> parameters set to <quote>y</quote>. This is not the case on some systems by default. If these parameters are not defined, KEDR is sometimes unable to find the addresses of the calls to the target functions. Something like <code>([&lt;(null)&gt;] not_supported+0x0)</code> could appear in the trace instead of real addresses in this case.
 </para>
 
 <para>

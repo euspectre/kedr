@@ -1,32 +1,31 @@
 ﻿<section id="custom_fsim_payloads">
 <title>Writing Custom Payloads for Fault Simulation</title>
-
     <para>
-This is a description, how to write new payload module for fault simulation, using KEDR tool for generation files from templates. Common abilities of this tool are detailed descibed in <xref linkend="using_gen"/> ...
+This section describes how to write a new payload module for fault simulation using a tool provided by KEDR to generate source files from the templates. Common abilities of this tool are described in detail in <xref linkend="using_gen"/>.
     </para>
     <para>
-Whole infrastructure, which is needed for building payload module from 'definition' file is located in <filename class='directory'>custom_payload_fsim</filename> directory under installed expamples. Here is its content:
+The whole infrastructure necessary for building the payload module from the <quote>definition file</quote> is located in <filename class='directory'>custom_payload_fsim</filename> subdirectory in the directory where the examples provided with KEDR are installed. Here are its contents:
 <variablelist>
     <varlistentry><term><filename>payload.data</filename></term>
-        <listitem>'definition' file for creating payload</listitem>
+        <listitem>'definition' file to create the payload module</listitem>
     </varlistentry>
     <varlistentry><term><filename>makefile</filename></term>
         <listitem>file for common build infrastructure for <command>make</command> utility</listitem>
     </varlistentry>
     <varlistentry><term><filename>Kbuild</filename></term>
-        <listitem>file for building kernel module from c-sources</listitem>
+        <listitem>file for building kernel module from C sources</listitem>
     </varlistentry>
     <varlistentry><term><filename class='directory'>templates</filename></term>
-        <listitem>directory which contatin templates files, used for generating sources from 'definition' file</listitem>
+        <listitem>directory containing the templates used for generating sources from the 'definition' file</listitem>
     </varlistentry>
 </variablelist>
-Copy contents of this directory into you own place.
+To use all this in development of your payload module, copy the contents of that directory to a directory of your choice.
     </para>
     <para>
-The first, and the main step - rewrite <filename>payload.data</filename> for reflecting definitions of you own payload module.
+The first and the main step is to rewrite <filename>payload.data</filename> to reflect definitions of your payload module.
     </para>
     <para>
-At global level (not inside groups) this file should contain definitions for next parameters:
+At the global level (i.e. before the first group begins), this file should contain definitions for the following parameters:
 <variablelist>
     <varlistentry><term>module.name</term>
         <listitem>string, which will be used as module name inside its source files</listitem>
@@ -34,22 +33,22 @@ At global level (not inside groups) this file should contain definitions for nex
     <varlistentry><term>module.author</term>
         <listitem>author of the module</listitem>
     </varlistentry>
-    <varlistentry><term>module.licence</term>
-        <listitem>licence for the module</listitem>
+    <varlistentry><term>module.license</term>
+        <listitem>license for the module</listitem>
     </varlistentry>
 </variablelist>
-Additionally, next parameters may be defined at global level:
+In addition, the following parameters may be defined at the global level:
 <variablelist>
     <varlistentry><term>header</term>
-        <listitem>code (may be multi lined), which will be inserted before definition of replacement functions. Usually, this code contains '#include' directives, for header files which define target functions and types of its parameters.</listitem>
+        <listitem>the code (may be multiline) to be inserted before the definition of replacement functions. This code usually contains &apos;#include&apos; directives for header files which define target functions and types of its parameters.</listitem>
     </varlistentry>
 </variablelist>
-Example of global section of the <filename>payload.data</filename>:
+Example of global section of the <filename>payload.data</filename> file:
 <programlisting>
 # This module processes the calls to kstrdup function.
 
 module.name = payload_fsim_kstrdup
-module.author = Tsyvarev
+module.author = Andrey Tsyvarev
 module.license = GPL
 
 header =&gt;&gt;
@@ -58,60 +57,66 @@ header =&gt;&gt;
 </programlisting>
     </para>
     <para>
-For each target function, which is intended to replace, group should be defined.
-Each group should contain definitions for next parameters:
+For each <link linkend="target_function">target function</link> the calls to which should be processed, a group should be prepared in the definition file.
+Each group should contain definitions for the following parameters:
 <variablelist>
     <varlistentry><term>function.name</term>
-        <listitem>name of the target function, which should replaced</listitem>
+        <listitem>name of the target function</listitem>
     </varlistentry>
     <varlistentry><term>returnType</term>
-        <listitem>returning type of the target function, if it returns non-void, otherwise shouldn't be assigned at all</listitem>
+        <listitem>return type of the target function if it is not void, otherwise shouldn't be defined at all</listitem>
     </varlistentry>
     <varlistentry><term>returnsVoid</term>
-        <listitem>any non-empty value, if the target function returns void, otherwise should't be assigned at all. In the future, probably, this parameter will not be used, but currently its usage is mandatory for void functions.</listitem>
+        <listitem>any non-empty value, if the target function returns void, otherwise should't be defined at all. In the future, this parameter will, probably, not be used, but currently its usage is mandatory for the functions that return void.</listitem>
     </varlistentry>
     <varlistentry><term>arg.type</term>
-        <listitem>types (multi-value) of the parameters of the target function, starting with the first one. If function doesn't take parameters, shouldn't be assigned at all.</listitem>
+        <listitem>(multi-valued) types of the parameters of the target function, starting with the first one. If the function has no parameters, shouldn't be assigned at all.</listitem>
     </varlistentry>
     <varlistentry><term>arg.name</term>
-        <listitem>names (multi-value) of the parameters of the target function, starting with the first one. If function doesn't take parameters, shouldn't be assigned at all. Parameters of the replacement function will be accessible via these names in the code.</listitem>
+        <listitem>(multi-valued) names of the parameters of the target function, starting with the first one. If the function has no parameters, shouldn't be assigned at all. Parameters of the replacement function will be accessible via these names in the code.</listitem>
     </varlistentry>
     <varlistentry><term>trace.param.name</term>
-        <listitem>variable names (multi-value), which values will be output into the trace. This variables should be accessible in replacement function(see below). At least, one value should be output (otherwise this replacement function is meaningless).</listitem>
+        <listitem>(multi-valued) variable names, which values will be output to the trace. This variables should be accessible in replacement function (see below). At least, one value should be output (otherwise this replacement function is meaningless).</listitem>
     </varlistentry>
     <varlistentry><term>trace.param.type</term>
-        <listitem>types (multi-value) of the values, which will be output into the trace. This types will be used in casting values before they will be output(so, these types may differ from real type of variables, which values are used to output).</listitem>
+        <listitem>(multi-valued) types of the values, which will be output into the trace. This types will be used for casting the values of the corresponding variables before they will be output (so, these types may differ from the real types of variables).</listitem>
     </varlistentry>
     <varlistentry><term>trace.formatString</term>
         <listitem>format string which is used for printf-like output values from replacement function (see parameters <quote>trace.param.name</quote> and <quote>trace.param.type</quote>)</listitem>
     </varlistentry>
 </variablelist>
-Until that moment, only parameters which are also used for call monitor payload has described (see <xref linkend="custom_callm_payloads"/>). And these parameters have almost the same meaning for fault simulation payload, because it extend functionality of call monitor payload. Next, parameters which has meaning only for fault simulation:
+    </para>
+    <para>
+Until this moment, only parameters which are also used for the payload modules for call monitoring have been described (see <xref linkend="custom_callm_payloads"/>). These parameters have almost the same meaning for the payload modules for fault simulation (these modules extend the functionality of call monitoring payloads). Listed below are the parameters that are meaningful only for fault simulation:
+    </para>
+    <para>
 <variablelist>
     <varlistentry><term>fpoint.error_code</term>
-        <listitem>code (may be multi line), which should be executed instead call of the target function for simulate target function failure. Usually, this code simply set <varname>returnValue</varname> variable, which will be returned to the caller, for signal that failure occures.</listitem>
+        <listitem>code (may be multiline) which should be executed instead the call to the target function to simulate failure of the latter. Usually, this code simply sets <varname>returnValue</varname> variable which will be returned to the caller to indicate that a failure has occured.</listitem>
     </varlistentry>
     <varlistentry><term>fpoint.param.name</term>
-        <listitem>variable names (multi-value), which values will be passed to the indicator function, and may be used for determine scenario of fault simulation in it. Order of these variables make a sence, because them will be passed sequentially to the indicator function. Usually, only parameters of the target function are passed to the indicator.</listitem>
+        <listitem>(multi-valued) names of the variables which values will be passed to the indicator function and may be used to specify the scenario of fault simulation in it. The order of these variables is important, because they will be passed sequentially to the indicator function. Usually, only the parameters of the target function are passed to the indicator.</listitem>
     </varlistentry>
     <varlistentry><term>fpoint.param.type</term>
-        <listitem>types (multi-value) of the values, which values will be passed to the indicator function. This types will be used for casting variables' values before passing (so, these types may differ from real type of variables).</listitem>
+        <listitem>(multi-valued) types of the values that will be passed to the indicator function. These types will be used to properly cast the values before passing to the indicator (so these types may differ from the real types of the variables).</listitem>
     </varlistentry>
 </variablelist>
 
-Additionally, next parameters may be defined at group level. Them similar to the ones for call monitor payload, but may have additional work load for fault simulation facility.
+    </para>
+    <para>
+Additionally, the following parameters can be defined at the group level. They are similar to the ones used in the payload modules for call monitoring. The differences concerning fault simulation are also described below.
 <variablelist>
     <varlistentry><term>prologue</term>
-        <listitem>code (may be multi lined) which will be inserted to the start of replacement function (before call indicator function, which should decide, whether need to simulate or not). May use variable declarations. Usually, this code declare variables, which will be used in output, passed to the indicator function or used by the next code sections (see below).</listitem>
+        <listitem>code (may be multiline) which will be inserted at the start of replacement function (before the call to the indicator function which should decide whether need to simulate a failure or not). Usually, this code declares variables that will be used in the output, will be passed to the indicator function or used by the following code sections (see below).</listitem>
     </varlistentry>
     <varlistentry><term>middleCode</term>
-        <listitem>code (may be multi lined) which may calculate data for output. May not use variable declarations. Note, that this code will be executed after indicator function and possible target function call or executing error-path, and so cannot change their behaviour.</listitem>
+        <listitem>code (may be multiline) which may calculate data for output. Variables can not be declared there. Note, that this code is placed after the call to the indicator function and after the possible call to the target function (or the error-path). Therefore, <code>middleCode</code> cannot affect the behaviour of these parts of the replacement function. Its intended usage it to prepare the data to the output to the trace: calculate the necessary values, etc.</listitem>
     </varlistentry>
     <varlistentry><term>epilogue</term>
-        <listitem>code (may be multi lined) which will be inserted at the end of replacement function (after output values). If <code>prologue</code> or <code>middleCode</code> requests some resources from the kernel, this code may be used for returning this resources back.</listitem>
+        <listitem>code (may be multiline) which will be inserted at the end of the replacement function (after the values are output to the trace). If <code>prologue</code> or <code>middleCode</code> request some resources from the kernel, this code can be used to release these resources.</listitem>
     </varlistentry>
 </variablelist>
-Visibility of variables in different parts of code of the replacement function may be described as pseudocode:
+Visibility of variables in different parts of code of the replacement function may be described in pseudocode as follows:
 <programlisting>
 <symbol>returnType</symbol> replacement_function(<symbol>arg.name</symbol>...)
 {
@@ -132,10 +137,12 @@ Visibility of variables in different parts of code of the replacement function m
     <symbol>epilogue</symbol>
 }
 </programlisting>
-If target function return non-void value, variable <varname>returnValue</varname> may be used as name of variable to output (<symbol>arg.name</symbol>) and in the <symbol>middleCode</symbol>. Also, this variable should be assigned in the <symbol>fpoint.error_code</symbol>.
+If the target function does not return void, variable <varname>returnValue</varname> can be used as name of variable to output (<symbol>arg.name</symbol>) and in the <symbol>middleCode</symbol>. Also, this variable should be assigned in the <symbol>fpoint.error_code</symbol> (otherwise it will not be initialized if the failure of the target function is simulated).
     </para>
     <para>
-Example of the group section for __kmalloc target function:
+Here is an example of the group section for __kmalloc target function. Note the definition of <code>fpoint.fault_code</code> parameter. Its value is <quote><code>returnValue = NULL;</code></quote> because '=' characters after the leftmost one have no special meaning and are treated as the part of the value.
+    </para>
+    
 <programlisting>
 [group]
 	# Name and return type of the target function
@@ -173,7 +180,9 @@ Example of the group section for __kmalloc target function:
 
 # End of the group of definitions for __kmalloc().
 </programlisting>
-Example of the group section for kstrdup() target function (note using <varname>len</varname> variable for fault simulation as derived parameter from target function parameter <varname>str</varname>):
+
+<para>
+Example of the group section for kstrdup() target function:
 <programlisting>
 [group]
 	# Name and return type of the target function
@@ -216,13 +225,16 @@ Example of the group section for kstrdup() target function (note using <varname>
 </programlisting>
     </para>
     <para>
-There is an ability to different replacement functions to share same indicator function (and, therefore, share scenario). This is more than simple using same indicator functions, because this functions may use some data, which is privare for each indicator instance. In the case if sharing, these indicator function' s data will be also sharing.
+Note the usage of <varname>len</varname> variable for fault simulation in the example above. This value is calculated in the prologue based on the target function parameter <varname>str</varname> and is then used as one of the parameters to be passed to the fault simulation indicator.
     </para>
     <para>
-Such sharing indicator function may be used, e.g., for target functions, which is known to use internally some common mechanism, and you want to simulate fail of this mechanism.
+It is possible for different replacement functions to share the same indicator function (and, therefore, share the scenario). This is more than simply using the same indicator functions, this is using a single instance of an indicator. These functions may use some data private for each indicator instance. In case if sharing, this data will be also shared.
     </para>
     <para>
-For say, that function <function>g</function> should share fault simulation scenario with <function>f</function>, you should assign parameter <symbol>fpoint.reuse_point</symbol> for group of function <function>g</function> to <code>f</code>. In this case, group definition of function <function>f</function> should precede the group definition of function <function>g</function>. Example of sharing fault simulation scenario for <function>__kmalloc</function> and <function>krealloc</function>:
+Sharing of the indicator functions can be useful, for example, for the target functions that are known to use a common mechanism internally (e.g. memory allocator), and you want to simulate a failure of this mechanism.
+    </para>
+    <para>
+If, say, function <function>g</function> should share the fault simulation scenario with <function>f</function>, you should define parameter <symbol>fpoint.reuse_point</symbol> in the group of function <function>g</function> with value <code>f</code>. In this case, the group for function <function>f</function> should precede the group for function <function>g</function>. Example of sharing a fault simulation scenario for <function>__kmalloc</function> and <function>krealloc</function>:
 <programlisting>
     ...
 [group]
@@ -280,13 +292,13 @@ For say, that function <function>g</function> should share fault simulation scen
 
 # End of the group of definitions for krealloc().
 </programlisting>
-Note, that in group definition for <function>krealloc</function> function we use same names and types for variables, which is intended to pass to indicator function, as for <function>__kmaloc</function>.
+Note that in the group for <function>krealloc</function> function, we use the same names and types of the variables intended to be passed to the indicator function, as for <function>__kmalloc</function>.
     </para>
     <para>
-After writing <filename>payload.data</filename> file, you may rewrite value of module_name variable in the <filename>makefile</filename> and <filename>Kbuild</filename> according to one you use as value of <quote>module.name</quote> parameter. In the future, this step may be implemented in the <filename>makefile</filename> itself.
+After writing <filename>payload.data</filename> file, you can change the value of module_name variable in the <filename>makefile</filename> and <filename>Kbuild</filename> according to the one you use as value of <quote>module.name</quote> parameter. In the future, this step may be implemented in the <filename>makefile</filename> itself.
     </para>
-Next, and the last step is running <command>make</command> utility. It generate sources for payload module, and then build this module. That is all.
     <para>
+The last step is to run <command>make</command> utility. This will invoke the code generator tool (<command>kedr_gen</command>) to create the sources for your payload module, then the module will be built.
     </para>
 
 </section>

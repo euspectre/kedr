@@ -1,31 +1,31 @@
 ﻿<section id="custom_callm_payloads">
 <title>Writing Custom Payloads for Call Monitoring</title>
     <para>
-This is a description, how to write new payload module for call monitoring, using KEDR tool for generation files from templates. Common abilities of this tool are detailed descibed in <xref linkend="using_gen"/> ...
+This section describes how to write a new payload module for call monitoring using a tool provided by KEDR to generate source files from the templates. Common abilities of this tool are described in detail in <xref linkend="using_gen"/>.
     </para>
     <para>
-Whole infrastructure, which is needed for building payload module from 'definition' file is located in <filename class='directory'>custom_payload_callm</filename> directory under installed expamples. Here is its content:
+The whole infrastructure necessary for building the payload module from the <quote>definition file</quote> is located in <filename class='directory'>custom_payload_callm</filename> subdirectory in the directory where the examples provided with KEDR are installed. Here are its contents:
 <variablelist>
     <varlistentry><term><filename>payload.data</filename></term>
-        <listitem>'definition' file for creating payload</listitem>
+        <listitem>'definition' file to create the payload module</listitem>
     </varlistentry>
     <varlistentry><term><filename>makefile</filename></term>
         <listitem>file for common build infrastructure for <command>make</command> utility</listitem>
     </varlistentry>
     <varlistentry><term><filename>Kbuild</filename></term>
-        <listitem>file for building kernel module from c-sources</listitem>
+        <listitem>file for building kernel module from C sources</listitem>
     </varlistentry>
     <varlistentry><term><filename class='directory'>templates</filename></term>
-        <listitem>directory which contatin templates files, used for generating sources from 'definition' file</listitem>
+        <listitem>directory containing the templates used for generating sources from the 'definition' file</listitem>
     </varlistentry>
 </variablelist>
-Copy contents of this directory into you own place.
+To use all this in development of your payload module, copy the contents of that directory to a directory of your choice.
     </para>
     <para>
-The first, and the main step - rewrite <filename>payload.data</filename> for reflecting definitions of you own payload module.
+The first and the main step is to rewrite <filename>payload.data</filename> to reflect definitions of your payload module.
     </para>
     <para>
-At global level (not inside groups) this file should contain definitions for next parameters:
+At the global level (i.e. before the first group begins), this file should contain definitions for the following parameters:
 <variablelist>
     <varlistentry><term>module.name</term>
         <listitem>string, which will be used as module name inside its source files</listitem>
@@ -33,22 +33,22 @@ At global level (not inside groups) this file should contain definitions for nex
     <varlistentry><term>module.author</term>
         <listitem>author of the module</listitem>
     </varlistentry>
-    <varlistentry><term>module.licence</term>
-        <listitem>licence for the module</listitem>
+    <varlistentry><term>module.license</term>
+        <listitem>license for the module</listitem>
     </varlistentry>
 </variablelist>
-In addition, the following parameters may be defined at global level:
+In addition, the following parameters may be defined at the global level:
 <variablelist>
     <varlistentry><term>header</term>
         <listitem>the code (may be multiline) to be inserted before the definition of replacement functions. This code usually contains &apos;#include&apos; directives for header files which define target functions and types of its parameters.</listitem>
     </varlistentry>
 </variablelist>
-Example of global section of the <filename>payload.data</filename>:
+Example of global section of the <filename>payload.data</filename> file:
 <programlisting>
 # This module processes the calls to module_put function.
 
 module.name = payload_callm_module_put
-module.author = Tsyvarev
+module.author = Andrey Tsyvarev
 module.license = GPL
 
 header =&gt;&gt;
@@ -57,47 +57,47 @@ header =&gt;&gt;
 </programlisting>
     </para>
     <para>
-For each target function, which is intended to replace, group should be defined.
-Each group should contain definitions for next parameters:
+For each <link linkend="target_function">target function</link> the calls to which should be processed, a group should be prepared in the definition file.
+Each group should contain definitions for the following parameters:
 <variablelist>
     <varlistentry><term>function.name</term>
-        <listitem>name of the target function, which should replaced</listitem>
+        <listitem>name of the target function</listitem>
     </varlistentry>
     <varlistentry><term>returnType</term>
-        <listitem>returning type of the target function, if it returns non-void, otherwise shouldn't be assigned at all</listitem>
+        <listitem>return type of the target function if it is not void, otherwise shouldn't be defined at all</listitem>
     </varlistentry>
     <varlistentry><term>returnsVoid</term>
-        <listitem>any non-empty value, if the target function returns void, otherwise should't be assigned at all. In the future, probably, this parameter will not be used, but currently its usage is mandatory for void functions.</listitem>
+        <listitem>any non-empty value, if the target function returns void, otherwise should't be defined at all. In the future, this parameter will, probably, not be used, but currently its usage is mandatory for the functions that return void.</listitem>
     </varlistentry>
     <varlistentry><term>arg.type</term>
-        <listitem>types (multi-value) of the parameters of the target function, starting with the first one. If function doesn't take parameters, shouldn't be assigned at all.</listitem>
+        <listitem>(multi-valued) types of the parameters of the target function, starting with the first one. If the function has no parameters, shouldn't be assigned at all.</listitem>
     </varlistentry>
     <varlistentry><term>arg.name</term>
-        <listitem>names (multi-value) of the parameters of the target function, starting with the first one. If function doesn't take parameters, shouldn't be assigned at all. Parameters of the replacement function will be accessible via these names in the code.</listitem>
+        <listitem>(multi-valued) names of the parameters of the target function, starting with the first one. If the function has no parameters, shouldn't be assigned at all. Parameters of the replacement function will be accessible via these names in the code.</listitem>
     </varlistentry>
     <varlistentry><term>trace.param.name</term>
-        <listitem>variable names (multi-value), which values will be output into the trace. This variables should be accessible in replacement function(see below). At least, one value should be output (otherwise this replacement function is meaningless).</listitem>
+        <listitem>(multi-valued) variable names, which values will be output to the trace. This variables should be accessible in replacement function (see below). At least, one value should be output (otherwise this replacement function is meaningless).</listitem>
     </varlistentry>
     <varlistentry><term>trace.param.type</term>
-        <listitem>types (multi-value) of the values, which will be output into the trace. This types will be used for casting variable values before they will be output(so, these types may differ from real type of variables).</listitem>
+        <listitem>(multi-valued) types of the values, which will be output into the trace. This types will be used for casting the values of the corresponding variables before they will be output (so, these types may differ from the real types of variables).</listitem>
     </varlistentry>
     <varlistentry><term>trace.formatString</term>
-        <listitem>format string which is used for printf-like output values from replacement function (see parameters <quote>trace.param.name</quote> and <quote>trace.param.type</quote>)</listitem>
+        <listitem>format string which is used for printf-like output of values from replacement function (see parameters <quote>trace.param.name</quote> and <quote>trace.param.type</quote>)</listitem>
     </varlistentry>
 </variablelist>
-Additionally, next parameters may be defined at group level:
+Additionally, the following parameters can be defined at group level:
 <variablelist>
     <varlistentry><term>prologue</term>
-        <listitem>code (may be multi lined) which will be inserted to the start of replacement function (before call of target function). May use variable declarations. Usually, this code declare variables, which will be used in output and next code sections (see below).</listitem>
+        <listitem>code (may be multiline) which will be inserted at the start of replacement function (before the call to target function). Usually, this code declares variables which will be used in output and the following code sections (see below).</listitem>
     </varlistentry>
     <varlistentry><term>middleCode</term>
-        <listitem>code (may be multi lined) which will be inserted after call of the target function and before output variables. May not use variable declarations. Usually, this code calculate variables, which will be used in output.</listitem>
+        <listitem>code (may be multiline) which will be inserted after call to the target function and before the output of values to the trace. Variables can not be declared there. Usually, this code calculates the values of the variables if it is necessary before the output to the trace is done.</listitem>
     </varlistentry>
     <varlistentry><term>epilogue</term>
-        <listitem>code (may be multi lined) which will be inserted at the end of replacement function (after output values). If <code>prologue</code> or <code>middleCode</code> requests some resources from the kernel, this code may be used for returning this resources back.</listitem>
+        <listitem>code (may be multiline) which will be inserted at the end of the replacement function (after the values are output to the trace). If <code>prologue</code> or <code>middleCode</code> request some resources from the kernel, this code can be used to release these resources.</listitem>
     </varlistentry>
 </variablelist>
-Visibility of variables in different parts of code of the replacement function may be described as pseudocode:
+Visibility of variables in different parts of code of the replacement function can be described in pseudocode as follows:
 <programlisting>
 <symbol>returnType</symbol> replacement_function(<symbol>arg.name</symbol>...)
 {
@@ -110,7 +110,7 @@ Visibility of variables in different parts of code of the replacement function m
     <symbol>epilogue</symbol>
 }
 </programlisting>
-If target function return non-void value, variable <varname>returnValue</varname> may be used as name of variable to output (<symbol>arg.name</symbol>) and in the <symbol>middleCode</symbol>.
+If the target function does not return void, variable <varname>returnValue</varname> may be used as the name of variable to output (<symbol>arg.name</symbol>) and in the <symbol>middleCode</symbol>.
     </para>
     <para>
 Example of the group section for module_put() target function:
@@ -133,7 +133,7 @@ Example of the group section for module_put() target function:
 
 # End of the group of definitions for module_put().
 </programlisting>
-Example of the group section for __kmalloc() target function (note using <varname>returnValue</varname> variable):
+Example of the group section for __kmalloc() target function (note the usage of <varname>returnValue</varname> variable as the value of <code>trace.param.name</code> parameter):
 <programlisting>
 [group]
 	# Name and return type of the target function
@@ -162,7 +162,7 @@ Example of the group section for __kmalloc() target function (note using <varnam
 
 # End of the group of definitions for __kmalloc().
 </programlisting>
-Example of the group section for __kmalloc() target function (note implementation <symbol>prologue</symbol> parameter):
+Example of the group section for kmem_cache_alloc() target function (note the contents of <symbol>prologue</symbol> parameter):
 <programlisting>
     [group]
 	# Name and return type of the target function
@@ -196,9 +196,13 @@ size_t size = kmem_cache_size(mc);
 </programlisting>
     </para>
     <para>
-After writing <filename>payload.data</filename> file, you may rewrite value of module_name variable in the <filename>makefile</filename> and <filename>Kbuild</filename> according to one you use as value of <quote>module.name</quote> parameter. In the future, this step may be implemented in the <filename>makefile</filename> itself.
+As you can see, kmem_cache_alloc() function does not have <code>size</code> argument. If we still want to output the size of the requested memory block to the trace, we need to determine it within the replacement function. This is exactly what is done in the prologue code above.
     </para>
-Next, and the last step is running <command>make</command> utility. It generate sources for payload module, and then build this module. That is all.
+        
     <para>
+After writing <filename>payload.data</filename> file, you can change the value of module_name variable in the <filename>makefile</filename> and <filename>Kbuild</filename> according to the one you use as value of <quote>module.name</quote> parameter. In the future, this step may be implemented in the <filename>makefile</filename> itself.
+    </para>
+    <para>
+The last step is to run <command>make</command> utility. This will invoke the code generator tool (<command>kedr_gen</command>) to create the sources for your payload module, then the module will be built.
     </para>
 </section>
