@@ -3,8 +3,31 @@
     <para>
 This section describes how to write a new payload module for fault simulation using a tool provided by KEDR to generate source files from the templates. Common abilities of this tool are described in detail in <xref linkend="using_gen"/>.
     </para>
+
+<para>
+Typical purposes of a custom payload module of this kind could be as follows: 
+</para>
+
+<itemizedlist>
+<listitem><para>
+support fault simulation for the functions for which it is not supported by KEDR <quote>out-of-the-box</quote>;
+</para></listitem>
+
+<listitem><para>
+change the set of parameters output to the trace, in case you need something other than the arguments and the return value of the replacement function to be output;
+</para></listitem>
+
+<listitem><para>
+provide a different set of variables to be passed to fault simulation indicator (see below) - this can be necessary if you would like to implement <link linkend="custom_fsim_scenarios">custom fault simulation scenarios</link>.
+</para></listitem>
+</itemizedlist>
+
+<note><para>
+Note that the infrastructure provided by KEDR for fault simulation (<link linkend="fault_simulation_point">points</link>, <link linkend="fault_simulation_indicator">indicators</link> and the respective control facilities) could be used for other purposes as well. What it does in general, is to alter the behaviour of a call made by the target module if the indicator returns nonzero, or allow the target function to do its work normally if the indicator returns 0. The <quote>altered behaviour</quote> is controlled by the user, see the description of <code>fpoint.error_code</code> parameter below. So, instead of fault simulation, you could implement, say, timeout/sleep injection (i.e., delaying the return from the replacement function which might help with concurrency analysis, etc.) or whatever else you want.
+</para></note>
+
     <para>
-The whole infrastructure necessary for building the payload module from the <quote>definition file</quote> is located in <filename class='directory'>custom_payload_fsim</filename> subdirectory in the directory where the examples provided with KEDR are installed. Here are its contents:
+The files necessary to build the payload module from the <quote>definition file</quote> are located in <filename class='directory'>custom_payload_fsim</filename> subdirectory in the directory where the examples provided with KEDR are installed. Here are its contents:
 <variablelist>
     <varlistentry><term><filename>payload.data</filename></term>
         <listitem>'definition' file to create the payload module</listitem>
@@ -86,6 +109,11 @@ Each group should contain definitions for the following parameters:
     </varlistentry>
 </variablelist>
     </para>
+
+<important><para>
+Output to the trace is currently supported only for the variables of simple types (i.e. no strings, arrays, structures, etc.). Pointers can be output (e.g., using <code><quote>%p</quote></code> or a similar format) but not the data they point to. This is due to the limitations of <command>kedr_gen</command>. In the future versions, these limitations may be removed or at least relaxed.
+</para></important>
+
     <para>
 Until this moment, only parameters which are also used for the payload modules for call monitoring have been described (see <xref linkend="custom_callm_payloads"/>). These parameters have almost the same meaning for the payload modules for fault simulation (these modules extend the functionality of call monitoring payloads). Listed below are the parameters that are meaningful only for fault simulation:
     </para>

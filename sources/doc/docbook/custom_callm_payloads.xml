@@ -3,6 +3,21 @@
     <para>
 This section describes how to write a new payload module for call monitoring using a tool provided by KEDR to generate source files from the templates. Common abilities of this tool are described in detail in <xref linkend="using_gen"/>.
     </para>
+    
+<para>
+Typical purposes of a custom payload module of this kind could be as follows: 
+</para>
+
+<itemizedlist>
+<listitem><para>
+support call monitoring for the functions for which it is not supported by KEDR <quote>out-of-the-box</quote>;
+</para></listitem>
+
+<listitem><para>
+change the set of parameters output to the trace, in case you need something other than the arguments and the return value of the replacement function to be output.
+</para></listitem>
+</itemizedlist>
+    
     <para>
 The whole infrastructure necessary for building the payload module from the <quote>definition file</quote> is located in <filename class='directory'>custom_payload_callm</filename> subdirectory in the directory where the examples provided with KEDR are installed. Here are its contents:
 <variablelist>
@@ -85,6 +100,11 @@ Each group should contain definitions for the following parameters:
         <listitem>format string which is used for printf-like output of values from replacement function (see parameters <quote>trace.param.name</quote> and <quote>trace.param.type</quote>)</listitem>
     </varlistentry>
 </variablelist>
+
+<important><para>
+Output to the trace is currently supported only for the variables of simple types (i.e. no strings, arrays, structures, etc.). Pointers can be output (e.g., using <code><quote>%p</quote></code> or a similar format) but not the data they point to. This is due to the limitations of <command>kedr_gen</command>. In the future versions, these limitations may be removed or at least relaxed.
+</para></important>
+
 Additionally, the following parameters can be defined at group level:
 <variablelist>
     <varlistentry><term>prologue</term>
