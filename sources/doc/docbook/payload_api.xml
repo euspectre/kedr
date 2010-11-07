@@ -114,8 +114,12 @@ pointer to the target module as an argument. If a callback is NULL, it is
 ignored.
 </para>
 
+<note><para>
+Note that if the target module fails to initialize itself (and its init function returns an error as a result) and <code>target_unload_callback</code> is not NULL, this callback will be called nevertheless.
+</para></note>
+
 <para>
-Each payload module has usually a single global instance of this structure 
+Each payload module has usually a single global instance of <code>struct kedr_payload</code> structure 
 and passes its address when registering and unregistering itself with the 
 KEDR core.
 </para>
