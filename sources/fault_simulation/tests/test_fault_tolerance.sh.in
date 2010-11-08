@@ -60,8 +60,8 @@ cat > "$commands_file" << eof
 on_load insmod "$fault_simulation_module" || ! printf "Cannot load fault simulation module into kernel.\n"
 on_unload rmmod "$fault_simulation_module" || ! printf "Cannot unload fault simulation module.\n"
 on_load mkdir -p "$debugfs_mount_point" || ! printf "Cannot create mount point for debugfs.\n"
-on_load mount -t debugfs debugfs "$debugfs_mount_point" || ! printf "Cannot mount debufs.\n"
-on_unload umount "$debugfs_mount_point" || ! printf "Error occures while umount debufs.\n"
+on_load mount -t debugfs debugfs "$debugfs_mount_point" || ! printf "Cannot mount debugfs.\n"
+on_unload umount "$debugfs_mount_point" || ! printf "Error occures while umount debugfs.\n"
 eof
 
 cat > "$commands_file_module_a" << eof

@@ -1,0 +1,72 @@
+#!/bin/sh
+
+debugfs_mount_point="@CMAKE_CURRENT_BINARY_DIR}@/debugfs"
+point_kmalloc_name=sample_point_kmalloc
+indicator_kmalloc_name=sample_indicator_kmalloc
+
+current_indicator_file="${debugfs_mount_point}/kedr_fault_simulation/points/${point_kmalloc_name}/current_indicator"
+indicator_expression_file="${debugfs_mount_point}/kedr_fault_simulation/points/${point_kmalloc_name}/expression"
+
+sample_target_module_name=kedr_sample_target
+sample_target_script="sh @CMAKE_BINARY_DIR@/examples/sample_target/kedr_sample_target"
+sample_target_device="/dev/cfake"
+
+kedr_conf_file="@CMAKE_CURRENT_BINARY_DIR@/kedr.conf"
+commands_file="@CMAKE_CURRENT_BINARY_DIR@/commands"
+
+kedr_control_script="sh @CMAKE_BINARY_DIR@/tools/control/kedr_test"
+do_commands_script="sh @CMAKE_BINARY_DIR@/tests/scripts/do_commands.sh"
+
+cat > "$kedr_conf_file" << eof
+module @CMAKE_BINARY_DIR@/fault_simulation/kedr_fault_simulation.ko
+module @CMAKE_BINARY_DIR@/examples/fsim_payload_kmalloc/kedr_fsim_payload_kmalloc.ko
+module @CMAKE_BINARY_DIR@/examples/indicator_kmalloc/kedr_sample_indicator_kmalloc.ko
+eof
+
+cat > "$commands_file" << eof
+on_load $kedr_control_script start "$sample_target_module_name" "$kedr_conf_file" || ! printf "Cannot start KEDR.\n"
+on_unload $kedr_control_script stop || ! printf "Cannot stop KEDR.\n"
+on_load mkdir -p "$debugfs_mount_point" || ! printf "Cannot create directory for mount debugfs\n"
+on_load mount -t debugfs debugfs "$debugfs_mount_point" || ! printf "Cannot mount debugfs.\n"
+on_unload umount "$debugfs_mount_point" || ! printf "Cannot unmount debugfs.\n"
+on_load $sample_target_script load cfake_buffer_size=2000 || ! printf "Cannot load sample target.\n"
+on_unload $sample_target_script unload || ! printf "Cannot unload sample target.\n"
+eof
+
+if ! $do_commands_script "$commands_file" load; then
+	printf "Cannot initialize test.\n"
+	exit 1
+fi
+
+printf "%s %s" "${indicator_kmalloc_name}" "size > 1000" > "$current_indicator_file"
+if test $? -ne 0; then
+	printf "Cannot set indicator for the point.\n"
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+echo 123 > "$sample_target_device"
+if test $? -eq 0; then
+	printf "Expected, that writting to the device, created by sample target, will failed. But it succeed.\n"
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+printf "%s" "size > 10000" > "$indicator_expression_file"
+if test $? -ne 0; then
+	printf "Cannot change indicator parameters via writting to the file.\n"
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+echo 123 > "$sample_target_device"
+if test $? -ne 0 ; then
+	printf "Expected, that writting to the device, created by sample target, will succeed(indicator parameters changed). But it failed.\n"
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+if ! $do_commands_script "$commands_file" unload; then
+	printf "Error occures while finalize test.\n"
+	exit 1
+fi
