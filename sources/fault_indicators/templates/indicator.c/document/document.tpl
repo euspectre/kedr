@@ -130,7 +130,7 @@ indicator_init(void)
     if(indicator == NULL)
     {
         printk(KERN_ERR "Cannot register indicator.\n");
-        return 1;
+        return -1;
     }
 
     return 0;
