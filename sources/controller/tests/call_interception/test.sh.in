@@ -7,7 +7,7 @@
 #	'payload' - call monitor payload, which replace this function
 
 kedr_control_scipt="sh @CMAKE_BINARY_DIR@/tools/control/kedr_test"
-capture_trace_until_done_script="sh @CMAKE_SOURCE_DIR@/tools/capture_trace/kedr_capture_trace_until_done.sh"
+capture_trace_script="sh @CMAKE_BINARY_DIR@/tools/capture_trace/kedr_test_capture_trace"
 temp_dir=@KEDR_TEST_PREFIX_TEMP_SESSION@/call_interception
 kedr_debugfs_dir=${temp_dir}/debugfs
 
@@ -98,7 +98,7 @@ sleep 0.2
 mkdir -p "${temp_dir}"
 rm -f "${trace_file}"
 
-${capture_trace_until_done_script} "${trace_file}" "${kedr_debugfs_dir}"
+${capture_trace_script} session -d "${kedr_debugfs_dir}" "${trace_file}"
 
 if test $? -ne 0; then
     printf "Some error occures while capturing trace\n"

@@ -2,13 +2,16 @@
 
 ############################################################################
 # Usage:
-#		capture_trace start <file> [<debugfs-mount-dir>]
+#		capture_trace start [-d <debugfs-mount-dir>] [<file>]
 #       capture_trace stop
 #       capture_trace status
+#		capture_trace session [-d <debugfs-mount-dir>] [<file>]
 # 
-# 'start' command starts listening to the trace, capture the messages
-# output there by the payload modules and by the controller, and store them
-# in the file specified by <file>. If file exists, trace will be appended to it.
+# 'start' command starts listening to the trace in non-blocking mope,
+# capture the messages output there by the payload modules and by the controller,
+# and store them in the file specified by <file>.
+# If file exists, trace will be appended to it.
+# If file is not specified, trace is output into STDOUT.
 #
 # <debugfs-mount-dir> is used to determine, where debugfs is mounted.
 # If it is not given, it is assumed to "/sys/kernel/debug".
@@ -16,6 +19,10 @@
 # 'stop' command stops capturing.
 #
 # 'status' command output, whether capturing is running now.
+#
+# 'session' command similar to start, but listen trace in blocking mode,
+# until target session is finished. If file specified and exist, also verify its content
+# to determine current state of the target session.
 #
 # A message occupies a single line in the trace.
 # Currently, the messages have the following format (the number of spaces
@@ -27,7 +34,7 @@
 ############################################################################
 
 if test $# -eq 0 ; then
-    printf "'start', 'stop' or 'status' command should be specified.\n"
+    printf "'start', 'stop', 'status' or 'session' command should be specified.\n"
 	exit 0
 fi
 
@@ -41,7 +48,7 @@ if test -f "${PID_FILE}"; then
     # Check if $PID_FILE indeed contains a pid (a weak check).
     echo ${LISTENER_PID} | grep '^[0-9][0-9]*$' > /dev/null
     if test $? -ne 0; then
-    	printf "Invalid pid of a listener process: \"${LISTENER_PID}\". Remove temporary file.\n"
+    	printf "Invalid pid of a listener process: \"${LISTENER_PID}\". Remove temporary file.\n" >2&
 
     # Remove the pid file as it is probably corrupted somehow.
     	rm -f "${PID_FILE}"
@@ -51,14 +58,22 @@ else
     LISTENER_PID=
 fi
 
-case ${command} in
-start)
-    if test $# -lt 1 ; then
-        printf "Usage: $0 start <path_where_to_store_trace> [<debugfs-mount-dir>]\n"
-    	exit 1
-    fi
-    OUT_FILE="$1"
-    shift
+# Common part of 'start' and 'session' commands:
+# Parse options, and verify it. Also create file, if it specified and not exist.
+if test "${command}" = "start" -o "${command}" = "session"; then
+	#Default value
+	DEBUGFS_MOUNT_POINT="/sys/kernel/debug"
+    while getopts ":d:" option; do
+		case $option in
+		'd')
+			DEBUGFS_MOUNT_POINT="$OPTARG";;
+		*)
+			printf "Usage: \n\n\t$0 start [-d <debugfs-mount-dir>] [<path_where_to_store_trace>]\n" >&2
+			exit 1;;
+		esac
+	done
+	shift $(($OPTIND - 1))
+
     if test "${LISTENER_PID}"; then
     	# temporary file exists
     	printf "It seems that some other process is now listening to the trace "
@@ -67,48 +82,61 @@ start)
     	printf "before."
     	exit 1
     fi
-    
-    if test -e "${OUT_FILE}"; then
-        if test ! -w "${OUT_FILE}"; then
-            printf "Output file '%s' cannot be written\n" "${OUT_FILE}"
-            exit 1
-        fi
-    else
-        # create empty file
-        printf "" > "${OUT_FILE}"
-        if test $? -ne 0; then
-            printf "Cannot create output file '%s'\n" "${OUT_FILE}"
-            exit 1
-        fi
-    fi
-    if test $# -ne 0; then
-        DEBUGFS_MOUNT_POINT="$1"
-        shift
-    else
-        DEBUGFS_MOUNT_POINT="/sys/kernel/debug"
-    fi
+
     if test ! -d ${DEBUGFS_MOUNT_POINT}; then
         printf "debugfs mount point ${DEBUGFS_MOUNT_POINT} is not exist.\n"
-        printf "Please specify correct directory, where debugfs is mounted, by the second parameter.\n"
+        printf "Please specify correct directory, where debugfs is mounted, by the -d option.\n"
         exit 1
     fi
+	trace_pipe="${DEBUGFS_MOUNT_POINT}/tracing/trace_pipe"
+	if test ! -e "${trace_pipe}"; then
+        printf "Tracing file "${trace_pipe}" is not exist.\n"
+        printf "Probably, debugfs is not mounted into "${DEBUGFS_MOUNT_POINT}", or kernel tracing system is not initialized.\n"
+        exit 1
+	fi
+
+    if test $# -ne 0; then
+		OUT_FILE="$1"
+	fi
+fi
+
+
+case ${command} in
+start)
     # Start listening to the trace pipe and capturing the events
-    cat "${DEBUGFS_MOUNT_POINT}/tracing/trace_pipe" >> "${OUT_FILE}" &
+    if test $OUT_FILE; then
+	    if test -e "${OUT_FILE}"; then
+	        if test ! -w "${OUT_FILE}"; then
+	            printf "Output file '%s' cannot be written\n" "${OUT_FILE}"
+	            exit 1
+	        fi
+	    else
+	        # create empty file
+	        printf "" > "${OUT_FILE}"
+	        if test $? -ne 0; then
+	            printf "Cannot create output file '%s'\n" "${OUT_FILE}"
+	            exit 1
+	        fi
+	    fi
+		cat "${trace_pipe}" >> "${OUT_FILE}" &
+	else
+		cat "${trace_pipe}" &
+	fi
     LISTENER_PID=$!
     # $! is the pid of the last backgroud process launched from this shell.
 
     # Check if the listener process is actually running.
     ps -e | grep $! > /dev/null
     if test $? -ne 0; then
-    	printf "Failed to start listening to the trace pipe\n"
+    	printf "Failed to start listening to the trace pipe\n" >&2
     	exit 1
     fi
     echo ${LISTENER_PID} > "${PID_FILE}"
-    printf "Capturing started.\n"
+    printf "Capturing started.\n" >&2
     ;;
 stop)
     if test ! "${LISTENER_PID}"; then
-    	printf "Nothing to stop: no process is listening to the trace pipe now.\n"
+    	printf "Nothing to stop: no process is listening to the trace pipe now.\n" >&2
     	exit 1
     fi
     # Check if this pid is actually the id of a listener process.
@@ -121,17 +149,47 @@ stop)
     # If there are no listeners, do nothing, just remove .pid file.
 
     rm -f ${PID_FILE}
-    printf "Capturing stopped.\n"
+    printf "Capturing stopped.\n" >&2
     ;;
 status)
     if test "${LISTENER_PID}"; then
-        printf "Capturing of the trace is running now.\n"
+        printf "Capturing of the trace is running now.\n" >&2
     else
-        printf "Capturing of the trace is not running now.\n"
+        printf "Capturing of the trace is not running now.\n" >&2
     fi
     ;;
+session)
+	end_session_regexp="target_session_ends"
+	if test $OUT_FILE; then
+		if test -f "${OUT_FILE}"; then
+		    # Verify, whether session already ended
+			start_session_regexp="target_session_starts"
+
+		    awk_script="
+		        BEGIN {result=\"no\"}
+		        /${start_session_regexp}/ {result=\"no\"; next}
+		        /${end_session_regexp}/ {result=\"yes\"; next}
+		        END {print result}"
+
+		    is_trace_already_complete=`awk "${awk_script}" "${OUT_FILE}"`
+		    if test "${is_trace_already_complete}" = "yes"; then
+		        exit 0
+		    fi
+		else
+		    printf "" > "${OUT_FILE}"
+		    if test $? -ne 0; then
+		        printf "Cannot create output file '%s'\n" "${OUT_FILE}" >&2
+		        exit 1
+		    fi
+		fi
+
+		sed -e "/$end_session_regexp/ q" < "${trace_pipe}" >> "${OUT_FILE}"
+	else
+		sed -e "/$end_session_regexp/ q" < "${trace_pipe}"
+	fi
+	;;
 *)
-    printf "Incorrect command \"${command}\". Should be 'start' ,'stop' or 'status'."
+    printf "Incorrect command \"${command}\". Should be 'start' ,'stop', 'status' or 'session'." >&2
 esac
 
 exit 0
