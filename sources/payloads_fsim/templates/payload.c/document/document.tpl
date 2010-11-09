@@ -12,9 +12,9 @@ MODULE_LICENSE("<$module.license$>");
 
 #include <linux/stacktrace.h>
 
-<$if concat(fpoint.fault_code)$>#include <kedr/fault_simulation/fault_simulation.h><$endif$>
+<$if concat(fpoint.fault_code)$>#include <kedr/fault_simulation/fault_simulation.h>
 
-<$header$>
+<$endif$><$header$>
 
 /* To minimize the unexpected consequences of trace event-related 
  * headers and symbols, place #include directives for system headers 
@@ -22,16 +22,6 @@ MODULE_LICENSE("<$module.license$>");
  */
 #define CREATE_TRACE_POINTS
 #include "trace_payload.h" /* trace event facilities */
-
-<$if concat(fpoint.fault_code)$><$if concat(fpoint.reuse_point)$>
-/*
- * For reusing simulation points
- * 
- * If replacement function reuse previousely declared simulation point, it define its point as fake point.
- * Otherwise, it should declare point variable.
- */
-static struct kedr_simulation_point* fake_fsim_point;
-<$endif$><$endif$>
 
 /* 
  *   void get_caller_address(void* abs_addr, int section_id, ptrdiff_t rel_addr)
@@ -122,37 +112,15 @@ static void* orig_addrs[] = {
 static void* repl_addrs[] = {
 <$replFunctionAddress : join(,\n)$>
 };
-<$if concat(fpoint.fault_code)$>//Arrays of simulation points and its parameters for register
-static struct kedr_simulation_point** sim_points[] = {
-<$simPointAddress : join(,\n)$>
-};
-
-static const char* sim_point_names[] = {
-<$simPointName : join(,\n)$>
-};
-
-static const char* sim_point_formats[] = {
-<$simPointFormat : join(,\n)$>
-};
-
-//return not 0 if registration of simulation point i is failed
-static int register_point_i(int i)
+<$if concat(fpoint.fault_code)$>//Array of simulation points and its parameters for register
+struct sim_point_attributes
 {
-<$if concat(fpoint.reuse_point)$>
-    if(sim_points[i] == &fake_fsim_point) return 0;//needn't to register
-<$endif$>        
-    *(sim_points[i]) = kedr_fsim_point_register(sim_point_names[i],
-        (sim_point_formats[i]));
-    return *(sim_points[i]) == NULL;
-}
-
-static void unregister_point_i(int i)
-{
-<$if concat(fpoint.reuse_point)$>
-    if(sim_points[i] == &fake_fsim_point) return;//needn't to unregister
-<$endif$>        
-    kedr_fsim_point_unregister(*(sim_points[i]));
-}
+    struct kedr_simulation_point** p_point;
+    const char* name;
+    const char* format;
+} sim_points[] = {
+<$simPointAttributes : join(\n)$>
+};
 <$endif$>
 
 static struct kedr_payload payload = {
@@ -169,11 +137,12 @@ static void
 <$module.name$>_cleanup_module(void)
 {
 <$if concat(fpoint.fault_code)$>    int i;
-    for(i = 0; i < ARRAY_SIZE(sim_points); i++)
+<$endif$>    kedr_payload_unregister(&payload);
+<$if concat(fpoint.fault_code)$>    for(i = 0; i < ARRAY_SIZE(sim_points); i++)
 	{
-		unregister_point_i(i);
+		kedr_fsim_point_unregister(*sim_points[i].p_point);
 	}<$endif$>
-    kedr_payload_unregister(&payload);
+    
     KEDR_MSG("[<$module.name$>] Cleanup complete\n");
     return;
 }
@@ -186,23 +155,21 @@ static int __init
 
 	BUILD_BUG_ON( ARRAY_SIZE(orig_addrs) != 
         ARRAY_SIZE(repl_addrs));
-<$if concat(fpoint.fault_code)$>    BUILD_BUG_ON( ARRAY_SIZE(sim_points) !=
-		ARRAY_SIZE(sim_point_names));
-	BUILD_BUG_ON( ARRAY_SIZE(sim_points) !=
-		ARRAY_SIZE(sim_point_formats));<$endif$>
 
 	KEDR_MSG("[<$module.name$>] Initializing\n");
 
 <$if concat(fpoint.fault_code)$>	for(i = 0; i < ARRAY_SIZE(sim_points); i++)
 	{
-        if(register_point_i(i)) break;
+        *sim_points[i].p_point = kedr_fsim_point_register(sim_points[i].name,
+            sim_points[i].format);
+        if(*sim_points[i].p_point) break;
 	}
 	if(i != ARRAY_SIZE(sim_points))
 	{
 		KEDR_MSG("[<$module.name$>] Failed to register simulation points\n");
 		for(--i; i>=0 ; i--)
 		{
-            unregister_point_i(i);
+            kedr_fsim_point_unregister(*sim_points[i].p_point);
         }
         return -1;
 	}
@@ -212,7 +179,7 @@ static int __init
     {
 		for(--i; i>=0 ; i--)
 		{
-            unregister_point_i(i);
+            kedr_fsim_point_unregister(*sim_points[i].p_point);
         }
         return result;
     }<$else$>    if(result) return result;

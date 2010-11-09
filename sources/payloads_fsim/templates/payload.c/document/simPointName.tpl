@@ -1,1 +1,0 @@
-	fsim_point_name_<$function.name$>

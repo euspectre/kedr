@@ -1,1 +1,0 @@
-	fsim_point_format_<$function.name$>
