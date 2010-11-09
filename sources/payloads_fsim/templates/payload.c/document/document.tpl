@@ -162,7 +162,7 @@ static int __init
 	{
         *sim_points[i].p_point = kedr_fsim_point_register(sim_points[i].name,
             sim_points[i].format);
-        if(*sim_points[i].p_point) break;
+        if(*sim_points[i].p_point == NULL) break;
 	}
 	if(i != ARRAY_SIZE(sim_points))
 	{
