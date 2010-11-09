@@ -10,6 +10,9 @@ kmodule_configure_kernel_functions(functions REQUIRED
 	"krealloc"
 	"kmem_cache_alloc"
 	OPTIONAL "kmem_cache_alloc_notrace"
+# In call monitoring mode
+	"kmem_cache_free"
+	"kfree"
 )
 
 set(kmem_cache_alloc_FUNCTION "kmem_cache_alloc")
