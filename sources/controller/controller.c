@@ -290,20 +290,33 @@ do_process_area(void* kbeg, void* kend,
     void** from_funcs, void** to_funcs, unsigned int nfuncs)
 {
     struct insn c_insn; /* current instruction */
-    unsigned int i;
     void* pos = NULL;
     
-    /* TODO: provide assert-like wrapper */
     BUG_ON(kbeg == NULL);
     BUG_ON(kend == NULL);
     BUG_ON(kend < kbeg);
         
-    pos = kbeg;
-    for (i = 0; ; ++i)
+    for (pos = kbeg; pos + 4 < kend; )
     {
         unsigned int len;
         unsigned int k;
 
+/* 'pos + 4 < kend' is based on another "heuristics". 'call' and 'jmp' 
+ * instructions we need to instrument are 5 bytes long on x86 and x86-64 
+ * machines. So if there are no more than 4 bytes left before the end, they
+ * cannot contain the instruction of this kind, we do not need to check 
+ * these bytes. 
+ * This allows to avoid "decoder stopped past the end of the section"
+ * conditions (see do_process_insn()). There, the decoder tries to chew 
+ * the trailing 1-2 zero bytes of the section (padding) and gets past 
+ * the end of the section.
+ * It seems that the length of the instruction that consists of zeroes
+ * only is 3 bytes (it is a flavour of 'add'), i.e. shorter than that 
+ * kind of 'call' we are instrumenting.
+ *
+ * [NB] The above check automatically handles 'pos == kend' case.
+ */
+       
         len = do_process_insn(&c_insn, pos, kend,
             from_funcs, to_funcs, nfuncs);
         if (len == 0)   
@@ -350,24 +363,6 @@ do_process_area(void* kbeg, void* kend,
             {
                 ++pos;
             }
-        }
-
-    /* Another heuristics based on the fact that 'call' instructions we need
-     * to instrument are 5 bytes long on x86 and x86-64 machines. So if 
-     * there are no more than 4 bytes left before the end, they cannot 
-     * contain the instruction of this kind, we do not need to check these
-     * bytes. 
-     * This allows to avoid "decoder stopped past the end of the section"
-     * conditions (see do_process_insn()). There, the decoder tries to chew 
-     * the trailing 1-2 zero bytes of the section (padding) and gets past 
-     * the end of the section.
-     * It seems that the length of the instruction that consists of zeroes
-     * only is 3 bytes (it is a flavour of 'add'), i.e. shorter than that 
-     * kind of 'call' we are instrumenting.
-     */
-        if (pos + 4 >= kend)
-        {
-            break;
         }
     }
     
