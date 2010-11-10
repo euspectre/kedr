@@ -86,9 +86,13 @@ DEFINE_MUTEX(indicator_mutex);
 
 ////////////////Auxiliary functions///////////////////////////
 
-// Initialize expression part of the indicator state.
-static int
-indicator_state_expression_init(struct indicator_real_state* state, const char* expression);
+// Create indicator state
+static struct indicator_real_state*
+indicator_state_create(const char* expression, struct dentry* control_directory);
+// Destroy indicator state
+static void
+indicator_state_destroy(struct indicator_real_state* state);
+
 // Change expression of the indicator. On fail state is not changed.
 // Should be executed with mutex taken.
 static int
@@ -100,17 +104,6 @@ static int process_may_fail(pid_t filter_pid);
 // Should be executed with mutex taken.
 static int
 indicator_state_pid_set_internal(struct indicator_real_state* state, pid_t pid);
-
-// Destroy expression part of the indicator state
-static void
-indicator_state_expression_destroy(struct indicator_real_state* state);
-//
-static int indicator_create_expression_file(struct indicator_real_state* state, struct dentry* dir);
-static void indicator_remove_expression_file(struct indicator_real_state* state);
-//
-static int indicator_create_pid_file(struct indicator_real_state* state, struct dentry* dir);
-static void indicator_remove_pid_file(struct indicator_real_state* state);
-
 //////////////Indicator's functions declaration////////////////////////////
 
 static int indicator_simulate(void* indicator_state, void* user_data);
@@ -180,11 +173,7 @@ void indicator_instance_destroy(void* indicator_state)
     struct indicator_real_state* indicator_real_state =
         (struct indicator_real_state*)indicator_state;
     
-    indicator_remove_pid_file(indicator_real_state);
-    indicator_remove_expression_file(indicator_real_state);
-    indicator_state_expression_destroy(indicator_real_state);
-    
-    kfree(indicator_real_state);
+    indicator_state_destroy(indicator_real_state);
 }
 
 int indicator_instance_init(void** indicator_state,
@@ -192,43 +181,36 @@ int indicator_instance_init(void** indicator_state,
 {
     struct indicator_real_state* indicator_real_state;
     const char* expression = (*params != '\0') ? params : "0";
-    indicator_real_state = kmalloc(sizeof(*indicator_real_state), GFP_KERNEL);
-    if(indicator_real_state == NULL)
-    {
-        pr_err("Cannot allocate indicator state.");
-        return -1;
-    }
-    if(indicator_state_expression_init(indicator_real_state, expression))
-    {
-        kfree(indicator_real_state);
-        return -1;
-    }
     
-    atomic_set(&indicator_real_state->pid, 0);//initially - no process filtering
-    
-    if(indicator_create_pid_file(indicator_real_state, control_directory))
-    {
-        indicator_state_expression_destroy(indicator_real_state);
-        kfree(indicator_real_state);
-        return -1;
-    }
-    
-    if(indicator_create_expression_file(indicator_real_state, control_directory))
-    {
-        indicator_remove_pid_file(indicator_real_state);
-        indicator_state_expression_destroy(indicator_real_state);
-        kfree(indicator_real_state);
-        return -1;
-    }
+    indicator_real_state = indicator_state_create(expression,
+        control_directory);
+    if(indicator_real_state == NULL) return -1;
     
     *indicator_state = indicator_real_state;
     return 0;
 }
 //////////////////Implementation of auxiliary functions////////////////
-// Initialize expression part of the indicator state.
+
+// Note: Whenever this function returns 0 or not 0,
+// indicator_state_destroy_files() should be called.
 static int
-indicator_state_expression_init(struct indicator_real_state* state, const char* expression)
+indicator_state_create_files(struct indicator_real_state* state, 
+    struct dentry* control_directory);
+
+struct indicator_real_state*
+indicator_state_create(const char* expression, struct dentry* control_directory)
 {
+    struct indicator_real_state* state = 
+		kzalloc(sizeof(*state), GFP_KERNEL);
+	if(state == NULL)
+    {
+        pr_err("Cannot allocate memory for indicator state");
+        return NULL;
+    }
+
+    // Initialize expression
+    atomic_set(&state->times, 0);
+    
     state->calc = kedr_calc_parse(expression,
         <$expressionConstParams$>,
         ARRAY_SIZE(var_names), var_names,
@@ -236,20 +218,44 @@ indicator_state_expression_init(struct indicator_real_state* state, const char* 
     if(state->calc == NULL)
     {
         pr_err("Cannot parse string expression.");
-        return -1;
+        goto fail;
     }
-    state->expression = kmalloc(strlen(expression) + 1, GFP_KERNEL);
+    state->expression = kstrdup(expression , GFP_KERNEL);
     if(state->expression == NULL)
     {
         pr_err("Cannot allocate memory for string expression.");
-        kedr_calc_delete(state->calc);
-        return -1;
+        goto fail;
     }
-    strcpy(state->expression, expression);
-    atomic_set(&state->times, 0);
-    return 0;
 
+    // Create control files
+    if(control_directory != NULL)
+    {
+        if(indicator_state_create_files(state, control_directory))
+        {
+            goto fail;
+        }
+    }
+    return state;
+
+fail:
+    indicator_state_destroy(state);
+    return NULL;
 }
+
+static void
+indicator_state_remove_files(struct indicator_real_state* state); 
+
+void indicator_state_destroy(struct indicator_real_state* state)
+{
+    indicator_state_remove_files(state);
+    if(state->expression != NULL)
+        kfree(state->expression);
+    if(state->calc != NULL)
+        kedr_calc_delete(state->calc);
+
+    kfree(state);
+}
+
 // Change expression of the indicator. On fail state is not changed.
 // Should be executed with mutex taken.
 static int
@@ -290,13 +296,6 @@ indicator_state_expression_set_internal(struct indicator_real_state* state, cons
     
     return 0;
 }
-// Destroy expression part of the indicator state
-static void
-indicator_state_expression_destroy(struct indicator_real_state* state)
-{
-    kedr_calc_delete(state->calc);
-    kfree(state->expression);
-}
 
 //Determine according to the value of 'pid' field of the indicator state,
 //whether we may make fail this process or not.
@@ -331,15 +330,24 @@ indicator_state_pid_set_internal(struct indicator_real_state* state, pid_t pid)
 
 
 /////////////////////Files implementation/////////////////////////////
-//Expression
+// Expression
 static char* indicator_expression_file_get_str(struct inode* inode);
 static int indicator_expression_file_set_str(const char* str, struct inode* inode);
 
 CONTROL_FILE_OPS(indicator_expression_file_operations,
     indicator_expression_file_get_str, indicator_expression_file_set_str);
 
-int indicator_create_expression_file(struct indicator_real_state* state, struct dentry* dir)
+// Pid
+static char* indicator_pid_file_get_str(struct inode* inode);
+static int indicator_pid_file_set_str(const char* str, struct inode* inode);
+
+CONTROL_FILE_OPS(indicator_pid_file_operations,
+    indicator_pid_file_get_str, indicator_pid_file_set_str);
+
+int indicator_state_create_files(struct indicator_real_state* state,
+    struct dentry* dir)
 {
+    // File for set/get expression
     state->expression_file = debugfs_create_file("expression",
         S_IRUGO | S_IWUSR | S_IWGRP,
         dir,
@@ -349,47 +357,43 @@ int indicator_create_expression_file(struct indicator_real_state* state, struct 
         pr_err("Cannot create expression file for indicator.");
         return -1;
     }
-    return 0;
-
-}
-void indicator_remove_expression_file(struct indicator_real_state* state)
-{
-    mutex_lock(&indicator_mutex);
-    state->expression_file->d_inode->i_private = NULL;
-    mutex_unlock(&indicator_mutex);
-
-    debugfs_remove(state->expression_file);
-}
-// Pid
-static char* indicator_pid_file_get_str(struct inode* inode);
-static int indicator_pid_file_set_str(const char* str, struct inode* inode);
-
-CONTROL_FILE_OPS(indicator_pid_file_operations,
-    indicator_pid_file_get_str, indicator_pid_file_set_str);
-
-int indicator_create_pid_file(struct indicator_real_state* state, struct dentry* dir)
-{
+    // File for set/get pid constraint
     state->pid_file = debugfs_create_file("pid",
         S_IRUGO | S_IWUSR | S_IWGRP,
         dir,
         state, &indicator_pid_file_operations);
+    
     if(state->pid_file == NULL)
     {
         pr_err("Cannot create pid file for indicator.");
         return -1;
     }
     return 0;
-
 }
-void indicator_remove_pid_file(struct indicator_real_state* state)
+
+void
+indicator_state_remove_files(struct indicator_real_state* state)
 {
-    mutex_lock(&indicator_mutex);
-    state->pid_file->d_inode->i_private = NULL;
-    mutex_unlock(&indicator_mutex);
+    // Expression file
+    if(state->expression_file)
+    {
+        mutex_lock(&indicator_mutex);
+        state->expression_file->d_inode->i_private = NULL;
+        mutex_unlock(&indicator_mutex);
 
-    debugfs_remove(state->pid_file);
+        debugfs_remove(state->expression_file);
+    }
+    // Pid file
+    if(state->pid_file)
+    {
+        mutex_lock(&indicator_mutex);
+        state->pid_file->d_inode->i_private = NULL;
+        mutex_unlock(&indicator_mutex);
+
+        debugfs_remove(state->pid_file);
+    }
 }
-//
+
 /////Implementation of getter and setter for file operations/////////////
 char* indicator_expression_file_get_str(struct inode* inode)
 {
