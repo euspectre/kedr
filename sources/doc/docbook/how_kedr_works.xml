@@ -119,7 +119,7 @@ of payload modules and to provide API to them.
 
 <listitem><para>
 Loads the payload modules listed in the configuration file. Each payload 
-module should register itself with the KEDR core by calling (see <xref 
+module should register itself with the KEDR core by calling <function>kedr_payload_register</function> (see <xref 
 linkend="payload_api"/>), this is usually done in its init function.
 </para></listitem>
 

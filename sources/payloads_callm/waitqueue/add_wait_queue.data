@@ -1,7 +1,6 @@
 [group]
 	# Name and return type of the target function
 	function.name = add_wait_queue
-	returnsVoid = yes
 
 	# Names and types of the arguments of the target function
 	arg.type = wait_queue_head_t*

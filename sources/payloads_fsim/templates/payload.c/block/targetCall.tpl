@@ -1,1 +1,1 @@
-<$if returnsVoid$><$else$>returnValue = <$endif$><$function.name$>(<$argumentList$>);
+<$if returnType$>returnValue = <$endif$><$function.name$>(<$argumentList$>);

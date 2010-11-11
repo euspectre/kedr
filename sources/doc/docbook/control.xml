@@ -121,7 +121,7 @@ If <filename>kedr_base</filename> module is still loaded after <quote>stop</quot
 <section id="kedr_control.caveats">
 <title>Caveats</title>
     <para>
-In its <command>start</command>, <command>stop</command> and <command>restart</command> modes, <command>&kedr-service;</command> changes the state of tracepoints breaking usage of the trace. So, trace capturing mechanism should not be running when <command>&kedr-service;</command> command is executed in these modes. To be exact, <command>kedr_capture_trace</command> should not be in capturing state and <command>kedr_capture_trace_until_done.sh</command> should not be running in this case.
+In its <command>start</command>, <command>stop</command> and <command>restart</command> modes, <command>&kedr-service;</command> changes the state of tracepoints breaking usage of the trace. So, trace capturing mechanism should not be running when <command>&kedr-service;</command> command is executed in these modes. To be exact, <command>kedr_capture_trace</command> should not be in capturing state and <command>kedr_capture_trace session</command> should not be running in this case.
     </para>
 </section>
 

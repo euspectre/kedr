@@ -54,16 +54,17 @@ called_&lt;function-name&gt;: (&lt;call_address&gt;) arguments(&lt;arguments-lis
 If you would like to find the lines in the source code of the target module corresponding to the addresses given in the trace records, see <xref linkend="analyze_trace"/> for details.
 </para>
 
+<!--
 <note><para>
 On some systems, you can see the address fields in the trace records with the contents similar to the following: <code>([&lt;(null)&gt;] not_supported+0x0)</code>. This means that KEDR was unable to obtain the address of the call. This can happen, for example, if the kernel has been built without <code>CONFIG_STACKTRACE</code> or <code>CONFIG_FRAME_POINTER</code> defined. To make debugging of kernel modules (and the kernel proper) easier, it is recommended to rebuild the kernel with these parameters set to <quote>y</quote>.
 </para></note>
-
+-->
 <para>
 A different format is used for marker records indicating loading and unloading of the target module:
 </para>
 
 <synopsis>
-target_session_&lt;begins|end&gt;: target_module: "&lt;target-module-name&gt;"
+target_session_&lt;begins|ends&gt;: target_module: "&lt;target-module-name&gt;"
 </synopsis> 
 
     <para>

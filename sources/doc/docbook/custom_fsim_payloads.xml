@@ -89,9 +89,6 @@ Each group should contain definitions for the following parameters:
     <varlistentry><term>returnType</term>
         <listitem>return type of the target function if it is not void, otherwise shouldn't be defined at all</listitem>
     </varlistentry>
-    <varlistentry><term>returnsVoid</term>
-        <listitem>any non-empty value, if the target function returns void, otherwise should't be defined at all. In the future, this parameter will, probably, not be used, but currently its usage is mandatory for the functions that return void.</listitem>
-    </varlistentry>
     <varlistentry><term>arg.type</term>
         <listitem>(multi-valued) types of the parameters of the target function, starting with the first one. If the function has no parameters, shouldn't be assigned at all.</listitem>
     </varlistentry>
@@ -99,7 +96,7 @@ Each group should contain definitions for the following parameters:
         <listitem>(multi-valued) names of the parameters of the target function, starting with the first one. If the function has no parameters, shouldn't be assigned at all. Parameters of the replacement function will be accessible via these names in the code.</listitem>
     </varlistentry>
     <varlistentry><term>trace.param.name</term>
-        <listitem>(multi-valued) variable names, which values will be output to the trace. This variables should be accessible in replacement function (see below). At least, one value should be output (otherwise this replacement function is meaningless).</listitem>
+        <listitem>(multi-valued) variable names, which values will be output to the trace. This variables should be accessible in replacement function (see below).</listitem>
     </varlistentry>
     <varlistentry><term>trace.param.type</term>
         <listitem>(multi-valued) types of the values, which will be output into the trace. This types will be used for casting the values of the corresponding variables before they will be output (so, these types may differ from the real types of variables).</listitem>

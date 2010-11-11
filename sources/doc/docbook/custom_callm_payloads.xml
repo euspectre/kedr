@@ -81,9 +81,6 @@ Each group should contain definitions for the following parameters:
     <varlistentry><term>returnType</term>
         <listitem>return type of the target function if it is not void, otherwise shouldn't be defined at all</listitem>
     </varlistentry>
-    <varlistentry><term>returnsVoid</term>
-        <listitem>any non-empty value, if the target function returns void, otherwise should't be defined at all. In the future, this parameter will, probably, not be used, but currently its usage is mandatory for the functions that return void.</listitem>
-    </varlistentry>
     <varlistentry><term>arg.type</term>
         <listitem>(multi-valued) types of the parameters of the target function, starting with the first one. If the function has no parameters, shouldn't be assigned at all.</listitem>
     </varlistentry>
@@ -91,7 +88,7 @@ Each group should contain definitions for the following parameters:
         <listitem>(multi-valued) names of the parameters of the target function, starting with the first one. If the function has no parameters, shouldn't be assigned at all. Parameters of the replacement function will be accessible via these names in the code.</listitem>
     </varlistentry>
     <varlistentry><term>trace.param.name</term>
-        <listitem>(multi-valued) variable names, which values will be output to the trace. This variables should be accessible in replacement function (see below). At least, one value should be output (otherwise this replacement function is meaningless).</listitem>
+        <listitem>(multi-valued) variable names, which values will be output to the trace. This variables should be accessible in replacement function (see below).</listitem>
     </varlistentry>
     <varlistentry><term>trace.param.type</term>
         <listitem>(multi-valued) types of the values, which will be output into the trace. This types will be used for casting the values of the corresponding variables before they will be output (so, these types may differ from the real types of variables).</listitem>
@@ -117,6 +114,7 @@ Additionally, the following parameters can be defined at group level:
         <listitem>code (may be multiline) which will be inserted at the end of the replacement function (after the values are output to the trace). If <code>prologue</code> or <code>middleCode</code> request some resources from the kernel, this code can be used to release these resources.</listitem>
     </varlistentry>
 </variablelist>
+
 Visibility of variables in different parts of code of the replacement function can be described in pseudocode as follows:
 <programlisting>
 <symbol>returnType</symbol> replacement_function(<symbol>arg.name</symbol>...)
@@ -129,8 +127,9 @@ Visibility of variables in different parts of code of the replacement function c
     }
     <symbol>epilogue</symbol>
 }
+
 </programlisting>
-If the target function does not return void, variable <varname>returnValue</varname> may be used as the name of variable to output (<symbol>arg.name</symbol>) and in the <symbol>middleCode</symbol>.
+If the target function does not return void, variable <varname>returnValue</varname> refers to the returning value of the function. It may be used as the name of variable to output (<symbol>arg.name</symbol>) and in the <symbol>middleCode</symbol>.
     </para>
     <para>
 Example of the group section for module_put() target function:
@@ -138,7 +137,6 @@ Example of the group section for module_put() target function:
 [group]
     # Name and return type of the target function
     function.name = module_put
-    returnsVoid = yes
 
     # Names and types of the arguments of the target function
     arg.type = struct module*
@@ -218,7 +216,6 @@ size_t size = kmem_cache_size(mc);
     <para>
 As you can see, kmem_cache_alloc() function does not have <code>size</code> argument. If we still want to output the size of the requested memory block to the trace, we need to determine it within the replacement function. This is exactly what is done in the prologue code above.
     </para>
-        
     <para>
 After writing <filename>payload.data</filename> file, you can change the value of module_name variable in the <filename>makefile</filename> and <filename>Kbuild</filename> according to the one you use as value of <quote>module.name</quote> parameter. In the future, this step may be implemented in the <filename>makefile</filename> itself.
     </para>

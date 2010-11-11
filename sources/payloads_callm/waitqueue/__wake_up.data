@@ -1,7 +1,6 @@
 [group]
 	# Name and return type of the target function
 	function.name = __wake_up
-	returnsVoid = yes
 
 	# Names and types of the arguments of the target function
 	arg.type = wait_queue_head_t*
