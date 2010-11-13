@@ -2,7 +2,7 @@
 <title>Analyzing the Trace</title>
 
 <para>
-This section describes one of the techniques that can be used when analyzing the traces output by payload modules for call monitoring or fault simulation. In particular, it shows how to find out which place in the source code of the target module each particular trace record corresponds to.
+This section describes a couple of techniques that can be used when analyzing the traces output by payload modules for call monitoring or fault simulation. In particular, it shows how to find out which place in the source code of the target module each particular trace record corresponds to and <link linkend="analyze_trace.stack">how to obtain call stack</link> for a call of interest.
 </para>
 
 <note>
@@ -15,6 +15,11 @@ Please check if the kernel of your system is built with <code>CONFIG_STACKTRACE<
 It is desirable to have the target module with debug information enabled. Note that it is only necessary if you would like to match the trace records to the appropriate fragments of the source code of the target module. KEDR itself <emphasis>does not</emphasis> require the modules under analysis to have debug information.
 </para>
 </note>
+
+<!-- ============================================================== -->
+
+<section id="analyze_trace.general">
+<title>General</title>
 
 <para>
 Let us consider the trace from the example described in <xref linkend="getting_started"/> (the records are numbered just for convenience):
@@ -83,7 +88,7 @@ On the other hand, you could assume that the order in which the sections are loc
 <para>
 Now that you have found the section a call of interest belongs to as well as its offset in that section, you can use the debug information in the target module to find the corresponding place in its source code. The following sections show how to do this.
 </para>
-
+</section>
 <!-- ============================================================== -->
 
 <section id="analyze_trace.gdb">
@@ -239,6 +244,194 @@ cfake_open():
 
 <para>
 The remaining records can be processed in a similar way.
+</para>
+
+</section>
+<!-- ============================================================== -->
+
+<section id="analyze_trace.stack">
+<title>Obtaining the Call Stack</title>
+
+<note>
+<para>
+The technique described below is quite easy to use. Still, to understand it better, it is recommended that you familiarize yourself first with the instructions on how to create custom payload modules using template-based code generation and fault simulation infrastructure (see <xref linkend="extend"/>). 
+</para>
+
+<para>
+Note that we are not actually going to do fault simulation here, we will just reuse the infrastructure for a different purpose.
+</para>
+</note>
+
+<para>
+Sometimes the technique described in the sections above is not enough to find out, what the target module was actually doing when it called the target function. Consider memory allocation and deallocation, for example. The developers of the target module may choose to use <code>kmalloc()</code> directly. Alternatively, they may choose to provide a set of their own functions for memory management that probably use <code>kmalloc()</code> internally but are higher-level and suit the needs of the developers better. If the latter is the case, it may happen that many of the calls to <code>kmalloc()</code> recorded in the trace are performed from the same address in the code even if the target module services completely different requests each time. If there are many such calls recorded, it could become difficult to analyze what was actually happening in the target module, for example, to track down a memory leak or the like.
+</para>
+
+<para>
+If we need to analyze only a few of the recorded calls, it could be helpful if we obtained call stack for each of these calls somehow.
+</para>
+
+<para>
+Let us look at two fragments of a trace produced by call monitoring facilities from KEDR during the initialization and finalization of some kernel module:
+</para>
+
+<programlisting><![CDATA[
+insmod-1910 [000] 338.670490: 
+    called___kmalloc: ([<e0c5b55d>] core+0x755d) arguments: (36, d0), result: ddad8300
+insmod-1910 [000] 338.670576: 
+    called___kmalloc: ([<e0c5b55d>] core+0x755d) arguments: (64, d0), result: ddad6f40
+insmod-1910 [000] 338.670595: 
+    called_kfree: ([<e0c556d9>] core+0x16d9) arguments: (ddad6f40)
+insmod-1910 [000] 338.670676: 
+    called___kmalloc: ([<e0c5b55d>] core+0x755d) arguments: (36, d0), result: ddad6f40
+insmod-1910 [000] 338.670760: 
+    called___kmalloc: ([<e0c5b55d>] core+0x755d) arguments: (64, d0), result: de864f00
+]]></programlisting>
+
+<programlisting><![CDATA[
+rmmod-1956 [000] 437.168068: 
+    called_kfree: ([<e0c556d9>] core+0x16d9) arguments: (de864f00)
+rmmod-1956 [000] 437.168080: 
+    called_kfree: ([<e0c5d511>] core+0x9511) arguments: (ddad8300)
+]]></programlisting>
+
+<para>
+You have probably noticed that there is no matching call to <code>kfree()</code> recorded for the third call to <code>__kmalloc()</code> (the one that returned <code>0xddad6f40</code>). Looks like a memory leak. Note that all the calls to <code>__kmalloc()</code> were made from the same place in the code of the target module. It was that higher level allocation function provided and used by the target module.
+</para>
+
+<para>
+Assuming that the above situation is reproducible, let us try to obtain the call stack for each call to <code>__kmalloc()</code> made in the context of <command>insmod</command> process. However, the default payload modules for call monitoring and fault simulation are currently unable to output call stacks. So we need to prepare a custom paylaod module somehow that suits our needs. Fortunately, it is not that difficult.
+</para>
+
+<para>
+As it is mentioned in <xref linkend="custom_fsim_payloads"/>, the <quote>point and indicator</quote> infrastructure provided by KEDR for fault simulation, can be used for other purposes as well. Actually, it supports altering the behaviour of the target module according to a scenario chosen by the user (see also <xref linkend="fault_sim"/>). That is exactly what we need: each time <code>__kmalloc()</code> is called in the context of the specified process (or process tree), current call stack should be output, say, to the system log and the execution of the target module should then continue normally. To develop payload module <filename>payload_dump_stack</filename> that implements that, we can follow the steps described in <xref linkend="custom_fsim_payloads"/>.
+</para>
+
+<para>
+First, we copy <filename class='directory'>custom_payload_fsim</filename> example to some other directory. The templates located there remain unchanged and we change only the name of the payload module to <filename>payload_dump_stack</filename> in <filename>Kbuild</filename> and <filename>makefile</filename>.
+</para>
+
+<para>
+Then, to make things easier, we replace <filename>payload.data</filename> with the corresponding file for the default payload module for fault simulation for common memory management routines. That file can be found in <filename class='directory'>payloads_fsim/common_memory_management</filename> subdirectory in the build tree of KEDR. We need to change this <filename>payload.data</filename> file as follows.
+</para>
+
+<itemizedlist>
+<listitem><para>
+Set <code>module.name</code> and <code>module.author</code> appropriately.
+</para></listitem>
+
+<listitem>
+<para>
+Add relevant #include directives to the header part:
+</para>
+
+<programlisting><![CDATA[
+#include <linux/kernel.h>   /* dump_stack() */
+#include <linux/sched.h>    /* current, etc. */
+]]></programlisting>
+</listitem>
+
+<listitem><para>
+Turn off point reuse by commenting out <code>fpoint.reuse_point = ...</code> lines in <emphasis>each</emphasis> group. We would like to control the calls to <code>__kmalloc</code> separately from the calls to other memory management functions. For those, we only need a usual trace.
+</para></listitem>
+
+<listitem>
+<para>
+The most important part is to specify what exactly to do if a call to <code>__kmalloc</code> matches the chosen scenario. We replace the default definition of <code>fpoint.fault_code</code> for the group for <code>__kmalloc</code> function with the following (for simplicity, we do not care about the concurrency issues here):
+</para>
+
+<programlisting><![CDATA[
+    fpoint.fault_code =>>
+        static int callNo = 0;
+        
+        /* just output a message and the call stack and go on normally */
+        ++callNo;
+        printk(KERN_INFO "[__kmalloc()] Matched call, PID=%d, call #%d\n",
+            (int)(current->pid),
+            callNo
+        );
+        dump_stack();
+        returnValue = __kmalloc(size, flags);
+    <<
+]]></programlisting>
+
+<para>
+That is, if the indicator function returns non-zero for a given call to <code>__kmalloc</code>, we output the call number and PID of the corresponding process and call <code>dump_stack()</code> to output the call stack to the system log. Note that we call <code>__kmalloc</code> at the end as we do not intend to simulate its failure rather than to allow the execution continue normally.
+</para>
+</listitem>
+</itemizedlist>
+
+<para>
+That is all for the payload module. Now we can build it and instruct KEDR to load it along with the corresponding core modules and the indicator. A configuration file like the following could be used to do this.
+</para>
+
+<programlisting><![CDATA[
+on_load mkdir -p "/tmp/kedr/debugfs"
+
+# Mount debugfs to enable tracepoints later
+on_load mount debugfs -t debugfs "/tmp/kedr/debugfs"
+
+# This allows to roll back in case of error while loading a payload
+on_unload mount | grep "/tmp/kedr/debugfs"; if test $? -eq 0; then umount "/tmp/kedr/debugfs"; fi
+
+# Fault simulation infrastructure
+module /usr/local/lib/modules/2.6.34.7-0.5-default/misc/kedr_fault_simulation.ko
+
+# Payload modules
+payload /home/tester/work/kedr/payload_dump_stack/payload_dump_stack.ko 
+on_load echo 1 > /tmp/kedr/debugfs/tracing/events/payload_dump_stack/enable
+
+# Indicators 
+# We could use kedr_fsim_indicator_common.ko as well because we are 
+# not going to set scenarios involving restrictions on the arguments 
+# of __kmalloc.
+module /usr/local/lib/modules/2.6.34.7-0.5-default/misc/kedr_fsim_indicator_kmalloc.ko
+
+# After tracepoints are enabled for all payloads, unmount debugfs
+on_load umount "/tmp/kedr/debugfs"
+]]></programlisting>
+
+<para>
+Now we can set the indicator for the point corresponding to <code>__kmalloc</code>. We use <quote>kmalloc</quote> indicator but <quote>common</quote> would also do this time. We restrict the scenario to the processes launched from the current shell and then enable the scenario as usual:
+</para>
+
+<programlisting><![CDATA[
+# echo "kmalloc" > /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/current_indicator 
+# echo $$ > /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/pid 
+# echo 1 > /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/expression
+]]></programlisting>
+
+<para>
+After that, we can load the target module by executing <command>insmod</command> from that shell. Call stacks for the four relevant calls to <code>__kmalloc</code> will be output to the system log. We are particularly interested in the call #3:
+</para>
+
+<programlisting><![CDATA[
+[  338.990197] [__kmalloc()] Matched call, PID=2943, call #3
+[  338.990199] Pid: 2943, comm: insmod Not tainted 2.6.34.7-0.5-default #1
+[  338.990200] Call Trace:
+[  338.990203]  [<c0206303>] try_stack_unwind+0x173/0x190
+[  338.990206]  [<c020509f>] dump_trace+0x3f/0xe0
+[  338.990208]  [<c020636b>] show_trace_log_lvl+0x4b/0x60
+[  338.990210]  [<c0206398>] show_trace+0x18/0x20
+[  338.990212]  [<c05b9f5b>] dump_stack+0x6d/0x72
+[  338.990215]  [<e0871a89>] repl___kmalloc+0xf9/0x150 [payload_dump_stack]
+[  338.990223]  [<e0c5b55d>] my_mem_alloc+0x2d/0x60 [frmwk_mod]
+[  338.990232]  [<e0c598cb>] my_object_alloc+0xb/0x20 [frmwk_mod]
+[  338.990240]  [<e0c5d52f>] my_object_create+0xf/0x50 [frmwk_mod]
+[  338.990250]  [<e0cd106f>] impl_init_subsystem+0xf/0x20 [target_mod]
+[  338.990256]  [<e0cd100a>] impl_init+0x2a/0x40 [target_mod]
+[  338.990262]  [<e0cb801e>] init+0x1e/0x20a [target_mod]
+[  338.990264]  [<c020120e>] do_one_initcall+0x2e/0x180
+[  338.990267]  [<c0277c11>] sys_init_module+0xb1/0x220
+[  338.990269]  [<c0203190>] sysenter_do_call+0x12/0x22
+[  338.990275]  [<ffffe430>] 0xffffe430 
+]]></programlisting>
+
+<para>
+Now that we have got the stack trace for that call, it will probably be easier to find out what exactly was allocated there. The ordinary trace that KEDR facilities have also prepared, could be used to check if this is the call we need to analyze.
+</para>
+
+<para>
+If there are still too many calls to the target functions made from in the context of a given process, one might want to filter the calls further to avoid filling the system log with lots of call stacks. We could instruct our system to trigger stack dump only for the call with a given number, or for the first N calls, or only for the calls where <code>size</code> parameter is 36, etc. All features of fault simulation scenarios can be used here (see <xref linkend="fault_sim"/>). 
 </para>
 
 </section>
