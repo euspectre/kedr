@@ -4,112 +4,113 @@
 
 body 
 { 
-	font-family: sans-serif; 
+    font-family: sans-serif; 
 }
 
 h1, h2, h3, h4, h5 
 { 
-	font-style: italic; 
-	text-decoration: underline; 
+    font-style: italic; 
+    text-decoration: underline; 
 }
 
 h1 
 { 
-	font-size: 200%; 
+    font-size: 200%; 
 }
 
 h2 
 { 
-	font-size: 150%; 
+    font-size: 150%; 
 }
 
 h3 
 { 
-	font-size: 125%; 
-	text-align: left; 
+    font-size: 125%; 
+    text-align: left; 
 }
 
 h4, h5, h6
 { 
-	font-size: 100%; 
-	text-align: left; 
+    font-size: 100%; 
+    text-align: left; 
 }
 
 
 h3.author, h3.corpauthor 
 { 
-	text-align: left; 
-	font-style: normal; 
-	font-size: 100%; 
-	margin-bottom: 0; 
+    text-align: left; 
+    font-style: normal; 
+    font-size: 100%; 
+    margin-bottom: 0; 
 }
 
 p 
 { 
-	text-align: justify; 
+    text-align: justify; 
 }
 
 .releaseinfo
 {
-	font-size: 125%; 
+    font-size: 125%; 
 }
 
 code 
 { 
-	white-space: nowrap; 
-	font-family: monospace;
-	font-size: 100%;
+    white-space: nowrap; 
+    font-family: monospace;
+    font-size: 100%;
 }
 
 div.navheader th, .toc, a:link, a:active 
 { 
-	color: #41A317; 
-	text-decoration: underline; 
+    color: #41A317; 
+    text-decoration: underline; 
 }
 
 a:visited 
 { 
-	color: #41A317; 
-	text-decoration: underline; 
+    color: #41A317; 
+    text-decoration: underline; 
 }
 
 a:hover 
 { 
-	color: #41A317; 
-	text-decoration: none; 
+    color: #41A317; 
+    text-decoration: none; 
 }
 
 .programlisting, .screen, .note, .warning, .caution, .tip, .important
 {
-	padding: 0in;
-	font-size: 100%;
+    padding: 0in;
+    font-size: 100%;
 }
 
-.programlisting, .screen
+.programlisting, .screen, .synopsis
 {
-	border: thin solid #54C571; 
-	background-color: #C3FDB8; 
-	font-family: monospace;
+    border: thin solid #54C571; 
+    background-color: #E1FDDA; 
+    /*background-color: #C3FDB8; */
+    font-family: monospace;
 }
 
 .note, .tip
 {
-	background-color: white;
-	border: thin solid #347235; 
+    background-color: white;
+    border: thin solid #347235; 
 }
 
 .warning .title, .caution .title, .important .title, .note .title, .tip .title
 {
-	color: white;
-	font-style: normal;
-	text-decoration: none;	
-	font-size: 125%;
+    color: white;
+    font-style: normal;
+    text-decoration: none;  
+    font-size: 125%;
 }
 
 .warning, .caution, .important
 {
-	background-color: white;
-	border: thin solid #c00; 
+    background-color: white;
+    border: thin solid #c00; 
 }
 
 .note .programlisting, .note .screen, 
@@ -124,29 +125,29 @@ a:hover
 
 .note .title, .tip .title
 {
-	margin: 0in;
-	padding: 0.05in 0.1in 0.05in 0.1in;	
-	background-color: #4AA02C;
-	border-bottom: thin solid #347235; 
+    margin: 0in;
+    padding: 0.05in 0.1in 0.05in 0.1in; 
+    background-color: #4AA02C;
+    border-bottom: thin solid #347235; 
 }
 
 .warning .title, .caution .title, .important .title
 {
-	margin: 0in;
-	padding: 0.05in 0.1in 0.05in 0.1in;	
-	background-color: #ff0000;
-	border-bottom: thin solid #c00; 
+    margin: 0in;
+    padding: 0.05in 0.1in 0.05in 0.1in; 
+    background-color: #ff0000;
+    border-bottom: thin solid #c00; 
 }
 
 .note p, .tip p, .warning p, .caution p, .important p
 {
-	padding: 0in 0.1in 0in 0.1in;	
+    padding: 0in 0.1in 0in 0.1in;   
 }
 
 img
 {
-	border: thin solid #808080;
-	margin: 0in 0.5in
+    border: thin solid #808080;
+    margin: 0in 0.5in
 }
 
 .command
@@ -160,15 +161,15 @@ img
     font-style: italic;
 }
 
-.emphasis /*, .firstterm*/
+.emphasis, .term /*, .firstterm*/
 {
-	font-weight: bold;
+    font-weight: bold;
 }
 
 /* Special style for cited phrases */
 .pcite
 {
-	font-style: italic;
+    font-style: italic;
 }
 
 /* This style instructs the browser treat the corresponding part of the text
@@ -176,28 +177,28 @@ img
  */
 .nobreak
 {
-	white-space: nowrap;
+    white-space: nowrap;
 }
 
 .table-contents td
 {
-	padding: 0em 0.5em;
+    padding: 0em 0.5em;
 }
 
 .synopsis
 {
-	font-size: 100%;
-	font-family: monospace;
-	/*margin-left: 0.5in;
-	margin-right: 0.5in;*/
-		
-	border: thin solid #cccccc; 
-	background-color: #C3FDB8;
+    font-size: 100%;
+    /*font-family: monospace;*/
+    /*margin-left: 0.5in;
+    margin-right: 0.5in;*/
+        
+    /*border: thin solid #cccccc; 
+    background-color: #C3FDB8;*/
 }
 
 /* This style is used to emphasize a word or a part of a word.
  */
 .emphasized
 {
-	font-weight: bold;
+    font-weight: bold;
 }

@@ -1,11 +1,11 @@
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><title>1. Introduction</title><link rel="stylesheet" href="kedr-doc.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.75.2"><link rel="home" href="index.html" title="KEDR 0.1 Reference Manual"><link rel="up" href="index.html" title="KEDR 0.1 Reference Manual"><link rel="prev" href="index.html" title="KEDR 0.1 Reference Manual"><link rel="next" href="overview.html" title="2. Overview"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">1. Introduction</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="index.html">Prev</a> </td><th width="60%" align="center"> </th><td width="20%" align="right"> <a accesskey="n" href="overview.html">Next</a></td></tr></table><hr></div><div class="section" title="1. Introduction"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="intro"></a>1. Introduction</h2></div></div></div><p>
-<span class="emphasis"><em>KEDR system</em></span> provides the tools for runtime analysis (especially, verification) of kernel-mode drivers on Linux (<span class="quote">“<span class="quote"><span class="emphasized">KEDR</span></span>”</span> is an acronym for <span class="quote">“<span class="quote"><span class="emphasized">KE</span>rnel-mode <span class="emphasized">D</span>rivers in <span class="emphasized">R</span>untime</span>”</span>). The framework is intended to be used by the driver developers and may be useful for the driver certification systems as well.
+<span class="emphasis"><em>KEDR framework</em></span> provides the tools to facilitate runtime analysis of kernel modules (including device drivers) in Linux. <span class="quote">“<span class="quote"><span class="emphasized">KEDR</span></span>”</span> is an acronym for <span class="quote">“<span class="quote"><span class="emphasized">KE</span>rnel-mode <span class="emphasized">D</span>rivers in <span class="emphasized">R</span>untime</span>”</span>. The framework is intended to be used by the driver developers and may be useful for the driver certification systems as well.
 </p><p>
-The tools provided by KEDR operate on a driver chosen by the user (<em class="firstterm">target driver</em>). They monitor kernel function calls made by the driver, perform fault simulation, etc. This may complement many existing tools for error detection, fault simulation, memory checking, etc., that operate on the Linux kernel as a whole.
+The tools provided by KEDR operate on a kernel module chosen by the user (<em class="firstterm">target module</em>). They monitor calls to the kernel functions that the module makes, perform fault simulation, etc. This may complement many existing tools for fault injection, memory checking, etc., that operate on the Linux kernel as a whole.
 </p><p>
-The typical usage of KEDR is essentially as follows. The user works with the target driver as usual or may be runs some specific tests on it. At the same time, KEDR tools are monitoring the operation of the driver, checking if it works correctly, doing fault simulation if requested, dumping the data about the actions made by the driver to some kind of a trace for future analysis, etc. 
+The typical usage of KEDR is essentially as follows. The user works with the target kernel module as usual or may be runs some specific tests on it. At the same time, KEDR tools are monitoring the operation of the module, checking if it works correctly, doing fault simulation if requested, dumping the data about the actions made by the module to some kind of a trace for future analysis, etc. 
 </p><p>
-KEDR system is designed to be easy to extend and build upon. For example, the set of kernel functions to be monitored is fully customizable; fault simulation scenarios can also be provided and controlled by the user. Besides that, KEDR provides an interface to implement custom types of analysis via pluggable modules - in addition to call monitoring and fault simulation.
+KEDR framework is designed to be easy to extend and build upon. For example, the set of kernel functions to be monitored is fully customizable; fault simulation scenarios can also be provided and controlled by the user. Besides that, KEDR provides an interface to implement custom types of analysis via pluggable modules - in addition to call monitoring and fault simulation.
 </p><p>
 Currently, KEDR works on x86 and x86-64 architectures. 
 </p><p>
@@ -13,14 +13,14 @@ KEDR is free software and is distributed under the terms of <a class="ulink" hre
 </p><p>
 The latest stable version of KEDR as well as the development versions can be found at <a class="ulink" href="http://developer.berlios.de/projects/kedr/" target="_top"><span class="quote">“<span class="quote">KEDR</span>”</span> project site at BerliOS Developer.</a>
 </p><div class="warning" title="Warning" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Warning</h3><p>
-KEDR system can do much harm if it gets out of control. USE IT ONLY IF YOU 
+KEDR framework can do much harm if it gets out of control. USE IT ONLY IF YOU 
 KNOW WHAT YOU ARE DOING. There is no warranty. If you use KEDR, you do so at
 your own risk.
     </p><p>
-Main components of KEDR system operate in the kernel space. The system 
-instruments the drivers under analysis and allows custom kernel modules to 
-alter the behaviour of these drivers. This creates both a security hole 
-and a potential for system instability, especially if the drivers under 
+Main components of KEDR framework operate in the kernel space. The system 
+instruments the modules under analysis and allows custom kernel modules to 
+alter the behaviour of these modules. This creates both a security hole 
+and a potential for system instability, especially if the kernel modules under 
 analysis are faulty.
     </p><p>
 It is not recommended to use KEDR on the machines holding important data or 

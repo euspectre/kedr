@@ -1,122 +1,139 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><title>5. Customizing and Extending KEDR</title><link rel="stylesheet" href="kedr-doc.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.75.2"><link rel="home" href="index.html" title="KEDR 0.1 Reference Manual"><link rel="up" href="index.html" title="KEDR 0.1 Reference Manual"><link rel="prev" href="using_kedr.html" title="4. Using KEDR"><link rel="next" href="reference.html" title="6. KEDR Reference"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">5. Customizing and Extending KEDR</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="using_kedr.html">Prev</a> </td><th width="60%" align="center"> </th><td width="20%" align="right"> <a accesskey="n" href="reference.html">Next</a></td></tr></table><hr></div><div class="section" title="5. Customizing and Extending KEDR"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="extend"></a>5. Customizing and Extending KEDR</h2></div></div></div><div class="toc"><dl><dt><span class="section"><a href="extend.html#using_gen">5.1. Using Generator for create custom modules</a></span></dt><dt><span class="section"><a href="extend.html#custom_callm_payloads">5.2. Writing Custom Payloads for Call Monitoring</a></span></dt><dt><span class="section"><a href="extend.html#custom_fsim_payloads">5.3. Writing Custom Payloads for Fault Simulation</a></span></dt><dt><span class="section"><a href="extend.html#custom_fsim_scenarios">5.4. Writing Custom Scenarios for Fault Simulation</a></span></dt><dt><span class="section"><a href="extend.html#custom_analysis">5.5. Implementing Custom Types of Analysis</a></span></dt><dd><dl><dt><span class="section"><a href="extend.html#custom_analysis.basics">5.5.1. Choosing the Counters and the Functions to Process</a></span></dt><dt><span class="section"><a href="extend.html#custom_analysis.payload">5.5.2. Creating the Payload Module</a></span></dt><dt><span class="section"><a href="extend.html#custom_analysis.build">5.5.3. Building the Payload Module</a></span></dt><dt><span class="section"><a href="extend.html#custom_analysis.use">5.5.4. Using the Payload Module</a></span></dt></dl></dd></dl></div><div class="section" title="5.1. Using Generator for create custom modules"><div class="titlepage"><div><div><h3 class="title"><a name="using_gen"></a>5.1. Using Generator for create custom modules</h3></div></div></div><p>
-For creating multiple modules with simular functionality, KEDR actively use generation of files from templates. This approach makes it possible to split implementation of such modules into general implementation of the modules functionality and definition of the specific functionality of each module.
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><title>5. Customizing and Extending KEDR</title><link rel="stylesheet" href="kedr-doc.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.75.2"><link rel="home" href="index.html" title="KEDR 0.1 Reference Manual"><link rel="up" href="index.html" title="KEDR 0.1 Reference Manual"><link rel="prev" href="using_kedr.html" title="4. Using KEDR"><link rel="next" href="reference.html" title="6. KEDR Reference"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">5. Customizing and Extending KEDR</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="using_kedr.html">Prev</a> </td><th width="60%" align="center"> </th><td width="20%" align="right"> <a accesskey="n" href="reference.html">Next</a></td></tr></table><hr></div><div class="section" title="5. Customizing and Extending KEDR"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="extend"></a>5. Customizing and Extending KEDR</h2></div></div></div><div class="toc"><dl><dt><span class="section"><a href="extend.html#using_gen">5.1. Using Code Generator to Create Custom Modules</a></span></dt><dt><span class="section"><a href="extend.html#custom_callm_payloads">5.2. Writing Custom Payloads for Call Monitoring</a></span></dt><dt><span class="section"><a href="extend.html#custom_fsim_payloads">5.3. Writing Custom Payloads for Fault Simulation</a></span></dt><dt><span class="section"><a href="extend.html#custom_fsim_scenarios">5.4. Writing Custom Scenarios for Fault Simulation</a></span></dt><dt><span class="section"><a href="extend.html#custom_analysis">5.5. Implementing Custom Types of Analysis</a></span></dt><dd><dl><dt><span class="section"><a href="extend.html#custom_analysis.basics">5.5.1. Choosing the Counters and the Functions to Process</a></span></dt><dt><span class="section"><a href="extend.html#custom_analysis.payload">5.5.2. Creating the Payload Module</a></span></dt><dt><span class="section"><a href="extend.html#custom_analysis.build">5.5.3. Building the Payload Module</a></span></dt><dt><span class="section"><a href="extend.html#custom_analysis.use">5.5.4. Using the Payload Module</a></span></dt></dl></dd></dl></div><div class="section" title="5.1. Using Code Generator to Create Custom Modules"><div class="titlepage"><div><div><h3 class="title"><a name="using_gen"></a>5.1. Using Code Generator to Create Custom Modules</h3></div></div></div><p>
+To automate creation of multiple modules with simular functionality, KEDR actively uses template-based generation of files. This approach facilitates code reuse as it makes it possible to separate the common parts in the implementation of the modules and the parts specific to each module. This also allows the developer of the new modules to concentrate mostly on the <span class="quote">“<span class="quote">logic</span>”</span> of what (s)he wants to implement there rather than on writing and debugging <span class="quote">“<span class="quote">boilerplate</span>”</span> code.
     </p><p>
-So, implementation of the new module requires only to write short definition of what this module is supposed to do in extent of the base functionality. Creation of source file(s) for this module will be performed automatically by <span class="quote">“<span class="quote">generator</span>”</span>.
+So, to develop a new module this way, it is only necessary to prepare a short definition of what this module is supposed to do in addition to the basic functionality. Creation of the source file(s) for this module will be performed automatically by the <span class="quote">“<span class="quote">code generator</span>”</span>.
     </p><p>
-Aside from using this mechanizm inside KEDR, it may be used for creating custom specialized modules for different purposes: call monitor payloads, fault simulation payloads, fault simulation indicators. This way for create custom modules has many advantages:
-</p><div class="variablelist"><dl><dt><span class="term">it fast</span></dt><dd>e.g., implementation of new call monitor payload require about 10 lines in 'definition' file for 'header' (it contain name of module, which will be generated, author, license...) , and about 10 lines for every replacement function (description of function arguments, and format of how them should be stored in the string)</dd><dt><span class="term">it clear</span></dt><dd>all features of your module are described in one place (not scattered over different files or over one long file); every line in the 'definition' file is self explanatory</dd><dt><span class="term">it use high level of abstraction</span></dt><dd>while writing 'definition' file, you shouldn't be aware of what file(s) will be generating from them, and how exactly one or another feature will be implemented</dd><dt><span class="term">it error free</span></dt><dd>If 'definition' file is written correctly, it should generate correct code of the module; the most lines in the 'definition' file simply introduce names of some essences - such lines are always correct; rare interline dependencies may be easy debugged in clear and short 'definition' file, same for rare code chunks definitions.</dd><dt><span class="term">it produce easy updatable modules</span></dt><dd>If templates is updated to implement some new base functionality, or to change implementation, or to fix some errors, simple call 'generator' with new templates will update you module.</dd></dl></div><p>
+Apart from usage within KEDR, this mechanism can also be used for creating custom specialized modules for different purposes: payload modules for call monitoring or fault simulation, fault simulation indicators, etc. This approach to development of custom modules has many advantages:
+    </p><div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem"><p><span class="emphasis"><em>fast development</em></span> - the implementation of a new payload payload module for call monitoring requires, for example, about 10 lines in the <span class="quote">“<span class="quote">definition</span>”</span> file for the <span class="quote">“<span class="quote">header</span>”</span> part (it contains the name of the module, the author and the license, etc.), and about 10 lines per replacement function (description of the arguments and the return value, etc.).</p></li><li class="listitem"><p><span class="emphasis"><em>clear and readable definition files</em></span> - all features of your module are described in one place, the so called <em class="firstterm">definition file</em> rather than scattered over different files or over one long file. Every line in a <span class="quote">“<span class="quote">definition</span>”</span> file is self-explanatory.</p></li><li class="listitem"><p><span class="emphasis"><em>high level of abstraction</em></span> - when writing a <span class="quote">“<span class="quote">definition</span>”</span> file, you do not need to care about what file(s) will be generated from it and how exactly any particular feature will be implemented.</p></li><li class="listitem"><p><span class="emphasis"><em>less error-prone code</em></span> - if the <span class="quote">“<span class="quote">definition</span>”</span> file is written correctly, correct code of the module will be generated from it. Most of the lines in that file simply define the names of some entities (variables, types, etc.) that will appear in the generated code. The rare inter-line dependencies as well as code chunk definitions can be easily debugged in the clear and short <span class="quote">“<span class="quote">definition</span>”</span> file.</p></li><li class="listitem"><p><span class="emphasis"><em>easier maintenance</em></span> - if the templates are updated to implement some new basic functionality, to fix errors or for any other reason, it is enough to run the <span class="quote">“<span class="quote">generator</span>”</span> again to update the code of the modules you have created. The enhancements and fixes will thus automatically propagate to all the modules generated using those templates.</p></li></ul></div><p>
+Of course, using the <span class="quote">“<span class="quote">generator</span>”</span> is not an universal way to extend functionality of the standard KEDR modules. If some functionality is not provided by the templates, it will not be available for the generated modules. You will probably need to implement it manually - or prepare the templates of your own. Still, in many cases it can be very convenient to use the <span class="quote">“<span class="quote">generator</span>”</span> with the default templates to create modules for KEDR.
     </p><p>
-Of course, using 'generator' is not an universal means for extending functionality of standard KEDR modules. If some functionality extension is not provided by the templates, it cannot be implemented in this way. But if it is, it is recommended to use 'generator'.
+Let us now consider the common format of <span class="quote">“<span class="quote">definition</span>”</span> files. 
     </p><p>
-Next, describe common format of 'definition' file. 'Generator' is based on MiST Engine library from <a class="ulink" href="http://template2code.sourceforge.net" target="_top"><em class="citetitle">Template2Code 
-project</em></a>, and is very similar to 'mist_gen' example from it. As result, format of the 'definition' file, accepted by the 'generator', is the same as format of the configuration file, accepted by 'mist_gen'. Last format is fully described <a class="ulink" href="http://template2code.sourceforge.net/mist-doc/param.html" target="_top"><em class="citetitle">here</em></a>. The only one difference - 'definition' file may contatin strings <code class="code">[block]</code>, which introduce additional division of file by blocks.
+The <span class="quote">“<span class="quote">generator</span>”</span> is based on MiST Engine library from <a class="ulink" href="http://template2code.sourceforge.net" target="_top"><em class="citetitle">Template2Code 
+project</em></a> and is very similar to <span class="quote">“<span class="quote">mist_gen</span>”</span> example from that project. As a result, the format of definition files accepted by the generator is the same as the format of <em class="firstterm">configuration files</em> accepted by <span class="quote">“<span class="quote">mist_gen</span>”</span>. The format is fully described <a class="ulink" href="http://template2code.sourceforge.net/mist-doc/param.html" target="_top"><em class="citetitle">here</em></a>. The only difference is that a definition file (as well as a configuration file for <span class="quote">“<span class="quote">mist_gen</span>”</span>) may contain <code class="code">[group]</code> keywords that divide the file into blocks.
     </p><p>
-Every 'definition' file is treated as array of lines. Lines which contain only white space characters (spaces and tabs) and lines, which first non-whitespace character is <code class="code">#</code> are ignored:
-    </p><pre class="programlisting">
-# Next line is empty, so it will be ignored
+A definition file is treated as an array of records. The lines that contain only whitespace characters (spaces and tabs) are ignored, so are the lines where the first non-whitespace character is <code class="code">#</code>:
+</p><pre class="programlisting">
+# The next line is empty, so it will be ignored
 
     # This line will be ignored too.
-    </pre><p>
+</pre><p>
+    </p><p>
 Lines like 
-    </p><pre class="programlisting">
+</p><pre class="programlisting">
 &lt;parameter-name&gt; = &lt;value&gt;
-    </pre><p>
-define parameter with name <code class="code">&lt;parameter-name&gt;</code> and assign string <code class="code">&lt;value&gt;</code> to it. Only one restriction on <code class="code">&lt;parameter-name&gt;</code> - is shouldn't contain whitespace characters. Whitespace characters surrounding <code class="code">&lt;parameter-name&gt;</code> and <code class="code">&lt;value&gt;</code> are ignored.
-    </p><pre class="programlisting">
-# Define parameter with name 'a' to '135'
+</pre><p>
+define a parameter with name <code class="code">&lt;parameter-name&gt;</code> and assign the string <code class="code">&lt;value&gt;</code> to it. <code class="code">&lt;parameter-name&gt;</code> may only contain latin letters, digits, dots, hyphens and underscores. The names are case-sensitive. Whitespace characters surrounding <code class="code">&lt;parameter-name&gt;</code> and <code class="code">&lt;value&gt;</code> are ignored.
+    </p><p>
+</p><pre class="programlisting">
+# Define parameter with name 'a' and value '135'
 a = 135
-# Define parameter with name 'b' to 'some string'
+# Define parameter with name 'b' and value 'some string'
 b = some string
-# Define parameter with name 'expression' to '2 + 3 = 5'
+# Define parameter with name 'expression' and value '2 + 3 = 5'
 expression = 2 + 3 = 5
-    </pre><p>
-There is a way to define parameter with long value:
-    </p><pre class="programlisting">
-# Define parameter with name 'long-string' to 'string1 string2 string3'
+</pre><p>
+    </p><p>
+There is a way to define parameter with a long value:
+</p><pre class="programlisting">
+# Define parameter with name 'long-string' and value 'string1 string2 string3'
 # Note, that leading whitespace characters are ignored.
 long-string = string1 \
     string2 \
     string3
-    </pre><p>
-Also, parameters with multiline value may be defined:
-    </p><pre class="programlisting">
-multi-line-parameter =&lt;&lt;
+</pre><p>
+    </p><p>
+In addition, parameters with multiline values can be defined too:
+</p><pre class="programlisting">
+multi-line-parameter =&gt;&gt;
     line1
     line2
     ...
     lineN
-&gt;&gt;
-    </pre><p>
-Value of 'multi-line-parameter' is precisely
-    </p><pre class="programlisting">
+&lt;&lt;
+</pre><p>
+    </p><p>
+The value of <code class="code">multi-line-parameter</code> is precisely as follows:
+</p><pre class="programlisting">
     line1
     line2
     ...
     lineN
-    </pre><p>
-Note, that new-line character should follow immidiatly after <code class="code">&lt;&lt;</code> delimiter, and delimiter <code class="code">&gt;&gt;</code> should be  the only one on the line except whitespace characters.
-    </p><pre class="programlisting">
-# Correct definition of multiline parameter, contained &gt;&gt;
-multi-line-parameter =&lt;&lt;
+</pre><p>
+    </p><p>
+Note that a newline character should immediately follow <code class="code">&gt;&gt;</code> delimiter and apart from the delimiter <code class="code">&lt;&lt;</code> the should be no characters on the line (except whitespace characters).
+
+</p><pre class="programlisting">
+# Correct definition of a multiline parameter containing &gt;&gt;
+multi-line-parameter =&gt;&gt;
     &lt;&lt;a&gt;&gt;
     &lt;&lt;b&gt;&gt;
-    &gt;&gt;
-    </pre><p>
+    &lt;&lt;
+</pre><p>
     </p><p>
-The only information, which generator extracts from 'definition' file, is set of parameters with assigned values. Order of this parameters in the file has no sence, so 'definition' files
-    </p><pre class="programlisting">
+The generator only extracts the set of parameters with and  their values from the definition file. The order in which these parameters are listed is not important. For example, the following definition files
+</p><pre class="programlisting">
 a = 5
 b = 10
-    </pre><p>
+</pre><p>
 and
-    </p><pre class="programlisting">
+</p><pre class="programlisting">
 b = 10
 a = 5
-    </pre><p>
-means efficiently the same: <code class="code">a='5', b='10'</code>.
+</pre><p>
+have actually the same meaning.
     </p><p>
-But when several definitions assign values to the same parameter, parameter became multi-valued, and order of the assignments become valuable.
-    </p><pre class="programlisting">
+However when several definitions assign values to the same parameter, the parameter becomes multi-valued and the order of the assignments becomes important. Example:
+    </p><p>
+</p><pre class="programlisting">
 a = 5
 a = 10
-    </pre><p>
-means <code class="code">a={'5','10'}</code>, but
-    </p><pre class="programlisting">
+</pre><p>
+This means <code class="code">a={'5','10'}</code>, but
+</p><pre class="programlisting">
 a = 10
 a = 5
-    </pre><p>
-means <code class="code">a={'10','5'}</code>. Depended on the meaning of the parameter,  difference in order of assignments to it may have sence (e.g, order of the function parameters is critical), or may not (e.g. order of the replacement functions in the file)
+</pre><p>
+means <code class="code">a={'10','5'}</code>. 
     </p><p>
-As a rule, order between two multi-valued parameters assignments make a sence only in case, when these parameters describe one-value attributes of same object:
-    </p><pre class="programlisting">
+Depending on the meaning of the parameter, the difference in the order of its values may be important (e.g. the order of the function parameters is critical), or it may be not (e.g. the order of the replacement functions in the file).
+    </p><p>
+As a rule, the order of values of two multi-valued parameters is only significant if these parameters describe one-value attributes of same object:
+    </p><p>
+</p><pre class="programlisting">
 obj.name = object1
 obj.description = This is object1
 obj.name = object2
 obj.description = This is object2
-    </pre><p>
-define <code class="code">obj.name</code> as 
-<span class="simplelist">object1, object2</span>,
+</pre><p>
+This defines <code class="code">obj.name</code> as 
+<span class="simplelist"><span class="quote">“<span class="quote">object1</span>”</span>, <span class="quote">“<span class="quote">object2</span>”</span></span>,
  <code class="code">obj.description</code> as
- <span class="simplelist">This is object1, This is object2</span>,
-and this may meen two object instances with attributes
- <span class="simplelist">object1, This is object1</span> and 
-<span class="simplelist">object2, This is object2</span>
-    </p><pre class="programlisting">
+ <span class="simplelist"><span class="quote">“<span class="quote">This is object1</span>”</span>, <span class="quote">“<span class="quote">This is object2</span>”</span></span>.
+This may mean there are two object instances with attributes
+<span class="simplelist"><span class="quote">“<span class="quote">object1</span>”</span>, <span class="quote">“<span class="quote">This is object1</span>”</span></span> and 
+<span class="simplelist"><span class="quote">“<span class="quote">object2</span>”</span>, <span class="quote">“<span class="quote">This is object2</span>”</span></span>
+    </p><p>
+Let us consider the following definitions where the values of <code class="code">obj.description</code> are given in a reverse order.
+</p><pre class="programlisting">
 obj.name = object1
 obj.description = This is object2
 obj.name = object2
 obj.description = This is object1
-    </pre><p>
-define <code class="code">obj.name</code> as 
-<span class="simplelist">object1, object2</span>,
+</pre><p>
+This defines <code class="code">obj.name</code> as 
+<span class="simplelist"><span class="quote">“<span class="quote">object1</span>”</span>, <span class="quote">“<span class="quote">object2</span>”</span></span>,
  <code class="code">obj.description</code> as
-<span class="simplelist">This is object2, This is object1</span>,
-and this may meen two object instances with attributes
-<span class="simplelist">object1, This is object2</span> and 
-<span class="simplelist">object2, This is object1</span>,
-which probably is not what you want. Simple way to not get confused in ordering - define all attributes for one instance, and only then define attributes for another one.
+<span class="simplelist"><span class="quote">“<span class="quote">This is object2</span>”</span>, <span class="quote">“<span class="quote">This is object1</span>”</span></span>.
+This may mean two object instances with attributes
+<span class="simplelist"><span class="quote">“<span class="quote">object1</span>”</span>, <span class="quote">“<span class="quote">This is object2</span>”</span></span> and 
+<span class="simplelist"><span class="quote">“<span class="quote">object2</span>”</span>, <span class="quote">“<span class="quote">This is object1</span>”</span></span>,
+which is probably not what you want. 
     </p><p>
-If some object has non-constant set of attributes (e.g., one of its attribute may have multiple values, or one of its attribute is optional), then you cannot define several instances of this object in one 'definition' file. This is because generator cannot determine, which instance has particular value of attribute. For this case, <code class="code">[group]</code> keyword was introduced into 'definition' file format. This keyword introduce new group of definitions, which starts just after this keyword, and ends before the next occurence of same keyword, or at the end of the file.
+A simple way to avoid such confusion with ordering is to define all attributes for one instance first and only then define attributes for another one.
+    </p><p>
+If some object has a non-constant set of attributes (e.g., one of its attributes may have multiple values or one of its attribute is optional), then you cannot define several instances of this object in one definition file. This is because the generator cannot determine which instance each particular value of an attribute belongs to. To address this problem, <code class="code">[group]</code> keyword was introduced in the format of definition files. This keyword denotes a new group of definitions that starts just after this keyword and ends before the next occurence of same keyword or at the end of the file.
+    </p><p>
 </p><pre class="programlisting">
 module_name = Arrays
 [group]
@@ -128,45 +145,59 @@ array.values = val2
 array.values = val3
 [group]
 array.name = array3
-    </pre><p>
-There are 3 groups in this file. First define <code class="code">array.name='array1'</code> and <code class="code">array.values='val1'</code>, second - <code class="code">array.name='array2'</code> and <code class="code">array.values={'val2', 'val3'}</code>, third - <code class="code">array.name='array3'</code>. Each group may be interpret as array object, object <code class="code">array1</code> contains one element <code class="code">val1</code>, object <code class="code">array2</code> contains two elements <code class="code">val2</code> and <code class="code">val3</code>, object <code class="code">array3</code> contains none elements.
+</pre><p>
+There are 3 groups in this file. The first one defines <code class="code">array.name='array1'</code> and <code class="code">array.values='val1'</code>, the second - <code class="code">array.name='array2'</code> and <code class="code">array.values={'val2', 'val3'}</code>, third - <code class="code">array.name='array3'</code>. Each group can be interpreted as a definition of an array object. The object named <code class="code">array1</code> contains one element <code class="code">val1</code>, the object named <code class="code">array2</code> contains two elements <code class="code">val2</code> and <code class="code">val3</code>, the object named <code class="code">array3</code> contains no elements.
     </p><p>
-<code class="code">[group]</code> keyword doesn't cancelling gathering of all parameters assignments - global meaning of this file is <code class="code">module_name='Arrays'</code>, <code class="code">array.name={'array1', 'array2', 'array3'}</code> and <code class="code">array.values={'val1', 'val2', val3'}</code>. And this infomation will be processed by the generator, using one set of templates. But also information for every group will be processed, using another set of templates. And this processing will result in new multi value parameter, which values are results of particular group processing. This parameter is reffered as 'block', as the set of templates, used for its generation. And it may be used at the top level of processing, set of templates for which is reffered as 'document'.
+<code class="code">[group]</code> keyword does not prevent gathering of all parameter assignments. That is, the <span class="quote">“<span class="quote">global meaning</span>”</span> of this file is <code class="code">module_name='Arrays'</code>, <code class="code">array.name={'array1', 'array2', 'array3'}</code> and <code class="code">array.values={'val1', 'val2', val3'}</code>. This information will be processed by the generator using one set of templates. But besides that, the information from each group will also be processed using another set of templates. This processing will result in a new multi-valued parameter which values are the results processing of the groups. This parameter is referred to as <span class="quote">“<span class="quote">block</span>”</span>, and so is the set of templates used to  generate it. This parameter can be used at the top level of processing, the set of templates for which is referred to as <span class="quote">“<span class="quote">document</span>”</span>.
     </p><p>
-This is a basic information, which is needed for write you own 'definition' files for custom modules with KEDR templates. For more information - see documentation on 'generator'.
+As far as payload modules are concerned, <span class="quote">“<span class="quote">document</span>”</span> templates define the overall layout of the generated source and header files while <span class="quote">“<span class="quote">block</span>”</span> templates define the parts of the code related to a replacement function. That is, a <code class="code">[group]</code> block corresponds to a replacement function in this case.
+    </p><p>
+This section has given a brief overview of template-based code generation mechanism used in KEDR. This should be enough though if you would like to write you own <span class="quote">“<span class="quote">definition</span>”</span> files for custom modules with the templates provided by KEDR. See <a class="ulink" href="http://template2code.sourceforge.net/mist-doc/index.html" target="_top">MiST Engine Reference Manual</a> and <a class="ulink" href="http://template2code.sourceforge.net" target="_top"><span class="quote">“<span class="quote">mist_gen</span>”</span> example</a> if you want to learn more about this way of template-based code generation.
     </p></div><div class="section" title="5.2. Writing Custom Payloads for Call Monitoring"><div class="titlepage"><div><div><h3 class="title"><a name="custom_callm_payloads"></a>5.2. Writing Custom Payloads for Call Monitoring</h3></div></div></div><p>
-This is a description, how to write new payload module for call monitoring, using KEDR tool for generation files from templates. Common abilities of this tool are detailed descibed in <a class="xref" href="extend.html#using_gen" title="5.1. Using Generator for create custom modules">Section 5.1, “Using Generator for create custom modules”</a> ...
+This section describes how to write a new payload module for call monitoring using a tool provided by KEDR to generate source files from the templates. Common abilities of this tool are described in detail in <a class="xref" href="extend.html#using_gen" title="5.1. Using Code Generator to Create Custom Modules">Section 5.1, “Using Code Generator to Create Custom Modules”</a>.
     </p><p>
-Whole infrastructure, which is needed for building payload module from 'definition' file is located in <code class="filename">custom_payload_callm</code> directory under installed expamples. Here is its content:
-</p><div class="variablelist"><dl><dt><span class="term"><code class="filename">payload.data</code></span></dt><dd>'definition' file for creating payload</dd><dt><span class="term"><code class="filename">makefile</code></span></dt><dd>file for common build infrastructure for <span class="command"><strong>make</strong></span> utility</dd><dt><span class="term"><code class="filename">Kbuild</code></span></dt><dd>file for building kernel module from c-sources</dd><dt><span class="term"><code class="filename">templates</code></span></dt><dd>directory which contatin templates files, used for generating sources from 'definition' file</dd></dl></div><p>
-Copy contents of this directory into you own place.
+Typical purposes of a custom payload module of this kind could be as follows: 
+</p><div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem"><p>
+support call monitoring for the functions for which it is not supported by KEDR <span class="quote">“<span class="quote">out-of-the-box</span>”</span>;
+</p></li><li class="listitem"><p>
+change the set of parameters output to the trace, in case you need something other than the arguments and the return value of the replacement function to be output.
+</p></li></ul></div><p>
+The whole infrastructure necessary for building the payload module from the <span class="quote">“<span class="quote">definition file</span>”</span> is located in <code class="filename">custom_payload_callm</code> subdirectory in the directory where the examples provided with KEDR are installed. Here are its contents:
+</p><div class="variablelist"><dl><dt><span class="term"><code class="filename">payload.data</code></span></dt><dd>'definition' file to create the payload module</dd><dt><span class="term"><code class="filename">makefile</code></span></dt><dd>file for common build infrastructure for <span class="command"><strong>make</strong></span> utility</dd><dt><span class="term"><code class="filename">Kbuild</code></span></dt><dd>file for building kernel module from C sources</dd><dt><span class="term"><code class="filename">templates</code></span></dt><dd>directory containing the templates used for generating sources from the 'definition' file</dd></dl></div><p>
+To use all this in development of your payload module, copy the contents of that directory to a directory of your choice.
     </p><p>
-The first, and the main step - rewrite <code class="filename">payload.data</code> for reflecting definitions of you own payload module.
+The first and the main step is to rewrite <code class="filename">payload.data</code> to reflect definitions of your payload module.
     </p><p>
-At global level (not inside groups) this file should contain definitions for next parameters:
-</p><div class="variablelist"><dl><dt><span class="term">module.name</span></dt><dd>string, which will be used as module name inside its source files</dd><dt><span class="term">module.author</span></dt><dd>author of the module</dd><dt><span class="term">module.licence</span></dt><dd>licence for the module</dd></dl></div><p>
-Additionally, next parameters may be defined at global level:
-</p><div class="variablelist"><dl><dt><span class="term">header</span></dt><dd>code (may be multi lined), which will be inserted before definition of replacement functions. Usually, this code contains '#include' directives, for header files which define target functions and types of its parameters.</dd></dl></div><p>
-Example of global section of the <code class="filename">payload.data</code>:
-    </p><pre class="programlisting">
+At the global level (i.e. before the first group begins), this file should contain definitions for the following parameters:
+</p><div class="variablelist"><dl><dt><span class="term">module.name</span></dt><dd>string, which will be used as module name inside its source files</dd><dt><span class="term">module.author</span></dt><dd>author of the module</dd><dt><span class="term">module.license</span></dt><dd>license for the module</dd></dl></div><p>
+In addition, the following parameters may be defined at the global level:
+</p><div class="variablelist"><dl><dt><span class="term">header</span></dt><dd>the code (may be multiline) to be inserted before the definition of replacement functions. This code usually contains '#include' directives for header files which define target functions and types of its parameters.</dd></dl></div><p>
+Example of global section of the <code class="filename">payload.data</code> file:
+</p><pre class="programlisting">
 # This module processes the calls to module_put function.
 
 module.name = payload_callm_module_put
-module.author = Tsyvarev
+module.author = Andrey Tsyvarev
 module.license = GPL
 
 header =&gt;&gt;
 #include &lt;linux/module.h&gt;
 &lt;&lt;
-    </pre><p>
+</pre><p>
     </p><p>
-For each target function, which is intended to replace, group should be defined.
-Each group should contain definitions for next parameters:
-</p><div class="variablelist"><dl><dt><span class="term">function.name</span></dt><dd>name of the target function, which should replaced</dd><dt><span class="term">returnType</span></dt><dd>returning type of the target function, if it returns non-void, otherwise shouldn't be assigned at all</dd><dt><span class="term">returnsVoid</span></dt><dd>any non-empty value, if the target function returns void, otherwise should't be assigned at all. In the future, probably, this parameter will not be used, but currently its usage is mandatory for void functions.</dd><dt><span class="term">arg.type</span></dt><dd>types (multi-value) of the parameters of the target function, starting with the first one. If function doesn't take parameters, shouldn't be assigned at all.</dd><dt><span class="term">arg.name</span></dt><dd>names (multi-value) of the parameters of the target function, starting with the first one. If function doesn't take parameters, shouldn't be assigned at all. Parameters of the replacement function will be accessible via these names in the code.</dd><dt><span class="term">trace.param.name</span></dt><dd>variable names (multi-value), which values will be output into the trace. This variables should be accessible in replacement function(see below). At least, one value should be output (otherwise this replacement function is meaningless).</dd><dt><span class="term">trace.param.type</span></dt><dd>types (multi-value) of the values, which will be output into the trace. This types will be used for casting variable values before they will be output(so, these types may differ from real type of variables).</dd><dt><span class="term">trace.formatString</span></dt><dd>format string which is used for printf-like output values from replacement function (see parameters <span class="quote">“<span class="quote">trace.param.name</span>”</span> and <span class="quote">“<span class="quote">trace.param.type</span>”</span>)</dd></dl></div><p>
-Additionally, next parameters may be defined at group level:
-</p><div class="variablelist"><dl><dt><span class="term">prologue</span></dt><dd>code (may be multi lined) which will be inserted to the start of replacement function (before call of target function). May use variable declarations. Usually, this code declare variables, which will be used in output and next code sections (see below).</dd><dt><span class="term">middleCode</span></dt><dd>code (may be multi lined) which will be inserted after call of the target function and before output variables. May not use variable declarations. Usually, this code calculate variables, which will be used in output.</dd><dt><span class="term">epilogue</span></dt><dd>code (may be multi lined) which will be inserted at the end of replacement function (after output values). If <code class="code">prologue</code> or <code class="code">middleCode</code> requests some resources from the kernel, this code may be used for returning this resources back.</dd></dl></div><p>
-Visibility of variables in different parts of code of the replacement function may be described as pseudocode:
-    </p><pre class="programlisting">
+For each <a class="link" href="glossary.html#target_function" title="Target function">target function</a> the calls to which should be processed, a group should be prepared in the definition file.
+Each group should contain definitions for the following parameters:
+</p><div class="variablelist"><dl><dt><span class="term">function.name</span></dt><dd>name of the target function</dd><dt><span class="term">returnType</span></dt><dd>return type of the target function if it is not void, otherwise shouldn't be defined at all</dd><dt><span class="term">arg.type</span></dt><dd>(multi-valued) types of the parameters of the target function, starting with the first one. If the function has no parameters, shouldn't be assigned at all.</dd><dt><span class="term">arg.name</span></dt><dd>(multi-valued) names of the parameters of the target function, starting with the first one. If the function has no parameters, shouldn't be assigned at all. Parameters of the replacement function will be accessible via these names in the code.</dd><dt><span class="term">trace.param.name</span></dt><dd>(multi-valued) variable names, which values will be output to the trace. This variables should be accessible in replacement function (see below).</dd><dt><span class="term">trace.param.type</span></dt><dd>(multi-valued) types of the values, which will be output into the trace. This types will be used for casting the values of the corresponding variables before they will be output (so, these types may differ from the real types of variables).</dd><dt><span class="term">trace.formatString</span></dt><dd>format string which is used for printf-like output of values from replacement function (see parameters <span class="quote">“<span class="quote">trace.param.name</span>”</span> and <span class="quote">“<span class="quote">trace.param.type</span>”</span>)</dd></dl></div><p>
+
+</p><div class="important" title="Important" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Important</h3><p>
+Output to the trace is currently supported only for the variables of simple types (i.e. no strings, arrays, structures, etc.). Pointers can be output (e.g., using <code class="code"><span class="quote">“<span class="quote">%p</span>”</span></code> or a similar format) but not the data they point to. This is due to the limitations of <span class="command"><strong>kedr_gen</strong></span>. In the future versions, these limitations may be removed or at least relaxed.
+</p></div><p>
+
+Additionally, the following parameters can be defined at group level:
+</p><div class="variablelist"><dl><dt><span class="term">prologue</span></dt><dd>code (may be multiline) which will be inserted at the start of replacement function (before the call to target function). Usually, this code declares variables which will be used in output and the following code sections (see below).</dd><dt><span class="term">middleCode</span></dt><dd>code (may be multiline) which will be inserted after call to the target function and before the output of values to the trace. Variables can not be declared there. Usually, this code calculates the values of the variables if it is necessary before the output to the trace is done.</dd><dt><span class="term">epilogue</span></dt><dd>code (may be multiline) which will be inserted at the end of the replacement function (after the values are output to the trace). If <code class="code">prologue</code> or <code class="code">middleCode</code> request some resources from the kernel, this code can be used to release these resources.</dd></dl></div><p>
+
+Visibility of variables in different parts of code of the replacement function can be described in pseudocode as follows:
+</p><pre class="programlisting">
 <span class="symbol">returnType</span> replacement_function(<span class="symbol">arg.name</span>...)
 {
     <span class="symbol">prologue</span>
@@ -177,131 +208,147 @@ Visibility of variables in different parts of code of the replacement function m
     }
     <span class="symbol">epilogue</span>
 }
-    </pre><p>
-If target function return non-void value, variable <code class="varname">returnValue</code> may be used as name of variable to output (<span class="symbol">arg.name</span>) and in the <span class="symbol">middleCode</span>.
+
+</pre><p>
+If the target function does not return void, variable <code class="varname">returnValue</code> refers to the returning value of the function. It may be used as the name of variable to output (<span class="symbol">arg.name</span>) and in the <span class="symbol">middleCode</span>.
     </p><p>
 Example of the group section for module_put() target function:
 </p><pre class="programlisting">
 [group]
-	# Name and return type of the target function
-	function.name = module_put
-	returnsVoid = yes
+    # Name and return type of the target function
+    function.name = module_put
 
-	# Names and types of the arguments of the target function
-	arg.type = struct module*
-	arg.name = m
-	
-	# The parameters to be output to the trace. 
-	trace.param.type = void*
-	trace.param.name = m
+    # Names and types of the arguments of the target function
+    arg.type = struct module*
+    arg.name = m
+    
+    # The parameters to be output to the trace. 
+    trace.param.type = void*
+    trace.param.name = m
 
-	# The format string to be used for trace output.
-	trace.formatString = "arguments: (%p)"
+    # The format string to be used for trace output.
+    trace.formatString = "arguments: (%p)"
 
 # End of the group of definitions for module_put().
-    </pre><p>
-Example of the group section for __kmalloc() target function (note using <code class="varname">returnValue</code> variable):
-    </p><pre class="programlisting">
+</pre><p>
+Example of the group section for __kmalloc() target function (note the usage of <code class="varname">returnValue</code> variable as the value of <code class="code">trace.param.name</code> parameter):
+</p><pre class="programlisting">
 [group]
-	# Name and return type of the target function
-	function.name = __kmalloc
-	returnType = void*
+    # Name and return type of the target function
+    function.name = __kmalloc
+    returnType = void*
 
-	# Names and types of the arguments of the target function
-	arg.type = size_t
-	arg.name = size
+    # Names and types of the arguments of the target function
+    arg.type = size_t
+    arg.name = size
 
-	arg.type = gfp_t
-	arg.name = flags
-	
-	# The parameters to be output to the trace. 
-	trace.param.type = size_t
-	trace.param.name = size
+    arg.type = gfp_t
+    arg.name = flags
+    
+    # The parameters to be output to the trace. 
+    trace.param.type = size_t
+    trace.param.name = size
 
-	trace.param.type = unsigned int
-	trace.param.name = flags
+    trace.param.type = unsigned int
+    trace.param.name = flags
 
-	trace.param.type = void*
-	trace.param.name = returnValue
+    trace.param.type = void*
+    trace.param.name = returnValue
 
-	# The format string to be used for trace output.
-	trace.formatString = "arguments: (%zu, %x), result: %p"
+    # The format string to be used for trace output.
+    trace.formatString = "arguments: (%zu, %x), result: %p"
 
 # End of the group of definitions for __kmalloc().
-    </pre><p>
-Example of the group section for __kmalloc() target function (note implementation <span class="symbol">prologue</span> parameter):
-    </p><pre class="programlisting">
+</pre><p>
+Example of the group section for kmem_cache_alloc() target function (note the contents of <span class="symbol">prologue</span> parameter):
+</p><pre class="programlisting">
     [group]
-	# Name and return type of the target function
-	function.name = kmem_cache_alloc
-	returnType = void*
+    # Name and return type of the target function
+    function.name = kmem_cache_alloc
+    returnType = void*
 
-	# Names and types of the arguments of the target function
-	arg.type = struct kmem_cache*
-	arg.name = mc
-	
-	arg.type = gfp_t
-	arg.name = flags
-	
-	prologue =&gt;&gt;
+    # Names and types of the arguments of the target function
+    arg.type = struct kmem_cache*
+    arg.name = mc
+    
+    arg.type = gfp_t
+    arg.name = flags
+    
+    prologue =&gt;&gt;
 size_t size = kmem_cache_size(mc);
 &lt;&lt;
-	# The parameters to be output to the trace. 
-	trace.param.type = size_t
-	trace.param.name = size
+    # The parameters to be output to the trace. 
+    trace.param.type = size_t
+    trace.param.name = size
 
-	trace.param.type = unsigned int
-	trace.param.name = flags
+    trace.param.type = unsigned int
+    trace.param.name = flags
 
-	trace.param.type = void*
-	trace.param.name = returnValue
+    trace.param.type = void*
+    trace.param.name = returnValue
 
-	# The format string to be used for trace output.
-	trace.formatString = "arguments: (%zu, %x), result: %p"
+    # The format string to be used for trace output.
+    trace.formatString = "arguments: (%zu, %x), result: %p"
 
 # End of the group of definitions for kmem_cache_alloc().
-    </pre><p>
+</pre><p>
     </p><p>
-After writing <code class="filename">payload.data</code> file, you may rewrite value of module_name variable in the <code class="filename">makefile</code> and <code class="filename">Kbuild</code> according to one you use as value of <span class="quote">“<span class="quote">module.name</span>”</span> parameter. In the future, this step may be implemented in the <code class="filename">makefile</code> itself.
-    </p>
-Next, and the last step is running <span class="command"><strong>make</strong></span> utility. It generate sources for payload module, and then build this module. That is all.
-    <p>
+As you can see, kmem_cache_alloc() function does not have <code class="code">size</code> argument. If we still want to output the size of the requested memory block to the trace, we need to determine it within the replacement function. This is exactly what is done in the prologue code above.
+    </p><p>
+After writing <code class="filename">payload.data</code> file, you can change the value of module_name variable in the <code class="filename">makefile</code> and <code class="filename">Kbuild</code> according to the one you use as value of <span class="quote">“<span class="quote">module.name</span>”</span> parameter. In the future, this step may be implemented in the <code class="filename">makefile</code> itself.
+    </p><p>
+The last step is to run <span class="command"><strong>make</strong></span> utility. This will invoke the code generator tool (<span class="command"><strong>kedr_gen</strong></span>) to create the sources for your payload module, then the module will be built.
     </p></div><div class="section" title="5.3. Writing Custom Payloads for Fault Simulation"><div class="titlepage"><div><div><h3 class="title"><a name="custom_fsim_payloads"></a>5.3. Writing Custom Payloads for Fault Simulation</h3></div></div></div><p>
-This is a description, how to write new payload module for fault simulation, using KEDR tool for generation files from templates. Common abilities of this tool are detailed descibed in <a class="xref" href="extend.html#using_gen" title="5.1. Using Generator for create custom modules">Section 5.1, “Using Generator for create custom modules”</a> ...
+This section describes how to write a new payload module for fault simulation using a tool provided by KEDR to generate source files from the templates. Common abilities of this tool are described in detail in <a class="xref" href="extend.html#using_gen" title="5.1. Using Code Generator to Create Custom Modules">Section 5.1, “Using Code Generator to Create Custom Modules”</a>.
     </p><p>
-Whole infrastructure, which is needed for building payload module from 'definition' file is located in <code class="filename">custom_payload_fsim</code> directory under installed expamples. Here is its content:
-</p><div class="variablelist"><dl><dt><span class="term"><code class="filename">payload.data</code></span></dt><dd>'definition' file for creating payload</dd><dt><span class="term"><code class="filename">makefile</code></span></dt><dd>file for common build infrastructure for <span class="command"><strong>make</strong></span> utility</dd><dt><span class="term"><code class="filename">Kbuild</code></span></dt><dd>file for building kernel module from c-sources</dd><dt><span class="term"><code class="filename">templates</code></span></dt><dd>directory which contatin templates files, used for generating sources from 'definition' file</dd></dl></div><p>
-Copy contents of this directory into you own place.
+Typical purposes of a custom payload module of this kind could be as follows: 
+</p><div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem"><p>
+support fault simulation for the functions for which it is not supported by KEDR <span class="quote">“<span class="quote">out-of-the-box</span>”</span>;
+</p></li><li class="listitem"><p>
+change the set of parameters output to the trace, in case you need something other than the arguments and the return value of the replacement function to be output;
+</p></li><li class="listitem"><p>
+provide a different set of variables to be passed to fault simulation indicator (see below) - this can be necessary if you would like to implement <a class="link" href="extend.html#custom_fsim_scenarios" title="5.4. Writing Custom Scenarios for Fault Simulation">custom fault simulation scenarios</a>.
+</p></li></ul></div><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
+Note that the infrastructure provided by KEDR for fault simulation (<a class="link" href="glossary.html#fault_simulation_point" title="Fault simulation point">points</a>, <a class="link" href="glossary.html#fault_simulation_indicator" title="Fault simulation indicator">indicators</a> and the respective control facilities) could be used for other purposes as well. What it does in general, is to alter the behaviour of a call made by the target module if the indicator returns nonzero, or allow the target function to do its work normally if the indicator returns 0. The <span class="quote">“<span class="quote">altered behaviour</span>”</span> is controlled by the user, see the description of <code class="code">fpoint.error_code</code> parameter below. So, instead of fault simulation, you could implement, say, timeout/sleep injection (i.e., delaying the return from the replacement function which might help with concurrency analysis, etc.) or whatever else you want.
+</p></div><p>
+The files necessary to build the payload module from the <span class="quote">“<span class="quote">definition file</span>”</span> are located in <code class="filename">custom_payload_fsim</code> subdirectory in the directory where the examples provided with KEDR are installed. Here are its contents:
+</p><div class="variablelist"><dl><dt><span class="term"><code class="filename">payload.data</code></span></dt><dd>'definition' file to create the payload module</dd><dt><span class="term"><code class="filename">makefile</code></span></dt><dd>file for common build infrastructure for <span class="command"><strong>make</strong></span> utility</dd><dt><span class="term"><code class="filename">Kbuild</code></span></dt><dd>file for building kernel module from C sources</dd><dt><span class="term"><code class="filename">templates</code></span></dt><dd>directory containing the templates used for generating sources from the 'definition' file</dd></dl></div><p>
+To use all this in development of your payload module, copy the contents of that directory to a directory of your choice.
     </p><p>
-The first, and the main step - rewrite <code class="filename">payload.data</code> for reflecting definitions of you own payload module.
+The first and the main step is to rewrite <code class="filename">payload.data</code> to reflect definitions of your payload module.
     </p><p>
-At global level (not inside groups) this file should contain definitions for next parameters:
-</p><div class="variablelist"><dl><dt><span class="term">module.name</span></dt><dd>string, which will be used as module name inside its source files</dd><dt><span class="term">module.author</span></dt><dd>author of the module</dd><dt><span class="term">module.licence</span></dt><dd>licence for the module</dd></dl></div><p>
-Additionally, next parameters may be defined at global level:
-</p><div class="variablelist"><dl><dt><span class="term">header</span></dt><dd>code (may be multi lined), which will be inserted before definition of replacement functions. Usually, this code contains '#include' directives, for header files which define target functions and types of its parameters.</dd></dl></div><p>
-Example of global section of the <code class="filename">payload.data</code>:
-    </p><pre class="programlisting">
+At the global level (i.e. before the first group begins), this file should contain definitions for the following parameters:
+</p><div class="variablelist"><dl><dt><span class="term">module.name</span></dt><dd>string, which will be used as module name inside its source files</dd><dt><span class="term">module.author</span></dt><dd>author of the module</dd><dt><span class="term">module.license</span></dt><dd>license for the module</dd></dl></div><p>
+In addition, the following parameters may be defined at the global level:
+</p><div class="variablelist"><dl><dt><span class="term">header</span></dt><dd>the code (may be multiline) to be inserted before the definition of replacement functions. This code usually contains '#include' directives for header files which define target functions and types of its parameters.</dd></dl></div><p>
+Example of global section of the <code class="filename">payload.data</code> file:
+</p><pre class="programlisting">
 # This module processes the calls to kstrdup function.
 
 module.name = payload_fsim_kstrdup
-module.author = Tsyvarev
+module.author = Andrey Tsyvarev
 module.license = GPL
 
 header =&gt;&gt;
 #include &lt;linux/string.h&gt;
 &lt;&lt;
-    </pre><p>
+</pre><p>
     </p><p>
-For each target function, which is intended to replace, group should be defined.
-Each group should contain definitions for next parameters:
-</p><div class="variablelist"><dl><dt><span class="term">function.name</span></dt><dd>name of the target function, which should replaced</dd><dt><span class="term">returnType</span></dt><dd>returning type of the target function, if it returns non-void, otherwise shouldn't be assigned at all</dd><dt><span class="term">returnsVoid</span></dt><dd>any non-empty value, if the target function returns void, otherwise should't be assigned at all. In the future, probably, this parameter will not be used, but currently its usage is mandatory for void functions.</dd><dt><span class="term">arg.type</span></dt><dd>types (multi-value) of the parameters of the target function, starting with the first one. If function doesn't take parameters, shouldn't be assigned at all.</dd><dt><span class="term">arg.name</span></dt><dd>names (multi-value) of the parameters of the target function, starting with the first one. If function doesn't take parameters, shouldn't be assigned at all. Parameters of the replacement function will be accessible via these names in the code.</dd><dt><span class="term">trace.param.name</span></dt><dd>variable names (multi-value), which values will be output into the trace. This variables should be accessible in replacement function(see below). At least, one value should be output (otherwise this replacement function is meaningless).</dd><dt><span class="term">trace.param.type</span></dt><dd>types (multi-value) of the values, which will be output into the trace. This types will be used in casting values before they will be output(so, these types may differ from real type of variables, which values are used to output).</dd><dt><span class="term">trace.formatString</span></dt><dd>format string which is used for printf-like output values from replacement function (see parameters <span class="quote">“<span class="quote">trace.param.name</span>”</span> and <span class="quote">“<span class="quote">trace.param.type</span>”</span>)</dd></dl></div><p>
-Until that moment, only parameters which are also used for call monitor payload has described (see <a class="xref" href="extend.html#custom_callm_payloads" title="5.2. Writing Custom Payloads for Call Monitoring">Section 5.2, “Writing Custom Payloads for Call Monitoring”</a>). And these parameters have almost the same meaning for fault simulation payload, because it extend functionality of call monitor payload. Next, parameters which has meaning only for fault simulation:
-</p><div class="variablelist"><dl><dt><span class="term">fpoint.error_code</span></dt><dd>code (may be multi line), which should be executed instead call of the target function for simulate target function failure. Usually, this code simply set <code class="varname">returnValue</code> variable, which will be returned to the caller, for signal that failure occures.</dd><dt><span class="term">fpoint.param.name</span></dt><dd>variable names (multi-value), which values will be passed to the indicator function, and may be used for determine scenario of fault simulation in it. Order of these variables make a sence, because them will be passed sequentially to the indicator function. Usually, only parameters of the target function are passed to the indicator.</dd><dt><span class="term">fpoint.param.type</span></dt><dd>types (multi-value) of the values, which values will be passed to the indicator function. This types will be used for casting variables' values before passing (so, these types may differ from real type of variables).</dd></dl></div><p>
+For each <a class="link" href="glossary.html#target_function" title="Target function">target function</a> the calls to which should be processed, a group should be prepared in the definition file.
+Each group should contain definitions for the following parameters:
+</p><div class="variablelist"><dl><dt><span class="term">function.name</span></dt><dd>name of the target function</dd><dt><span class="term">returnType</span></dt><dd>return type of the target function if it is not void, otherwise shouldn't be defined at all</dd><dt><span class="term">arg.type</span></dt><dd>(multi-valued) types of the parameters of the target function, starting with the first one. If the function has no parameters, shouldn't be assigned at all.</dd><dt><span class="term">arg.name</span></dt><dd>(multi-valued) names of the parameters of the target function, starting with the first one. If the function has no parameters, shouldn't be assigned at all. Parameters of the replacement function will be accessible via these names in the code.</dd><dt><span class="term">trace.param.name</span></dt><dd>(multi-valued) variable names, which values will be output to the trace. This variables should be accessible in replacement function (see below).</dd><dt><span class="term">trace.param.type</span></dt><dd>(multi-valued) types of the values, which will be output into the trace. This types will be used for casting the values of the corresponding variables before they will be output (so, these types may differ from the real types of variables).</dd><dt><span class="term">trace.formatString</span></dt><dd>format string which is used for printf-like output values from replacement function (see parameters <span class="quote">“<span class="quote">trace.param.name</span>”</span> and <span class="quote">“<span class="quote">trace.param.type</span>”</span>)</dd></dl></div><p>
+    </p><div class="important" title="Important" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Important</h3><p>
+Output to the trace is currently supported only for the variables of simple types (i.e. no strings, arrays, structures, etc.). Pointers can be output (e.g., using <code class="code"><span class="quote">“<span class="quote">%p</span>”</span></code> or a similar format) but not the data they point to. This is due to the limitations of <span class="command"><strong>kedr_gen</strong></span>. In the future versions, these limitations may be removed or at least relaxed.
+</p></div><p>
+Until this moment, only parameters which are also used for the payload modules for call monitoring have been described (see <a class="xref" href="extend.html#custom_callm_payloads" title="5.2. Writing Custom Payloads for Call Monitoring">Section 5.2, “Writing Custom Payloads for Call Monitoring”</a>). These parameters have almost the same meaning for the payload modules for fault simulation (these modules extend the functionality of call monitoring payloads). Listed below are the parameters that are meaningful only for fault simulation:
+    </p><p>
+</p><div class="variablelist"><dl><dt><span class="term">fpoint.error_code</span></dt><dd>code (may be multiline) which should be executed instead the call to the target function to simulate failure of the latter. Usually, this code simply sets <code class="varname">returnValue</code> variable which will be returned to the caller to indicate that a failure has occured.</dd><dt><span class="term">fpoint.param.name</span></dt><dd>(multi-valued) names of the variables which values will be passed to the indicator function and may be used to specify the scenario of fault simulation in it. The order of these variables is important, because they will be passed sequentially to the indicator function. Usually, only the parameters of the target function are passed to the indicator.</dd><dt><span class="term">fpoint.param.type</span></dt><dd>(multi-valued) types of the values that will be passed to the indicator function. These types will be used to properly cast the values before passing to the indicator (so these types may differ from the real types of the variables).</dd></dl></div><p>
 
-Additionally, next parameters may be defined at group level. Them similar to the ones for call monitor payload, but may have additional work load for fault simulation facility.
-</p><div class="variablelist"><dl><dt><span class="term">prologue</span></dt><dd>code (may be multi lined) which will be inserted to the start of replacement function (before call indicator function, which should decide, whether need to simulate or not). May use variable declarations. Usually, this code declare variables, which will be used in output, passed to the indicator function or used by the next code sections (see below).</dd><dt><span class="term">middleCode</span></dt><dd>code (may be multi lined) which may calculate data for output. May not use variable declarations. Note, that this code will be executed after indicator function and possible target function call or executing error-path, and so cannot change their behaviour.</dd><dt><span class="term">epilogue</span></dt><dd>code (may be multi lined) which will be inserted at the end of replacement function (after output values). If <code class="code">prologue</code> or <code class="code">middleCode</code> requests some resources from the kernel, this code may be used for returning this resources back.</dd></dl></div><p>
-Visibility of variables in different parts of code of the replacement function may be described as pseudocode:
-    </p><pre class="programlisting">
+    </p><p>
+Additionally, the following parameters can be defined at the group level. They are similar to the ones used in the payload modules for call monitoring. The differences concerning fault simulation are also described below.
+</p><div class="variablelist"><dl><dt><span class="term">prologue</span></dt><dd>code (may be multiline) which will be inserted at the start of replacement function (before the call to the indicator function which should decide whether need to simulate a failure or not). Usually, this code declares variables that will be used in the output, will be passed to the indicator function or used by the following code sections (see below).</dd><dt><span class="term">middleCode</span></dt><dd>code (may be multiline) which may calculate data for output. Variables can not be declared there. Note, that this code is placed after the call to the indicator function and after the possible call to the target function (or the error-path). Therefore, <code class="code">middleCode</code> cannot affect the behaviour of these parts of the replacement function. Its intended usage it to prepare the data to the output to the trace: calculate the necessary values, etc.</dd><dt><span class="term">epilogue</span></dt><dd>code (may be multiline) which will be inserted at the end of the replacement function (after the values are output to the trace). If <code class="code">prologue</code> or <code class="code">middleCode</code> request some resources from the kernel, this code can be used to release these resources.</dd></dl></div><p>
+Visibility of variables in different parts of code of the replacement function may be described in pseudocode as follows:
+</p><pre class="programlisting">
 <span class="symbol">returnType</span> replacement_function(<span class="symbol">arg.name</span>...)
 {
     <span class="symbol">prologue</span>
@@ -320,250 +367,250 @@ Visibility of variables in different parts of code of the replacement function m
     }
     <span class="symbol">epilogue</span>
 }
-    </pre><p>
-If target function return non-void value, variable <code class="varname">returnValue</code> may be used as name of variable to output (<span class="symbol">arg.name</span>) and in the <span class="symbol">middleCode</span>. Also, this variable should be assigned in the <span class="symbol">fpoint.error_code</span>.
+</pre><p>
+If the target function does not return void, variable <code class="varname">returnValue</code> can be used as name of variable to output (<span class="symbol">arg.name</span>) and in the <span class="symbol">middleCode</span>. Also, this variable should be assigned in the <span class="symbol">fpoint.error_code</span> (otherwise it will not be initialized if the failure of the target function is simulated).
     </p><p>
-Example of the group section for __kmalloc target function:
+Here is an example of the group section for __kmalloc target function. Note the definition of <code class="code">fpoint.fault_code</code> parameter. Its value is <span class="quote">“<span class="quote"><code class="code">returnValue = NULL;</code></span>”</span> because '=' characters after the leftmost one have no special meaning and are treated as the part of the value.
+    </p><pre class="programlisting">
+[group]
+    # Name and return type of the target function
+    function.name = __kmalloc
+    returnType = void*
+
+    # Names and types of the arguments of the target function
+    arg.type = size_t
+    arg.name = size
+
+    arg.type = gfp_t
+    arg.name = flags
+    
+    # The parameters to be output to the trace. 
+    trace.param.type = size_t
+    trace.param.name = size
+
+    trace.param.type = unsigned int
+    trace.param.name = flags
+
+    trace.param.type = void*
+    trace.param.name = returnValue
+
+    # The format string to be used for trace output.
+    trace.formatString = "arguments: (%zu, %x), result: %p"
+
+    # Fault Simulation
+    fpoint.param.type = size_t
+    fpoint.param.name = size
+
+    fpoint.param.type = gfp_t
+    fpoint.param.name = flags
+
+    fpoint.fault_code = returnValue = NULL;
+
+# End of the group of definitions for __kmalloc().
+</pre><p>
+Example of the group section for kstrdup() target function:
 </p><pre class="programlisting">
 [group]
-	# Name and return type of the target function
-	function.name = __kmalloc
-	returnType = void*
+    # Name and return type of the target function
+    function.name = kstrdup
+    returnType = char*
 
-	# Names and types of the arguments of the target function
-	arg.type = size_t
-	arg.name = size
+    # Names and types of the arguments of the target function
+    arg.type = const char*
+    arg.name = str
+    
+    arg.type = gfp_t
+    arg.name = flags
 
-	arg.type = gfp_t
-	arg.name = flags
-	
-	# The parameters to be output to the trace. 
-	trace.param.type = size_t
-	trace.param.name = size
+    # Calculate length of the string
+    prologue = size_t len = strlen(str);
 
-	trace.param.type = unsigned int
-	trace.param.name = flags
+    # The parameters to be output to the trace.
+    trace.param.type = size_t
+    trace.param.name = len
 
-	trace.param.type = void*
-	trace.param.name = returnValue
+    trace.param.type = unsigned int
+    trace.param.name = flags
 
-	# The format string to be used for trace output.
-	trace.formatString = "arguments: (%zu, %x), result: %p"
+    trace.param.type = void*
+    trace.param.name = returnValue
 
-	# Fault Simulation
-	fpoint.param.type = size_t
-	fpoint.param.name = size
+    # The format string to be used for trace output.
+    trace.formatString = "arguments: (strlen=%zu, flags=%x), result: %p"
 
-	fpoint.param.type = gfp_t
-	fpoint.param.name = flags
+    # Fault Simulation
+    fpoint.param.type = size_t
+    fpoint.param.name = len
 
-	fpoint.fault_code =	returnValue = NULL;
+    fpoint.param.type = gfp_t
+    fpoint.param.name = flags
 
-# End of the group of definitions for __kmalloc().
-    </pre><p>
-Example of the group section for kstrdup() target function (note using <code class="varname">len</code> variable for fault simulation as derived parameter from target function parameter <code class="varname">str</code>):
-    </p><pre class="programlisting">
-[group]
-	# Name and return type of the target function
-	function.name = kstrdup
-	returnType = char*
-
-	# Names and types of the arguments of the target function
-	arg.type = const char*
-	arg.name = str
-	
-	arg.type = gfp_t
-	arg.name = flags
-
-	# Calculate length of the string
-	prologue = size_t len = strlen(str);
-
-	# The parameters to be output to the trace.
-	trace.param.type = size_t
-	trace.param.name = len
-
-	trace.param.type = unsigned int
-	trace.param.name = flags
-
-	trace.param.type = void*
-	trace.param.name = returnValue
-
-	# The format string to be used for trace output.
-	trace.formatString = "arguments: (strlen=%zu, flags=%x), result: %p"
-
-	# Fault Simulation
-	fpoint.param.type = size_t
-	fpoint.param.name = len
-
-	fpoint.param.type = gfp_t
-	fpoint.param.name = flags
-
-	fpoint.fault_code =	returnValue = NULL;
+    fpoint.fault_code = returnValue = NULL;
 
 # End of the group of definitions for kstrdup().
-    </pre><p>
+</pre><p>
     </p><p>
-There is an ability to different replacement functions to share same indicator function (and, therefore, share scenario). This is more than simple using same indicator functions, because this functions may use some data, which is privare for each indicator instance. In the case if sharing, these indicator function' s data will be also sharing.
+Note the usage of <code class="varname">len</code> variable for fault simulation in the example above. This value is calculated in the prologue based on the target function parameter <code class="varname">str</code> and is then used as one of the parameters to be passed to the fault simulation indicator.
     </p><p>
-Such sharing indicator function may be used, e.g., for target functions, which is known to use internally some common mechanism, and you want to simulate fail of this mechanism.
+It is possible for different replacement functions to share the same indicator function (and, therefore, share the scenario). This is more than simply using the same indicator functions, this is using a single instance of an indicator. These functions may use some data private for each indicator instance. In case if sharing, this data will be also shared.
     </p><p>
-For say, that function <code class="function">g</code> should share fault simulation scenario with <code class="function">f</code>, you should assign parameter <span class="symbol">fpoint.reuse_point</span> for group of function <code class="function">g</code> to <code class="code">f</code>. In this case, group definition of function <code class="function">f</code> should precede the group definition of function <code class="function">g</code>. Example of sharing fault simulation scenario for <code class="function">__kmalloc</code> and <code class="function">krealloc</code>:
-    </p><pre class="programlisting">
+Sharing of the indicator functions can be useful, for example, for the target functions that are known to use a common mechanism internally (e.g. memory allocator), and you want to simulate a failure of this mechanism.
+    </p><p>
+If, say, function <code class="function">g</code> should share the fault simulation scenario with <code class="function">f</code>, you should define parameter <span class="symbol">fpoint.reuse_point</span> in the group of function <code class="function">g</code> with value <code class="code">f</code>. In this case, the group for function <code class="function">f</code> should precede the group for function <code class="function">g</code>. Example of sharing a fault simulation scenario for <code class="function">__kmalloc</code> and <code class="function">krealloc</code>:
+</p><pre class="programlisting">
     ...
 [group]
-	# Name and return type of the target function
-	function.name = __kmalloc
-	returnType = void*
+    # Name and return type of the target function
+    function.name = __kmalloc
+    returnType = void*
 
-	# Names and types of the arguments of the target function
-	arg.type = size_t
-	arg.name = size
+    # Names and types of the arguments of the target function
+    arg.type = size_t
+    arg.name = size
 
-	arg.type = gfp_t
-	arg.name = flags
-	
+    arg.type = gfp_t
+    arg.name = flags
+    
     ...
     
-	# Fault Simulation
-	fpoint.param.type = size_t
-	fpoint.param.name = size
+    # Fault Simulation
+    fpoint.param.type = size_t
+    fpoint.param.name = size
 
-	fpoint.param.type = gfp_t
-	fpoint.param.name = flags
+    fpoint.param.type = gfp_t
+    fpoint.param.name = flags
 
-	fpoint.fault_code = returnValue = NULL;
+    fpoint.fault_code = returnValue = NULL;
     
 # End of the group of definitions for __kmalloc().
 
 [group]
-	# Name and return type of the target function
-	function.name = krealloc
-	returnType = void*
+    # Name and return type of the target function
+    function.name = krealloc
+    returnType = void*
 
-	# Names and types of the arguments of the target function
-	arg.type = const void*
-	arg.name = p
+    # Names and types of the arguments of the target function
+    arg.type = const void*
+    arg.name = p
 
-	arg.type = size_t
-	arg.name = size
+    arg.type = size_t
+    arg.name = size
 
-	arg.type = gfp_t
-	arg.name = flags
-	
-    ...	
+    arg.type = gfp_t
+    arg.name = flags
+    
+    ... 
 
-	# Fault Simulation
-	<span class="emphasis"><em>fpoint.reuse_point = __kmalloc</em></span>
+    # Fault Simulation
+    <span class="emphasis"><em>fpoint.reuse_point = __kmalloc</em></span>
 
-	fpoint.param.type = size_t
-	fpoint.param.name = size
+    fpoint.param.type = size_t
+    fpoint.param.name = size
 
-	fpoint.param.type = gfp_t
-	fpoint.param.name = flags
+    fpoint.param.type = gfp_t
+    fpoint.param.name = flags
 
-	fpoint.fault_code = returnValue = NULL;
+    fpoint.fault_code = returnValue = NULL;
 
 # End of the group of definitions for krealloc().
-    </pre><p>
-Note, that in group definition for <code class="function">krealloc</code> function we use same names and types for variables, which is intended to pass to indicator function, as for <code class="function">__kmaloc</code>.
+</pre><p>
+Note that in the group for <code class="function">krealloc</code> function, we use the same names and types of the variables intended to be passed to the indicator function, as for <code class="function">__kmalloc</code>.
     </p><p>
-After writing <code class="filename">payload.data</code> file, you may rewrite value of module_name variable in the <code class="filename">makefile</code> and <code class="filename">Kbuild</code> according to one you use as value of <span class="quote">“<span class="quote">module.name</span>”</span> parameter. In the future, this step may be implemented in the <code class="filename">makefile</code> itself.
-    </p>
-Next, and the last step is running <span class="command"><strong>make</strong></span> utility. It generate sources for payload module, and then build this module. That is all.
-    <p>
+After writing <code class="filename">payload.data</code> file, you can change the value of module_name variable in the <code class="filename">makefile</code> and <code class="filename">Kbuild</code> according to the one you use as value of <span class="quote">“<span class="quote">module.name</span>”</span> parameter. In the future, this step may be implemented in the <code class="filename">makefile</code> itself.
+    </p><p>
+The last step is to run <span class="command"><strong>make</strong></span> utility. This will invoke the code generator tool (<span class="command"><strong>kedr_gen</strong></span>) to create the sources for your payload module, then the module will be built.
     </p></div><div class="section" title="5.4. Writing Custom Scenarios for Fault Simulation"><div class="titlepage"><div><div><h3 class="title"><a name="custom_fsim_scenarios"></a>5.4. Writing Custom Scenarios for Fault Simulation</h3></div></div></div><p>
-This is a description, how to write module which will implement new scenario for fault simulation, using KEDR tool for generation files from templates. Common abilities of this tool are detailed descibed in <a class="xref" href="extend.html#using_gen" title="5.1. Using Generator for create custom modules">Section 5.1, “Using Generator for create custom modules”</a> ...
+The fault simulation scenarios described in <a class="xref" href="using_kedr.html#fault_sim" title="4.5. Fault Simulation">Section 4.5, “Fault Simulation”</a> are configurable and are probably enough for many cases. If they are not, a kernel module implementing a custom <a class="link" href="glossary.html#fault_simulation_indicator" title="Fault simulation indicator">fault simulation indicator</a> can be developed. This section describes how do this using a tool provided by KEDR to generate source files from the templates. Common abilities of this tool are described in detail in <a class="xref" href="extend.html#using_gen" title="5.1. Using Code Generator to Create Custom Modules">Section 5.1, “Using Code Generator to Create Custom Modules”</a>
     </p><p>
-Whole infrastructure, which is needed for building payload module from 'definition' file is located in <code class="filename">custom_indicator_fsim</code> directory under installed expamples. Here is its content:
-</p><div class="variablelist"><dl><dt><span class="term"><code class="filename">indicator.data</code></span></dt><dd>'definition' file for creating module, which will implement fault simulation indicator</dd><dt><span class="term"><code class="filename">makefile</code></span></dt><dd>file for common build infrastructure for <span class="command"><strong>make</strong></span> utility</dd><dt><span class="term"><code class="filename">Kbuild</code></span></dt><dd>file for building kernel module from c-sources</dd><dt><span class="term"><code class="filename">templates</code></span></dt><dd>directory which contatin templates files, used for generating sources from 'definition' file</dd><dt><span class="term"><code class="filename">calculator.c</code>, <code class="filename">calculator.h</code>, <code class="filename">control_file.c</code>, <code class="filename">control_file.h</code></span></dt><dd>Additional source files and header which implements parts of indicator functionality. These files are used for building module.</dd></dl></div><p>
-Copy contents of this directory into you own place.
+The whole infrastructure needed to build the module based on the definition file and the templates is located in <code class="filename">custom_indicator_fsim</code> subdirectory in the directory where the examples provided with KEDR are installed. Here are its contents:
+</p><div class="variablelist"><dl><dt><span class="term"><code class="filename">indicator.data</code></span></dt><dd>'definition' file to create the module that will implement the fault simulation indicator</dd><dt><span class="term"><code class="filename">makefile</code></span></dt><dd>file for common build infrastructure for <span class="command"><strong>make</strong></span> utility</dd><dt><span class="term"><code class="filename">Kbuild</code></span></dt><dd>file for building kernel module from C sources</dd><dt><span class="term"><code class="filename">templates</code></span></dt><dd>directory containing the templates used for generating sources from the 'definition' file</dd><dt><span class="term"><code class="filename">calculator.c</code>, <code class="filename">calculator.h</code>, <code class="filename">control_file.c</code>, <code class="filename">control_file.h</code></span></dt><dd>additional source and header files that implement some of the indicator's functionality. These files are used for building the module.</dd></dl></div><p>
+To use all this in development of your module, copy the contents of that directory to a directory of your choice.
     </p><p>
-The first, and the main step - rewrite file <code class="filename">indicator.data</code> for reflecting definitions of you own indicator module.
+The first and the main step is to rewrite file <code class="filename">indicator.data</code> to reflect the definitions of your indicator module.
     </p><p>
-As opposed to the payloads for call monitoring and fault simulation, which may implements replacement functions for several target ones in one module, every fault simulation indicator should be implemented in different module. So, groups are not used in 'definition' file for indicator module, and only global set of parameters is make sence.
+Unlike a payload module for <a class="link" href="extend.html#custom_callm_payloads" title="5.2. Writing Custom Payloads for Call Monitoring">call monitoring</a> or <a class="link" href="extend.html#custom_fsim_payloads" title="5.3. Writing Custom Payloads for Fault Simulation">fault simulation</a> that can implement replacement functions for several target functions in a single module, each fault simulation indicator should be implemented in a separate module. So, groups are not used in the definition file for the indicator module. Only the global set of parameters is taken into account.
     </p><p>
-Indicator module should contain definitions for next parameters:
-</p><div class="variablelist"><dl><dt><span class="term">module.author</span></dt><dd>author of the module</dd><dt><span class="term">module.licence</span></dt><dd>licence for the module</dd><dt><span class="term">indicator.name</span></dt><dd>name of the indicator, exported by the module. This name should be used, when one need to assign indicator for some function.</dd><dt><span class="term">indicator.parameters.type</span></dt><dd>types (multi value) of the values, which accept indicator function. This is important part of the indicator, and will be fully described later. May be not assigned at all - in this case, indicator function will not accept parameters. </dd><dt><span class="term">indicator.parameters.name</span></dt><dd>names (multi value) of the values, which accept indicator function.</dd><dt><span class="term">expression.vars.name</span></dt><dd>variable names (multi value), which may be used in expression for set particular scenario for indicator. This names themselves doesn't concerned with variable names, used in indicator function. Order of this names has no sence. May be not assigned at all - there are another ways to declare expression variables.</dd><dt><span class="term">expression.vars.values</span></dt><dd>values (multi value) of corresponding expression variables, which will be used at expression evaluate stage (that is, when indicator function will be called). Typically, this values refer to the indicator function parameters.</dd><dt><span class="term">expression.vars.pname</span></dt><dd>names (multi value) of indicator function parameters, which may be used in expression for set particular scenario for indicator. <code class="code"><code class="varname">expression.vars.pname</code> = <code class="literal">var_a</code></code> is equivalent to <code class="code"><code class="varname">expression.vars.name</code> = <code class="literal">var_a</code></code> + <code class="code"><code class="varname">expression.vars.value</code> = <code class="literal">var_a</code></code>. May be not assigned at all - there are another ways to declare expression variables.</dd></dl></div><p>
+Indicator module should contain definitions of the following parameters:
+</p><div class="variablelist"><dl><dt><span class="term">module.author</span></dt><dd>author of the module</dd><dt><span class="term">module.license</span></dt><dd>license for the module</dd><dt><span class="term">indicator.name</span></dt><dd>name of the indicator, provided by the module. This is the very name that should be used when one applies the indicator to some target function (to be exact, to a <a class="link" href="glossary.html#fault_simulation_indicator" title="Fault simulation indicator">fault simulation point</a>).</dd><dt><span class="term">indicator.parameters.type</span></dt><dd>(multi-valued) types of the values that the indicator function accepts. This is an important part of the indicator and will be described later in detail. This parameter may be assigned no value at all - in this case, the indicator function will accept no parameters. </dd><dt><span class="term">indicator.parameters.name</span></dt><dd>(multi-valued) names of the values that the indicator function accepts.</dd><dt><span class="term">expression.vars.name</span></dt><dd>(multi-valued) names of variables that can be used in an expression to set a particular scenario for the indicator (see also <a class="xref" href="using_kedr.html#fault_sim" title="4.5. Fault Simulation">Section 4.5, “Fault Simulation”</a>). The names themselves are by no means bound to the names of variables used in the indicator. The order of values is not important for this parameter. This parameter may even be left undefined as there are other ways to declare expression variables.</dd><dt><span class="term">expression.vars.values</span></dt><dd>(multi-valued) values of the corresponding expression variables that will be used during the evaluation of the expression (that is, when the indicator function is called). Typically, these values refer to the parameters of the indicator function.</dd><dt><span class="term">expression.vars.pname</span></dt><dd>(multi-valued) names of the parameters of the indicator function that can be used in an expression to set a particular scenario for the indicator. <code class="code"><code class="varname">expression.vars.pname</code> = <code class="literal">var_a</code></code> is equivalent to <code class="code"><code class="varname">expression.vars.name</code> = <code class="literal">var_a</code></code> + <code class="code"><code class="varname">expression.vars.value</code> = <code class="literal">var_a</code></code>. This parameter may even be left undefined as there are other ways to declare expression variables.</dd></dl></div><p>
     </p><p>
-The main characteristic of fault simulation indicator is a set of scenarios, which it can implement. Aside from <code class="varname">pid</code> parameter, which may be used for every generated indicator, and which simply restrict area of fault simulation, <code class="varname">expression</code> is the only indicator's parameter, which may affect on the fault simulation scenario. Expression, which use only constant integers as arguments, may implement only "always simulate fail" or "never simulate fail" scenarious. But if expression can use variables, which may have different values at different expression evaluation stages, the set of scenarios is dramatically increased.
+The main characteristic of a fault simulation indicator is a set of scenarios, which it can implement. Apart from <code class="varname">pid</code> parameter that can be used for each generated indicator and simply restricts the <span class="quote">“<span class="quote">area</span>”</span> of fault simulation, <code class="varname">expression</code> is the only indicator's parameter, which may affect the fault simulation scenario. An expression that uses only constant integers as arguments may implement only <span class="pcite"><span class="quote">“<span class="quote">always simulate fail</span>”</span></span> or <span class="pcite"><span class="quote">“<span class="quote">never simulate fail</span>”</span></span> scenarios. But if the expression can use variables which may have different values each time the expression is evaluated, the set of supported scenarios increases dramatically.
     </p><p>
-One type of variable, which may be used in expression, is parameter of the target function. E.g., expression <code class="code">(<code class="varname">size</code> &gt; 100)</code>, where <code class="varname">size</code> corresponds to the target function parameter, implements scenario "simulate fail when <code class="varname">size</code> is greater than <code class="literal">100</code>". There is only way for indicator to implement such using of target function's parameter: declare this parameter as parameter of indicator function. So, corresponded replacement function should pass this parameter to the indicator function, whenever it should choose, whether it need to simulate fail. This indicator's behaviour is achived by ( assume that <code class="varname">size</code> parameter of the target function has type <code class="literal">size_t</code>):
-    </p><pre class="programlisting">
+One type of variable that can be used in the expression is the parameter of the target function. E.g., expression <code class="code">(<code class="varname">size</code> &gt; 100)</code>, where <code class="varname">size</code> corresponds to the target function parameter, implements the scenario <span class="pcite"><span class="quote">“<span class="quote">simulate fail when <code class="varname">size</code> is greater than <code class="literal">100</code></span>”</span></span>. The only way for the indicator to implement such usage of a target function's parameter is to declare this parameter as parameter of indicator function. So, the corresponding replacement function should pass this parameter to the indicator function whenever it should choose whether it needs to simulate a failure. This behaviour of the indicator is achieved by the following definitions (assume <code class="varname">size</code> parameter of the target function has type <code class="literal">size_t</code>):
+</p><pre class="programlisting">
 indicator.parameters.type = size_t
 indicator.parameters.name = size
-    </pre><p>
+</pre><p>
     </p><p>
-This fragment only define, that indicator function itself accept parameter <code class="varname">size</code>, but for permitting this parameter to be usable in expression,
+This fragment only defines that the indicator function itself accepts parameter <code class="varname">size</code>. To permit using this parameter in the expression, the following definition should be used as well:
     </p><pre class="programlisting">
 expression.vars.pname = size
-    </pre><p>
-should be used.
-    </p><p>
+</pre><p>
 Parameters <code class="varname">expression.vars.name</code> and <code class="varname">expression.vars.value</code> may be useful for such cases:
-    </p><pre class="programlisting">
+</p><pre class="programlisting">
 ...
 indicator.parameters.type = const char*
 indicator.parameters.name = str
 ...
-# Expression may use variable only with integer values, so we cannot use string parameter in it.
-# But we can use length of this string as parameter 'len'
+# Expression may use variables only with integer values, so we cannot use 
+# a string parameter in it.
+# But we can use the length of this string as parameter 'len'
 expression.vars.name = len
 expression.vars.value = strlen(str)
 ...
-    </pre><p>
-    </p><pre class="programlisting">
+</pre><p>
+</p><pre class="programlisting">
 ...
 indicator.parameters.type = size_t
-# Cannot use 'strlen' as name of the parameter, because strlen is the kernel function.
+# Cannot use 'strlen' as name of the parameter, because strlen() is 
+# the kernel function.
 indicator.parameters.name = len
 ...
-# But here 'strlen' is available - this is not a name of c-variable.
+# But here 'strlen' is available - this is not a name of C variable.
 expression.vars.name = strlen
-# We only need to bind expression variable with its value.
+# We only need to bind expression variable to its value.
 expression.vars.value = len
 ...
-    </pre><p>
+</pre><p>
     </p><p>
-But if we declare that indicator function accepts parameter <code class="varname">size</code> of type <span class="type">size_t</span>, we make this indicator inapplicable for that target functions, which do not accept parameter of that type. Or more exactly, indicator is not applicable for replace functions, which do not provide parameter of this type to indicator function. This limitation is work even if this parameter is not really used in the current scenario.
+However if we declare that the indicator function accepts parameter <code class="varname">size</code> of type <span class="type">size_t</span>, we make this indicator not applicable for those target functions that do not accept a parameter of that type. Or to be more exact, the indicator is not applicable for (cannot be used from) the replacement functions that do not provide a parameter of this type to indicator function. This limitation holds even if this parameter is not really used in the current scenario.
     </p><p>
-Though it is acceptable for indicator to use in expression variables, which is not derived from indicator parameters, like 
-    </p><pre class="programlisting">
+Although it is acceptable for the indicator to use the variables in expression, which are not derived from the indicator's parameters like 
+</p><pre class="programlisting">
 expression.vars.name = prob50
 expression.vars.value = random() % 2
-    </pre><p>
-it is not recommended, because there is more effective way to doing this. The thing is that, such type of variables is evaluated every time indicator function is called, whenever this variable is used in expression or not. And this evaluation may take relative long time. There is another type of variables, which is applicable in such case - runtime variables. Format of declaration of such variables is:
-    </p><pre class="programlisting">
+</pre><p>
+it is not recommended, because there is a more efficient way to do this. The thing is that, the variables of this kind are evaluated every time the indicator function is called, no matter if this variable is used in the expression or not. This evaluation may take relatively long time in some cases. There is another type of variables which is applicable in such cases - <em class="firstterm">runtime variables</em>. Declaration of such variables has the following format:
+</p><pre class="programlisting">
 expression.rvars.name = prob50
 expression.rvars.code =&gt;&gt;
     return random() % 2;
 &lt;&lt;
-    </pre><p>
-<code class="varname">expression.rvars.code</code> parameter is provide code of the function, which will be used, whenever value of variable is <span class="emphasis"><em>really</em></span> needed. Costs for such optimisation - function call instead inlined code, when value of variable is needed, and inability to use local variables of indicator function (and parameters of this function).
+</pre><p>
+<code class="varname">expression.rvars.code</code> parameter provides the code of the function which will be used whenever value of variable is <span class="emphasis"><em>really</em></span> needed. The costs of such optimisation are a function call used instead of the inlined code when the value of the variable is needed, and inability to use local variables of the indicator function (and parameters of this function) to prepared the value of the runtime variable.
     </p><p>
-For simple writting expression, some named constants may be introduces to it.
-There are two ways for doing this:
-    </p><pre class="programlisting">
+To simplify writing expressions and to make them more readable, named constants can be declared and then used there. There are two ways to do this:
+</p><pre class="programlisting">
 expression.constants.name = constant_100
 expression.constants.value = 100
-    </pre><p>
-make available to use in the expression constant <code class="varname">constant_100</code>, which evaluated to 100.
-    </p><pre class="programlisting">
+</pre><p>
+This makes the constant with name <code class="varname">constant_100</code> and value 100 available for usage in the expressions.
+</p><pre class="programlisting">
 expression.constants.cname = GFP_ATOMIC
-    </pre><p>
-make available to use in the expression constant <code class="varname">GFP_ATOMIC</code>, which evaluated to GFP_ATOMIC. Expression <code class="code">flags == GFP_ATOMIC</code> is more clear, than <code class="code">flags == 32</code>, isn't it?
+</pre><p>
+This makes the constant with name <code class="varname">GFP_ATOMIC</code> which evaluates to GFP_ATOMIC available for usage in the expressions. Expression <code class="code">flags == GFP_ATOMIC</code> is clearer and easier to read than <code class="code">flags == 32</code>, isn't it?
     </p><p>
-Additionally, next parameters may be defined:
-</p><div class="variablelist"><dl><dt><span class="term">global</span></dt><dd>code (may be multi lined), which will be inserted at the global scope and its definitions will be visible in any parameter. Usually, this code contains '#include' directives, for header files which define types of parameters of the indicator, and functions, which is used in parameters.</dd></dl></div><p>
+Additionally, the following parameter can be defined:
+</p><div class="variablelist"><dl><dt><span class="term">global</span></dt><dd>code (may be multiline) that will be inserted at the global scope and its definitions will be visible everywhere in the source file of the indicator. Usually, this code contains <code class="code">#include</code> directives for the header files containing types definitions of parameters of the indicator and declarations of the functions used to obtain the values of the parameters.</dd></dl></div><p>
 Example of indicator for <code class="function">kstrdup</code> function:
-    </p><pre class="programlisting">
+</p><pre class="programlisting">
 # This module implements indicator for kmalloc-like functions.
 
-module.author = Tsyvarev
+module.author = Andrey Tsyvarev
 module.license = GPL
 
 global =&gt;&gt;
-#include &gt;linux/gfp.h&lt;      /* gfp_flags constants */
-#include &gt;linux/types.h&lt;      /* size_t */
+#include &lt;linux/gfp.h&gt;      /* gfp_flags constants */
+#include &lt;linux/types.h&gt;    /* size_t */
 &lt;&lt;
 
 indicator.name = kmalloc
@@ -581,11 +628,11 @@ expression.constants.c_name = GFP_ATOMIC
 
 expression.vars.pname = size
 expression.vars.pname = flags
-    </pre><p>
+</pre><p>
     </p><p>
-After writing <code class="filename">indicator.data</code> file, you may rewrite value of module_name variable in the <code class="filename">makefile</code> and <code class="filename">Kbuild</code> according to one you wish to use as module name.
+After writing <code class="filename">payload.data</code> file, you can change the value of module_name variable in the <code class="filename">makefile</code> and <code class="filename">Kbuild</code> according to the one you use as value of <span class="quote">“<span class="quote">module.name</span>”</span> parameter. 
     </p><p>
-Next, and the last step is running <span class="command"><strong>make</strong></span> utility. It generate sources for indicator module, and then build this module. That is all.
+The last step is to run <span class="command"><strong>make</strong></span> utility. This will invoke the code generator tool (<span class="command"><strong>kedr_gen</strong></span>) to create the sources for your payload module, then the module will be built.
     </p></div><div class="section" title="5.5. Implementing Custom Types of Analysis"><div class="titlepage"><div><div><h3 class="title"><a name="custom_analysis"></a>5.5. Implementing Custom Types of Analysis</h3></div></div></div><p>
 KEDR is not only a system to perform call monitoring and fault simulation for the target kernel modules. It is a framework that allows to implement different kinds of analysis based on the information about the function calls made by the target module.
 </p><p>
@@ -649,7 +696,9 @@ static struct kedr_payload counters_payload = {
     .mod                    = THIS_MODULE,
     .repl_table.orig_addrs  = &amp;orig_addrs[0],
     .repl_table.repl_addrs  = &amp;repl_addrs[0],
-    .repl_table.num_addrs   = ARRAY_SIZE(orig_addrs)
+    .repl_table.num_addrs   = ARRAY_SIZE(orig_addrs),
+    .target_load_callback   = NULL,
+    .target_unload_callback = NULL
 };
 </pre><p>
 The initial value of each counter is 0. The replacement functions actually update the counters. They do this with special locks held to avoid some of the concurrency issues. For example, the replacement function for <code class="code">__kmalloc()</code> looks like this:

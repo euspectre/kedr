@@ -18,9 +18,9 @@ analysis.
 </p><pre class="programlisting">
 struct kedr_repl_table
 {
-	void** orig_addrs; 
-	void** repl_addrs; 
-	unsigned int num_addrs;
+    void** orig_addrs; 
+    void** repl_addrs; 
+    unsigned int num_addrs;
 };
 </pre><p>
 <code class="code">orig_addrs</code> - an array of the addresses of target functions 
@@ -43,8 +43,10 @@ point of view of the KEDR core.
 </p><pre class="programlisting">
 struct kedr_payload
 {
-	struct module* mod;
-	struct kedr_repl_table repl_table;
+    struct module* mod;
+    struct kedr_repl_table repl_table;
+    void (*target_load_callback)(struct module*);
+    void (*target_unload_callback)(struct module*);
 };
 </pre><p>
 <code class="code">mod</code> - the payload module itself. This field is usually 
@@ -53,7 +55,16 @@ initialized with <code class="code">THIS_MODULE</code> value.
 <code class="code">repl_table</code> - <a class="link" href="reference.html#payload_api.rtable" title="6.1.2. struct kedr_repl_table">the 
 replacement table</a>.
 </p><p>
-Each payload module has usually a single global instance of this structure 
+<code class="code">target_load_callback</code> and <code class="code">target_unload_callback</code>. If 
+not NULL, these callbacks are called by KEDR core after the target module is loaded (but 
+before it begins its initialization) and, respectively, when the target module 
+has done cleaning up and is about to unload. The callbacks are passed the 
+pointer to the target module as an argument. If a callback is NULL, it is 
+ignored.
+</p><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
+Note that if the target module fails to initialize itself (and its init function returns an error as a result) and <code class="code">target_unload_callback</code> is not NULL, this callback will be called nevertheless.
+</p></div><p>
+Each payload module has usually a single global instance of <code class="code">struct kedr_payload</code> structure 
 and passes its address when registering and unregistering itself with the 
 KEDR core.
 </p><p>
@@ -61,21 +72,23 @@ Example:
 </p><pre class="programlisting">
 /* Addresses of the functions of interest (target functions) */
 static void* orig_addrs[] = {
-	(void*)&amp;_copy_to_user,
-	(void*)&amp;_copy_from_user
+    (void*)&amp;_copy_to_user,
+    (void*)&amp;_copy_from_user
 };
 
 /* Addresses of the replacement functions */
 static void* repl_addrs[] = {
-	(void*)&amp;repl__copy_to_user,
-	(void*)&amp;repl__copy_from_user
+    (void*)&amp;repl__copy_to_user,
+    (void*)&amp;repl__copy_from_user
 };
 
 static struct kedr_payload payload = {
-	.mod                    = THIS_MODULE,
-	.repl_table.orig_addrs  = &amp;orig_addrs[0],
-	.repl_table.repl_addrs  = &amp;repl_addrs[0],
-	.repl_table.num_addrs   = ARRAY_SIZE(orig_addrs)
+    .mod                    = THIS_MODULE,
+    .repl_table.orig_addrs  = &amp;orig_addrs[0],
+    .repl_table.repl_addrs  = &amp;repl_addrs[0],
+    .repl_table.num_addrs   = ARRAY_SIZE(orig_addrs),
+    .target_load_callback   = NULL,
+    .target_unload_callback = NULL
 };
 </pre></div><div class="section" title="6.1.4. kedr_payload_register()"><div class="titlepage"><div><div><h4 class="title"><a name="payload_api.register"></a>6.1.4. kedr_payload_register()</h4></div></div></div><pre class="programlisting">
 int 
@@ -215,7 +228,9 @@ static struct kedr_payload payload = {
     .mod                    = THIS_MODULE,
     .repl_table.orig_addrs  = &amp;orig_addrs[0],
     .repl_table.repl_addrs  = &amp;repl_addrs[0],
-    .repl_table.num_addrs   = ARRAY_SIZE(orig_addrs)
+    .repl_table.num_addrs   = ARRAY_SIZE(orig_addrs),
+    .target_load_callback   = NULL,
+    .target_unload_callback = NULL
 };
 /*********************************************************************/
 
