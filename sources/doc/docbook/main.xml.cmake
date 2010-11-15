@@ -33,7 +33,7 @@
 <article lang="en">
 <title>KEDR &rel-version; Reference Manual</title>
 <articleinfo>
-    <releaseinfo>KEDR &rel-version; Reference Manual (&rel-date;)</releaseinfo>
+    <releaseinfo>KEDR Framework version &rel-version; (&rel-date;)</releaseinfo>
     <authorgroup>
         <author>
             <firstname>Eugene</firstname>
