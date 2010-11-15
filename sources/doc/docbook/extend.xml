@@ -10,6 +10,9 @@
 <!-- Custom Fault Simulation Payloads -->
 &kedr_custom_fsim_payloads;
 
+<!-- Description of the happensBefore parameter for call monitor and fault simulation payloads -->
+&kedr_happens_before_parameter;
+
 <!-- Custom Fault Simulation Scenarios -->
 &kedr_custom_fsim_scenarios;
 
