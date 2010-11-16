@@ -80,6 +80,8 @@ Only calls to the subset of all kernel functions are detected. This subset howev
     <member>kmem_cache_alloc</member>
     <member>[kmem_cache_alloc_notrace]</member>
     <member>kmem_cache_free</member>
+    <member>__get_free_pages</member>
+    <member>free_pages</member>
     </simplelist>
 </listitem>
 <listitem><phrase role="emphasized">kedr_cm_user_space_access.ko:</phrase>

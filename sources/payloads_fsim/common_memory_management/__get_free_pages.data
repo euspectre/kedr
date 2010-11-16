@@ -1,0 +1,43 @@
+[group]
+	# Name and return type of the target function
+	function.name = __get_free_pages
+	returnType = unsigned long
+
+	# Names and types of the arguments of the target function
+	arg.type = gfp_t
+	arg.name = flags
+	
+	arg.type = unsigned int
+	arg.name = order
+
+	prologue =>>
+size_t size = PAGE_SIZE * (((size_t)1) >> order);
+<<
+	# The parameters to be output to the trace. 
+	trace.param.type = unsigned int
+	trace.param.name = flags
+
+	trace.param.type = unsigned int
+	trace.param.name = order
+
+	trace.param.type = void*
+	trace.param.name = returnValue
+
+	# The format string to be used for trace output.
+	trace.formatString = "arguments: (%x, %u), result: %p"
+
+	# Fault Simulation
+	fpoint.reuse_point = __kmalloc
+
+	# Duplicate parameters for kmalloc simulation point
+	fpoint.param.type = size_t
+	fpoint.param.name = size
+
+	fpoint.param.type = gfp_t
+	fpoint.param.name = flags
+
+	fpoint.fault_code =	returnValue = 0;
+
+# End of the group of definitions for __get_free_pages().
+
+#######################################################################

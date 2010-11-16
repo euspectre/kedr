@@ -12,6 +12,9 @@ kmodule_configure_kernel_functions(functions REQUIRED
 	"kmem_cache_alloc"
 	OPTIONAL "kmem_cache_alloc_notrace" REQUIRED
 	"kmem_cache_free"
+# kmalloc somewhere expanded to the __get_free_pages
+	"__get_free_pages"
+	"free_pages"
 )
 
 set(kmem_cache_alloc_FUNCTION "kmem_cache_alloc")

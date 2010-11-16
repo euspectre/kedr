@@ -320,13 +320,14 @@ Here is the list of payload modules for fault simulation provided with KEDR:
         <member><function>krealloc</function></member>
         <member><function>kmem_cache_alloc</function></member>
         <member>[<function>kmem_cache_alloc_notrace</function>]</member>
+        <member><function>__get_free_pages</function></member>
         </simplelist>
     </listitem>
 </varlistentry>
 </variablelist>
 
 <note><para>
-Although KEDR module <filename>kedr_fsim_cmm.ko</filename> currently provides fault simulation facilities for 4 functions, it exports only one directory (<filename class='directory'>__kmalloc</filename>) to manage fault simulation scenarios. All those 4 functions use the same scenario that is set for <function>__kmalloc</function> function.
+Although KEDR module <filename>kedr_fsim_cmm.ko</filename> currently provides fault simulation facilities for 5 functions, it exports only one directory (<filename class='directory'>__kmalloc</filename>) to manage fault simulation scenarios. All those 5 functions use the same scenario that is set for <function>__kmalloc</function> function.
 </para></note>
     
 <para>
