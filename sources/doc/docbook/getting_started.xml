@@ -4,6 +4,25 @@
 <para>
 This section shows how to install KEDR framework and how to use it to analyze a simple kernel module.
 </para>
+
+<warning>
+    <para>
+KEDR framework can do much harm if it gets out of control. USE IT ONLY IF YOU 
+KNOW WHAT YOU ARE DOING. There is no warranty. If you use KEDR, you do so at
+your own risk.
+    </para>
+    <para>
+Main components of KEDR framework operate in the kernel space. The system 
+instruments the modules under analysis and allows custom kernel modules to 
+alter the behaviour of these modules. This creates both a security hole 
+and a potential for system instability, especially if the kernel modules under 
+analysis are faulty.
+    </para>
+    <para>
+It is not recommended to use KEDR on the machines holding important data or 
+providing important services.
+    </para>
+</warning>
 <!-- ================================================================ -->
 
 <section id="getting_started.install">

@@ -29,23 +29,4 @@ KEDR is free software and is distributed under the terms of <ulink url="http://w
 The latest stable version of KEDR as well as the development versions can be found at <ulink url="&kedr-url;"><quote>KEDR</quote> project site at BerliOS Developer.</ulink>
 </para>
 
-<warning>
-    <para>
-KEDR framework can do much harm if it gets out of control. USE IT ONLY IF YOU 
-KNOW WHAT YOU ARE DOING. There is no warranty. If you use KEDR, you do so at
-your own risk.
-    </para>
-    <para>
-Main components of KEDR framework operate in the kernel space. The system 
-instruments the modules under analysis and allows custom kernel modules to 
-alter the behaviour of these modules. This creates both a security hole 
-and a potential for system instability, especially if the kernel modules under 
-analysis are faulty.
-    </para>
-    <para>
-It is not recommended to use KEDR on the machines holding important data or 
-providing important services.
-    </para>
-</warning>
-
 </section>
