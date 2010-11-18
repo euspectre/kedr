@@ -1,0 +1,11 @@
+module.author = Tsyvarev
+module.license = GPL
+
+indicator.name = size_greater_10
+
+indicator.parameters.name = size
+indicator.parameters.type = size_t
+
+indicator.simulate.name = size_greater_10
+indicator.simulate.first =
+indicator.simulate.code = return size > 10;

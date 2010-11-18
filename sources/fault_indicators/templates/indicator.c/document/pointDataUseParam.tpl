@@ -1,1 +1,1 @@
-#define <$indicator.parameters.name$> (((struct point_data*)user_data)-><$indicator.parameters.name$>)
+#define <$indicator.parameters.name$> (point_data-><$indicator.parameters.name$>)

@@ -1,0 +1,1 @@
+<$if isIndicatorState$>struct indicator_real_state*<$endif$>

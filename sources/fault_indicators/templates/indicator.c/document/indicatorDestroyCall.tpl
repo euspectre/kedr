@@ -1,0 +1,1 @@
+	indicator_destroy_<$indicator.destroy.name$>(<$indicatorStateName$>);

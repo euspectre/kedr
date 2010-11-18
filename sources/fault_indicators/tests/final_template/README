@@ -1,0 +1,3 @@
+Here are tests for correctness of final template for indicator.
+
+That is, that internal data files are transformed into the correct indicator module, with correct behaviour.

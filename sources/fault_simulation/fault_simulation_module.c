@@ -277,10 +277,10 @@ EXPORT_SYMBOL(kedr_fsim_point_unregister);
  * 'format_string' - format of 'user_data' parameter, taken by 'simulate'
  *
  * 'create_instance' - function which will be called for create indicator instance
- * for particular point.
+ * for particular point. May be NULL.
  *
  * 'destroy_instance' - function which will be called when indicator instance
- * should be unset for particular point
+ * should be unset for particular point. May be NULL.
  *
  * Return not-null pointer, which may be used for unregister of indicator.
  *
@@ -527,7 +527,8 @@ void clear_indicator_internal(struct kedr_simulation_point* point)
     synchronize_rcu();
     //now we can safetly remove indicator instance.
     indicator = container_of(indicator_obj, struct kedr_simulation_indicator, obj);
-    indicator->destroy_instance(instance->indicator_state);
+    if(indicator->destroy_instance)
+        indicator->destroy_instance(instance->indicator_state);
     //
     wobj_weak_ref_clear(&instance->indicator_weak_ref);
     wobj_unref(indicator_obj);
@@ -587,7 +588,8 @@ void clear_indicator_callback(wobj_weak_ref_t* instance_obj)
     
     synchronize_rcu();
     
-    indicator->destroy_instance(instance->indicator_state);
+    if(indicator->destroy_instance)
+        indicator->destroy_instance(instance->indicator_state);
     kfree(instance);
 }
 
@@ -629,6 +631,7 @@ int kedr_fsim_point_set_indicator_internal(struct kedr_simulation_point* point,
 
     clear_indicator_internal(point);
     //Because we take mutex, which protect indicator from deleting, we may safetly use this indicator
+    instance->indicator_state = NULL;
     if(indicator->create_instance)
     {
         if(indicator->create_instance(&instance->indicator_state, params, point->control_dir))
@@ -637,10 +640,6 @@ int kedr_fsim_point_set_indicator_internal(struct kedr_simulation_point* point,
             kfree(instance);
             return -1;
         }
-    }
-    else
-    {
-        instance->indicator_state = NULL;
     }
     
     instance->indicator = indicator;

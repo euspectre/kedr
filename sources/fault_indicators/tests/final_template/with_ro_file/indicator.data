@@ -1,0 +1,9 @@
+module.author = Tsyvarev
+module.license = GPL
+
+indicator.name = ro_file
+
+indicator.file.name = some_string
+indicator.file.fs_name = some_string
+indicator.file.get = return kstrdup("some_string", GFP_KERNEL);
+indicator.file.set =

@@ -4,6 +4,7 @@ module_name := @module_name@
 indicator_data_file := indicator.data
 
 indicator_c_file := indicator.c
+indicator_internal_data_file := indicator_internal.data
 
 additional_sources := calculator.c control_file.c
 additional_headers := calculator.h control_file.h
@@ -23,11 +24,14 @@ $(module_name).ko: $(indicator_c_file) $(additional_sources) $(additional_header
 	cat "$(kedr_base_symbols)" "$(fault_simulation_symbols)" > ./Module.symvers
 	make -C $(KBUILD_DIR) M=$(PWD) modules
 
-$(indicator_c_file): $(indicator_data_file)
+$(indicator_c_file): $(indicator_internal_data_file)
 	$(kedr_gen_tool) $(kedr_gen_templates_dir)/indicator.c/ $^ > $@
+$(indicator_internal_data_file): $(indicator_data_file)
+	$(kedr_gen_tool) $(kedr_gen_templates_dir)/indicator_internal.data/ $^ > $@
 
 clean:
 	make -C $(KBUILD_DIR) M=$(PWD) clean
 	rm -f $(indicator_c_file)
+	rm -f $(indicator_internal_data_file)
 
 .PHONY: all clean

@@ -61,21 +61,6 @@ if ! simulate; then
 fi
 
 ##
-echo "$indicator_name" "1" > "${point_dir}/current_indicator"
-
-if test $? -ne 0; then
-	printf "Cannot set indicator with parameter \"1\" for the point.\n"
-	$do_commands_script "$commands_file" unload
-	exit 1
-fi
-
-if  simulate; then
-	printf "Simulate should fail with "1" expression.\n"
-	$do_commands_script "$commands_file" unload
-	exit 1
-fi
-
-##
 echo "1" > "${point_dir}/expression"
 
 if test $? -ne 0; then
@@ -85,7 +70,7 @@ if test $? -ne 0; then
 fi
 
 if  simulate; then
-	printf "Simulate should fail with "1" expression.\n"
+	printf "Simulate should fail with \"1\" expression.\n"
 	$do_commands_script "$commands_file" unload
 	exit 1
 fi
@@ -108,7 +93,16 @@ fi
 
 comment
 ##
-echo "$indicator_name" "times % 2" > "${point_dir}/current_indicator"
+# Clear times counter
+echo "0" > "${point_dir}/times"
+
+if test $? -ne 0; then
+	printf "Cannot clear times counter.\n"
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+echo "times % 2" > "${point_dir}/expression"
 
 if test $? -ne 0; then
 	printf "Cannot set expression for the indicator.\n"
@@ -117,7 +111,7 @@ if test $? -ne 0; then
 fi
 
 if  simulate; then
-	printf "First call of simulate should fail with "times %% 2" expression.\n"
+	printf "First call of simulate should fail with \"times %% 2\" expression.\n"
 	$do_commands_script "$commands_file" unload
 	exit 1
 fi
@@ -135,7 +129,8 @@ if  simulate; then
 fi
 
 ##
-echo "$indicator_name" "1" > "${point_dir}/current_indicator"
+echo "$indicator_name" > "${point_dir}/current_indicator"
+echo "1" > "${point_dir}/expression"
 echo $$ > "${point_dir}/pid"
 
 if test $? -ne 0; then

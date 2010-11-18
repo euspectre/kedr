@@ -1,0 +1,24 @@
+#!/bin/sh
+
+indicator_module="@CMAKE_CURRENT_BINARY_DIR@/@kmodule_name@.ko"
+indicator_name="never"
+
+. ../test_common.sh
+
+init_test
+
+echo "$indicator_name" > "${point_dir}/current_indicator"
+
+if test $? -ne 0; then
+	printf "Cannot set indicator for the point.\n"
+	finalize_test
+	exit 1
+fi
+
+if ! simulate; then
+	printf "Simulate should't fail with \"never\" scenario.\n"
+	finalize_test
+	exit 1
+fi
+
+finalize_test

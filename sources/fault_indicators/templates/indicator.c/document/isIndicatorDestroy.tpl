@@ -1,0 +1,1 @@
+<$if concat(indicator.file.name)$>1<$else$><$if concat(indicator.destroy.name)$>1<$endif$><$endif$>

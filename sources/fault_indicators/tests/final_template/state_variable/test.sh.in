@@ -1,0 +1,46 @@
+#!/bin/sh
+
+indicator_module="@CMAKE_CURRENT_BINARY_DIR@/@kmodule_name@.ko"
+indicator_name="every_second_call"
+
+. ../test_common.sh
+
+init_test
+
+echo "$indicator_name" > "${point_dir}/current_indicator"
+
+if test $? -ne 0; then
+	printf "Cannot set indicator for the point.\n"
+	finalize_test
+	exit 1
+fi
+
+if  ! simulate; then
+	printf "First call of simulate shouldn't fail with \"every second call\" scenario.\n"
+	finalize_test
+	exit 1
+fi
+
+if  simulate; then
+	printf "Second call of simulate should fail with \"every second call\" scenario.\n"
+	finalize_test
+	exit 1
+fi
+
+echo "$indicator_name" > "${point_with_params_dir}/current_indicator"
+
+if test $? -ne 0; then
+	printf "Cannot set indicator for another point.\n"
+	finalize_test
+	exit 1
+fi
+
+if  ! simulate_with_params 1; then
+	printf "First call (for another instance) of simulate shouldn't fail with \"every second call\" scenario.\n"
+	finalize_test
+	exit 1
+fi
+
+
+
+finalize_test

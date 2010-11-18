@@ -1,0 +1,4 @@
+module.author = Tsyvarev
+module.license = GPL
+
+indicator.name = never

@@ -11,6 +11,7 @@ write_indicator_name="indicator_for_write"
 module_a_name="fsim_test_module_a"
 module_a="@CMAKE_CURRENT_BINARY_DIR@/module_a/${module_a_name}.ko"
 module_b="@CMAKE_CURRENT_BINARY_DIR@/module_b/fsim_test_module_b.ko"
+indicators_simple="@CMAKE_CURRENT_BINARY_DIR@/indicators_simple/fsim_test_indicators_simple.ko"
 current_value_file="/sys/module/${module_a_name}/parameters/current_value"
 
 device=kedr_test_device
@@ -180,53 +181,6 @@ if test "$current_value" != "0"; then
     exit 1
 fi
 
-
-
-cat > /dev/null << comment1
-dd "of=/dev/$device" if=/dev/zero bs=16 count=1
-current_value=`cat "$current_value_file"`
-
-if test "$current_value" != "16"; then
-    printf "Expected, that simulation of write point returns '16', but it is '%s'.\n" "$current_value"
-    rmmod "$module_b"
-    $do_commands_script "$commands_file" unload
-    exit 1
-fi
-
-if ! rmmod "$module_b"; then
-    printf "Error occures while unload module 'b'.\n"
-    $do_commands_script "$commands_file" unload
-    exit 1
-fi
-
-
-dd "if=/dev/$device" of=/dev/null bs=1 count=1
-current_value=`cat "$current_value_file"`
-
-if test "$current_value" != "0"; then
-    printf "Expected, that simulation of read point returns '0'(indicator should be cleared), but it is '%s'.\n" "$current_value"
-    $do_commands_script "$commands_file" unload
-    exit 1
-fi
-
-dd "of=/dev/$device" if=/dev/zero bs=16 count=1
-current_value=`cat "$current_value_file"`
-
-if test "$current_value" != "0"; then
-    printf "Expected, that simulation of write point returns '0'(indicator should be cleared), but it is '%s'.\n" "$current_value"
-    $do_commands_script "$commands_file" unload
-    exit 1
-fi
-
-external_value=`cat "$external_value_file"`
-if test "$external_value" != "5"; then
-    printf "Expected, that 'external_value' for module 'a' become '5'(result of destroy function), but it is '%s'.\n" "$external_value"
-    $do_commands_script "$commands_file" unload
-    exit 1
-fi
-
-comment1
-
 if ! rmmod "$module_b"; then
     printf "Cannot unload module_b.\n"
     exit 1
@@ -240,6 +194,55 @@ simulate_point "$write_point_name" 25
 if test "$current_value" != "0"; then
     printf "Expected, that simulation of write point returns '0'(indicator was automatically cleared), but it is '%s'.\n" "$current_value"
     $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+
+
+
+# Set "never" and "always" scenarious
+
+if ! insmod "$indicators_simple"; then
+    printf "Cannot load module with simple indicators into kernel.\n"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+
+if ! set_indicator "$read_point_name" "never"; then
+    printf "Cannot set "never" scenario for read point.\n"
+    rmmod "$indicators_simple"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+simulate_point "$read_point_name"
+
+if test "$current_value" != 0 ; then
+    printf "Expected, that simulation for read point returns '0' (scenario is 'never'), but it is '%s'.\n" "$current_value"
+	rmmod "$indicators_simple"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+if ! set_indicator "$read_point_name" "always"; then
+    printf "Cannot set "always" scenario for read point.\n"
+    rmmod "$indicators_simple"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+simulate_point "$read_point_name"
+
+if test "$current_value" != 1 ; then
+    printf "Expected, that simulation for read point returns '1' (scenario is 'always'), but it is '%s'.\n" "$current_value"
+	rmmod "$indicators_simple"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+if ! rmmod "$indicators_simple"; then
+    printf "Cannot unload module with simple indicators.\n"
     exit 1
 fi
 

@@ -1,0 +1,20 @@
+module.author = Tsyvarev
+module.license = GPL
+
+global = #include <linux/slab.h>
+
+indicator.name = result
+
+indicator.state.name = result
+indicator.state.type = int
+
+indicator.simulate.name = result
+indicator.simulate.code = return state(result);
+
+indicator.init.name = result
+indicator.init.code = state(result) = 0; return 0;
+
+indicator.file.name = need_simulate
+indicator.file.fs_name = need_simulate
+indicator.file.get = return kstrdup(state(result) ? "1" : "0", GFP_KERNEL);
+indicator.file.set = state(result) = strcmp(str, "0") && strcmp(str, "true"); return 0;

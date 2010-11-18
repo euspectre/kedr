@@ -1,0 +1,65 @@
+#
+# File for include into test scripts.
+#
+# 'indicator_module' variable should be declared before including.
+#
+# Declare common variables and functions for the tests.
+
+kedr_base_module="@CMAKE_BINARY_DIR@/base/kedr_base.ko"
+fault_simulation_module="@CMAKE_BINARY_DIR@/fault_simulation/kedr_fault_simulation.ko"
+
+simulation_module="@CMAKE_CURRENT_BINARY_DIR@/module/kedr_indicator_internal_test_module.ko"
+point_name="common"
+point_with_params_name="size"
+
+
+debugfs="@CMAKE_CURRENT_BINARY_DIR@/debugfs"
+
+point_dir="${debugfs}/kedr_fault_simulation/points/${point_name}"
+point_with_params_dir="${debugfs}/kedr_fault_simulation/points/${point_with_params_name}"
+
+simulate()
+{
+	echo 123 > "${debugfs}/kedr_indicator_internal_test_module/simulate"
+}
+
+# simulate_with_params(size)
+simulate_with_params()
+{
+	dd count=1 bs=$1 if=/dev/zero of="${debugfs}/kedr_indicator_internal_test_module/simulate_with_params"
+}
+
+
+do_commands_script="sh @CMAKE_BINARY_DIR@/tests/scripts/do_commands.sh"
+commands_file="@CMAKE_CURRENT_BINARY_DIR@/commands.txt"
+
+cat > "$commands_file" << eof
+
+on_load insmod "${fault_simulation_module}" || ! printf "Cannot load fault simulation module into kernel.\n"
+on_unload rmmod "${fault_simulation_module}" || ! printf "Cannot unload fault simulation module.\n"
+on_load insmod "${simulation_module}" || ! printf "Cannot load module with simulation point into kernel.\n"
+on_unload rmmod "${simulation_module}" || ! printf "Cannot unload module with simulation point.\n"
+on_load insmod "${indicator_module}" || ! printf "Cannot load indicator module into kernel.\n"
+on_unload rmmod "${indicator_module}" || ! printf "Cannot unload indicator module.\n"
+
+on_load mkdir -p "${debugfs}"
+on_load mount -t debugfs debugfs "${debugfs}"
+on_unload umount "${debugfs}"
+
+eof
+
+init_test()
+{
+	if ! $do_commands_script "$commands_file" load; then
+		printf "Cannot initialize test.\n"
+		exit 1
+	fi
+}
+
+finalize_test()
+{
+	if ! $do_commands_script "$commands_file" unload; then
+		printf "Error occures while finalize test.\n"
+		exit 1
+	fi
+}

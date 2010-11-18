@@ -1,0 +1,1 @@
+struct dentry* file_<$indicator.file.name$>;

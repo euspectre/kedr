@@ -1,0 +1,19 @@
+module.author = Tsyvarev
+module.license = GPL
+
+indicator.name = size_in_10_20
+
+indicator.parameters.name = size
+indicator.parameters.type = size_t
+
+indicator.simulate.name = always
+indicator.simulate.first =
+indicator.simulate.code = return 1;
+
+indicator.simulate.name = size_not_less_10
+indicator.simulate.first = yes
+indicator.simulate.code = if(size < 10) simulate_never(); return 0;
+
+indicator.simulate.name = size_not_greater_20
+indicator.simulate.first = yes
+indicator.simulate.code = if(size > 20) simulate_never(); return 0;

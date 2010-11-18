@@ -1,0 +1,13 @@
+module.author = Tsyvarev
+module.license = GPL
+
+indicator.name = every_second_call
+
+indicator.state.name = times
+indicator.state.type = atomic_t
+
+indicator.simulate.name = every_second_call
+indicator.simulate.code = return (atomic_inc_return(&state(times)) % 2) == 0;
+
+indicator.init.name = times
+indicator.init.code = atomic_set(&state(times), 0); return 0;

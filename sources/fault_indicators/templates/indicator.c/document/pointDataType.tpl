@@ -1,4 +1,1 @@
-<$if concat(indicator.parameters.type)$>struct point_data
-{
-    <$pointDataField : join(\n    )$>
-};<$endif$>
+<$if isPointData$>struct point_data*<$endif$>

@@ -1,6 +1,6 @@
 add_subdirectory(module_a)
 add_subdirectory(module_b)
-#add_subdirectory(module_c)
+add_subdirectory(indicators_simple)
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/test_simple.sh.in"
     "${CMAKE_CURRENT_BINARY_DIR}/test_simple.sh"

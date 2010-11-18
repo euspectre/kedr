@@ -80,7 +80,7 @@ module_b_init(void)
     if(indicator_read == NULL)
     {
         printk(KERN_ERR "Cannot register read indicator.\n");
-        return 1;
+        return -1;
     }
 
     indicator_write = kedr_fsim_indicator_register(write_indicator_name,
@@ -91,7 +91,7 @@ module_b_init(void)
     {
         printk(KERN_ERR "Cannot register write indicator.\n");
         kedr_fsim_indicator_unregister(indicator_read);
-        return 1;
+        return -1;
     }
 
     return 0;

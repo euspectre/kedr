@@ -1,0 +1,1 @@
+<$indicator.state.type$> <$indicator.state.name$>;

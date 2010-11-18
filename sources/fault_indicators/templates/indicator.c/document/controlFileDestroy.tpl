@@ -1,0 +1,1 @@
+indicator_file_<$indicator.file.name$>_destroy(<$indicatorStateName$>);

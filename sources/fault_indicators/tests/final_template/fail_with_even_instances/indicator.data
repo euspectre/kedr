@@ -1,0 +1,23 @@
+module.author = Tsyvarev
+module.license = GPL
+
+indicator.name = fail_with_even_instances
+
+global =>>
+atomic_t instances = ATOMIC_INIT(0);
+<<
+
+indicator.simulate.name = even_instances
+indicator.simulate.code =>>
+	return (atomic_read(&instances) % 2) == 0;
+<<
+
+indicator.init.name = instances
+indicator.init.code =>>
+ 	atomic_inc(&instances); return 0;
+<<
+
+indicator.destroy.name = instances
+indicator.destroy.code =>>
+	atomic_dec(&instances);
+<<

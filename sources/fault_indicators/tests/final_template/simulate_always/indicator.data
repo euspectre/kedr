@@ -1,0 +1,7 @@
+module.author = Tsyvarev
+module.license = GPL
+
+indicator.name = always
+
+indicator.simulate.name = always
+indicator.simulate.code = return 1;
