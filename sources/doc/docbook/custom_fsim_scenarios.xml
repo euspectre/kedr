@@ -42,20 +42,20 @@ Indicator module should contain definitions of the following parameters:
     <varlistentry><term>indicator.name</term>
         <listitem>name of the indicator, provided by the module. This is the very name that should be used when one applies the indicator to some target function (to be exact, to a <link linkend="fault_simulation_indicator">fault simulation point</link>).</listitem>
     </varlistentry>
-    <varlistentry><term>indicator.parameters.type</term>
+    <varlistentry><term>indicator.parameter.type</term>
         <listitem>(multi-valued) types of the values that the indicator function accepts. This is an important part of the indicator and will be described later in detail. This parameter may be assigned no value at all - in this case, the indicator function will accept no parameters. </listitem>
     </varlistentry>
-    <varlistentry><term>indicator.parameters.name</term>
+    <varlistentry><term>indicator.parameter.name</term>
         <listitem>(multi-valued) names of the values that the indicator function accepts.</listitem>
     </varlistentry>
-    <varlistentry><term>expression.vars.name</term>
+    <varlistentry><term>expression.variable.name</term>
         <listitem>(multi-valued) names of variables that can be used in an expression to set a particular scenario for the indicator (see also <xref linkend="fault_sim"/>). The names themselves are by no means bound to the names of variables used in the indicator. The order of values is not important for this parameter. This parameter may even be left undefined as there are other ways to declare expression variables.</listitem>
     </varlistentry>
-    <varlistentry><term>expression.vars.values</term>
+    <varlistentry><term>expression.variable.value</term>
         <listitem>(multi-valued) values of the corresponding expression variables that will be used during the evaluation of the expression (that is, when the indicator function is called). Typically, these values refer to the parameters of the indicator function.</listitem>
     </varlistentry>
-    <varlistentry><term>expression.vars.pname</term>
-        <listitem>(multi-valued) names of the parameters of the indicator function that can be used in an expression to set a particular scenario for the indicator. <code><varname>expression.vars.pname</varname> = <literal>var_a</literal></code> is equivalent to <code><varname>expression.vars.name</varname> = <literal>var_a</literal></code> + <code><varname>expression.vars.value</varname> = <literal>var_a</literal></code>. This parameter may even be left undefined as there are other ways to declare expression variables.</listitem>
+    <varlistentry><term>expression.variable.pname</term>
+        <listitem>(multi-valued) names of the parameters of the indicator function that can be used in an expression to set a particular scenario for the indicator. <code><varname>expression.variable.pname</varname> = <literal>var_a</literal></code> is equivalent to <code><varname>expression.variable.name</varname> = <literal>var_a</literal></code> + <code><varname>expression.variable.value</varname> = <literal>var_a</literal></code>. This parameter may even be left undefined as there are other ways to declare expression variables.</listitem>
     </varlistentry>
 </variablelist>
     </para>
@@ -65,42 +65,42 @@ The main characteristic of a fault simulation indicator is a set of scenarios, w
     <para>
 One type of variable that can be used in the expression is the parameter of the target function. E.g., expression <code>(<varname>size</varname> &gt; 100)</code>, where <varname>size</varname> corresponds to the target function parameter, implements the scenario <phrase role="pcite"><quote>simulate fail when <varname>size</varname> is greater than <literal>100</literal></quote></phrase>. The only way for the indicator to implement such usage of a target function's parameter is to declare this parameter as parameter of indicator function. So, the corresponding replacement function should pass this parameter to the indicator function whenever it should choose whether it needs to simulate a failure. This behaviour of the indicator is achieved by the following definitions (assume <varname>size</varname> parameter of the target function has type <literal>size_t</literal>):
 <programlisting>
-indicator.parameters.type = size_t
-indicator.parameters.name = size
+indicator.parameter.type = size_t
+indicator.parameter.name = size
 </programlisting>
     </para>
     <para>
 This fragment only defines that the indicator function itself accepts parameter <varname>size</varname>. To permit using this parameter in the expression, the following definition should be used as well:
     </para>
 <programlisting>
-expression.vars.pname = size
+expression.variable.pname = size
 </programlisting>
 
     <para>
-Parameters <varname>expression.vars.name</varname> and <varname>expression.vars.value</varname> may be useful for such cases:
+Parameters <varname>expression.variable.name</varname> and <varname>expression.variable.value</varname> may be useful for such cases:
 <programlisting>
 ...
-indicator.parameters.type = const char*
-indicator.parameters.name = str
+indicator.parameter.type = const char*
+indicator.parameter.name = str
 ...
 # Expression may use variables only with integer values, so we cannot use 
 # a string parameter in it.
 # But we can use the length of this string as parameter 'len'
-expression.vars.name = len
-expression.vars.value = strlen(str)
+expression.variable.name = len
+expression.variable.value = strlen(str)
 ...
 </programlisting>
 <programlisting>
 ...
-indicator.parameters.type = size_t
+indicator.parameter.type = size_t
 # Cannot use 'strlen' as name of the parameter, because strlen() is 
 # the kernel function.
-indicator.parameters.name = len
+indicator.parameter.name = len
 ...
 # But here 'strlen' is available - this is not a name of C variable.
-expression.vars.name = strlen
+expression.variable.name = strlen
 # We only need to bind expression variable to its value.
-expression.vars.value = len
+expression.variable.value = len
 ...
 </programlisting>
     </para>
@@ -110,27 +110,27 @@ However if we declare that the indicator function accepts parameter <varname>siz
     <para>
 Although it is acceptable for the indicator to use the variables in expression, which are not derived from the indicator's parameters like 
 <programlisting>
-expression.vars.name = prob50
-expression.vars.value = random() % 2
+expression.variable.name = prob50
+expression.variable.value = random() % 2
 </programlisting>
 it is not recommended, because there is a more efficient way to do this. The thing is that, the variables of this kind are evaluated every time the indicator function is called, no matter if this variable is used in the expression or not. This evaluation may take relatively long time in some cases. There is another type of variables which is applicable in such cases - <firstterm>runtime variables</firstterm>. Declaration of such variables has the following format:
 <programlisting>
-expression.rvars.name = prob50
-expression.rvars.code =&gt;&gt;
+expression.rvariable.name = prob50
+expression.rvariable.code =&gt;&gt;
     return random() % 2;
 &lt;&lt;
 </programlisting>
-<varname>expression.rvars.code</varname> parameter provides the code of the function which will be used whenever value of variable is <emphasis>really</emphasis> needed. The costs of such optimisation are a function call used instead of the inlined code when the value of the variable is needed, and inability to use local variables of the indicator function (and parameters of this function) to prepared the value of the runtime variable.
+<varname>expression.rvariable.code</varname> parameter provides the code of the function which will be used whenever value of variable is <emphasis>really</emphasis> needed. The costs of such optimisation are a function call used instead of the inlined code when the value of the variable is needed, and inability to use local variables of the indicator function (and parameters of this function) to prepared the value of the runtime variable.
     </para>
     <para>
 To simplify writing expressions and to make them more readable, named constants can be declared and then used there. There are two ways to do this:
 <programlisting>
-expression.constants.name = constant_100
-expression.constants.value = 100
+expression.constant.name = constant_100
+expression.constant.value = 100
 </programlisting>
 This makes the constant with name <varname>constant_100</varname> and value 100 available for usage in the expressions.
 <programlisting>
-expression.constants.cname = GFP_ATOMIC
+expression.constant.cname = GFP_ATOMIC
 </programlisting>
 This makes the constant with name <varname>GFP_ATOMIC</varname> which evaluates to GFP_ATOMIC available for usage in the expressions. Expression <code>flags == GFP_ATOMIC</code> is clearer and easier to read than <code>flags == 32</code>, isn't it?
     </para>
@@ -155,19 +155,19 @@ global =&gt;&gt;
 
 indicator.name = kmalloc
 
-indicator.parameters.type = size_t
-indicator.parameters.name = size
+indicator.parameter.type = size_t
+indicator.parameter.name = size
 
-indicator.parameters.type = gfp_t
-indicator.parameters.name = flags
+indicator.parameter.type = gfp_t
+indicator.parameter.name = flags
 
-expression.constants.c_name = GFP_NOWAIT
-expression.constants.c_name = GFP_KERNEL
-expression.constants.c_name = GFP_USER
-expression.constants.c_name = GFP_ATOMIC
+expression.constant.c_name = GFP_NOWAIT
+expression.constant.c_name = GFP_KERNEL
+expression.constant.c_name = GFP_USER
+expression.constant.c_name = GFP_ATOMIC
 
-expression.vars.pname = size
-expression.vars.pname = flags
+expression.variable.pname = size
+expression.variable.pname = flags
 </programlisting>
     </para>
     <para>

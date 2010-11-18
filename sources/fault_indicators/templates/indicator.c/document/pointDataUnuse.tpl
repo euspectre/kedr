@@ -1,2 +1,2 @@
-<$if concat(indicator.parameters.name)$><$pointDataUnuseParam : join(\n)$>
+<$if concat(indicator.parameter.name)$><$pointDataUnuseParam : join(\n)$>
 <$endif$>

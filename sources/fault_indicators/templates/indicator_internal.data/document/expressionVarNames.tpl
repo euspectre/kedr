@@ -1,2 +1,2 @@
-<$if concat(expression.vars.name)$>    "<$expression.vars.name : join(",\n    ")$>"<$if concat(expression.vars.pname)$>,
-<$endif$><$endif$><$if concat(expression.vars.pname)$>    "<$expression.vars.pname : join(",\n    ")$>"<$endif$>
+<$if concat(expression.variable.name)$>    "<$expression.variable.name : join(",\n    ")$>"<$if concat(expression.variable.pname)$>,
+<$endif$><$endif$><$if concat(expression.variable.pname)$>    "<$expression.variable.pname : join(",\n    ")$>"<$endif$>

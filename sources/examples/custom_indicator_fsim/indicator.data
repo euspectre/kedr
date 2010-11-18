@@ -10,18 +10,18 @@ global =>>
 
 indicator.name = kstrdup
 
-indicator.parameters.type = size_t
-indicator.parameters.name = len
+indicator.parameter.type = size_t
+indicator.parameter.name = len
 
-indicator.parameters.type = gfp_t
-indicator.parameters.name = flags
+indicator.parameter.type = gfp_t
+indicator.parameter.name = flags
 
-expression.constants.c_name = GFP_NOWAIT
-expression.constants.c_name = GFP_KERNEL
-expression.constants.c_name = GFP_USER
-expression.constants.c_name = GFP_ATOMIC
+expression.constant.c_name = GFP_NOWAIT
+expression.constant.c_name = GFP_KERNEL
+expression.constant.c_name = GFP_USER
+expression.constant.c_name = GFP_ATOMIC
 
-expression.vars.name = strlen
-expression.vars.value = len
+expression.variable.name = strlen
+expression.variable.value = len
 
-expression.vars.pname = flags
+expression.variable.pname = flags

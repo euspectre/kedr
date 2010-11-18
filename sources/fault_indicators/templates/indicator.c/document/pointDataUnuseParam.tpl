@@ -1,1 +1,1 @@
-#undef <$indicator.parameters.name$>
+#undef <$indicator.parameter.name$>

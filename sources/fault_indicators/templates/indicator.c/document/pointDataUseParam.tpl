@@ -1,1 +1,1 @@
-#define <$indicator.parameters.name$> (point_data-><$indicator.parameters.name$>)
+#define <$indicator.parameter.name$> (point_data-><$indicator.parameter.name$>)

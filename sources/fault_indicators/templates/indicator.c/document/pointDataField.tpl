@@ -1,1 +1,1 @@
-<$indicator.parameters.type$> <$indicator.parameters.name$>;
+<$indicator.parameter.type$> <$indicator.parameter.name$>;

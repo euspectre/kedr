@@ -1,1 +1,1 @@
-{"<$expression.rvars.name$>", runtime_var_<$expression.rvars.name$>_compute}
+{"<$expression.rvariable.name$>", runtime_var_<$expression.rvariable.name$>_compute}

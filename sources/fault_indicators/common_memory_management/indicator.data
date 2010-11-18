@@ -10,16 +10,16 @@ global =>>
 
 indicator.name = kmalloc
 
-indicator.parameters.type = size_t
-indicator.parameters.name = size
+indicator.parameter.type = size_t
+indicator.parameter.name = size
 
-indicator.parameters.type = gfp_t
-indicator.parameters.name = flags
+indicator.parameter.type = gfp_t
+indicator.parameter.name = flags
 
-expression.constants.c_name = GFP_NOWAIT
-expression.constants.c_name = GFP_KERNEL
-expression.constants.c_name = GFP_USER
-expression.constants.c_name = GFP_ATOMIC
+expression.constant.c_name = GFP_NOWAIT
+expression.constant.c_name = GFP_KERNEL
+expression.constant.c_name = GFP_USER
+expression.constant.c_name = GFP_ATOMIC
 
-expression.vars.pname = size
-expression.vars.pname = flags
+expression.variable.pname = size
+expression.variable.pname = flags

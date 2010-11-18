@@ -1,1 +1,1 @@
-<$if concat(expression.rvars.name)$>    <$expressionRvarDeclaration : join(,\n    )$><$endif$>
+<$if concat(expression.rvariable.name)$>    <$expressionRvarDeclaration : join(,\n    )$><$endif$>

@@ -1,1 +1,1 @@
-vars[++current_var_index] = <$expression.vars.pname$>;
+vars[++current_var_index] = <$expression.variable.pname$>;

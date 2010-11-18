@@ -1,2 +1,2 @@
-indicator.parameters.type = <$indicator.parameters.type$>
-indicator.parameters.name = <$indicator.parameters.name$>
+indicator.parameter.type = <$indicator.parameter.type$>
+indicator.parameter.name = <$indicator.parameter.name$>

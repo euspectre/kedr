@@ -1,1 +1,1 @@
-{"<$expression.constants.c_name$>", <$expression.constants.c_name$>}
+{"<$expression.constant.c_name$>", <$expression.constant.c_name$>}
