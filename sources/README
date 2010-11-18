@@ -1,20 +1,17 @@
 ﻿KEDR Framework
 --------------
 KEDR framework provides the tools for runtime analysis (especially, 
-verification) of kernel-mode drivers on Linux (KEDR is an acronym 
-for KErnel-mode Drivers in Runtime). The framework is intended to be used 
-by the driver developers and may be useful for the driver certification 
-systems as well.
+verification) of Linux kernel modules, including kernel-mode drivers. 
 
-The tools provided by KEDR operate on a driver chosen by the user (target 
-driver). They monitor kernel function calls made by the driver, perform 
+The tools provided by KEDR operate on a module chosen by the user (target 
+module). They monitor kernel function calls made by the module, perform 
 fault simulation, etc. This may complement many existing tools for error 
-detection, fault simulation, memory checking, etc., that operate on the 
-Linux kernel as a whole.
+detection, fault simulation, memory checking, etc., that usually operate 
+on the Linux kernel as a whole.
 
 The typical usage of KEDR is essentially as follows. The user works with 
-the target driver as usual or probably runs some specific tests on it. At 
-the same time, KEDR tools are monitoring the operation of the driver, 
+the target module as usual or probably runs some specific tests on it. At 
+the same time, KEDR tools are monitoring the operation of the module, 
 checking if it works correctly, doing fault simulation if requested, 
 dumping the data about the actions made by the driver to some kind of a 
 trace for future analysis, etc. 
@@ -31,6 +28,12 @@ Currently, KEDR works on x86 and x86-64 architectures.
 KEDR is free software and is distributed under the terms of GNU General 
 Public License Version 2.
 
+See the documentation (doc/html/index.html) for the detailed information
+about KEDR framework.
+
 The latest stable version of KEDR as well as the development versions can 
 be found at KEDR project site at BerliOS Developer: 
 http://developer.berlios.de/projects/kedr/
+
+KEDR is developed at the Institute for System Programming of the Russian 
+Academy of Sciences (ISPRAS), http://www.ispras.ru/en/

@@ -1,1 +1,10 @@
-TODO: provide the change log
+---------------------------------------------------------------------------
+KEDR 0.1
+---------------------------------------------------------------------------
+This is the first public stable version of KEDR framework. 
+Main features of this version:
+    * support for call monitoring for the kernel modules;
+    * support for fault simulation according to the scenarios chosen by 
+the user;
+    * the means to customize the analysis tools provided with KEDR and 
+to build new tools on top of it.

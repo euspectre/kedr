@@ -1,2 +1,12 @@
-TODO: list the news (the most recent first)
+2010-11-23
+KEDR 0.1 released
 
+This is the first public stable version of KEDR framework.
+
+This version supports call monitoring and fault simulation for the kernel 
+modules chosen by the user. The framework also provides the means to build 
+custom analysis systems on top of it.
+
+To learn more about KEDR, see the documentation:
+http://kedr.berlios.de/kedr-doc/index.html
+-----------------------------------------------------------
