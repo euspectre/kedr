@@ -123,7 +123,7 @@ ssize_t control_file_read_common (struct file *filp,
     if(count + *f_pos > size)
         count = size - *f_pos;
 
-    if(__copy_to_user(buf, str + *f_pos, count) != 0)
+    if(copy_to_user(buf, str + *f_pos, count) != 0)
         return -EFAULT;
 
     *f_pos += count;
