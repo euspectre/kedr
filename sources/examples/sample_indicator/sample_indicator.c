@@ -2,6 +2,18 @@
  * Example of using fault simulation API to create fault simulation indicator module.
  */
 
+/* ========================================================================
+ * Copyright (C) 2010, Institute for System Programming 
+ *                     of the Russian Academy of Sciences (ISPRAS)
+ * Authors: 
+ *      Eugene A. Shatokhin <spectre@ispras.ru>
+ *      Andrey V. Tsyvarev  <tsyvarev@ispras.ru>
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 as published
+ * by the Free Software Foundation.
+ ======================================================================== */
+
 #include <linux/module.h>
 
 #include <kedr/fault_simulation/fault_simulation.h>

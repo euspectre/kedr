@@ -1,4 +1,4 @@
-#Create rule for obtain one file by copiing another
+#Create rule for obtain one file by copying another one
 function(rule_copy_file target_file source_file)
     add_custom_command(OUTPUT ${target_file}
                     COMMAND cp -p ${source_file} ${target_file}

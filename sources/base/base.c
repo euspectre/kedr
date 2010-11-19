@@ -1,32 +1,23 @@
 /*
  * The "base" component of KEDR system. 
  * "kedr-base" keeps a registry of payload modules and provides interface 
- * for them to register / unregister themselves. some .
+ * for them to register / unregister themselves. 
  * It also provides convenience functions for payload modules and the interface 
  * that "kedr-controller" uses during the instrumentation of a target module.
- *
- * Copyright (C) 2010 Institute for System Programming 
- *                    of the Russian Academy of Sciences (ISPRAS)
- * Authors: 
- *		Eugene A. Shatokhin <spectre@ispras.ru>
- *		Andrey V. Tsyvarev  <tsyvarev@ispras.ru>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or (at
- * your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, GOOD TITLE or
- * NON INFRINGEMENT.  See the GNU General Public License for more
- * details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+/* ========================================================================
+ * Copyright (C) 2010, Institute for System Programming 
+ *                     of the Russian Academy of Sciences (ISPRAS)
+ * Authors: 
+ *      Eugene A. Shatokhin <spectre@ispras.ru>
+ *      Andrey V. Tsyvarev  <tsyvarev@ispras.ru>
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 as published
+ * by the Free Software Foundation.
+ ======================================================================== */
+ 
 #include <linux/version.h>
 #include <linux/module.h>
 #include <linux/init.h>
