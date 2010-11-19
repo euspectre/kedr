@@ -42,7 +42,7 @@ rule_copy_source("sample_indicator.c")
 
 kedr_test_add_target("sample_indicator")
 
-#add_subdirectory(tests)
+add_subdirectory(tests)
 
 install(FILES   "${CMAKE_CURRENT_SOURCE_DIR}/sample_indicator.c"
         DESTINATION "${install_dir}$"

@@ -1,4 +1,4 @@
-module_name=kedr_fsim_payload_kmalloc
+module_name=@module_name@
 
 kedr_base_symbols=@kedr_base_symbols@
 fault_simulation_symbols=@fault_simulation_symbols@
@@ -8,7 +8,7 @@ PWD=`pwd`
 
 all: ${module_name}.ko
 
-${module_name}.ko: fsim_payload_kmalloc.c ${kedr_base_symbols} ${fault_simulation_symbols}
+${module_name}.ko: sample_fsim_payload.c ${kedr_base_symbols} ${fault_simulation_symbols}
 	cat "${kedr_base_symbols}" "${fault_simulation_symbols}" > ./Module.symvers
 	make -C ${KBUILD_DIR} M=${PWD} modules
 

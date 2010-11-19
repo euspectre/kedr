@@ -1,4 +1,5 @@
-set(module_name "kedr_fsim_payload_kmalloc")
+set(module_name "kedr_sample_fsim_payload")
+set(install_dir "${KEDR_EXAMPLE_PATH}/sample_fsim_payload")
 
 set(KEDR_INCLUDE_DIR "${KEDR_INSTALL_INCLUDE_DIR}")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Kbuild.in"
@@ -14,13 +15,13 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/makefile.in"
 )
 
 #For testing
-add_custom_target("fsim_payload_kmalloc"
+add_custom_target("sample_fsim_payload"
         DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${module_name}.ko"
                 )
 
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${module_name}.ko"
         COMMAND make -f makefile_test
-        DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/fsim_payload_kmalloc.c"
+        DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/sample_fsim_payload.c"
                 "${CMAKE_CURRENT_BINARY_DIR}/makefile_test"
                 "${CMAKE_CURRENT_BINARY_DIR}/Kbuild"
                 )
@@ -38,22 +39,22 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/makefile.in"
     @ONLY
 )
 
-rule_copy_source("fsim_payload_kmalloc.c")
+rule_copy_source("sample_fsim_payload.c")
 
-kedr_test_add_target("fsim_payload_kmalloc")
+kedr_test_add_target("sample_fsim_payload")
 
 #add_subdirectory(tests)
 
-install(FILES   "${CMAKE_CURRENT_SOURCE_DIR}/fsim_payload_kmalloc.c"
-        DESTINATION "${KEDR_EXAMPLE_PATH}/fsim_payload_kmalloc"
+install(FILES   "${CMAKE_CURRENT_SOURCE_DIR}/sample_fsim_payload.c"
+        DESTINATION ${install_dir}
 )
 
 install(FILES   "${CMAKE_CURRENT_BINARY_DIR}/makefile_installed"
-        DESTINATION "${KEDR_EXAMPLE_PATH}/fsim_payload_kmalloc"
+        DESTINATION ${install_dir}
         RENAME makefile
 )
 
 install(FILES   "${CMAKE_CURRENT_BINARY_DIR}/Kbuild_installed"
-        DESTINATION "${KEDR_EXAMPLE_PATH}/fsim_payload_kmalloc"
+        DESTINATION ${install_dir}
         RENAME Kbuild
 )

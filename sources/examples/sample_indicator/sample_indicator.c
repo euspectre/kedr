@@ -227,7 +227,7 @@ int sample_indicator_instance_init(void** indicator_state,
     struct sample_indicator_state* sample_indicator_state;
     unsigned long period;
     // Read 'params' and convert its to the value of the period
-    if((params != NULL) && (*params != '\0'))
+    if((params == NULL) || (*params == '\0'))
     {
         //Without parameters, set period to the default value
         period = DEFAULT_PERIOD;
@@ -325,18 +325,25 @@ void sample_indicator_instance_destroy(void* indicator_state)
 ssize_t file_period_read(struct file *filp,
     char __user *buf, size_t count, loff_t *f_pos)
 {
+    unsigned long period;
     char str[20];
     size_t size;
-    struct sample_indicator_state* sample_indicator_state;
 
     //Read field with private data in inode under mutex taken.
     mutex_lock(&indicator_mutex);
-    sample_indicator_state = filp->f_dentry->d_inode->i_private;
+    {
+        struct sample_indicator_state* sample_indicator_state =
+            filp->f_dentry->d_inode->i_private;
+        if(sample_indicator_state == NULL)
+        {
+            mutex_unlock(&indicator_mutex);
+            return -EINVAL;//file already removed
+        }
+        period = sample_indicator_state->period;
+    }
     mutex_unlock(&indicator_mutex);
     
-    if(sample_indicator_state == NULL) return -EINVAL;//file already removed
-    
-    size = scnprintf(str, sizeof(str), "%lu\n", sample_indicator_state->period) + 1;
+    size = scnprintf(str, sizeof(str), "%lu\n", period) + 1;
 
     //Standard writting string to the buf in read file operation
     if((*f_pos < 0) || (*f_pos > size)) return -EINVAL;

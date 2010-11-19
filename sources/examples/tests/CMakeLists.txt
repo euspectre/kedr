@@ -3,4 +3,4 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/test_fault_simulation.sh.in"
 	@ONLY
 )
 
-kedr_test_add_script("fault_simulation.example.01" "test_fault_simulation.sh")
+kedr_test_add_script("sample_fsim_payload.01" "test_fault_simulation.sh")

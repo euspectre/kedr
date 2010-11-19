@@ -1,11 +1,14 @@
 #!/bin/sh
 
 debugfs_mount_point="@CMAKE_CURRENT_BINARY_DIR@/debugfs"
-point_kmalloc_name=sample_point_kmalloc
-indicator_kmalloc_name=sample_indicator_kmalloc
+point_name=__kmalloc
+indicator_name=periodic
 
-current_indicator_file="${debugfs_mount_point}/kedr_fault_simulation/points/${point_kmalloc_name}/current_indicator"
-indicator_expression_file="${debugfs_mount_point}/kedr_fault_simulation/points/${point_kmalloc_name}/expression"
+point_dir=${debugfs_mount_point}/kedr_fault_simulation/points/${point_name}
+
+fsim_payload_module="@CMAKE_BINARY_DIR@/examples/sample_fsim_payload/kedr_sample_fsim_payload.ko"
+indicator_module="@CMAKE_BINARY_DIR@/examples/sample_indicator/kedr_sample_indicator.ko"
+kedr_fault_simulation_module="@CMAKE_BINARY_DIR@/fault_simulation/kedr_fault_simulation.ko"
 
 sample_target_module_name=kedr_sample_target
 sample_target_script="sh @CMAKE_BINARY_DIR@/examples/sample_target/kedr_sample_target"
@@ -18,9 +21,9 @@ kedr_control_script="sh @CMAKE_BINARY_DIR@/tools/control/kedr_test"
 do_commands_script="sh @CMAKE_BINARY_DIR@/tests/scripts/do_commands.sh"
 
 cat > "$kedr_conf_file" << eof
-module @CMAKE_BINARY_DIR@/fault_simulation/kedr_fault_simulation.ko
-module @CMAKE_BINARY_DIR@/examples/fsim_payload_kmalloc/kedr_fsim_payload_kmalloc.ko
-module @CMAKE_BINARY_DIR@/examples/indicator_kmalloc/kedr_sample_indicator_kmalloc.ko
+module ${kedr_fault_simulation_module}
+payload ${fsim_payload_module}
+module ${indicator_module}
 eof
 
 cat > "$commands_file" << eof
@@ -29,39 +32,61 @@ on_unload $kedr_control_script stop || ! printf "Cannot stop KEDR.\n"
 on_load mkdir -p "$debugfs_mount_point" || ! printf "Cannot create directory for mount debugfs\n"
 on_load mount -t debugfs debugfs "$debugfs_mount_point" || ! printf "Cannot mount debugfs.\n"
 on_unload umount "$debugfs_mount_point" || ! printf "Cannot unmount debugfs.\n"
-on_load $sample_target_script load cfake_buffer_size=2000 || ! printf "Cannot load sample target.\n"
-on_unload $sample_target_script unload || ! printf "Cannot unload sample target.\n"
 eof
 
 if ! $do_commands_script "$commands_file" load; then
 	printf "Cannot initialize test.\n"
 	exit 1
 fi
+# Set indicator with "always simulate fail" scenario
+printf "${indicator_name} 1" > "${point_dir}/current_indicator"
 
-printf "%s %s" "${indicator_kmalloc_name}" "size > 1000" > "$current_indicator_file"
 if test $? -ne 0; then
 	printf "Cannot set indicator for the point.\n"
 	$do_commands_script "$commands_file" unload
 	exit 1
 fi
 
-echo 123 > "$sample_target_device"
+#Try to load target module
+
+${sample_target_script} load
+
 if test $? -eq 0; then
-	printf "Expected, that writting to the device, created by sample target, will failed. But it succeed.\n"
+    printf "Expected, that target module fails to load with \"always\" fault simulation scenario.\n"
+    printf "But it was successfully loaded.\n"
+    ${sample_target_script} unload
+    $do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+# Set indicator with "simulate fail every second call" scenario
+printf "${indicator_name} 2" > "${point_dir}/current_indicator"
+
+if test $? -ne 0; then
+	printf "Cannot set indicator for the point again.\n"
 	$do_commands_script "$commands_file" unload
 	exit 1
 fi
 
-printf "%s" "size > 10000" > "$indicator_expression_file"
+#Now target module should successfully loaded
+
+${sample_target_script} load
+
 if test $? -ne 0; then
-	printf "Cannot change indicator parameters via writting to the file.\n"
-	$do_commands_script "$commands_file" unload
+    printf "Target module should successfully be loaded with \"fail every second call\" fault simulation scenario.\n"
+    $do_commands_script "$commands_file" unload
 	exit 1
 fi
+
+#But writting to the device should fail
 
 echo 123 > "$sample_target_device"
-if test $? -ne 0 ; then
-	printf "Expected, that writting to the device, created by sample target, will succeed(indicator parameters changed). But it failed.\n"
+result=$?
+
+${sample_target_script} unload
+
+if test "$result" -eq 0; then
+	printf "Expected, that writting to the device, created by sample target, will failed. But it succeed.\n"
 	$do_commands_script "$commands_file" unload
 	exit 1
 fi

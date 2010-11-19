@@ -5,7 +5,6 @@
 #
 # Declare common variables and functions for the tests.
 
-kedr_base_module="@CMAKE_BINARY_DIR@/base/kedr_base.ko"
 fault_simulation_module="@CMAKE_BINARY_DIR@/fault_simulation/kedr_fault_simulation.ko"
 
 simulation_module="@CMAKE_CURRENT_BINARY_DIR@/module/kedr_indicator_internal_test_module.ko"
