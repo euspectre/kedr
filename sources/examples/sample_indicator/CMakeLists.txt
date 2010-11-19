@@ -45,15 +45,15 @@ kedr_test_add_target("sample_indicator")
 add_subdirectory(tests)
 
 install(FILES   "${CMAKE_CURRENT_SOURCE_DIR}/sample_indicator.c"
-        DESTINATION "${install_dir}$"
+        DESTINATION "${install_dir}"
 )
 
 install(FILES   "${CMAKE_CURRENT_BINARY_DIR}/makefile_installed"
-        DESTINATION "${install_dir}$"
+        DESTINATION "${install_dir}"
         RENAME makefile
 )
 
 install(FILES   "${CMAKE_CURRENT_BINARY_DIR}/Kbuild_installed"
-        DESTINATION "${install_dir}$"
+        DESTINATION "${install_dir}"
         RENAME Kbuild
 )
