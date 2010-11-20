@@ -79,11 +79,11 @@ checkFinalCounters()
     record=$(cat "${COUNTERS_DIR}/alloc_max_size")
     checkValue "${record}" "${EXP_ALLOC_MAX_SIZE}"
     
-    record=$(cat "${COUNTERS_DIR}/mutex_locks")
-    checkValue "${record}" "${EXP_MUTEX_LOCKS}"
+#    record=$(cat "${COUNTERS_DIR}/mutex_locks")
+#    checkValue "${record}" "${EXP_MUTEX_LOCKS}"
     
-    record=$(cat "${COUNTERS_DIR}/mutex_balance")
-    checkValue "${record}" "${EXP_MUTEX_BALANCE}"
+#    record=$(cat "${COUNTERS_DIR}/mutex_balance")
+#    checkValue "${record}" "${EXP_MUTEX_BALANCE}"
 }
 
 ########################################################################
@@ -187,15 +187,19 @@ CONTROL_SCRIPT="@KEDR_TOOLS_DIR@/control/kedr_test"
 CONF_FILE="${WORK_DIR}/counters.conf"
 
 COUNTERS_DIR="${WORK_DIR}/debugfs/kedr_counters_example"
-COUNTERS="alloc_total alloc_failed alloc_max_size mutex_locks mutex_balance"
+
+# [NB] On some systems (e.g. debug kernels with CONFIG_DEBUG_LOCK_ALLOC=y)
+# mutex-related statistics will not be collected.
+# COUNTERS="alloc_total alloc_failed alloc_max_size mutex_locks mutex_balance"
+COUNTERS="alloc_total alloc_failed alloc_max_size"
 
 # Expected values 
 # We expect that the system has enough memory for the allocations not to fail.
 EXP_ALLOC_TOTAL=3
 EXP_ALLOC_FAILED=0
 EXP_ALLOC_MAX_SIZE=4000
-EXP_MUTEX_LOCKS=16
-EXP_MUTEX_BALANCE=0
+#EXP_MUTEX_LOCKS=16
+#EXP_MUTEX_BALANCE=0
 
 checkPrereqs
 doTest

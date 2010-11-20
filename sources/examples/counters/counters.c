@@ -258,6 +258,7 @@ repl_kmem_cache_alloc(struct kmem_cache* mc, gfp_t flags)
     return returnValue;
 }
 
+#ifndef CONFIG_DEBUG_LOCK_ALLOC
 static void
 repl_mutex_lock(struct mutex* lock)
 {
@@ -316,6 +317,7 @@ repl_mutex_lock_killable(struct mutex* lock)
 
     return returnValue;
 }
+#endif /* CONFIG_DEBUG_LOCK_ALLOC */
 
 static int
 repl_mutex_trylock(struct mutex* lock)
@@ -353,14 +355,24 @@ repl_mutex_unlock(struct mutex* lock)
 }
 /* ================================================================ */
 
+/* [NB] If CONFIG_DEBUG_LOCK_ALLOC is defined, mutex_lock & Ko are not 
+ * exported by the kernel. For simplicity, we just disable collection of 
+ * mutex-related statistics in this case. The corresponding files in 
+ * debugfs will be created though but they will contain 0.
+ */
+
 /* Names and addresses of the functions of interest */
 static void* orig_addrs[] = {
     (void*)&__kmalloc,
     (void*)&krealloc,
     (void*)&kmem_cache_alloc,
+
+#ifndef CONFIG_DEBUG_LOCK_ALLOC
     (void*)&mutex_lock,
     (void*)&mutex_lock_interruptible,
     (void*)&mutex_lock_killable,
+#endif /* CONFIG_DEBUG_LOCK_ALLOC */
+
     (void*)&mutex_trylock,
     (void*)&mutex_unlock
 };
@@ -372,9 +384,13 @@ static void* repl_addrs[] = {
     (void*)&repl___kmalloc,
     (void*)&repl_krealloc,
     (void*)&repl_kmem_cache_alloc,
+
+#ifndef CONFIG_DEBUG_LOCK_ALLOC
     (void*)&repl_mutex_lock,
     (void*)&repl_mutex_lock_interruptible,
     (void*)&repl_mutex_lock_killable,
+#endif /* CONFIG_DEBUG_LOCK_ALLOC */
+
     (void*)&repl_mutex_trylock,
     (void*)&repl_mutex_unlock
 };

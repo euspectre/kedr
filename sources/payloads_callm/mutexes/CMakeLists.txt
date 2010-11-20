@@ -5,12 +5,14 @@ set(kmodule_name "kedr_cm_mutexes")
 configure_file("beginning.data.in"
 	"${CMAKE_CURRENT_BINARY_DIR}/beginning.data")
 
+# [NB] If CONFIG_DEBUG_LOCK_ALLOC is defined in the kernel configuration,
+# *_nested functions may be used instead of mutex_lock, etc.
 kmodule_configure_kernel_functions(functions REQUIRED
 	"__mutex_init"
-	"mutex_lock"
+	OPTIONAL "mutex_lock"
 	"mutex_lock_interruptible"
 	"mutex_trylock"
-	"mutex_unlock"
+	REQUIRED "mutex_unlock"
 )
 
 kbuild_include_directories ("${CMAKE_CURRENT_BINARY_DIR}")
