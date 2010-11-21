@@ -202,7 +202,7 @@ Check various requirements for the operation of the module
 it properly copies data to and from user space, whether it 
 uses virtual memory facilities in a right way, etc. 
 </p></li><li class="listitem"><p>
-...And much more (see <a class="xref" href="extend.html#custom_analysis" title="5.5. Implementing Custom Types of Analysis">Section 5.5, “Implementing Custom Types of Analysis”</a>).
+...And much more (see <a class="xref" href="extend.html#custom_analysis" title="5.6. Implementing Custom Types of Analysis">Section 5.6, “Implementing Custom Types of Analysis”</a>).
 </p></li></ul></div><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
 Currently, KEDR already provides the sets of payload modules to perform 
 call monitoring and fault simulation. Payload modules for other types of 
@@ -284,7 +284,7 @@ target_session_&lt;begins|ends&gt;: target_module: "&lt;target-module-name&gt;"
 </pre><p>
 Only calls to the subset of all kernel functions are detected. This subset however can be easy extended by implementing your own modules (see <a class="xref" href="extend.html#custom_callm_payloads" title="5.2. Writing Custom Payloads for Call Monitoring">Section 5.2, “Writing Custom Payloads for Call Monitoring”</a>). Here is a full list of the payload modules that currently may be used for call monitoring, and the lists of the functions detected by each module. A function name in square brackets means that this function is detected only if it is exported by the kernel (it may or may not be exported in each particular system). Only one of the functions separated by a slash is detected depending on which one of them is actually exported by the kernel.
     </p><p>
-</p><div class="itemizedlist"><ul class="itemizedlist" type="opencircle"><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_cmm.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>__kmalloc</td></tr><tr><td>krealloc</td></tr><tr><td>kfree</td></tr><tr><td>kmem_cache_alloc</td></tr><tr><td>[kmem_cache_alloc_notrace]</td></tr><tr><td>kmem_cache_free</td></tr></table></li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_user_space_access.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>copy_to_user/_copy_to_user</td></tr><tr><td>copy_from_user/_copy_from_user</td></tr></table></li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_mutexes.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>__mutex_init</td></tr><tr><td>mutex_lock</td></tr><tr><td>mutex_lock_interruptible</td></tr><tr><td>mutex_trylock</td></tr><tr><td>mutex_unlock</td></tr></table></li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_spinlocks.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>_spin_lock_irqsave/_raw_spin_lock_irqsave</td></tr><tr><td>_spin_unlock_irqrestore/_raw_spin_unlock_irqrestore</td></tr></table>
+</p><div class="itemizedlist"><ul class="itemizedlist" type="opencircle"><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_cmm.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>__kmalloc</td></tr><tr><td>krealloc</td></tr><tr><td>kfree</td></tr><tr><td>kmem_cache_alloc</td></tr><tr><td>[kmem_cache_alloc_notrace]</td></tr><tr><td>kmem_cache_free</td></tr><tr><td>__get_free_pages</td></tr><tr><td>free_pages</td></tr></table></li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_user_space_access.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>copy_to_user/_copy_to_user</td></tr><tr><td>copy_from_user/_copy_from_user</td></tr></table></li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_mutexes.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>__mutex_init</td></tr><tr><td>mutex_lock</td></tr><tr><td>mutex_lock_interruptible</td></tr><tr><td>mutex_trylock</td></tr><tr><td>mutex_unlock</td></tr></table></li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_spinlocks.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>_spin_lock_irqsave/_raw_spin_lock_irqsave</td></tr><tr><td>_spin_unlock_irqrestore/_raw_spin_unlock_irqrestore</td></tr></table>
     additionally, if KEDR was configured with <span class="quote">“<span class="quote">enable_full_spinlock</span>”</span> option set,
     <table border="0" summary="Simple list" class="simplelist"><tr><td>_spin_lock/_raw_spin_lock</td></tr><tr><td>_spin_lock_irq/_raw_spin_lock_irq</td></tr><tr><td>_spin_unlock/_raw_spin_unlock</td></tr><tr><td>_spin_unlock_irq/_raw_spin_unlock_irq</td></tr></table></li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_waitqueue.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>__wake_up</td></tr><tr><td>init_waitqueue_head/__init_waitqueue_head</td></tr><tr><td>prepare_to_wait</td></tr><tr><td>finish_wait</td></tr><tr><td>remove_wait_queue</td></tr><tr><td>add_wait_queue</td></tr><tr><td>add_wait_queue_exclusive</td></tr></table></li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_capable.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>capable</td></tr></table></li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_vmm.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>vmalloc</td></tr><tr><td>__vmalloc</td></tr><tr><td>vmalloc_user</td></tr><tr><td>vmalloc_node</td></tr><tr><td>vmalloc_32</td></tr><tr><td>vfree</td></tr></table></li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_schedule.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>schedule</td></tr><tr><td>[preempt_schedule]</td></tr><tr><td>_cond_resched</td></tr><tr><td>schedule_timeout</td></tr><tr><td>schedule_timeout_uninterruptible</td></tr><tr><td>schedule_timeout_interruptible</td></tr><tr><td>io_schedule</td></tr><tr><td>cond_resched_lock/__cond_resched_lock</td></tr></table></li></ul></div><p>
     </p></div><div class="section" title="4.5. Fault Simulation"><div class="titlepage"><div><div><h3 class="title"><a name="fault_sim"></a>4.5. Fault Simulation</h3></div></div></div><p>
@@ -331,65 +331,61 @@ KEDR provides special kernel modules that implement indicators for different use
     </p><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
 Each fault simulation point uses its own instance of an indicator. That is, changing parameters of the indicator (and hence of the fault simulation scenario) for a target function does not affect other target functions. 
 </p></div><p>
-The indicator with name <span class="quote">“<span class="quote">common</span>”</span> is the common indicator that can be used for any target function. By default, the indicator function always returns 0 (<span class="quote">“<span class="quote">never make the calls fail</span>”</span>). Once the indicator has been set, it creates two control files in <code class="filename">/sys/kernel/debug/kedr_fault_simulation/points/&lt;function-name&gt;</code> directory: <code class="filename">expression</code> and <code class="filename">pid</code>. 
+The indicator with name <span class="quote">“<span class="quote">common</span>”</span> is the common indicator that can be used for any target function. By default, the indicator function always returns 0 (<span class="quote">“<span class="quote">never make the calls fail</span>”</span>). Once the indicator has been set, it creates three control files in <code class="filename">/sys/kernel/debug/kedr_fault_simulation/points/&lt;function-name&gt;</code> directory: <code class="filename">expression</code>, <code class="filename">times</code> and <code class="filename">pid</code>. 
     </p><p>
 <code class="filename">expression</code> file corresponds to the mathematical expression. The indicator function will return the resulting value of this expression when called from a fault simulation point. Reading from this file returns the expression currently used by the indicator function. If you would like to instruct the indicator to use another expression, write the expression to this file. 
     </p><div class="itemizedlist"><p>The expression may contain the following.</p><ul class="itemizedlist" type="opencircle"><li class="listitem" style="list-style-type: circle">Signed decimal integer numbers
 </li><li class="listitem" style="list-style-type: circle">Any mathematical operation from the list:
     <table border="0" summary="Simple list" class="simplelist"><tr><td><span class="quote">“<span class="quote">!</span>”</span> - logical not</td></tr><tr><td><span class="quote">“<span class="quote">~</span>”</span> - binary not</td></tr><tr><td><span class="quote">“<span class="quote">+</span>”</span> - unary plus</td></tr><tr><td><span class="quote">“<span class="quote">-</span>”</span> - unary minus</td></tr><tr><td><span class="quote">“<span class="quote">*</span>”</span> - multiplication</td></tr><tr><td><span class="quote">“<span class="quote">/</span>”</span> - integer division</td></tr><tr><td><span class="quote">“<span class="quote">%</span>”</span> - remainder of division</td></tr><tr><td><span class="quote">“<span class="quote">+</span>”</span> - binary plus</td></tr><tr><td><span class="quote">“<span class="quote">-</span>”</span> - binary minus</td></tr><tr><td><span class="quote">“<span class="quote">&gt;&gt;</span>”</span> - arithmetic right shift</td></tr><tr><td><span class="quote">“<span class="quote">&lt;&lt;</span>”</span> - arithmetic left shift</td></tr><tr><td><span class="quote">“<span class="quote">&lt;</span>”</span> - less</td></tr><tr><td><span class="quote">“<span class="quote">&gt;</span>”</span> - greater</td></tr><tr><td><span class="quote">“<span class="quote">&lt;=</span>”</span> - less or equal</td></tr><tr><td><span class="quote">“<span class="quote">&gt;=</span>”</span> - greater or equal</td></tr><tr><td><span class="quote">“<span class="quote">a=b</span>”</span> - equal</td></tr><tr><td><span class="quote">“<span class="quote">a!=b</span>”</span> - not equal</td></tr><tr><td><span class="quote">“<span class="quote">&amp;</span>”</span> - binary and</td></tr><tr><td><span class="quote">“<span class="quote">^</span>”</span> - binary xor</td></tr><tr><td><span class="quote">“<span class="quote">|</span>”</span> - binary or</td></tr><tr><td><span class="quote">“<span class="quote">&amp;&amp;</span>”</span> - logical and</td></tr><tr><td><span class="quote">“<span class="quote">a||b</span>”</span> - logical or</td></tr><tr><td><span class="quote">“<span class="quote">c ? a : b</span>”</span> - conditional operator</td></tr></table></li><li class="listitem" style="list-style-type: circle">Variables:
-    <div class="variablelist"><dl><dt><span class="term">in_init</span></dt><dd>evaluates to nonzero if the target module is currently executing its init function, evaluates to 0 otherwise</dd><dt><span class="term">rnd100</span></dt><dd>evaluates to a random integer number from [0...99]</dd><dt><span class="term">rnd10000</span></dt><dd>evaluates to a random integer number from [0...9999]</dd><dt><span class="term">times</span></dt><dd>evaluates to the ordinal number of the call to the corresponding target function since indicator has been set for it or its expression has changed (whatever comes last)</dd></dl></div></li></ul></div><p>
+    <div class="variablelist"><dl><dt><span class="term">in_init</span></dt><dd>evaluates to nonzero if the target module is currently executing its init function, evaluates to 0 otherwise</dd><dt><span class="term">rnd100</span></dt><dd>evaluates to a random integer number from [0...99]</dd><dt><span class="term">rnd10000</span></dt><dd>evaluates to a random integer number from [0...9999]</dd><dt><span class="term">times</span></dt><dd>evaluates to the ordinal number of the call to the corresponding target function since indicator has been set for it or since calls counter has been reseted(see below).</dd></dl></div></li></ul></div><p>
+<code class="filename">times</code> file corresponds to the counter of target function calls(see description of <code class="varname">times</code> times variable, which may be used in the expression for the indicator). This counter is incremented every time when target function is called (while this fault simulation indicator is set fo this function). Reading from the file returns current value of counter, any writing to this file resets value of the counter to 0.
+    </p><p>
 Examples:
-</p><pre class="programlisting">
+    </p><pre class="programlisting">
 echo common &gt; /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/current_indicator
 </pre><p>
 This will set <span class="quote">“<span class="quote">common</span>”</span> indicator for <code class="function">__kmalloc</code> function. The default scenario is <span class="pcite"><span class="quote">“<span class="quote">never simulate failures</span>”</span></span>. 
-</p><pre class="programlisting">
+    </p><pre class="programlisting">
 cat /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/expression
 </pre><p>
 The above command should print 0.
-</p><pre class="programlisting">
+    </p><pre class="programlisting">
 echo 1 &gt; /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/expression
 </pre><p>
 This will set the scenario to <span class="pcite"><span class="quote">“<span class="quote">make each call fail</span>”</span></span> for <code class="function">__kmalloc</code> function.
-</p><pre class="programlisting">
+    </p><pre class="programlisting">
 echo '!in_init' &gt; \
     /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/expression
 </pre><p>
 This will set the scenario to <span class="pcite"><span class="quote">“<span class="quote">after the target module is initialized, make each call to the target function fail</span>”</span></span>.
-</p><pre class="programlisting">
+    </p><pre class="programlisting">
 echo '!in_init &amp;&amp; (rnd100 &lt; 20)'&gt; \
     /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/expression
 </pre><p>
 This will set the scenario to <span class="pcite"><span class="quote">“<span class="quote">after the target module is initialized, simulate failures of approximately 20% of all calls to the target function</span>”</span></span>.
-</p><pre class="programlisting">
+    </p><pre class="programlisting">
+echo 'times = 1'&gt; \
+    /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/expression
+echo '0'&gt; \
+    /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/times
+</pre><p>
+This will set the scenario to <span class="pcite"><span class="quote">“<span class="quote">make only the first call to the target function fail</span>”</span></span> (all other calls will succeed). The second command force to count calls only from this moment.
+    </p><pre class="programlisting">
 echo '(times % 3) = 0'&gt; \
     /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/expression
 </pre><p>
 This will set the scenario to <span class="pcite"><span class="quote">“<span class="quote">make every third call to the target function fail</span>”</span></span> (succeed, succeed, fail, succeed, succeed, fail, succeed, ...).
-</p><p>
+    </p><p>
 The file named <code class="filename">pid</code> corresponds to the set of processes affected by the fault simulation for a given target function. That is, KEDR will not simulate failures when the requests to the target module come from the processes other than the listed ones. Initially, after the indicator has been set for the target function, pid is <code class="literal">0</code>. Whenever a call to a target function is intercepted by a payload module, the corresponding replacement function checks (according to the value of <code class="varname">expression</code>) whether it should simulate a failure or not. If you write a non-zero value to <code class="filename">pid</code> file, only the process with the given pid and its descendants (its children along with their children, etc.) will be affected by the fault simulation. 
     </p><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
 Note that when a nonzero pid is specified, the calls to the target function will not increment <code class="varname">times</code> variable if they are made in the context of a process that is neither the process with that pid nor its descendant.
 </p></div><p>
 In the following example, the fault simulation scenario is <span class="pcite"><span class="quote">“<span class="quote">make a call to the target function fail only if it is made in the context of a process launched from the current shell or of its descendants</span>”</span></span>.
-</p><pre class="programlisting">
+    </p><pre class="programlisting">
 echo common &gt; /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/current_indicator
 echo 1 &gt; /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/expression
 echo $$ &gt; /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/pid
 </pre><p>
-It is possible to set an indicator for a target function and the expression for this indicator in one step. To do this, you can write <code class="code"><span class="quote">“<span class="quote">common &lt;expression&gt;</span>”</span></code> (without quotes) <code class="filename">current_indicator</code> file. Example: 
-</p><pre class="programlisting">
-echo 'common !init &amp;&amp; (times % 2 = 0)' &gt; \
-    /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/current_indicator
-</pre><p>
-This command is actually equivalent to the following two combined:
-</p><pre class="programlisting">
-echo common &gt; /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/current_indicator
-echo 'common !init &amp;&amp; (times % 2 = 0)' &gt; \
-    /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/expression
-</pre><p>
-<code class="varname">pid</code> parameter can be assigned only after the indicator has been set for a fault simulation point.
-</p><p>
 Other indicators provided with KEDR extend the abilities of <span class="quote">“<span class="quote">common</span>”</span> indicator. They suppopt additional variables that can be used in the expression.
     </p><p>
 The indicator named <span class="quote">“<span class="quote">kmalloc</span>”</span> allows to use <code class="varname">size</code> and <code class="varname">flags</code> variables, that is, the parameters of <code class="code">__kmalloc</code> function. It also accepts several named constants of <code class="code">gfp_t</code> type like <code class="code">GFP_KERNEL</code> and <code class="varname">GFP_ATOMIC</code>. Example:
@@ -410,7 +406,7 @@ This will set the scenario for <code class="function">capable</code> function to
     </p><p>
 Here is the list of KEDR modules that provide fault simulation indicators:
     </p><div class="variablelist"><dl><dt><span class="term"><code class="filename">kedr_fsim_indicator_common.ko</code></span></dt><dd>implements <span class="quote">“<span class="quote">common</span>”</span> indicator</dd><dt><span class="term"><code class="filename">kedr_fsim_indicator_kmalloc.ko</code></span></dt><dd>implements <span class="quote">“<span class="quote">kmalloc</span>”</span> indicator</dd><dt><span class="term"><code class="filename">kedr_fsim_indicator_capable.ko</code></span></dt><dd>implements <span class="quote">“<span class="quote">capable</span>”</span> indicator</dd></dl></div><p>
-If you would like to extend <span class="quote">“<span class="quote">common</span>”</span> indicator to support more types of functions, see <a class="xref" href="extend.html#custom_fsim_scenarios" title="5.4. Writing Custom Scenarios for Fault Simulation">Section 5.4, “Writing Custom Scenarios for Fault Simulation”</a>.
+If you would like to extend <span class="quote">“<span class="quote">common</span>”</span> indicator to support more types of functions, see <a class="xref" href="extend.html#custom_fsim_scenarios" title="5.5. Writing Custom Scenarios for Fault Simulation">Section 5.5, “Writing Custom Scenarios for Fault Simulation”</a>.
     </p><p>
 Here is the list of payload modules for fault simulation provided with KEDR:
     </p><div class="variablelist"><dl><dt><span class="term"><code class="filename">kedr_fsim_capable.ko</code></span></dt><dd>implements fault simulation for function <code class="function">capable</code></dd><dt><span class="term"><code class="filename">kedr_fsim_user_space_access.ko</code></span></dt><dd>implements fault simulation for functions
@@ -419,8 +415,8 @@ Here is the list of payload modules for fault simulation provided with KEDR:
         , 
         <code class="function">copy_from_user</code>/<code class="function">_copy_from_user</code>
         </span></dd><dt><span class="term"><code class="filename">kedr_fsim_cmm.ko</code></span></dt><dd>implements fault simulation for functions
-        <span class="simplelist"><code class="function">__kmalloc</code>, <code class="function">krealloc</code>, <code class="function">kmem_cache_alloc</code>, [<code class="function">kmem_cache_alloc_notrace</code>]</span></dd></dl></div><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
-Although KEDR module <code class="filename">kedr_fsim_cmm.ko</code> currently provides fault simulation facilities for 4 functions, it exports only one directory (<code class="filename">__kmalloc</code>) to manage fault simulation scenarios. All those 4 functions use the same scenario that is set for <code class="function">__kmalloc</code> function.
+        <span class="simplelist"><code class="function">__kmalloc</code>, <code class="function">krealloc</code>, <code class="function">kmem_cache_alloc</code>, [<code class="function">kmem_cache_alloc_notrace</code>], <code class="function">__get_free_pages</code></span></dd></dl></div><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
+Although KEDR module <code class="filename">kedr_fsim_cmm.ko</code> currently provides fault simulation facilities for 5 functions, it exports only one directory (<code class="filename">__kmalloc</code>) to manage fault simulation scenarios. All those 5 functions use the same scenario that is set for <code class="function">__kmalloc</code> function.
 </p></div><p>
 If you would like to create a payload module to perform fault simulation for other functions, see <a class="xref" href="extend.html#custom_fsim_payloads" title="5.3. Writing Custom Payloads for Fault Simulation">Section 5.3, “Writing Custom Payloads for Fault Simulation”</a>.
 </p></div><div class="section" title="4.6. Analyzing the Trace"><div class="titlepage"><div><div><h3 class="title"><a name="analyze_trace"></a>4.6. Analyzing the Trace</h3></div></div></div><p>

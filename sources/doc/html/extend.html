@@ -1,4 +1,4 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><title>5. Customizing and Extending KEDR</title><link rel="stylesheet" href="kedr-doc.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.75.2"><link rel="home" href="index.html" title="KEDR 0.1 Reference Manual"><link rel="up" href="index.html" title="KEDR 0.1 Reference Manual"><link rel="prev" href="using_kedr.html" title="4. Using KEDR"><link rel="next" href="reference.html" title="6. KEDR Reference"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">5. Customizing and Extending KEDR</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="using_kedr.html">Prev</a> </td><th width="60%" align="center"> </th><td width="20%" align="right"> <a accesskey="n" href="reference.html">Next</a></td></tr></table><hr></div><div class="section" title="5. Customizing and Extending KEDR"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="extend"></a>5. Customizing and Extending KEDR</h2></div></div></div><div class="toc"><dl><dt><span class="section"><a href="extend.html#using_gen">5.1. Using Code Generator to Create Custom Modules</a></span></dt><dt><span class="section"><a href="extend.html#custom_callm_payloads">5.2. Writing Custom Payloads for Call Monitoring</a></span></dt><dt><span class="section"><a href="extend.html#custom_fsim_payloads">5.3. Writing Custom Payloads for Fault Simulation</a></span></dt><dt><span class="section"><a href="extend.html#custom_fsim_scenarios">5.4. Writing Custom Scenarios for Fault Simulation</a></span></dt><dt><span class="section"><a href="extend.html#custom_analysis">5.5. Implementing Custom Types of Analysis</a></span></dt><dd><dl><dt><span class="section"><a href="extend.html#custom_analysis.basics">5.5.1. Choosing the Counters and the Functions to Process</a></span></dt><dt><span class="section"><a href="extend.html#custom_analysis.payload">5.5.2. Creating the Payload Module</a></span></dt><dt><span class="section"><a href="extend.html#custom_analysis.build">5.5.3. Building the Payload Module</a></span></dt><dt><span class="section"><a href="extend.html#custom_analysis.use">5.5.4. Using the Payload Module</a></span></dt></dl></dd></dl></div><div class="section" title="5.1. Using Code Generator to Create Custom Modules"><div class="titlepage"><div><div><h3 class="title"><a name="using_gen"></a>5.1. Using Code Generator to Create Custom Modules</h3></div></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><title>5. Customizing and Extending KEDR</title><link rel="stylesheet" href="kedr-doc.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.75.2"><link rel="home" href="index.html" title="KEDR 0.1 Reference Manual"><link rel="up" href="index.html" title="KEDR 0.1 Reference Manual"><link rel="prev" href="using_kedr.html" title="4. Using KEDR"><link rel="next" href="reference.html" title="6. KEDR Reference"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">5. Customizing and Extending KEDR</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="using_kedr.html">Prev</a> </td><th width="60%" align="center"> </th><td width="20%" align="right"> <a accesskey="n" href="reference.html">Next</a></td></tr></table><hr></div><div class="section" title="5. Customizing and Extending KEDR"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="extend"></a>5. Customizing and Extending KEDR</h2></div></div></div><div class="toc"><dl><dt><span class="section"><a href="extend.html#using_gen">5.1. Using Code Generator to Create Custom Modules</a></span></dt><dt><span class="section"><a href="extend.html#custom_callm_payloads">5.2. Writing Custom Payloads for Call Monitoring</a></span></dt><dt><span class="section"><a href="extend.html#custom_fsim_payloads">5.3. Writing Custom Payloads for Fault Simulation</a></span></dt><dt><span class="section"><a href="extend.html#happens_before_parameter">5.4. <span class="quote">“<span class="quote">trace.happensBefore</span>”</span> Parameter for Call Monitoring and Fault Simulation Payloads</a></span></dt><dt><span class="section"><a href="extend.html#custom_fsim_scenarios">5.5. Writing Custom Scenarios for Fault Simulation</a></span></dt><dt><span class="section"><a href="extend.html#custom_analysis">5.6. Implementing Custom Types of Analysis</a></span></dt><dd><dl><dt><span class="section"><a href="extend.html#custom_analysis.basics">5.6.1. Choosing the Counters and the Functions to Process</a></span></dt><dt><span class="section"><a href="extend.html#custom_analysis.payload">5.6.2. Creating the Payload Module</a></span></dt><dt><span class="section"><a href="extend.html#custom_analysis.build">5.6.3. Building the Payload Module</a></span></dt><dt><span class="section"><a href="extend.html#custom_analysis.use">5.6.4. Using the Payload Module</a></span></dt></dl></dd></dl></div><div class="section" title="5.1. Using Code Generator to Create Custom Modules"><div class="titlepage"><div><div><h3 class="title"><a name="using_gen"></a>5.1. Using Code Generator to Create Custom Modules</h3></div></div></div><p>
 To automate creation of multiple modules with simular functionality, KEDR actively uses template-based generation of files. This approach facilitates code reuse as it makes it possible to separate the common parts in the implementation of the modules and the parts specific to each module. This also allows the developer of the new modules to concentrate mostly on the <span class="quote">“<span class="quote">logic</span>”</span> of what (s)he wants to implement there rather than on writing and debugging <span class="quote">“<span class="quote">boilerplate</span>”</span> code.
     </p><p>
 So, to develop a new module this way, it is only necessary to prepare a short definition of what this module is supposed to do in addition to the basic functionality. Creation of the source file(s) for this module will be performed automatically by the <span class="quote">“<span class="quote">code generator</span>”</span>.
@@ -307,7 +307,7 @@ support fault simulation for the functions for which it is not supported by KEDR
 </p></li><li class="listitem"><p>
 change the set of parameters output to the trace, in case you need something other than the arguments and the return value of the replacement function to be output;
 </p></li><li class="listitem"><p>
-provide a different set of variables to be passed to fault simulation indicator (see below) - this can be necessary if you would like to implement <a class="link" href="extend.html#custom_fsim_scenarios" title="5.4. Writing Custom Scenarios for Fault Simulation">custom fault simulation scenarios</a>.
+provide a different set of variables to be passed to fault simulation indicator (see below) - this can be necessary if you would like to implement <a class="link" href="extend.html#custom_fsim_scenarios" title="5.5. Writing Custom Scenarios for Fault Simulation">custom fault simulation scenarios</a>.
 </p></li></ul></div><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
 Note that the infrastructure provided by KEDR for fault simulation (<a class="link" href="glossary.html#fault_simulation_point" title="Fault simulation point">points</a>, <a class="link" href="glossary.html#fault_simulation_indicator" title="Fault simulation indicator">indicators</a> and the respective control facilities) could be used for other purposes as well. What it does in general, is to alter the behaviour of a call made by the target module if the indicator returns nonzero, or allow the target function to do its work normally if the indicator returns 0. The <span class="quote">“<span class="quote">altered behaviour</span>”</span> is controlled by the user, see the description of <code class="code">fpoint.error_code</code> parameter below. So, instead of fault simulation, you could implement, say, timeout/sleep injection (i.e., delaying the return from the replacement function which might help with concurrency analysis, etc.) or whatever else you want.
 </p></div><p>
@@ -519,7 +519,125 @@ Note that in the group for <code class="function">krealloc</code> function, we u
 After writing <code class="filename">payload.data</code> file, you can change the value of module_name variable in the <code class="filename">makefile</code> and <code class="filename">Kbuild</code> according to the one you use as value of <span class="quote">“<span class="quote">module.name</span>”</span> parameter. In the future, this step may be implemented in the <code class="filename">makefile</code> itself.
     </p><p>
 The last step is to run <span class="command"><strong>make</strong></span> utility. This will invoke the code generator tool (<span class="command"><strong>kedr_gen</strong></span>) to create the sources for your payload module, then the module will be built.
-    </p></div><div class="section" title="5.4. Writing Custom Scenarios for Fault Simulation"><div class="titlepage"><div><div><h3 class="title"><a name="custom_fsim_scenarios"></a>5.4. Writing Custom Scenarios for Fault Simulation</h3></div></div></div><p>
+    </p></div><div class="section" title="5.4. “trace.happensBefore” Parameter for Call Monitoring and Fault Simulation Payloads"><div class="titlepage"><div><div><h3 class="title"><a name="happens_before_parameter"></a>5.4. <span class="quote">“<span class="quote">trace.happensBefore</span>”</span> Parameter for Call Monitoring and Fault Simulation Payloads</h3></div></div></div><p>
+There is a parameter that changes control flow of the replacement function in call monitor and fault simulation payloads:
+</p><div class="variablelist"><dl><dt><span class="term">trace.happensBefore</span></dt><dd>If this parameter is defined (its precise value does not matter), the trace will be output before the target function is called. With this parameter defined, <code class="code">middleCode</code> parameter should not be used as well as <code class="varname">returnValue</code> variable.</dd></dl></div><p>
+    </p><p>
+The main purpose of using <code class="code">trace.happensBefore</code> parameter is collecting correct trace on SMP systems and the like. Suppose, two threads of execution call <code class="function">mutex_lock</code> and <code class="function">mutex_unlock</code> functions for the same mutex. One of the correct orders of these calls is:
+</p><pre class="programlisting">
+[1]    <code class="function">mutex_lock</code>
+[1]    <code class="function">mutex_unlock</code>
+[2]    <code class="function">mutex_lock</code>
+[2]    <code class="function">mutex_unlock</code>
+</pre><p>
+([<em class="replaceable"><code>n</code></em>] means that the operation is performed by the thread <em class="replaceable"><code>n</code></em>).
+    </p><p>
+So one may expect that same order will be recorded in the trace:
+</p><pre class="programlisting">
+1    called_mutex_lock
+1    called_mutex_unlock
+2    called_mutex_lock
+2    called_mutex_unlock
+</pre><p>
+    </p><p>
+As described in the <a class="xref" href="extend.html#custom_callm_payloads" title="5.2. Writing Custom Payloads for Call Monitoring">Section 5.2, “Writing Custom Payloads for Call Monitoring”</a>, a replacement function calls the target function first and only after that outputs its parameters to the trace. So the following order of the instructions is possible:
+</p><pre class="programlisting">
+[1]    [call replacement function for <code class="function">mutex_lock</code>]
+[1]    mutex_lock
+[1]    output("called_mutex_lock")
+[1]    [replacement function for <code class="function">mutex_lock</code> returns]
+[1]    [call replacement function for mutex_unlock]
+[1]    mutex_unlock
+[2]    [call replacement function for <code class="function">mutex_lock</code>]
+[2]    mutex_lock
+[2]    output("called_mutex_lock")
+[2]    [replacement function for <code class="function">mutex_lock</code> returns]
+[1]    output("called_mutex_unlock")
+[1]    [replacement function for <code class="function">mutex_unlock</code> returns]
+[2]    [call replacement function for mutex_unlock]
+[2]    mutex_unlock
+[2]    output("called_mutex_unlock")
+[2]    [replacement function for <code class="function">mutex_unlock</code> returns]
+</pre><p>
+    </p><p>
+Even though the order of calls to the target functions is correct, these instructions produce the trace that reflects impossible call order:
+</p><pre class="programlisting">
+1    called_mutex_lock
+2    called_mutex_lock
+1    called_mutex_unlock
+2    called_mutex_unlock
+</pre><p>
+    </p><p>
+From the kernel's point of view, the calls to <code class="function">mutex_lock</code> and <code class="function">mutex_unlock</code> are not related to the trace output made by KEDR. So the operations that output trace can be performed in any order, no matter in what order the target functions were called.
+    </p><p>
+To get a correct trace, we need to use <code class="code">trace.happensBefore</code> parameter for the replacement function for <code class="function">mutex_unlock</code>. At the abstract level, this parameter means <span class="quote">“<span class="quote">Whenever <code class="function">mutex_unlock</code> is called before some other function and nobody enforces this order explicitly, the order should be preserved in the trace</span>”</span>.
+    </p><p>
+Note that although <code class="function">mutex_lock</code> function must also be called before the corresponding <code class="function">mutex_unlock</code>, this order is not affected by <code class="code">trace.happensBefore</code> parameter.
+    </p><pre class="programlisting">
+...
+[1]    mutex_lock
+...
+[1]    mutex_unlock
+...
+</pre><p>
+The difference is that such order should be enforced <span class="emphasis"><em>explicitly</em></span>, that is, by the user of these functions and thus of the target module. If the target module calls, say, <code class="function">mutex_lock</code> strictly before <code class="function">mutex_unlock</code>, the replacement function for <code class="function">mutex_lock</code> will return strictly before the one for <code class="function">mutex_unlock</code> starts executing. This, in turn, automatically enforces that the corresponding trace records will go in the right order too.
+    </p><p>
+If <code class="code">trace.happensBefore</code> parameter is defined, the control flow of the replacement functions could be described in pseudocode as follows:
+</p><pre class="programlisting">
+<span class="symbol">returnType</span> replacement_function(<span class="symbol">arg.name</span>...)
+{
+    <span class="symbol">prologue</span>
+    output(<span class="symbol">trace.formatString</span>, <span class="symbol">trace.param.name</span>...);
+    target_function(<span class="symbol">arg.name</span>...);
+    <span class="symbol">epilogue</span>
+}
+</pre><p>
+    </p><p>
+For a fault simulation replacement function, the control flow is as follows in this case:
+</p><pre class="programlisting">
+<span class="symbol">returnType</span> replacement_function(<span class="symbol">arg.name</span>...)
+{
+    <span class="symbol">prologue</span>
+    output(<span class="symbol">trace.formatString</span>, <span class="symbol">trace.param.name</span>...);
+    if(indicator_function(<span class="symbol">fpoint.param.name</span>...) == 0)
+    {
+        target_function(<span class="symbol">arg.name</span>...);
+    }
+    else
+    {
+        <span class="symbol">fpoint.error_code</span>;
+    }
+    <span class="symbol">epilogue</span>
+}
+</pre><p>
+    </p><p>
+Another example of internal happens-before relationship is the one between <code class="function">kfree</code> and <code class="function">__kmalloc</code> functions. This relationship reflects the fact that <code class="function">__kmalloc</code> cannot return an address that was previously returned by another <code class="function">__kmalloc</code> call and was not processed by <code class="function">kfree</code>. Using <code class="code">trace.happensBefore</code> parameter one can make sure the order of the trace records is correct:
+</p><pre class="programlisting"> 
+    [group]
+    # Name and return type of the target function
+    function.name = kfree
+
+    # Names and types of the arguments of the target function
+    arg.type = void*
+    arg.name = p
+    
+    # The parameters to be output to the trace.
+    trace.param.type = void*
+    trace.param.name = p
+
+    # Happens-before relationship with kmalloc
+    <span class="emphasis"><em>trace.happensBefore = yes</em></span>
+
+    # The format string to be used for trace output.
+    trace.formatString = "arguments: (%p)"
+
+# End of the group of definitions for kfree().
+</pre><p>
+    </p><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
+For the trace records to reflect the fact that function <code class="function">A</code> has happens-before ordering with function <code class="function">B</code>, one should define <code class="code">trace.happensBefore</code> parameter for the function <code class="function">A</code> and <span class="emphasis"><em>should not define it</em></span> for the function <code class="function">B</code>. <code class="code">trace.happensBefore</code> cannot be used to enforce two different orderings for the calls to a single function such as <code class="function">krealloc</code> (which may be modelled as <code class="function">__kmalloc</code> + <code class="function">kfree</code>).
+    </p><p>
+Usually, the functions for which <code class="code">trace.happensBefore</code> parameter makes sense, return void and are not interesting for fault simulation.
+    </p></div></div><div class="section" title="5.5. Writing Custom Scenarios for Fault Simulation"><div class="titlepage"><div><div><h3 class="title"><a name="custom_fsim_scenarios"></a>5.5. Writing Custom Scenarios for Fault Simulation</h3></div></div></div><p>
 The fault simulation scenarios described in <a class="xref" href="using_kedr.html#fault_sim" title="4.5. Fault Simulation">Section 4.5, “Fault Simulation”</a> are configurable and are probably enough for many cases. If they are not, a kernel module implementing a custom <a class="link" href="glossary.html#fault_simulation_indicator" title="Fault simulation indicator">fault simulation indicator</a> can be developed. This section describes how do this using a tool provided by KEDR to generate source files from the templates. Common abilities of this tool are described in detail in <a class="xref" href="extend.html#using_gen" title="5.1. Using Code Generator to Create Custom Modules">Section 5.1, “Using Code Generator to Create Custom Modules”</a>
     </p><p>
 The whole infrastructure needed to build the module based on the definition file and the templates is located in <code class="filename">custom_indicator_fsim</code> subdirectory in the directory where the examples provided with KEDR are installed. Here are its contents:
@@ -531,44 +649,44 @@ The first and the main step is to rewrite file <code class="filename">indicator.
 Unlike a payload module for <a class="link" href="extend.html#custom_callm_payloads" title="5.2. Writing Custom Payloads for Call Monitoring">call monitoring</a> or <a class="link" href="extend.html#custom_fsim_payloads" title="5.3. Writing Custom Payloads for Fault Simulation">fault simulation</a> that can implement replacement functions for several target functions in a single module, each fault simulation indicator should be implemented in a separate module. So, groups are not used in the definition file for the indicator module. Only the global set of parameters is taken into account.
     </p><p>
 Indicator module should contain definitions of the following parameters:
-</p><div class="variablelist"><dl><dt><span class="term">module.author</span></dt><dd>author of the module</dd><dt><span class="term">module.license</span></dt><dd>license for the module</dd><dt><span class="term">indicator.name</span></dt><dd>name of the indicator, provided by the module. This is the very name that should be used when one applies the indicator to some target function (to be exact, to a <a class="link" href="glossary.html#fault_simulation_indicator" title="Fault simulation indicator">fault simulation point</a>).</dd><dt><span class="term">indicator.parameters.type</span></dt><dd>(multi-valued) types of the values that the indicator function accepts. This is an important part of the indicator and will be described later in detail. This parameter may be assigned no value at all - in this case, the indicator function will accept no parameters. </dd><dt><span class="term">indicator.parameters.name</span></dt><dd>(multi-valued) names of the values that the indicator function accepts.</dd><dt><span class="term">expression.vars.name</span></dt><dd>(multi-valued) names of variables that can be used in an expression to set a particular scenario for the indicator (see also <a class="xref" href="using_kedr.html#fault_sim" title="4.5. Fault Simulation">Section 4.5, “Fault Simulation”</a>). The names themselves are by no means bound to the names of variables used in the indicator. The order of values is not important for this parameter. This parameter may even be left undefined as there are other ways to declare expression variables.</dd><dt><span class="term">expression.vars.values</span></dt><dd>(multi-valued) values of the corresponding expression variables that will be used during the evaluation of the expression (that is, when the indicator function is called). Typically, these values refer to the parameters of the indicator function.</dd><dt><span class="term">expression.vars.pname</span></dt><dd>(multi-valued) names of the parameters of the indicator function that can be used in an expression to set a particular scenario for the indicator. <code class="code"><code class="varname">expression.vars.pname</code> = <code class="literal">var_a</code></code> is equivalent to <code class="code"><code class="varname">expression.vars.name</code> = <code class="literal">var_a</code></code> + <code class="code"><code class="varname">expression.vars.value</code> = <code class="literal">var_a</code></code>. This parameter may even be left undefined as there are other ways to declare expression variables.</dd></dl></div><p>
+</p><div class="variablelist"><dl><dt><span class="term">module.author</span></dt><dd>author of the module</dd><dt><span class="term">module.license</span></dt><dd>license for the module</dd><dt><span class="term">indicator.name</span></dt><dd>name of the indicator, provided by the module. This is the very name that should be used when one applies the indicator to some target function (to be exact, to a <a class="link" href="glossary.html#fault_simulation_indicator" title="Fault simulation indicator">fault simulation point</a>).</dd><dt><span class="term">indicator.parameter.type</span></dt><dd>(multi-valued) types of the values that the indicator function accepts. This is an important part of the indicator and will be described later in detail. This parameter may be assigned no value at all - in this case, the indicator function will accept no parameters. </dd><dt><span class="term">indicator.parameter.name</span></dt><dd>(multi-valued) names of the values that the indicator function accepts.</dd><dt><span class="term">expression.variable.name</span></dt><dd>(multi-valued) names of variables that can be used in an expression to set a particular scenario for the indicator (see also <a class="xref" href="using_kedr.html#fault_sim" title="4.5. Fault Simulation">Section 4.5, “Fault Simulation”</a>). The names themselves are by no means bound to the names of variables used in the indicator. The order of values is not important for this parameter. This parameter may even be left undefined as there are other ways to declare expression variables.</dd><dt><span class="term">expression.variable.value</span></dt><dd>(multi-valued) values of the corresponding expression variables that will be used during the evaluation of the expression (that is, when the indicator function is called). Typically, these values refer to the parameters of the indicator function.</dd><dt><span class="term">expression.variable.pname</span></dt><dd>(multi-valued) names of the parameters of the indicator function that can be used in an expression to set a particular scenario for the indicator. <code class="code"><code class="varname">expression.variable.pname</code> = <code class="literal">var_a</code></code> is equivalent to <code class="code"><code class="varname">expression.variable.name</code> = <code class="literal">var_a</code></code> + <code class="code"><code class="varname">expression.variable.value</code> = <code class="literal">var_a</code></code>. This parameter may even be left undefined as there are other ways to declare expression variables.</dd></dl></div><p>
     </p><p>
 The main characteristic of a fault simulation indicator is a set of scenarios, which it can implement. Apart from <code class="varname">pid</code> parameter that can be used for each generated indicator and simply restricts the <span class="quote">“<span class="quote">area</span>”</span> of fault simulation, <code class="varname">expression</code> is the only indicator's parameter, which may affect the fault simulation scenario. An expression that uses only constant integers as arguments may implement only <span class="pcite"><span class="quote">“<span class="quote">always simulate fail</span>”</span></span> or <span class="pcite"><span class="quote">“<span class="quote">never simulate fail</span>”</span></span> scenarios. But if the expression can use variables which may have different values each time the expression is evaluated, the set of supported scenarios increases dramatically.
     </p><p>
 One type of variable that can be used in the expression is the parameter of the target function. E.g., expression <code class="code">(<code class="varname">size</code> &gt; 100)</code>, where <code class="varname">size</code> corresponds to the target function parameter, implements the scenario <span class="pcite"><span class="quote">“<span class="quote">simulate fail when <code class="varname">size</code> is greater than <code class="literal">100</code></span>”</span></span>. The only way for the indicator to implement such usage of a target function's parameter is to declare this parameter as parameter of indicator function. So, the corresponding replacement function should pass this parameter to the indicator function whenever it should choose whether it needs to simulate a failure. This behaviour of the indicator is achieved by the following definitions (assume <code class="varname">size</code> parameter of the target function has type <code class="literal">size_t</code>):
 </p><pre class="programlisting">
-indicator.parameters.type = size_t
-indicator.parameters.name = size
+indicator.parameter.type = size_t
+indicator.parameter.name = size
 </pre><p>
     </p><p>
 This fragment only defines that the indicator function itself accepts parameter <code class="varname">size</code>. To permit using this parameter in the expression, the following definition should be used as well:
     </p><pre class="programlisting">
-expression.vars.pname = size
+expression.variable.pname = size
 </pre><p>
-Parameters <code class="varname">expression.vars.name</code> and <code class="varname">expression.vars.value</code> may be useful for such cases:
+Parameters <code class="varname">expression.variable.name</code> and <code class="varname">expression.variable.value</code> may be useful for such cases:
 </p><pre class="programlisting">
 ...
-indicator.parameters.type = const char*
-indicator.parameters.name = str
+indicator.parameter.type = const char*
+indicator.parameter.name = str
 ...
 # Expression may use variables only with integer values, so we cannot use 
 # a string parameter in it.
 # But we can use the length of this string as parameter 'len'
-expression.vars.name = len
-expression.vars.value = strlen(str)
+expression.variable.name = len
+expression.variable.value = strlen(str)
 ...
 </pre><p>
 </p><pre class="programlisting">
 ...
-indicator.parameters.type = size_t
+indicator.parameter.type = size_t
 # Cannot use 'strlen' as name of the parameter, because strlen() is 
 # the kernel function.
-indicator.parameters.name = len
+indicator.parameter.name = len
 ...
 # But here 'strlen' is available - this is not a name of C variable.
-expression.vars.name = strlen
+expression.variable.name = strlen
 # We only need to bind expression variable to its value.
-expression.vars.value = len
+expression.variable.value = len
 ...
 </pre><p>
     </p><p>
@@ -576,26 +694,26 @@ However if we declare that the indicator function accepts parameter <code class=
     </p><p>
 Although it is acceptable for the indicator to use the variables in expression, which are not derived from the indicator's parameters like 
 </p><pre class="programlisting">
-expression.vars.name = prob50
-expression.vars.value = random() % 2
+expression.variable.name = prob50
+expression.variable.value = random() % 2
 </pre><p>
 it is not recommended, because there is a more efficient way to do this. The thing is that, the variables of this kind are evaluated every time the indicator function is called, no matter if this variable is used in the expression or not. This evaluation may take relatively long time in some cases. There is another type of variables which is applicable in such cases - <em class="firstterm">runtime variables</em>. Declaration of such variables has the following format:
 </p><pre class="programlisting">
-expression.rvars.name = prob50
-expression.rvars.code =&gt;&gt;
+expression.rvariable.name = prob50
+expression.rvariable.code =&gt;&gt;
     return random() % 2;
 &lt;&lt;
 </pre><p>
-<code class="varname">expression.rvars.code</code> parameter provides the code of the function which will be used whenever value of variable is <span class="emphasis"><em>really</em></span> needed. The costs of such optimisation are a function call used instead of the inlined code when the value of the variable is needed, and inability to use local variables of the indicator function (and parameters of this function) to prepared the value of the runtime variable.
+<code class="varname">expression.rvariable.code</code> parameter provides the code of the function which will be used whenever value of variable is <span class="emphasis"><em>really</em></span> needed. The costs of such optimisation are a function call used instead of the inlined code when the value of the variable is needed, and inability to use local variables of the indicator function (and parameters of this function) to prepared the value of the runtime variable.
     </p><p>
 To simplify writing expressions and to make them more readable, named constants can be declared and then used there. There are two ways to do this:
 </p><pre class="programlisting">
-expression.constants.name = constant_100
-expression.constants.value = 100
+expression.constant.name = constant_100
+expression.constant.value = 100
 </pre><p>
 This makes the constant with name <code class="varname">constant_100</code> and value 100 available for usage in the expressions.
 </p><pre class="programlisting">
-expression.constants.cname = GFP_ATOMIC
+expression.constant.cname = GFP_ATOMIC
 </pre><p>
 This makes the constant with name <code class="varname">GFP_ATOMIC</code> which evaluates to GFP_ATOMIC available for usage in the expressions. Expression <code class="code">flags == GFP_ATOMIC</code> is clearer and easier to read than <code class="code">flags == 32</code>, isn't it?
     </p><p>
@@ -615,25 +733,25 @@ global =&gt;&gt;
 
 indicator.name = kmalloc
 
-indicator.parameters.type = size_t
-indicator.parameters.name = size
+indicator.parameter.type = size_t
+indicator.parameter.name = size
 
-indicator.parameters.type = gfp_t
-indicator.parameters.name = flags
+indicator.parameter.type = gfp_t
+indicator.parameter.name = flags
 
-expression.constants.c_name = GFP_NOWAIT
-expression.constants.c_name = GFP_KERNEL
-expression.constants.c_name = GFP_USER
-expression.constants.c_name = GFP_ATOMIC
+expression.constant.c_name = GFP_NOWAIT
+expression.constant.c_name = GFP_KERNEL
+expression.constant.c_name = GFP_USER
+expression.constant.c_name = GFP_ATOMIC
 
-expression.vars.pname = size
-expression.vars.pname = flags
+expression.variable.pname = size
+expression.variable.pname = flags
 </pre><p>
     </p><p>
 After writing <code class="filename">payload.data</code> file, you can change the value of module_name variable in the <code class="filename">makefile</code> and <code class="filename">Kbuild</code> according to the one you use as value of <span class="quote">“<span class="quote">module.name</span>”</span> parameter. 
     </p><p>
 The last step is to run <span class="command"><strong>make</strong></span> utility. This will invoke the code generator tool (<span class="command"><strong>kedr_gen</strong></span>) to create the sources for your payload module, then the module will be built.
-    </p></div><div class="section" title="5.5. Implementing Custom Types of Analysis"><div class="titlepage"><div><div><h3 class="title"><a name="custom_analysis"></a>5.5. Implementing Custom Types of Analysis</h3></div></div></div><p>
+    </p></div><div class="section" title="5.6. Implementing Custom Types of Analysis"><div class="titlepage"><div><div><h3 class="title"><a name="custom_analysis"></a>5.6. Implementing Custom Types of Analysis</h3></div></div></div><p>
 KEDR is not only a system to perform call monitoring and fault simulation for the target kernel modules. It is a framework that allows to implement different kinds of analysis based on the information about the function calls made by the target module.
 </p><p>
 In this section, we will show how to create a custom analysis system on top of KEDR. The system we are going to use as an example is rather simple: it maintains a set of counters accessible from user space that provide some information about the actions of the target module.
@@ -645,7 +763,7 @@ In general, a custom analysis system based on KEDR can be created in the followi
 Once the above steps are completed, KEDR utilities can be used to load your payload module along with the KEDR core. You can now load the target module and your system will start analyzing it.
 </p><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
 The source code of the analysis system developed in this example is available in <code class="filename">&lt;kedr_install_dir&gt;/share/kedr/examples/counters/</code>.
-</p></div><div class="section" title="5.5.1. Choosing the Counters and the Functions to Process"><div class="titlepage"><div><div><h4 class="title"><a name="custom_analysis.basics"></a>5.5.1. Choosing the Counters and the Functions to Process</h4></div></div></div><p>
+</p></div><div class="section" title="5.6.1. Choosing the Counters and the Functions to Process"><div class="titlepage"><div><div><h4 class="title"><a name="custom_analysis.basics"></a>5.6.1. Choosing the Counters and the Functions to Process</h4></div></div></div><p>
 Suppose the following counters are going to be supported by our analysis system:
 </p><div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem"><p>total number of memory allocation attempts;</p></li><li class="listitem"><p>number of memory allocation attempts that have failed;</p></li><li class="listitem"><p>size of the largest memory block requested to be allocated;</p></li><li class="listitem"><p>total number of mutex lock operations;</p></li><li class="listitem"><p>mutex balance, i.e. the difference between the total numbers of lock and unlock operations.</p></li></ul></div><p>
 To make the counters accessible from the user space, we can, for example, provide a file in <code class="filename">kedr_counters_example</code> directory in debugfs for each one of them.
@@ -661,7 +779,7 @@ It should not be very hard to extend this example to support other functions tha
 To collect data necessary to provide the remaining two counters, our system needs to process the calls to the operations with mutexes:
 </p><div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem"><p><code class="code">void mutex_lock(struct mutex* lock)</code></p></li><li class="listitem"><p><code class="code">int mutex_lock_interruptible(struct mutex* lock)</code></p></li><li class="listitem"><p><code class="code">int mutex_lock_killable(struct mutex* lock)</code></p></li><li class="listitem"><p><code class="code">int mutex_trylock(struct mutex* lock)</code></p></li><li class="listitem"><p><code class="code">void mutex_unlock(struct mutex* lock)</code></p></li></ul></div><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
 Note that the functions may be different for different variants and versions of the Linux kernel. There is no stable binary interface in the Linux kernel anyway. Please choose memory allocation operations and mutex-related functions appropriate for your kernel.
-</p></div></div><div class="section" title="5.5.2. Creating the Payload Module"><div class="titlepage"><div><div><h4 class="title"><a name="custom_analysis.payload"></a>5.5.2. Creating the Payload Module</h4></div></div></div><p>
+</p></div></div><div class="section" title="5.6.2. Creating the Payload Module"><div class="titlepage"><div><div><h4 class="title"><a name="custom_analysis.payload"></a>5.6.2. Creating the Payload Module</h4></div></div></div><p>
 To implement our analysis system, we need to create <a class="link" href="glossary.html#payload_module" title="Payload module">a payload module</a> for KEDR. As a starting point, we can use, for example, the skeleton of a module given in <a class="xref" href="reference.html#payload_api.stub" title="6.1.7. A Stub of a Payload Module">Section 6.1.7, “A Stub of a Payload Module”</a>. The module should provide <a class="link" href="glossary.html#replacement_function" title="Replacement function">a replacement function</a> for each functon we have chosen above.
 </p><p>
 The instance of <code class="code">struct kedr_payload</code> could be filled as follows (this structure should be used when registering and unregistering the payload module with KEDR core):
@@ -734,7 +852,7 @@ The technical details concerning the creation of files for the counters in debug
 Note that it is not mandatory to implement all the counters in a single payload module. For example, we could provide a module that implements the counters related to memory allocation and another one for those dealing with mutexes. As long as the sets of the <a class="link" href="glossary.html#target_function" title="Target function">target functions</a> do not intersect with each other, we may create a separate module for each set and use all these modules at the same time to analyse the target module. 
 </p><p>
 For simplicity, we implement all the counters in a single payload module in this example.
-</p></div></div><div class="section" title="5.5.3. Building the Payload Module"><div class="titlepage"><div><div><h4 class="title"><a name="custom_analysis.build"></a>5.5.3. Building the Payload Module</h4></div></div></div><p>
+</p></div></div><div class="section" title="5.6.3. Building the Payload Module"><div class="titlepage"><div><div><h4 class="title"><a name="custom_analysis.build"></a>5.6.3. Building the Payload Module</h4></div></div></div><p>
 The payload module that we have prepared can be built much in the same way as any other kernel module. Still, there is a couple of things to take into account.
 </p><p>
 First, the module uses header files provided by KEDR, so the top include directory of KEDR should be specified in <code class="code">-I</code> compiler option. The directory is usually <code class="filename">&lt;kedr_install_dir&gt;/include/</code>.
@@ -742,7 +860,7 @@ First, the module uses header files provided by KEDR, so the top include directo
 Second, each payload module uses functions exported by KEDR core and therefore needs the appropriate .symvers file. Before building the module, you should copy <code class="filename">kedr_base.symvers</code> file provided by KEDR to the directory of the payload module and rename it to <code class="filename">Module.symvers</code>. <code class="filename">kedr_base.symvers</code> is usually located in <code class="filename">/lib/modules/`uname -r`/symvers/</code> or in <code class="filename">&lt;kedr_install_dir&gt;/lib/modules/`uname -r`/symvers/</code> in case of a non-global installation of KEDR.
 </p><p>
 You can look at <code class="filename">Kbuild</code> and <code class="filename">makefile</code> files to see how the payload is built in <span class="quote">“<span class="quote">Counters</span>”</span> example.
-</p></div><div class="section" title="5.5.4. Using the Payload Module"><div class="titlepage"><div><div><h4 class="title"><a name="custom_analysis.use"></a>5.5.4. Using the Payload Module</h4></div></div></div><p>
+</p></div><div class="section" title="5.6.4. Using the Payload Module"><div class="titlepage"><div><div><h4 class="title"><a name="custom_analysis.use"></a>5.6.4. Using the Payload Module</h4></div></div></div><p>
 Now that the payload module for our analysis system is built, we can use it to see how the values of the counters change as the target module operates. You can chose any kernel module as a target if you know how to properly load it and to make it operate.
 </p><div class="important" title="Important" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Important</h3><p>
 It is not recommended to simultaneously use payload modules implementing different types of analysis. That is, it is better not to mix the payload module from <span class="quote">“<span class="quote">Counters</span>”</span> example with those intended for call monitoring, fault simulation, etc. One of the problems that may arise here is the conflicting sets of target functions. Currently, KEDR does not detect whether the sets of target functions that the payload modules process intersect or not. If a target function is processed by more than one payload module that are currently loaded, the behaviour of KEDR is undefined.
