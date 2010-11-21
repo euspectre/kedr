@@ -1,25 +1,25 @@
 ﻿<section id="happens_before_parameter">
-<title>Parameter trace.happensBefore for call monitor and fault simulation payloads</title>
+<title><quote>trace.happensBefore</quote> Parameter for Call Monitoring and Fault Simulation Payloads</title>
     <para>
-There is a parameter, which changes control flow of the replacement function in call monitor and fault simulation payloads:
+There is a parameter that changes control flow of the replacement function in call monitor and fault simulation payloads:
 <variablelist>
     <varlistentry><term>trace.happensBefore</term>
-        <listitem>If this parameter is defined (presize value has no meaning), trace will be output before target function calls. With this parameter defined, <symbol>middleCode</symbol> parameter shouldn't be used, also <varname>returnValue</varname> variable shouldn't be used.</listitem>
+        <listitem>If this parameter is defined (its precise value does not matter), the trace will be output before the target function is called. With this parameter defined, <code>middleCode</code> parameter should not be used as well as <varname>returnValue</varname> variable.</listitem>
     </varlistentry>
 </variablelist>
     </para>
     <para>
-The main purpose of using <symbol>trace.happensBefore</symbol> parameter is collecting correct trace on multithreaded systems. Suppose, two threads call <function>mutex_lock</function> and <function>mutex_unlock</function> functions for the same mutex. One of the correct order of this calls is:
+The main purpose of using <code>trace.happensBefore</code> parameter is collecting correct trace on SMP systems and the like. Suppose, two threads of execution call <function>mutex_lock</function> and <function>mutex_unlock</function> functions for the same mutex. One of the correct orders of these calls is:
 <programlisting>
 [1]    <function>mutex_lock</function>
 [1]    <function>mutex_unlock</function>
 [2]    <function>mutex_lock</function>
 [2]    <function>mutex_unlock</function>
 </programlisting>
-([<replaceable>n</replaceable>] means that operation is performed by the thread <replaceable>n</replaceable>).
+([<replaceable>n</replaceable>] means that the operation is performed by the thread <replaceable>n</replaceable>).
     </para>
     <para>
-So, one may expect, that same order will be fixed by the trace:
+So one may expect that same order will be recorded in the trace:
 <programlisting>
 1    called_mutex_lock
 1    called_mutex_unlock
@@ -28,7 +28,7 @@ So, one may expect, that same order will be fixed by the trace:
 </programlisting>
     </para>
     <para>
-As described in the <xref linkend="custom_callm_payloads"/>, replacement function firstly calls the target function, and after it returns, outputs it's parameters to the trace. So, next order of the instructions is possible:
+As described in the <xref linkend="custom_callm_payloads"/>, a replacement function calls the target function first and only after that outputs its parameters to the trace. So the following order of the instructions is possible:
 <programlisting>
 [1]    [call replacement function for <function>mutex_lock</function>]
 [1]    mutex_lock
@@ -49,7 +49,7 @@ As described in the <xref linkend="custom_callm_payloads"/>, replacement functio
 </programlisting>
     </para>
     <para>
-Even call order of the target functions is correct, these instructions produce trace, which reflect impossible order of the target functions calls:
+Even though the order of calls to the target functions is correct, these instructions produce the trace that reflects impossible call order:
 <programlisting>
 1    called_mutex_lock
 2    called_mutex_lock
@@ -58,21 +58,15 @@ Even call order of the target functions is correct, these instructions produce t
 </programlisting>
     </para>
     <para>
-The thing is that kernel internally enforce ordering of
-<programlisting>
-...
-[1]    mutex_unlock
-...
-[2]    mutex_lock
-...
-</programlisting>
-But because kernel knows nothing about output trace, operations which output trace may be disoredered.
+From the kernel's point of view, the calls to <function>mutex_lock</function> and <function>mutex_unlock</function> are not related to the trace output made by KEDR. So the operations that output trace can be performed in any order, no matter in what order the target functions were called.
     </para>
     <para>
-For get correct trace, we need use <symbol>trace.happensBefore</symbol> parameter for replacement function for <function>mutex_unlock</function>. At abstract level, this attribute means <quote>Whenever <function>mutex_unlock</function> is <emphasis>internally</emphasis> ordered before some other function, this order will be preserved in the trace</quote>.
+To get a correct trace, we need to use <code>trace.happensBefore</code> parameter for the replacement function for <function>mutex_unlock</function>. At the abstract level, this parameter means <quote>Whenever <function>mutex_unlock</function> is called before some other function and nobody enforces this order explicitly, the order should be preserved in the trace</quote>.
     </para>
     <para>
-Note, though <function>mutex_lock</function> function also should be ordered before corresponding <function>mutex_unlock</function>:
+Note that although <function>mutex_lock</function> function must also be called before the corresponding <function>mutex_unlock</function>, this order is not affected by <code>trace.happensBefore</code> parameter.
+    </para>
+
 <programlisting>
 ...
 [1]    mutex_lock
@@ -80,10 +74,12 @@ Note, though <function>mutex_lock</function> function also should be ordered bef
 [1]    mutex_unlock
 ...
 </programlisting>
-this order is not processing by the <symbol>trace.happensBefore</symbol> parameter. The difference is that this order should be provided <emphasis>externally</emphasis> - by the user of this functions, that is target module. But target module really call replacement functions, so it enforce ordering <function>replacement-for-mutex_lock</function> before <function>replacement-for-mutex_unlock</function>. This order, in turn, automatically enforce order <function>mutex_lock</function> before <function>mutex_unlock</function>, and order <function>output-for-mutex_lock</function> before <function>output-for-mutex_unlock</function>. So trace automatically reflects order of funcitons calls in this case.
+
+    <para>
+The difference is that such order should be enforced <emphasis>explicitly</emphasis>, that is, by the user of these functions and thus of the target module. If the target module calls, say, <function>mutex_lock</function> strictly before <function>mutex_unlock</function>, the replacement function for <function>mutex_lock</function> will return strictly before the one for <function>mutex_unlock</function> starts executing. This, in turn, automatically enforces that the corresponding trace records will go in the right order too.
     </para>
     <para>
-If <symbol>trace.happensBefore</symbol> parameter is defined, control flow of the replacement functions is described in pseudocode as follows:
+If <code>trace.happensBefore</code> parameter is defined, the control flow of the replacement functions could be described in pseudocode as follows:
 <programlisting>
 <symbol>returnType</symbol> replacement_function(<symbol>arg.name</symbol>...)
 {
@@ -95,7 +91,7 @@ If <symbol>trace.happensBefore</symbol> parameter is defined, control flow of th
 </programlisting>
     </para>
     <para>
-For fault simulation replacement function, if <symbol>trace.happensBefore</symbol> parameter is defined, control flow is:
+For a fault simulation replacement function, the control flow is as follows in this case:
 <programlisting>
 <symbol>returnType</symbol> replacement_function(<symbol>arg.name</symbol>...)
 {
@@ -114,33 +110,33 @@ For fault simulation replacement function, if <symbol>trace.happensBefore</symbo
 </programlisting>
     </para>
     <para>
-Another example of internal happens-before relationship is one between <function>kfree</function> and <function>__kmalloc</function> functions. This relationship reflects fact that <function>__kmalloc</function> cannot return address, which has previously returned by another <function>__kmalloc</function> call and has not processed by <function>kfree</function>. With using of <symbol>trace.happensBefore</symbol> parameter one can enforce same ordering in the trace:
+Another example of internal happens-before relationship is the one between <function>kfree</function> and <function>__kmalloc</function> functions. This relationship reflects the fact that <function>__kmalloc</function> cannot return an address that was previously returned by another <function>__kmalloc</function> call and was not processed by <function>kfree</function>. Using <code>trace.happensBefore</code> parameter one can make sure the order of the trace records is correct:
 <programlisting> 
     [group]
-	# Name and return type of the target function
-	function.name = kfree
+    # Name and return type of the target function
+    function.name = kfree
 
-	# Names and types of the arguments of the target function
-	arg.type = void*
-	arg.name = p
-	
-	# The parameters to be output to the trace.
-	trace.param.type = void*
-	trace.param.name = p
+    # Names and types of the arguments of the target function
+    arg.type = void*
+    arg.name = p
+    
+    # The parameters to be output to the trace.
+    trace.param.type = void*
+    trace.param.name = p
 
-	# Happens-before relationship with kmalloc
-	<emphasis>trace.happensBefore = yes</emphasis>
+    # Happens-before relationship with kmalloc
+    <emphasis>trace.happensBefore = yes</emphasis>
 
-	# The format string to be used for trace output.
-	trace.formatString = "arguments: (%p)"
+    # The format string to be used for trace output.
+    trace.formatString = &quot;arguments: (%p)&quot;
 
 # End of the group of definitions for kfree().
 </programlisting>
     </para>
     <note><para>
-For reflecting in the trace fact, that function <function>A</function> has happens-before ordering with function <function>B</function>, one should define <symbol>trace.happensBefore</symbol> parameter for the function <function>A</function> and <emphasis>do not define it</emphasis> for the function <function>B</function>. There is no way to enforce two different orderings for one function, such as <function>krealloc</function>, which may be modelled as <function>__kmalloc</function> + <function>kfree</function>.
+For the trace records to reflect the fact that function <function>A</function> has happens-before ordering with function <function>B</function>, one should define <code>trace.happensBefore</code> parameter for the function <function>A</function> and <emphasis>should not define it</emphasis> for the function <function>B</function>. <code>trace.happensBefore</code> cannot be used to enforce two different orderings for the calls to a single function such as <function>krealloc</function> (which may be modelled as <function>__kmalloc</function> + <function>kfree</function>).
     </para>
     <para>
-Usually, functions for which <symbol>trace.happensBefore</symbol> parameter make a sence, do not return value and are not interesting for fault simulation.
+Usually, the functions for which <code>trace.happensBefore</code> parameter makes sense, return void and are not interesting for fault simulation.
     </para></note>
 </section>
