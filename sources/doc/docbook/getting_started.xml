@@ -289,8 +289,8 @@ In general, it can be useful to see how a kernel module behaves on the code path
 <para>
 Call monitoring facilities of KEDR are not needed here. So a custom configuration of KEDR can be used instead of the default one to make sure that only necessary components of KEDR are to be loaded. To do so, create file <filename>kedr.conf</filename> with the following contents in a directory of your choice:
 <programlisting><![CDATA[
-module /lib/modules/`uname -r`/misc/kedr_fault_simulation.ko
-module /lib/modules/`uname -r`/misc/kedr_fsim_cmm.ko
+module /usr/local/lib/modules/`uname -r`/misc/kedr_fault_simulation.ko
+module /usr/local/lib/modules/`uname -r`/misc/kedr_fsim_cmm.ko
 ]]></programlisting>
 </para>
 <para>
@@ -303,7 +303,7 @@ Then you can call
 <para>
 You can choose a scenario according to which KEDR will make calls to <code>__kmalloc</code> fail. A group of possible scenarios is already provided by KEDR and custom scenarios can also be developed. In this example, we will show how to configure and use a pre-defined scenario. To make it available, you should load the corresponding module:
 <programlisting><![CDATA[
-insmod /lib/modules/`uname -r`/misc/kedr_fsim_indicator_kmalloc.ko
+insmod /usr/local/lib/modules/`uname -r`/misc/kedr_fsim_indicator_kmalloc.ko
 ]]></programlisting>
 This module implements a scenario named <quote>kmalloc</quote>. Inform KEDR core that it should use this scenario for <code>__kmalloc</code> function:
 <programlisting><![CDATA[
