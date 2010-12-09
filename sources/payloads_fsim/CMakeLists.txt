@@ -1,7 +1,9 @@
 set(KEDR_GEN_TEMPLATES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/templates/") 
 
 kbuild_use_symbols("${CMAKE_BINARY_DIR}/base/Module.symvers")
+kbuild_add_dependencies("kedr_base")
 kbuild_use_symbols("${CMAKE_BINARY_DIR}/fault_simulation/Module.symvers")
+kbuild_add_dependencies("kedr_fault_simulation")
 
 # Common name of data file
 set(payload_data_file "payload.data")

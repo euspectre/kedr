@@ -15,13 +15,14 @@ kbuild_include_directories(
 	"${CMAKE_CURRENT_SOURCE_DIR}"
 	)
 
-kbuild_add_module(${kmodule_name} 
+kbuild_add_module(${kmodule_name}
     "controller.c"
     "${arch_dir}/lib/inat.c"
     "${arch_dir}/lib/insn.c"
     "${arch_dir}/lib/inat-tables.h"
     "controller_tracing.h"
     )
+add_dependencies(${kmodule_name} "kedr_base")
 
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${arch_dir}/lib/inat-tables.h"
 			COMMAND LC_ALL=C awk -f "${CMAKE_CURRENT_SOURCE_DIR}/${arch_dir}/tools/gen-insn-attr-x86.awk"

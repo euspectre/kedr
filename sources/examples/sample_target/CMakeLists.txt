@@ -11,7 +11,7 @@ add_custom_target("sample_target"
                 )
 
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${module_name}.ko"
-        COMMAND make -f makefile_installed
+        COMMAND $(MAKE) -f makefile_installed
         DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/cfake.c"
                 "${CMAKE_CURRENT_BINARY_DIR}/cfake.h"
                 "${CMAKE_CURRENT_BINARY_DIR}/makefile_installed"

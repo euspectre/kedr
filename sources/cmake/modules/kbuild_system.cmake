@@ -6,6 +6,11 @@ set(kbuild_this_module_dir "${CMAKE_SOURCE_DIR}/cmake/modules")
 # Symvers files, which should be processed for build kernel module
 set(kbuild_symbol_files)
 
+# Target names, from which builded kernel module should depends.
+# Usually, it is targets for build another kernel modules,
+# which symvers files are used via kbuild_use_symbols().
+set(kbuild_dependencies_modules)
+
 #include directories for build kernel modules
 set(kbuild_include_dirs)
 
@@ -40,6 +45,9 @@ function(kbuild_add_module name)
 	#Global target
 	add_custom_target(${name} ALL
 			DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${name}.ko ${symvers_file})
+	if(kbuild_dependencies_modules)
+		add_dependencies(${name} ${kbuild_dependencies_modules})
+	endif(kbuild_dependencies_modules)
 	#Sources
 	if(ARGN)
 		set(sources ${ARGN})
@@ -162,12 +170,12 @@ function(kbuild_add_module name)
 	if(kbuild_symbol_files)
     	add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${name}.ko ${symvers_file}
 				COMMAND cat ${kbuild_symbol_files} >> ${symvers_file}
-    			COMMAND make -C ${KBUILD_BUILD_DIR} M=${CMAKE_CURRENT_BINARY_DIR} modules
+    			COMMAND $(MAKE) -C ${KBUILD_BUILD_DIR} M=${CMAKE_CURRENT_BINARY_DIR} modules
     			DEPENDS ${depend_files} ${kbuild_symbol_files}
                 )
 	else(kbuild_symbol_files)
     	add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${name}.ko ${symvers_file}
-    			COMMAND make -C ${KBUILD_BUILD_DIR} M=${CMAKE_CURRENT_BINARY_DIR} modules
+    			COMMAND $(MAKE) -C ${KBUILD_BUILD_DIR} M=${CMAKE_CURRENT_BINARY_DIR} modules
     			DEPENDS ${depend_files}
     			)
 	endif(kbuild_symbol_files)
@@ -219,7 +227,7 @@ function(kbuild_add_object source)
 	#create rules
 	list(APPEND clean_files_list "${CMAKE_CURRENT_BINARY_DIR}/Module.symvers")
 	add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${name}.o"
-			COMMAND make -C ${KBUILD_BUILD_DIR} M=${CMAKE_CURRENT_BINARY_DIR}
+			COMMAND $(MAKE) -C ${KBUILD_BUILD_DIR} M=${CMAKE_CURRENT_BINARY_DIR}
 			DEPENDS ${depend_files}
 			)
 
@@ -233,9 +241,14 @@ endmacro(kbuild_include_directories)
 
 # kbuild_use_symbols(symvers_file1 .. symvers_filen)
 macro(kbuild_use_symbols)
-#	set(kbuild_symbol_files "${kbuild_symbol_files} ${ARGN}")
 	list(APPEND kbuild_symbol_files ${ARGN})
 endmacro(kbuild_use_symbols)
+
+# kbuild_add_dependencies(kmodule1 .. kmoduleN)
+macro(kbuild_add_dependencies)
+	list(APPEND kbuild_dependencies_modules ${ARGN})
+endmacro(kbuild_add_dependencies)
+
 
 # kbuild_add_cflags (flag1 ... flagN)
 # Specify additional compiler flags for the module.

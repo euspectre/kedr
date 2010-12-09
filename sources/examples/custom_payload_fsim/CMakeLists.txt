@@ -66,7 +66,7 @@ add_custom_target("custom_payload_fsim"
 add_dependencies("custom_payload_fsim" "custom_payload_fsim_templates")
 
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${module_name}.ko"
-        COMMAND make -f makefile_test
+        COMMAND $(MAKE) -f makefile_test
         DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/payload.data"
                 "${CMAKE_CURRENT_BINARY_DIR}/makefile_test"
                 "${CMAKE_CURRENT_BINARY_DIR}/Kbuild"

@@ -20,7 +20,7 @@ all: $(module_name).ko
 
 $(module_name).ko: $(payload_c_file) $(payload_h_file) $(kedr_base_symbols) $(fault_simulation_symbols)
 	cat "$(kedr_base_symbols)" "$(fault_simulation_symbols)" > ./Module.symvers
-	make -C $(KBUILD_DIR) M=$(PWD) modules
+	$(MAKE) -C $(KBUILD_DIR) M=$(PWD) modules
 
 $(payload_c_file): $(payload_data_file)
 	$(kedr_gen_tool) $(kedr_gen_templates_dir)/payload.c/ $^ > $@
@@ -29,7 +29,7 @@ $(payload_h_file): $(payload_data_file)
 	$(kedr_gen_tool) $(kedr_gen_templates_dir)/trace_payload.h/ $^ > $@
 
 clean:
-	make -C $(KBUILD_DIR) M=$(PWD) clean
+	$(MAKE) -C $(KBUILD_DIR) M=$(PWD) clean
 	rm -f $(payload_c_file)
 	rm -f $(payload_h_file)
 

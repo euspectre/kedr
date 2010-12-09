@@ -2,6 +2,7 @@
 set(KEDR_GEN_TEMPLATES_DIR "${CMAKE_SOURCE_DIR}/payloads_fsim/templates/") 
 
 kbuild_use_symbols("${CMAKE_BINARY_DIR}/base/Module.symvers")
+kbuild_add_dependencies("kedr_base")
 
 # Common name of data file
 set(payload_data_file "payload.data")

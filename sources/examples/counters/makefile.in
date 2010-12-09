@@ -9,9 +9,9 @@ all: ${module_name}.ko
 
 ${module_name}.ko: counters.c ${kedr_base_symbols}
 	cat "${kedr_base_symbols}" > ./Module.symvers
-	make -C ${KBUILD_DIR} M=${PWD} modules
+	$(MAKE) -C ${KBUILD_DIR} M=${PWD} modules
 
 clean:
-	make -C ${KBUILD_DIR} M=${PWD} clean
+	$(MAKE) -C ${KBUILD_DIR} M=${PWD} clean
 
 .PHONY: all clean

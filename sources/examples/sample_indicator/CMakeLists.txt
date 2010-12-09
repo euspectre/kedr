@@ -20,7 +20,7 @@ add_custom_target("sample_indicator"
                 )
 
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${module_name}.ko"
-        COMMAND make -f makefile_test
+        COMMAND $(MAKE) -f makefile_test
         DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/sample_indicator.c"
                 "${CMAKE_CURRENT_BINARY_DIR}/makefile_test"
                 "${CMAKE_CURRENT_BINARY_DIR}/Kbuild"

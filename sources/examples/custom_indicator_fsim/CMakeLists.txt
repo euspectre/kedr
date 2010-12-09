@@ -78,7 +78,7 @@ add_custom_target("custom_fsim_indicator"
 add_dependencies("custom_fsim_indicator" "custom_fsim_indicator_templates")
 
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${module_name}.ko"
-        COMMAND make -f makefile_test
+        COMMAND $(MAKE) -f makefile_test
         DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/indicator.data"
 				"${CMAKE_CURRENT_BINARY_DIR}/calculator.c"
 				"${CMAKE_CURRENT_BINARY_DIR}/calculator.h"

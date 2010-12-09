@@ -10,9 +10,9 @@ all: ${module_name}.ko
 
 ${module_name}.ko: sample_fsim_payload.c ${kedr_base_symbols} ${fault_simulation_symbols}
 	cat "${kedr_base_symbols}" "${fault_simulation_symbols}" > ./Module.symvers
-	make -C ${KBUILD_DIR} M=${PWD} modules
+	$(MAKE) -C ${KBUILD_DIR} M=${PWD} modules
 
 clean:
-	make -C ${KBUILD_DIR} M=${PWD} clean
+	$(MAKE) -C ${KBUILD_DIR} M=${PWD} clean
 
 .PHONY: all clean

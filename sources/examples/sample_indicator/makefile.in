@@ -9,9 +9,9 @@ all: $(module_name).ko
 
 $(module_name).ko: sample_indicator.c $(fault_simulation_symbols)
 	cat "$(fault_simulation_symbols)" > ./Module.symvers
-	make -C $(KBUILD_DIR) M=$(PWD) modules
+	$(MAKE) -C $(KBUILD_DIR) M=$(PWD) modules
 
 clean:
-	make -C $(KBUILD_DIR) M=$(PWD) clean
+	$(MAKE) -C $(KBUILD_DIR) M=$(PWD) clean
 
 .PHONY: all clean
