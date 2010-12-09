@@ -3,10 +3,12 @@
 newline='
 '
 # Usage: 
-# kedr.sh start target_name [-c conf_string(s) | conf_file] ...
-# kedr.sh stop
-# kedr.sh restart
-# kedr.sh status
+# kedr start target_name [-c conf_string(s) | conf_file] ...
+# kedr stop
+# kedr restart
+# kedr status
+# kedr --help
+# kedr --version
 #
 # 'start' - start KEDR, when it is not started, for watching for given target.
 # Use config file @KEDR_FILE_DEFAULT_CONTROL_CONFIG@, if no other arguments are passed.
@@ -18,6 +20,30 @@ newline='
 # 'restart' - stop KEDR and start it with same configuration.
 #
 # 'status' - output current state of KEDR.
+#
+# 'version' - output version of the KEDR installed.
+
+usage()
+{
+	printf "Usage: \n"
+	printf "\tkedr start <target_module_name> [ -c <conf_string> | <conf_file> ...]\n"
+	printf "\t\tLoad KEDR infrastructure for control target module.\n"
+	printf "\tkedr stop\n"
+	printf "\t\tUnload KEDR infrastructure.\n"
+	printf "\tkedr restart\n"
+	printf "\t\tUnload KEDR infrastructure and load it with the same configuration.\n"
+	printf "\tkedr status\n"
+	printf "\t\tDisplay status of KEDR infrastructure.\n"
+	printf "\tkedr --help\n"
+	printf "\t\tDisplay this help and exit.\n"
+	printf "\tkedr --version\n"
+	printf "\t\tOutput version information and exit.\n"
+}
+
+version()
+{
+	printf "KEDR version %s.%s.%s.\n" "@KEDR_VERSION_MAJOR@" "@KEDR_VERSION_MINOR@" "@KEDR_VERSION_MICRO@"
+}
 
 # default config file
 default_config_file=@KEDR_FILE_DEFAULT_CONTROL_CONFIG@
@@ -47,7 +73,8 @@ start_conf_file=${tmp_dir}/start.conf
 
 
 if test $# -eq 0; then
-    printf "'start', 'stop' or 'status' command should be specified\n"
+    printf "kedr: command should be specified\n"
+	usage
     exit 1
 fi
 
@@ -369,6 +396,13 @@ restart)
     fi
     printf "KEDR started.\n"
     ;;
+--help)
+	printf "KEDR service.\n"
+	usage
+	;;
+--version)
+	version
+	;;
 *)
-    printf "%s\n" "Incorrect command '$command' to service, should be 'start', 'stop', 'restart' or 'status'."
+    printf "%s\n" "kedr: Incorrect command '$command' to service, should be 'start', 'stop', 'restart' or 'status'."
 esac
