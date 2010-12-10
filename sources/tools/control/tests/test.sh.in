@@ -2,9 +2,8 @@
 control_script="sh @CMAKE_BINARY_DIR@/tools/control/kedr_test"
 base_name="kedr_base"
 controller_name="kedr_controller"
-#Name of any payload
-payload_name="kedr_cm_cmm"
-
+# Name of any payload (empty if shouldn't be tested)
+payload_name="@NAME_OF_PAYLOAD_LOADED@"
 #Whether module is currently loading
 is_module_loading()
 {
@@ -26,42 +25,50 @@ fi
 
 if ! is_module_loading ${controller_name}; then
     printf "Controller module is not loading after 'start' command\n"
+	${control_script} stop
     exit 1
 fi
 
-if ! is_module_loading ${payload_name}; then
-    printf "Payload module is not loading after 'start' command\n"
-    exit 1
+if test "${payload_name}"; then
+	if ! is_module_loading ${payload_name}; then
+	    printf "Payload module is not loading after 'start' command\n"
+		${control_script} stop
+	    exit 1
+	fi
 fi
-
 
 ${control_script} status > ${output_file}
 if test $? -ne 0; then
     printf "Error occures when 'status' command is executed after 'start' command\n"
+	${control_script} stop
     exit 1
 fi
 
 grep "Base is running" ${output_file}
 if test $? -ne 0; then
     printf "'status' command does not output '%s' string, but should\n" "Base is running"
+	${control_script} stop
     exit 1
 fi
 
 grep "Controller is running" ${output_file}
 if test $? -ne 0; then
     printf "'status' command does not output '%s' string, but should\n" "Controller is running"
+	${control_script} stop
     exit 1
 fi
 
 grep "target1" ${output_file}
 if test $? -ne 0; then
     printf "'status' command does not output name of target for controller ('%s'), but should\n" "target1"
+	${control_script} stop
     exit 1
 fi
 
 grep "Target is running" ${output_file}
 if test $? -eq 0; then
     printf "'status' command outputs '%s' string, but shouldn't\n" "Target is running"
+	${control_script} stop
     exit 1
 fi
 
@@ -102,12 +109,16 @@ fi
 
 if ! is_module_loading ${controller_name}; then
     printf "Controller module is not loading after 'restart' command\n"
+	${control_script} stop
     exit 1
 fi
 
-if ! is_module_loading ${payload_name}; then
-    printf "Payload module is not loading after 'restart' command\n"
-    exit 1
+if test "${payload_name}"; then
+	if ! is_module_loading ${payload_name}; then
+	    printf "Payload module is not loading after 'restart' command\n"
+		${control_script} stop
+	    exit 1
+	fi
 fi
 
 ${control_script} stop

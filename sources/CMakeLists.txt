@@ -98,6 +98,10 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif()
 
 #######################################################################
+# Configuration of payloads set
+option(KEDR_STANDARD_CALLM_PAYLOADS "Whether need to build standard set of call monitor payloads" ON)
+option(KEDR_STANDARD_FSIM_PAYLOADS "Whether need to build standard set of fault simulation payloads" ON)
+#######################################################################
 # kedr_gen is built here explicitly and installed to a temporary location.
 # This is only necessary to build KEDR itself.
 # This should be done before the first add_subdirectory() command.
@@ -241,15 +245,26 @@ add_subdirectory(fault_simulation)
 
 add_subdirectory(include)
 
-# This file is used for create configuration file for call monitor payloads
-set(kedr_cm_conf_file_data "${CMAKE_BINARY_DIR}/tools/control/kedr_cm.conf.data")
+# This file is used for create configuration file for call monitor payloads or empty one
+set(kedr_conf_file_data_default "${CMAKE_BINARY_DIR}/tools/control/kedr.conf.data")
+set(kedr_test_conf_file_data_default "${CMAKE_BINARY_DIR}/tools/control/kedr_test.conf.data")
+
+if(KEDR_STANDARD_FSIM_PAYLOADS)
+# This file is used for create configuration file for fault simulation payloads
+set(kedr_conf_file_data_fsim "${CMAKE_BINARY_DIR}/tools/control/kedr_fsim.conf.data")
+endif(KEDR_STANDARD_FSIM_PAYLOADS)
 
 # tools should be before payloads
 add_subdirectory(tools)
-add_subdirectory(payloads_callm)
 
+if(KEDR_STANDARD_CALLM_PAYLOADS)
+add_subdirectory(payloads_callm)
+endif(KEDR_STANDARD_CALLM_PAYLOADS)
+
+if(KEDR_STANDARD_FSIM_PAYLOADS)
 add_subdirectory(payloads_fsim)
 add_subdirectory(fault_indicators)
+endif(KEDR_STANDARD_FSIM_PAYLOADS)
 
 add_subdirectory(examples)
 # Documentation

@@ -37,4 +37,4 @@ kedr_test_add_trigger_for_function(
 
 kedr_install_kmodule(${kmodule_name})
 
-kedr_add_default_cm_payload(${kmodule_name})
+kedr_conf_default_add_payload(${kmodule_name})

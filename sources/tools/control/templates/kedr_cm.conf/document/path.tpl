@@ -1,1 +1,0 @@
-<$if is_test$><$test_path$><$else$><$install_path$><$endif$>

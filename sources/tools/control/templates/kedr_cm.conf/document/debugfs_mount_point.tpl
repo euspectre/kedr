@@ -1,1 +1,0 @@
-<$if is_test$><$debugfs_test_mount_point$><$else$><$debugfs_install_mount_point$><$endif$>
