@@ -678,7 +678,7 @@ trace_consumer_create_file(const char* filename)
     // Open file for writing trace.
     if(strcmp(filename, "-") != 0)
     {
-        fd = open(filename, O_WRONLY | O_CREAT);
+        fd = open(filename, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
         if(fd == -1)
         {
             print_error("Cannot open file \"%s\" for collect trace: %s.",
@@ -1205,8 +1205,8 @@ static int process_options(int argc, char* const argv[],
             //error in options
             if(optind < argc)
                 print_error("Unknown option '%s'.", argv[optind]);
-            free(program_names);
-            free(file_names);
+            free(pnames);
+            free(fnames);
             return -1;
         case 's':
             *is_session = 1;
