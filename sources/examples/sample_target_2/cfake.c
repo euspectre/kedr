@@ -76,7 +76,6 @@ struct file_operations cfake_fops = {
 	.llseek =   cfake_llseek,
 	.read =     cfake_read,
 	.write =    cfake_write,
-	.ioctl =    cfake_ioctl,
 	.open =     cfake_open,
 	.release =  cfake_release,
 };
@@ -328,90 +327,6 @@ cfake_write(struct file *filp, const char __user *buf, size_t count,
 	
 out:
   	mutex_unlock(&dev->cfake_mutex);
-	return retval;
-}
-
-int 
-cfake_ioctl(struct inode *inode, struct file *filp,
-                 unsigned int cmd, unsigned long arg)
-{
-	int err = 0;
-	int retval = 0;
-	int fill_char;
-	unsigned int block_size = 0;
-	struct cfake_dev *dev = (struct cfake_dev *)filp->private_data;
-
-	/*
-	 * extract the type and number bitfields, and don't decode
-	 * wrong cmds: return ENOTTY (inappropriate ioctl) before access_ok()
-	 */
-	if (_IOC_TYPE(cmd) != CFAKE_IOCTL_MAGIC) return -ENOTTY;
-	if (_IOC_NR(cmd) > CFAKE_IOCTL_NCODES) return -ENOTTY;
-
-	if (_IOC_DIR(cmd) & _IOC_READ)
-	{
-		err = !access_ok(VERIFY_WRITE, (void __user *)arg, _IOC_SIZE(cmd));
-	}
-	else if (_IOC_DIR(cmd) & _IOC_WRITE)
-	{
-		err =  !access_ok(VERIFY_READ, (void __user *)arg, _IOC_SIZE(cmd));
-	}
-	if (err) 
-	{
-		return -EFAULT;
-	}
-	
-	/* Begin critical section */
-	if (mutex_lock_killable(&dev->cfake_mutex))
-	{
-		return -EINTR;
-	}
-	
-	switch(cmd) {
-	case CFAKE_IOCTL_RESET:
-		memset(dev->data, 0, dev->buffer_size);
-		break;
-	
-	case CFAKE_IOCTL_FILL:
-		retval = get_user(fill_char, (int __user *)arg);
-		if (retval == 0) /* success */
-		{
-			memset(dev->data, fill_char, dev->buffer_size);
-		}
-		break;
-	
-	case CFAKE_IOCTL_LFIRM:
-		/* Assume that only an administrator can load the 'firmware' */ 
-		if (!capable(CAP_SYS_ADMIN))
-		{
-			retval = -EPERM;
-			break;
-		}
-		
-		memset(dev->data, 0, dev->buffer_size);
-		strcpy((char*)(dev->data), "Hello, hacker!\n");
-		break;
-	
-	case CFAKE_IOCTL_RBUFSIZE:
-		retval = put_user(dev->buffer_size, (unsigned long __user *)arg);
-		break;
-	
-	case CFAKE_IOCTL_SBLKSIZE:
-		retval = get_user(block_size, (unsigned long __user *)arg);
-		if (retval != 0) break;
-		
-		retval = put_user(dev->block_size, (unsigned long __user *)arg);
-		if (retval != 0) break;
-		
-		dev->block_size = block_size;
-		break;
-	
-	default:  /* redundant, as 'cmd' was checked against CFAKE_IOCTL_NCODES */
-		retval = -ENOTTY;
-	}
-	
-	/* End critical section */
-	mutex_unlock(&dev->cfake_mutex);
 	return retval;
 }
 

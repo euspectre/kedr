@@ -27,8 +27,8 @@ int trigger_major = 0;
 /* ================================================================ */
 /* Main operations - declarations */
 
-int 
-trigger_ioctl(struct inode *inode, struct file *filp,
+long 
+trigger_ioctl(struct file *filp,
 	unsigned int cmd, unsigned long arg);
 
 /* ================================================================ */
@@ -37,7 +37,7 @@ struct cdev trigger_device;
 
 struct file_operations trigger_fops = {
 	.owner =    THIS_MODULE,
-	.ioctl =    trigger_ioctl,
+	.unlocked_ioctl =    trigger_ioctl,
 };
 
 /* ================================================================ */
@@ -82,9 +82,8 @@ module_init(trigger_init_module);
 module_exit(trigger_cleanup_module);
 /* ================================================================ */
 
-int 
-trigger_ioctl(struct inode *inode, struct file *filp,
-                 unsigned int cmd, unsigned long arg)
+long 
+trigger_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 {
 	void* __user user_area = (void* __user)arg;
 	if (_IOC_TYPE(cmd) != TRIGGER_IOCTL_MAGIC) return -ENOTTY;
