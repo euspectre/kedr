@@ -9,19 +9,13 @@ MODULE_LICENSE("<$module.license$>");
 /*********************************************************************/
 
 #include <kedr/base/common.h>
+#include <kedr/trace/trace.h>
 
 #include <linux/stacktrace.h>
 
 <$if concat(fpoint.fault_code)$>#include <kedr/fault_simulation/fault_simulation.h>
 
 <$endif$><$header$>
-
-/* To minimize the unexpected consequences of trace event-related 
- * headers and symbols, place #include directives for system headers 
- * before '#define CREATE_TRACE_POINTS' directive
- */
-#define CREATE_TRACE_POINTS
-#include "trace_payload.h" /* trace event facilities */
 
 /* 
  *   void get_caller_address(void* abs_addr, int section_id, ptrdiff_t rel_addr)
@@ -81,13 +75,18 @@ target_load_callback(struct module *target_module)
 
     target_init_addr = target_module->module_init;
     target_init_size = target_module->init_text_size;
+	
+	kedr_trace_marker_target(target_module, THIS_MODULE, 1);
+	
     return;
 }
 
 static void
 target_unload_callback(struct module *target_module)
 {
-    BUG_ON(target_module == NULL);
+    kedr_trace_marker_target(target_module, THIS_MODULE, 0);
+	
+	BUG_ON(target_module == NULL);
     
     target_core_addr = NULL;
     target_core_size = 0;
@@ -144,7 +143,7 @@ static void
 	}<$endif$>
     
     KEDR_MSG("[<$module.name$>] Cleanup complete\n");
-    return;
+    kedr_trace_pp_unregister();
 }
 
 static int __init

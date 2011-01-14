@@ -12,6 +12,7 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Kbuild.in"
 )
 
 set(kedr_base_symbols "${KEDR_INSTALL_PREFIX_KSYMVERS}/kedr_base.symvers")
+set(kedr_trace_symbols "${KEDR_INSTALL_PREFIX_KSYMVERS}/kedr_trace.symvers")
 set(fault_simulation_symbols "${KEDR_INSTALL_PREFIX_KSYMVERS}/kedr_fault_simulation.symvers")
 set(kedr_gen_tool "${KEDR_INSTALL_PREFIX_EXEC_AUX}/kedr_gen")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/makefile.in"
@@ -23,7 +24,7 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/makefile.in"
 set(templates_root_dir_src "${CMAKE_SOURCE_DIR}/payloads_fsim/templates")
 set(templates_root_dir_dst "${CMAKE_CURRENT_BINARY_DIR}/templates")
 
-set(templates_dirs "payload.c/block" "payload.c/document" "trace_payload.h/block" "trace_payload.h/document")
+set(templates_dirs "payload.c/block" "payload.c/document")
 
 set(templates_dirs_src)
 set(templates_dirs_dst)
@@ -79,6 +80,7 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Kbuild.in"
 )
 
 set(kedr_base_symbols "${CMAKE_BINARY_DIR}/base/Module.symvers")
+set(kedr_trace_symbols "${CMAKE_BINARY_DIR}/trace/Module.symvers")
 set(fault_simulation_symbols "${CMAKE_BINARY_DIR}/fault_simulation/Module.symvers")
 set(kedr_gen_tool "${KEDR_GEN_INSTALL_PREFIX}/kedr_gen")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/makefile.in"

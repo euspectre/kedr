@@ -22,8 +22,7 @@ set(functions ${copy_to_user_FUNCTION} ${copy_from_user_FUNCTION})
 
 kbuild_include_directories ("${CMAKE_CURRENT_BINARY_DIR}")
 kbuild_add_module(${kmodule_name}
-	"payload.c"
-	"trace_payload.h")
+	"payload.c")
 
 rules_generate_payload()
 

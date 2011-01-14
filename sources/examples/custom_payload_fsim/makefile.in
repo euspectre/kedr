@@ -3,14 +3,13 @@ module_name := @module_name@
 
 payload_data_file := payload.data
 
-# These two filenames shouldn't be changed
 payload_c_file := payload.c
-payload_h_file := trace_payload.h
 
 kedr_gen_templates_dir := ./templates
 kedr_gen_tool := @kedr_gen_tool@
 
 kedr_base_symbols := @kedr_base_symbols@
+kedr_trace_symbols := @kedr_trace_symbols@
 fault_simulation_symbols := @fault_simulation_symbols@
 
 KBUILD_DIR=@KBUILD_BUILD_DIR@
@@ -18,15 +17,12 @@ PWD=`pwd`
 
 all: $(module_name).ko
 
-$(module_name).ko: $(payload_c_file) $(payload_h_file) $(kedr_base_symbols) $(fault_simulation_symbols)
-	cat "$(kedr_base_symbols)" "$(fault_simulation_symbols)" > ./Module.symvers
+$(module_name).ko: $(payload_c_file) $(kedr_base_symbols) $(kedr_trace_symbols) $(fault_simulation_symbols)
+	cat "$(kedr_base_symbols)" "$(kedr_trace_symbols)" "$(fault_simulation_symbols)" > ./Module.symvers
 	$(MAKE) -C $(KBUILD_DIR) M=$(PWD) modules
 
 $(payload_c_file): $(payload_data_file)
 	$(kedr_gen_tool) $(kedr_gen_templates_dir)/payload.c/ $^ > $@
-
-$(payload_h_file): $(payload_data_file)
-	$(kedr_gen_tool) $(kedr_gen_templates_dir)/trace_payload.h/ $^ > $@
 
 clean:
 	$(MAKE) -C $(KBUILD_DIR) M=$(PWD) clean

@@ -1,1 +1,0 @@
-abs_addr, section_id, rel_addr<$if concat(trace.param.name)$>, <$trace.param.name : join(, )$><$endif$>

@@ -250,6 +250,7 @@ if(KEDR_STANDARD_FSIM_PAYLOADS)
 set(kedr_conf_file_data_fsim "${CMAKE_BINARY_DIR}/tools/control/kedr_fsim.conf.data")
 endif(KEDR_STANDARD_FSIM_PAYLOADS)
 
+add_subdirectory(trace)
 # tools should be before payloads
 add_subdirectory(tools)
 

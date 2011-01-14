@@ -1,1 +1,0 @@
-void* abs_addr, int section_id, ptrdiff_t rel_addr<$if concat(trace.param.name)$>, <$param : join(, )$><$endif$>

@@ -31,11 +31,13 @@ set(kedr_test_conf_file_data_header "${CMAKE_CURRENT_BINARY_DIR}/kedr_test_conf_
 file(WRITE "${kedr_conf_file_data_header}"
 	"debugfs_mount_point = ${KEDR_INSTALL_PREFIX_TEMP_SESSION}/${kedr_debugfs_dir}\n"
 	"fault_simulation_module = ${KEDR_INSTALL_PREFIX_KMODULE}/kedr_fault_simulation.ko\n"
+	"kedr_trace_module = ${KEDR_INSTALL_PREFIX_KMODULE}/kedr_trace.ko\n"
 )
 
 file(WRITE "${kedr_test_conf_file_data_header}"
 	"debugfs_mount_point = ${KEDR_TEST_PREFIX_TEMP_SESSION}/${kedr_debugfs_dir}\n"
 	"fault_simulation_module = ${CMAKE_BINARY_DIR}/fault_simulation/kedr_fault_simulation.ko\n"
+	"kedr_trace_module = ${CMAKE_BINARY_DIR}/trace/kedr_trace.ko\n"
 )
 
 #Function for create config file

@@ -4,6 +4,9 @@ set(KEDR_GEN_TEMPLATES_DIR "${CMAKE_SOURCE_DIR}/payloads_fsim/templates/")
 kbuild_use_symbols("${CMAKE_BINARY_DIR}/base/Module.symvers")
 kbuild_add_dependencies("kedr_base")
 
+kbuild_use_symbols("${CMAKE_BINARY_DIR}/trace/Module.symvers")
+kbuild_add_dependencies("kedr_trace")
+
 # Common name of data file
 set(payload_data_file "payload.data")
 # Common name of beginning part of the data-file
@@ -13,13 +16,9 @@ set(begin_data_file "beginning.data")
 # from ${payload_data_file}, placed in the current source or binary directory.
 function(rules_generate_payload)
 	set(payload_c_file "${CMAKE_CURRENT_BINARY_DIR}/payload.c")
-	set(trace_payload_h_file "${CMAKE_CURRENT_BINARY_DIR}/trace_payload.h")
 	to_abs_path(payload_data_file_abs ${payload_data_file})
 	add_custom_command(OUTPUT ${payload_c_file}
 				COMMAND ${KEDR_GEN_TOOL} ${KEDR_GEN_TEMPLATES_DIR}/payload.c/ ${payload_data_file_abs} > ${payload_c_file}
-				DEPENDS ${payload_data_file_abs})
-	add_custom_command(OUTPUT ${trace_payload_h_file}
-				COMMAND ${KEDR_GEN_TOOL} ${KEDR_GEN_TEMPLATES_DIR}/trace_payload.h/ ${payload_data_file_abs} > ${trace_payload_h_file}
 				DEPENDS ${payload_data_file_abs})
 endfunction(rules_generate_payload)
 

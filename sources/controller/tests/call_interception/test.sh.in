@@ -7,7 +7,7 @@
 #	'payload' - call monitor payload, which replace this function
 
 kedr_control_scipt="sh @CMAKE_BINARY_DIR@/tools/control/kedr_test"
-capture_trace_script="sh @CMAKE_BINARY_DIR@/tools/capture_trace/kedr_test_capture_trace"
+capture_trace_script="@CMAKE_BINARY_DIR@/tools/capture_trace/kedr_capture_trace"
 temp_dir=@KEDR_TEST_PREFIX_TEMP_SESSION@/call_interception
 kedr_debugfs_dir=${temp_dir}/debugfs
 
@@ -17,6 +17,7 @@ device=kedr_trigger_device
 trigger_module_name=trigger_module
 trigger_module=@CMAKE_CURRENT_BINARY_DIR@/trigger_module/trigger_module.ko
 trigger_program=@CMAKE_CURRENT_BINARY_DIR@/trigger_program/trigger_program
+kedr_trace_module=@CMAKE_BINARY_DIR@/trace/kedr_trace.ko
 
 # is_function_call_detected trace_file function
 is_function_call_detected()
@@ -38,13 +39,14 @@ payload_name=`printf "%s" "$payload" | sed '/\// s/^.\{0,\}\///; /\./ s/\..\{0,\
 trace_file="${temp_dir}/${function}.trace"
 
 # Load KEDR with given payload
-
+#(mounting debugfs needed for capture trace, not for starting kedr)
 ${kedr_control_scipt} start "${trigger_module_name}" \
+	-c "module \"${kedr_trace_module}\"" \
 	-c "payload \"${payload}\"" \
 	-c "on_load mkdir -p \"${kedr_debugfs_dir}\"" \
 	-c "on_load mount debugfs -t debugfs \"${kedr_debugfs_dir}\"" \
 	-c "on_unload umount \"${kedr_debugfs_dir}\"" \
-	-c "on_load echo 1 > \"${kedr_debugfs_dir}/tracing/events/${payload_name}/enable\""
+
 
 if test $? -ne 0; then
 	printf "Failed to start test\n"
@@ -83,7 +85,7 @@ ${trigger_program} ${function}
 test_result=$?
 
 #<> [Temporary]
-sleep 0.2
+#sleep 0.2
 #<> [/Temporary]
 
 
@@ -91,14 +93,18 @@ rm -f /dev/${device}
 /sbin/rmmod "${trigger_module}"
 
 #<> [Temporary]
-sleep 0.2
+#sleep 0.2
 #<> [/Temporary]
 
 # Capture trace
 mkdir -p "${temp_dir}"
 rm -f "${trace_file}"
 
-${capture_trace_script} session -d "${kedr_debugfs_dir}" "${trace_file}"
+
+${capture_trace_script} -s -d "${kedr_debugfs_dir}" -f "${trace_file}"
+#sleep 0.2
+#debug
+#${capture_trace_script} session -d "${kedr_debugfs_dir}" "${trace_file}"
 
 if test $? -ne 0; then
     printf "Some error occures while capturing trace\n"
