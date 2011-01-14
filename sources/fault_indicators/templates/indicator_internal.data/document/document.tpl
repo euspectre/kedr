@@ -66,13 +66,15 @@ indicator.simulate.name = expression
 indicator.simulate.first =
 indicator.simulate.code =>>
 	int result;
+    int *kcalc;
 	kedr_calc_int_t vars[ARRAY_SIZE(var_names)];
 
     vars[0] = atomic_inc_return(&state(times));
 <$expressionVarsSet$>
 
     rcu_read_lock();
-    result = kedr_calc_evaluate(rcu_dereference(state(calc)), vars);
+    kcalc = (int *)(state(calc));
+    result = kedr_calc_evaluate((kedr_calc_t *)(rcu_dereference(kcalc)), vars);
     rcu_read_unlock();
 	return result;
 <<
@@ -122,7 +124,9 @@ indicator.file.get =>>
 <<
 indicator.file.set =>>
 	char *new_expression;
-    kedr_calc_t *old_calc, *new_calc;
+    kedr_calc_t *old_calc;
+    kedr_calc_t *new_calc;
+    /*int *tmp_calc; */
     
     new_calc = kedr_calc_parse(str,
         <$expressionConstParams$>,
@@ -143,8 +147,11 @@ indicator.file.set =>>
     }
     
     old_calc = state(calc);
-    
-    rcu_assign_pointer(state(calc), new_calc);
+    {
+        int *kcalc = (int *)new_calc;
+        int **tmp = (int **)(&state(calc));
+        rcu_assign_pointer(*tmp, kcalc);
+    }
     
     synchronize_rcu();
 

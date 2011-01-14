@@ -21,6 +21,8 @@
 #include <linux/errno.h>	/* error codes */
 #include <linux/cdev.h>
 
+#include <linux/mutex.h>
+
 #include <asm/uaccess.h>	/* copy_*_user */
 
 #include "cfake.h"
@@ -74,7 +76,6 @@ struct file_operations cfake_fops = {
 	.llseek =   cfake_llseek,
 	.read =     cfake_read,
 	.write =    cfake_write,
-	.ioctl =    cfake_ioctl,
 	.open =     cfake_open,
 	.release =  cfake_release,
 };
@@ -173,11 +174,11 @@ cfake_init_module(void)
 		cfake_devices[i].buffer_size = cfake_buffer_size;
 		cfake_devices[i].block_size = cfake_block_size;
 		cfake_devices[i].dev_added = 0;
+		mutex_init(&cfake_devices[i].cfake_mutex);
 		
 		/* memory is to be allocated in open() */
 		cfake_devices[i].data = NULL; 
 		
-		init_MUTEX(&cfake_devices[i].sem);
 		cfake_setup_cdevice(&cfake_devices[i], i);
 	}
 	
@@ -254,9 +255,9 @@ cfake_read(struct file *filp, char __user *buf, size_t count,
 	struct cfake_dev *dev = (struct cfake_dev *)filp->private_data;
 	ssize_t retval = 0;
 	
-	if (down_interruptible(&dev->sem))
+	if (mutex_lock_killable(&dev->cfake_mutex))
 	{
-		return -ERESTARTSYS;
+		return -EINTR;
 	}
 	
 	if (*f_pos >= dev->buffer_size) /* EOF */
@@ -284,7 +285,7 @@ cfake_read(struct file *filp, char __user *buf, size_t count,
 	retval = count;
 	
 out:
-  	up(&dev->sem);
+  	mutex_unlock(&dev->cfake_mutex);
 	return retval;
 }
                 
@@ -295,9 +296,9 @@ cfake_write(struct file *filp, const char __user *buf, size_t count,
 	struct cfake_dev *dev = (struct cfake_dev *)filp->private_data;
 	ssize_t retval = 0;
 	
-	if (down_interruptible(&dev->sem))
+	if (mutex_lock_killable(&dev->cfake_mutex))
 	{
-		return -ERESTARTSYS;
+		return -EINTR;
 	}
 	
 	if (*f_pos >= dev->buffer_size) /* EOF */
@@ -325,91 +326,7 @@ cfake_write(struct file *filp, const char __user *buf, size_t count,
 	retval = count;
 	
 out:
-  	up(&dev->sem);
-	return retval;
-}
-
-int 
-cfake_ioctl(struct inode *inode, struct file *filp,
-                 unsigned int cmd, unsigned long arg)
-{
-	int err = 0;
-	int retval = 0;
-	int fill_char;
-	unsigned int block_size = 0;
-	struct cfake_dev *dev = (struct cfake_dev *)filp->private_data;
-	
-	/*
-	 * extract the type and number bitfields, and don't decode
-	 * wrong cmds: return ENOTTY (inappropriate ioctl) before access_ok()
-	 */
-	if (_IOC_TYPE(cmd) != CFAKE_IOCTL_MAGIC) return -ENOTTY;
-	if (_IOC_NR(cmd) > CFAKE_IOCTL_NCODES) return -ENOTTY;
-
-	if (_IOC_DIR(cmd) & _IOC_READ)
-	{
-		err = !access_ok(VERIFY_WRITE, (void __user *)arg, _IOC_SIZE(cmd));
-	}
-	else if (_IOC_DIR(cmd) & _IOC_WRITE)
-	{
-		err =  !access_ok(VERIFY_READ, (void __user *)arg, _IOC_SIZE(cmd));
-	}
-	if (err) 
-	{
-		return -EFAULT;
-	}
-	
-	/* Begin critical section */
-	if (down_interruptible(&dev->sem))
-	{
-		return -ERESTARTSYS;
-	}
-	
-	switch(cmd) {
-	case CFAKE_IOCTL_RESET:
-		memset(dev->data, 0, dev->buffer_size);
-		break;
-	
-	case CFAKE_IOCTL_FILL:
-		retval = get_user(fill_char, (int __user *)arg);
-		if (retval == 0) /* success */
-		{
-			memset(dev->data, fill_char, dev->buffer_size);
-		}
-		break;
-	
-	case CFAKE_IOCTL_LFIRM:
-		/* Assume that only an administrator can load the 'firmware' */ 
-		if (!capable(CAP_SYS_ADMIN))
-		{
-			retval = -EPERM;
-			break;
-		}
-		
-		memset(dev->data, 0, dev->buffer_size);
-		strcpy((char*)(dev->data), "Hello, hacker!\n");
-		break;
-	
-	case CFAKE_IOCTL_RBUFSIZE:
-		retval = put_user(dev->buffer_size, (unsigned long __user *)arg);
-		break;
-	
-	case CFAKE_IOCTL_SBLKSIZE:
-		retval = get_user(block_size, (unsigned long __user *)arg);
-		if (retval != 0) break;
-		
-		retval = put_user(dev->block_size, (unsigned long __user *)arg);
-		if (retval != 0) break;
-		
-		dev->block_size = block_size;
-		break;
-	
-	default:  /* redundant, as 'cmd' was checked against CFAKE_IOCTL_NCODES */
-		retval = -ENOTTY;
-	}
-	
-	/* End critical section */
-	up(&dev->sem);
+  	mutex_unlock(&dev->cfake_mutex);
 	return retval;
 }
 

@@ -35,8 +35,8 @@ struct cfake_dev {
 	/* Maximum number of bytes that can be read or written in one call */
 	unsigned long block_size;  
 	
-	/* Mutual exclusion semaphore */
-	struct semaphore sem; 
+	/* Mutual exclusion */
+	struct mutex cfake_mutex; 
 	
 	/* 1 if the device was successfuly added, 0 otherwise */
 	int dev_added;

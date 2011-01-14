@@ -25,7 +25,6 @@ rule_copy_source("kedr_sample_target")
 
 kedr_test_add_target("sample_target")
 
-
 install(FILES   "${CMAKE_CURRENT_SOURCE_DIR}/cfake.h"
                 "${CMAKE_CURRENT_SOURCE_DIR}/cfake.c"
                 "${CMAKE_CURRENT_SOURCE_DIR}/Kbuild"

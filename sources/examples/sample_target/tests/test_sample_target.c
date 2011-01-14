@@ -19,7 +19,7 @@
 
 #include <sys/ioctl.h>
 
-#define FILENAME "/dev/cfake0"
+#define FILENAME "/dev/cfake1"
 
 char write_buffer[135];
 void fill_write_buffer()
@@ -36,30 +36,31 @@ int main()
     int fd = open(FILENAME, O_RDWR);
     if(fd == 0)
     {
-        printf("Cannot open file %s.\n", FILENAME);
+        printf("Failed to open file %s.\n", FILENAME);
         return 1;
     }
     if(write(fd, write_buffer, sizeof(write_buffer)) != sizeof(write_buffer))
     {
-        printf("Cannot write all bytes from write_buffer\n");
+        printf("Failed to write all bytes from write_buffer\n");
         result = 1;
         goto out;
     }
     if(lseek(fd, SEEK_SET, 0) != 0)
     {
-        printf("Cannot positioning offset to the start of the file\n");
+        printf("Failed to position file offset to the start of the file\n");
         result = 1;
         goto out;
     }
     if(read(fd, buffer, sizeof(buffer)) < sizeof(write_buffer))
     {
-        printf("Incorrect number of reading bytes.\n");
+        printf("Incorrect number of read bytes.\n");
         result = 1;
         goto out;
     }
     if(memcmp(buffer, write_buffer, sizeof(write_buffer)) != 0)
     {
-        printf("Bytes, that was read from file, differ from that was written into file previously.\n");
+        printf( "The bytes read from the file differ from what was "
+				"previously written to it.\n");
         result = 1;
         goto out;
     }
