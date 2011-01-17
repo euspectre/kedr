@@ -374,7 +374,13 @@ parse_data_search_weak_variable(const struct parse_data* data,
  * Return 0 on success, print error message and return not 0 if number cannot be parsed.
  */
 
-int parse_number(const char* number, int number_len, kedr_calc_int_t* value);
+static int
+parse_number10(const char* number,
+    const char** number_end, kedr_calc_int_t* value);
+
+static int
+parse_number16(const char* number,
+    const char** number_end, kedr_calc_int_t* value);
 
 /////////////Implementation of exported functions//////////////////////
 
@@ -794,21 +800,28 @@ parse_data_next_token(struct parse_data* data)
     // whether token is number
     else if(isdigit(ch))
     {
-        int number_len;
+        const char* number_end;
+        int result;
         const char* number = &data->expr[data->current_pos];
-        //look for end of number
-        for(number_len = 1; isdigit(number[number_len]); number_len++);
-        // update position of current character
-        data->current_pos = number + number_len - data->expr;
-        if(!parse_number(number, number_len, &data->current_token_value))
+        //Determine type of number and look for the end of it
+        if(number[0] == '0' && ((number[1] == 'x') || (number[1] == 'X')))
         {
-            data->current_token_type = token_type_value;
+            result = parse_number16(number + 2,
+                &number_end, &data->current_token_value);
         }
         else
         {
-            print_error("Cannot convert number %*s to string.",
-                number_len, number);
+            result = parse_number10(number,
+                &number_end, &data->current_token_value);
+        }
+        if(result)
+        {
             data->current_token_type = token_type_error;
+        }
+        else
+        {
+            data->current_token_type = token_type_value;
+            data->current_pos = number_end - data->expr;
         }
     }
     // whether token is special symbol(s), which mean operation or delimiter
@@ -1142,14 +1155,54 @@ parse_data_search_weak_variable(const struct parse_data* data,
 }
 
 int
-parse_number(const char* str, int str_len, kedr_calc_int_t* value)
+parse_number10(const char* number,
+    const char** number_end, kedr_calc_int_t* value)
 {
-    kedr_calc_int_t result;//temporary variable
-    int i;
-    BUG_ON(str_len == 0);
+    const char* number_end_real;
+    kedr_calc_int_t value_real = 0;
+    if(!isdigit(*number))
+    {
+        print_error("Invalid first symbol of decimal number: '%c'",
+            *number);
+        return -1;
+    }
     
-    for(result = str[0] - '0', i = 1; i < str_len; i++)
-        result = result * 10 + (str[i] - '0');// currently do not verify overflow
-    *value = result;
+    for(value_real = *number - '0', number_end_real = number + 1;
+        isdigit(*number_end_real);
+        number_end_real++)
+    {
+        // currently do not verify overflow
+        value_real = value_real * 10 + (*number_end_real - '0');
+    }
+    *number_end = number_end_real;
+    *value = value_real;
+    return 0;
+}
+
+int parse_number16(const char* number,
+    const char** number_end, kedr_calc_int_t* value)
+{
+    const char* number_end_real;
+    kedr_calc_int_t value_real = 0;
+    if(!isxdigit(*number))
+    {
+        print_error("Invalid first symbol of hexadecimal number: '%c'",
+            *number);
+        return -1;
+    }
+#define HDIGIT_TO_VALUE(digit) (isdigit(digit) ? (digit) - '0' : \
+    digit - (islower(digit) ? 'a' : 'A') + 10)
+
+    for(value_real = HDIGIT_TO_VALUE(*number), number_end_real = number + 1;
+        isxdigit(*number_end_real);
+        number_end_real++)
+    {
+        // currently do not verify overflow
+        value_real = value_real * 16 + HDIGIT_TO_VALUE(*number_end_real);
+    }
+#undef HDIGIT_TO_VALUE
+
+    *number_end = number_end_real;
+    *value = value_real;
     return 0;
 }

@@ -8,7 +8,7 @@ configure_file (
   "${CMAKE_CURRENT_BINARY_DIR}/test.sh"
   @ONLY
 )
-#
+# Simple action
 kedr_test_add_script ("fault_simulation.calculator.simple.01"
    "test.sh" "2+2" "4"
 )
@@ -31,4 +31,14 @@ kedr_test_add_script ("fault_simulation.calculator.simple.05"
 # Operation ?: and grouping
 kedr_test_add_script ("fault_simulation.calculator.simple.06"
    "test.sh" "2 ? 4 : 0 ? 5 : 6" "4"
+)
+
+#Hexadecimal numbers - simple
+kedr_test_add_script ("fault_simulation.calculator.simple.07"
+   "test.sh" "0x2+0x2" "4"
+)
+
+#Hexadecimal numbers
+kedr_test_add_script ("fault_simulation.calculator.simple.08"
+   "test.sh" "0xaF +0X1Bd" "620"
 )

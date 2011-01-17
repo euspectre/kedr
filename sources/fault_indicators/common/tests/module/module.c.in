@@ -18,6 +18,8 @@
 
 #include <kedr/fault_simulation/fault_simulation.h>
 
+#cmakedefine KEDR_FSIM_CALLER_ADDRESS_DEF
+
 MODULE_AUTHOR("Tsyvarev");
 MODULE_LICENSE("GPL");
 
@@ -29,10 +31,20 @@ struct dentry* module_dir;
 struct dentry* simulate_file;
 struct kedr_simulation_point* point;
 
+static int simulate(void)
+{
+#ifdef KEDR_FSIM_CALLER_ADDRESS_DEF
+    void *caller_address = NULL;//some value
+    return kedr_fsim_point_simulate(point, &caller_address);
+#else
+    return kedr_fsim_point_simulate(point, NULL);
+#endif
+}
+
 ///////////////////////////File operations///////////////////////
 ssize_t simulate_file_write(struct file* filp, const char __user *buf, size_t count, loff_t* f_pos)
 {
-    return kedr_fsim_point_simulate(point, NULL) ? -EINVAL : count;
+    return simulate() ? -EINVAL : count;
 }
 
 static struct file_operations simulate_file_operations = {
@@ -44,7 +56,13 @@ static struct file_operations simulate_file_operations = {
 static int __init
 this_module_init(void)
 {
-    point = kedr_fsim_point_register("common", "");
+    point = kedr_fsim_point_register("common",
+#ifdef KEDR_FSIM_CALLER_ADDRESS_DEF
+    "void*"
+#else
+    ""
+#endif
+    );    
     if(point == NULL)
     {
         pr_err("Cannot register simulation point.");

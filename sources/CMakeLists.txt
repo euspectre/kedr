@@ -102,6 +102,15 @@ endif()
 option(KEDR_STANDARD_CALLM_PAYLOADS "Whether need to build standard set of call monitor payloads" ON)
 option(KEDR_STANDARD_FSIM_PAYLOADS "Whether need to build standard set of fault simulation payloads" ON)
 #######################################################################
+
+#######################################################################
+#Whether need to support 'caller_address' variable for expression in fault simulation indicator.
+option(KEDR_FSIM_CALLER_ADDRESS "Whether need support for 'caller_address' variable in expression for fault simulation indicator" OFF)
+#For use define/not define variants of previous variable
+if(KEDR_FSIM_CALLER_ADDRESS)
+    set(KEDR_FSIM_CALLER_ADDRESS_DEF "TRUE")
+endif(KEDR_FSIM_CALLER_ADDRESS)
+#######################################################################
 # kedr_gen is built here explicitly and installed to a temporary location.
 # This is only necessary to build KEDR itself.
 # This should be done before the first add_subdirectory() command.

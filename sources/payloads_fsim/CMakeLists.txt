@@ -11,6 +11,7 @@ kbuild_add_dependencies("kedr_fault_simulation")
 
 # Common name of data file
 set(payload_data_file "payload.data")
+
 # Common name of beginning part of the data-file
 set(begin_data_file "beginning.data")
 
@@ -19,9 +20,19 @@ set(begin_data_file "beginning.data")
 function(rules_generate_payload)
 	set(payload_c_file "${CMAKE_CURRENT_BINARY_DIR}/payload.c")
 	to_abs_path(payload_data_file_abs ${payload_data_file})
-	add_custom_command(OUTPUT ${payload_c_file}
-				COMMAND ${KEDR_GEN_TOOL} ${KEDR_GEN_TEMPLATES_DIR}/payload.c/ ${payload_data_file_abs} > ${payload_c_file}
-				DEPENDS ${payload_data_file_abs})
+	if(KEDR_FSIM_CALLER_ADDRESS)
+		set(payload_data_internal_file "${CMAKE_CURRENT_BINARY_DIR}/payload_internal.data")
+		add_custom_command(OUTPUT ${payload_data_internal_file}
+			COMMAND ${KEDR_GEN_TOOL} ${KEDR_GEN_TEMPLATES_DIR}/fsim_caller_address_internal.data/ ${payload_data_file_abs} > ${payload_data_internal_file}
+			DEPENDS ${payload_data_file_abs})
+		add_custom_command(OUTPUT ${payload_c_file}
+			COMMAND ${KEDR_GEN_TOOL} ${KEDR_GEN_TEMPLATES_DIR}/payload.c/ ${payload_data_internal_file} > ${payload_c_file}
+			DEPENDS ${payload_data_internal_file})
+	else(KEDR_FSIM_CALLER_ADDRESS)
+		add_custom_command(OUTPUT ${payload_c_file}
+			COMMAND ${KEDR_GEN_TOOL} ${KEDR_GEN_TEMPLATES_DIR}/payload.c/ ${payload_data_file_abs} > ${payload_c_file}
+			DEPENDS ${payload_data_file_abs})
+	endif(KEDR_FSIM_CALLER_ADDRESS)
 endfunction(rules_generate_payload)
 
 # Commands for generate ${payload_data_file} from ${begin_data_file} and all files,

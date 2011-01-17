@@ -36,7 +36,9 @@ set(templates_root_dir_src "${CMAKE_SOURCE_DIR}/fault_indicators/templates")
 set(templates_root_dir_dst "${CMAKE_CURRENT_BINARY_DIR}/templates")
 
 set(templates_dirs "indicator.c/block" "indicator.c/document" "indicator_internal.data/block" "indicator_internal.data/document")
-
+if(KEDR_FSIM_CALLER_ADDRESS)
+	list(APPEND templates_dirs "indicator_caller_address_internal.data/block" "indicator_caller_address_internal.data/document")
+endif(KEDR_FSIM_CALLER_ADDRESS)
 set(templates_dirs_src)
 set(templates_dirs_dst)
 set(templates_files_glob_expr)
