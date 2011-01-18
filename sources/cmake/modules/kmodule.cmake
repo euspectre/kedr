@@ -1,41 +1,51 @@
 set(kmodule_this_module_dir "${CMAKE_SOURCE_DIR}/cmake/modules/")
+
 # kmodule_try_compile(RESULT_VAR bindir srcfile
 #           [COMPILE_DEFINITIONS flags]
 #           [OUTPUT_VARIABLE var])
-# to be implemented...
 
 # Similar to try_module in simplified form, but compile srcfile as
 # kernel module, instead of user space program.
 
+function(kmodule_try_compile RESULT_VAR bindir srcfile)
+	set(is_compile_definitions_current "FALSE")
+	set(is_output_var_current "FALSE")
+	to_abs_path(src_abs_path "${srcfile}")
+	foreach(arg ${ARGN})
+		if(arg STREQUAL "COMPILE_DEFINITIONS")
+			set(is_compile_definitions_current "TRUE")
+			set(is_output_var_current "FALSE")
+		elseif(arg STREQUAL "OUTPUT_VARIABLE")
+			set(is_compile_definitions_current "FALSE")
+			set(is_output_var_current "TRUE")
+		elseif(is_compile_definitions_current)
+			set(kmodule_cflags "${kmodule_cflags} ${arg}")
+		elseif(is_output_var_current)
+			set(output_variable "${arg}")
+		else(arg STREQUAL "COMPILE_DEFINITIONS")
+			message(FATAL_ERROR "Unknown parameter to kmodule_try_compile: '${arg}'.")
+		endif(arg STREQUAL "COMPILE_DEFINITIONS")
+	endforeach(arg ${ARGN})
+	set(cmake_params "-DSRC_FILE:path=${src_abs_path}")
+	if(DEFINED kmodule_cflags)
+		list(APPEND cmake_params "-Dkmodule_flags=${kmodule_cflags}")
+	endif(DEFINED kmodule_cflags)
 
-# kmodule_try_compile_wout(RESULT_VAR bindir srcfile out_var)
-# is equivalent to 
-# kmodule_try_compile(RESULT_VAR bindir srcfile OUTPUT_VARIABLE out_var)
-function(kmodule_try_compile_wout RESULT_VAR bindir srcfile
-    out_var)
-
-try_compile(${RESULT_VAR} ${bindir}
-                ${kmodule_this_module_dir}/kmodule_files
-                kmodule_try_compile_target
-                CMAKE_FLAGS "-DSRC_FILE:PATH=${srcfile}"
-                OUTPUT_VARIABLE ${out_var})
-
-endfunction(kmodule_try_compile_wout RESULT_VAR bindir srcfile out_var)
-
-# kmodule_try_compile_wout_wcflags(RESULT_VAR bindir srcfile out_var cflags)
-# is equivalent to 
-# kmodule_try_compile(RESULT_VAR bindir srcfile COMPILE_DEFINITIONS cflags OUTPUT_VARIABLE out_var)
-function(kmodule_try_compile_wout_wcflags RESULT_VAR bindir srcfile
-    out_var my_cflags )
-
-try_compile(${RESULT_VAR} ${bindir}
-                ${kmodule_this_module_dir}/kmodule_files
-                kmodule_try_compile_target
-                CMAKE_FLAGS "-DSRC_FILE:PATH=${srcfile}" "-DCFLAGS:STRING=${my_cflags}"
-                OUTPUT_VARIABLE ${out_var})
-
-endfunction(kmodule_try_compile_wout_wcflags RESULT_VAR bindir srcfile
-    out_var my_cflags)
+	if(DEFINED output_variable)
+		try_compile(result_tmp "${bindir}"
+                "${kmodule_this_module_dir}/kmodule_files"
+				"kmodule_try_compile_target"
+                CMAKE_FLAGS ${cmake_params}
+                OUTPUT_VARIABLE output_tmp)
+		set("${output_variable}" "${output_tmp}" PARENT_SCOPE)
+	else(DEFINED output_variable)
+		try_compile("${RESULT_VAR}" "${bindir}"
+                "${kmodule_this_module_dir}/kmodule_files"
+				"kmodule_try_compile_target"
+                CMAKE_FLAGS ${cmake_params})
+	endif(DEFINED output_variable)
+	set("${RESULT_VAR}" "${result_tmp}" PARENT_SCOPE)
+endfunction(kmodule_try_compile RESULT_VAR bindir srcfile)
 
 # kmodule_is_function_exist(function_name RESULT_VAR)
 # Verify, whether given function exist in the kernel space on the current system.

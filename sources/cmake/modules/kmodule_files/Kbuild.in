@@ -1,4 +1,3 @@
-# Pass CMake ${CFLAGS} to the compiler of the kernel module
-EXTRA_CFLAGS = ${CFLAGS}
+ccflags-y := @kmodule_flags@
 
-obj-m= hello.o
+obj-m := try_compile.o

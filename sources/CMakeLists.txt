@@ -81,7 +81,8 @@ add_dependencies (uninstall uninstall_dirs)
 #${CMAKE_SOURCE_DIR}/include - root of the include tree (see convensions).
 include_directories("${CMAKE_SOURCE_DIR}/include")
 kbuild_include_directories("${CMAKE_SOURCE_DIR}/include")
-
+#For configuration file
+kbuild_include_directories("${CMAKE_BINARY_DIR}")
 #######################################################################
 # Make "Release" the default build type
 if (NOT CMAKE_BUILD_TYPE)
@@ -283,3 +284,5 @@ add_subdirectory(doc)
 # "Global" tests
 add_subdirectory(tests)
 #######################################################################
+configure_file("${CMAKE_SOURCE_DIR}/config.h.in" "${CMAKE_BINARY_DIR}/config.h")
+message(STATUS "Creating config.h - done")

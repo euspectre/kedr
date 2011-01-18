@@ -16,6 +16,8 @@
 #include <linux/wait.h> /*wait queue definitions*/
 
 #include <linux/sched.h> /* TASK_NORMAL, TASK_INTERRUPTIBLE*/
+
+#include "config.h"
 /*
  * Configurable parameters for internal implementation of the buffer.
  */
@@ -435,7 +437,13 @@ static int trace_buffer_update_internal(struct trace_buffer* trace_buffer,
             return -EAGAIN;
         }
         ts = ring_buffer_time_stamp(trace_buffer->buffer, cpu);
-        event = ring_buffer_consume(trace_buffer->buffer, cpu, &ts);
+#if defined(RING_BUFFER_CONSUME_HAS_4_ARGS)
+		event = ring_buffer_consume(trace_buffer->buffer, cpu, &ts, NULL);
+#elif defined(RING_BUFFER_CONSUME_HAS_3_ARGS)
+		event = ring_buffer_consume(trace_buffer->buffer, cpu, &ts);
+#else
+#error RING_BUFFER_CONSUME_HAS_4_ARGS or RING_BUFFER_CONSUME_HAS_3_ARGS should be defined.
+#endif
         last_message_set_timestamp(oldest_message, ts);
         //rearrange 'oldest_message'
         list_del(&oldest_message->list);
