@@ -12,7 +12,6 @@ set (KEDR_TEST_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/include")
 #######################################################################
 
 add_subdirectory(sample_target)
-add_subdirectory(sample_target_2)
 add_subdirectory(sample_indicator)
 add_subdirectory(sample_fsim_payload)
 add_subdirectory(counters)

@@ -60,10 +60,6 @@ ssize_t
 cfake_write(struct file *filp, const char __user *buf, size_t count,
 	loff_t *f_pos);
 
-int 
-cfake_ioctl(struct inode *inode, struct file *filp,
-	unsigned int cmd, unsigned long arg);
-
 loff_t 
 cfake_llseek(struct file *filp, loff_t off, int whence);
 

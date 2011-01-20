@@ -1,9 +1,7 @@
-/* cfake.h */
+/* simple_target.h */
 
-#ifndef CFAKE_H_1727_INCLUDED
-#define CFAKE_H_1727_INCLUDED
-
-#include <linux/ioctl.h> /* needed for the _IOW etc stuff used later */
+#ifndef SIMPLE_TARGET_H_1727_INCLUDED
+#define SIMPLE_TARGET_H_1727_INCLUDED
 
 #ifndef CFAKE_MAJOR
 #define CFAKE_MAJOR 0   /* dynamic major by default */
@@ -46,37 +44,11 @@ struct cfake_dev {
 };
 
 /*
- * The configurable parameters
+ * Configurable parameters
  */
 extern int cfake_major;     
 extern int cfake_ndevices;
 extern unsigned long cfake_buffer_size;
 extern unsigned long cfake_block_size;
 
-/* ====================================================== */
-/* ioctl-related stuff */
-
-/* A 'magic' number to distinguish the IOCTL codes for our driver */
-#define CFAKE_IOCTL_MAGIC  0xC2 
-
-/* IOCTL codes */
-/* Reset the 'device' by filling the memory block with zeros */
-#define CFAKE_IOCTL_RESET _IO(CFAKE_IOCTL_MAGIC, 0)
-	
-/* Fill the memory buffer with the specified character, 
-the character converted to int being pointed to by the argument*/
-#define CFAKE_IOCTL_FILL  _IOW(CFAKE_IOCTL_MAGIC, 1, int)
-
-/* Load 'firmware' to the 'device': a predefined string "Hello, hacker!" */
-#define CFAKE_IOCTL_LFIRM _IO(CFAKE_IOCTL_MAGIC, 2)
-
-/* Read buffer size */
-#define CFAKE_IOCTL_RBUFSIZE _IOR(CFAKE_IOCTL_MAGIC, 3, int /* ??? why int? */)
-
-/* Set block size and return its previous value */
-#define CFAKE_IOCTL_SBLKSIZE _IOWR(CFAKE_IOCTL_MAGIC, 4, int /* ??? why int? */)
-
-/* The number of IOCTL codes */
-#define CFAKE_IOCTL_NCODES 5
-
-#endif /* CFAKE_H_1727_INCLUDED */
+#endif /* SIMPLE_TARGET_H_1727_INCLUDED */
