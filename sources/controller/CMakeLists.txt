@@ -20,7 +20,6 @@ kbuild_add_module(${kmodule_name}
     "${arch_dir}/lib/inat.c"
     "${arch_dir}/lib/insn.c"
     "${arch_dir}/lib/inat-tables.h"
-    "controller_tracing.h"
     )
 add_dependencies(${kmodule_name} "kedr_base")
 

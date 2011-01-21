@@ -33,13 +33,6 @@
 
 #include <kedr/base/common.h>   /* common declarations */
 
-/* To minimize the unexpected consequences of trace event-related 
- * headers and symbols, place #include directives for system headers 
- * before '#define CREATE_TRACE_POINTS' directive
- */
-#define CREATE_TRACE_POINTS
-#include "controller_tracing.h" /* trace events */
-
 /* ================================================================ */
 /* This string will be used in debug output to specify the name of 
  * the current component of KEDR
@@ -427,14 +420,6 @@ on_module_load(struct module *mod)
     target_in_init = 1;
     spin_unlock_irqrestore(&target_in_init_lock, flags);
     
-    trace_target_session_begins(target_name);
-    /* Until this function finishes, no replacement function will be called
-     * because the target module has not completed loading yet. That means,
-     * no tracepoint will be triggered in the target module before the 
-     * tracepoint above is triggered. The order of the messages in the trace
-     * is still up to the tracing system.
-     */
-    
     /* Notify the base and request the combined replacement table */
     ret = kedr_impl_on_target_load(target_module, &repl_table);
     if (ret != 0)
@@ -488,8 +473,7 @@ on_module_unload(struct module *mod)
         "failed to handle unloading of the target module.\n");
         return;
     }
-    
-    trace_target_session_ends(target_name);
+
     return;
 }
 

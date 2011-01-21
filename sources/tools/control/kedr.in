@@ -61,12 +61,6 @@ rmmod_only_one()
 
 # directory for temporary files
 tmp_dir=@KEDR_PREFIX_TEMP_SESSION@/control
-# Point for mount debugfs filesystem for enable tracing points in controller module
-# (!!!) This directory should not be used by capture trace functionality for same purpose, because
-# capturing trace will be running BEFORE controller, so after it run, debugfs should be always mounted.
-# But after enabling tracpoints for controller, it umount debugfs from its local directory
-
-controller_debugfs_mount_point=${tmp_dir}/controller_debugfs
 
 # commands(in format of config file), used for last start KEDR
 start_conf_file=${tmp_dir}/start.conf
@@ -321,11 +315,6 @@ start)
         collect_conf_file "${start_conf_file}" "$@"
     fi
     collect_conf_file "${start_conf_file}" -c "module @KEDR_FILE_CONTROLLER@ target_name=${target_name}"
-    # Enable tracepoints for controller
-    collect_conf_file "${start_conf_file}" -c "on_load mkdir -p \"${controller_debugfs_mount_point}\"" \
-                                            -c "on_load mount debugfs -t debugfs \"${controller_debugfs_mount_point}\"" \
-                                            -c "on_load printf 1 > \"${controller_debugfs_mount_point}/tracing/events/${controller_name}/enable\"" \
-                                            -c "on_load umount \"${controller_debugfs_mount_point}\""
 
     execute_conf_on_load "${start_conf_file}"
     if test $? -ne 0; then
