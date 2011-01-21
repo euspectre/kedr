@@ -3,7 +3,7 @@
 newline='
 '
 # Usage: 
-# kedr start target_name [-c conf_string(s) | conf_file] ...
+# kedr start target_name [-c conf_string(s) | -f conf_file] ...
 # kedr stop
 # kedr restart
 # kedr status
@@ -26,7 +26,7 @@ newline='
 usage()
 {
 	printf "Usage: \n"
-	printf "\tkedr start <target_module_name> [ -c <conf_string> | <conf_file> ...]\n"
+	printf "\tkedr start <target_module_name> [ -c <conf_string> | -f <conf_file> ...]\n"
 	printf "\t\tLoad KEDR infrastructure for control target module.\n"
 	printf "\tkedr stop\n"
 	printf "\t\tUnload KEDR infrastructure.\n"
@@ -105,31 +105,6 @@ resolve_module_alias()
 {
     #not implemented yet
     printf "%s" "$1"
-}
-
-# collect_conf_file target_file [-c conf_string | conf_file]...
-#
-# Build config file from pieses: config string or config files.
-# If target file exists - append.
-collect_conf_file()
-{
-    target_conf_file=$1
-    shift
-    while test $# -gt 0; do
-        if test "$1" = "-c"; then
-            shift
-            if test $# -eq 0; then
-                printf "After '-c' parameter should be config string(s)\n"
-                rm -f ${target_conf_file}
-                exit 1
-            fi
-            printf "%s\n" "$1" >> "${target_conf_file}"
-        else
-            cat "$1" >> "${target_conf_file}"
-            printf "\n" >> "${target_conf_file}"
-        fi
-        shift
-    done
 }
 
 # Some regular expressions for parsing configuration file
@@ -302,24 +277,48 @@ start)
     printf "Starting KEDR...\n"
     #collect all parts of the configuration to the ${start_conf_file}
     mkdir -p ${tmp_dir} || (printf "Cannot create directory for temporary files\n" && exit 1)
-    #empty file
-    printf "\n" > "${start_conf_file}"
+	# Create config file for processing
+    #Add loading of kedr base module to the config file
+    printf "module %s\n" "@KEDR_FILE_BASE@" > "${start_conf_file}"
     if test $? -ne 0; then
         printf "Cannot write to temporary file\n"
         exit 1
     fi
-    collect_conf_file "${start_conf_file}" -c "module @KEDR_FILE_BASE@"
-    if test $# -eq 0; then
-        collect_conf_file "${start_conf_file}" "${default_config_file}"
-    else
-        collect_conf_file "${start_conf_file}" "$@"
+    #Append config file content formed from options to the config file
+    while getopts ":c:f:" opt; do
+		case $opt in
+		c)
+			non_default_config=1
+			printf "%s\n" "$OPTARG" >> "${start_conf_file}"
+		;;
+		f)
+			non_default_config=1
+			cat "$OPTARG" >> "${start_conf_file}"
+			printf "\n" >> "${start_conf_file}"
+		;;
+		?)
+			usage
+			exit 1
+		;;
+		esac
+	done
+    if test "$OPTIND" -lt "$#"; then
+        print "Unknown parameter %s\n" "${$OPTIND}"
+        usage
+        exit 1
     fi
-    collect_conf_file "${start_conf_file}" -c "module @KEDR_FILE_CONTROLLER@ target_name=${target_name}"
+    #Or use default config file content
+    if test -z $non_default_config; then
+        cat "${default_config_file}" >> "${start_conf_file}"
+        printf "\n" >> "${start_conf_file}"
+    fi
+    #Append loading of controller module to the config file
+    printf "module %s target_name=%s\n" "@KEDR_FILE_CONTROLLER@" "${target_name}" >> "${start_conf_file}"
 
     execute_conf_on_load "${start_conf_file}"
     if test $? -ne 0; then
         # In the release version next line should be uncommented
-        #rm -f "${start_conf_file}"
+        rm -f "${start_conf_file}"
         exit 1
     fi
     printf "KEDR started.\n"

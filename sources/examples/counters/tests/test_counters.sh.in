@@ -92,7 +92,7 @@ doTest()
     cd "${WORK_DIR}"
     
     # Load KEDR core and the payload module, mount debugfs
-    sh ${CONTROL_SCRIPT} start ${TARGET_NAME} "${CONF_FILE}" || exit 1
+    sh ${CONTROL_SCRIPT} start ${TARGET_NAME} -f "${CONF_FILE}" || exit 1
     
     # Check if the necessary files have been created in debugfs
     if test ! -d "${COUNTERS_DIR}"; then

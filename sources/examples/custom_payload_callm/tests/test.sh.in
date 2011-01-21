@@ -24,7 +24,7 @@ module @CMAKE_BINARY_DIR@/examples/indicator_kmalloc/kedr_sample_indicator_kmall
 eof
 
 cat > "$commands_file" << eof
-on_load $kedr_control_script start "$sample_target_module_name" "$kedr_conf_file" || ! printf "Cannot start KEDR.\n"
+on_load $kedr_control_script start "$sample_target_module_name" -f "$kedr_conf_file" || ! printf "Cannot start KEDR.\n"
 on_unload $kedr_control_script stop || ! printf "Cannot stop KEDR.\n"
 on_load mkdir -p "$debugfs_mount_point" || ! printf "Cannot create directory for mount debugfs\n"
 on_load mount -t debugfs debugfs "$debugfs_mount_point" || ! printf "Cannot mount debugfs.\n"
