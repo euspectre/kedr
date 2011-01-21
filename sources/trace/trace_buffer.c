@@ -4,7 +4,6 @@
 #include "trace_buffer.h"
 
 #include <linux/ring_buffer.h> /* ring buffer functions*/
-#include <linux/delay.h> /* msleep_interruptible definition */
 
 #include <linux/cpumask.h> /* definition of 'struct cpumask'(cpumask_t)*/
 #include <linux/threads.h> /*definition of NR_CPUS macro*/
@@ -17,7 +16,61 @@
 
 #include <linux/sched.h> /* TASK_NORMAL, TASK_INTERRUPTIBLE*/
 
+#include <linux/jiffies.h> /* jiffies and constants for it*/
+
 #include "config.h"
+
+/*
+ * For some reason, standard clock for ring buffer is not sufficient
+ * for interprocessor message ordering. So, need to implement our clock.
+ * 
+ * The function, represented clock, should:
+ * 1)on one processor, be monotonic function from the real time.
+ * 2)when called one different processors at the nearest the same time,
+ * return near values.
+ * 3)be convertable(with some precision) to the real time, passed from
+ * the system starts
+ * 4)have precision which allows correct ordering of messages on
+ * different CPUs, which represent strictly ordered actions
+ * (such as spin_unlock() and spin_lock(), or kfree() and kmalloc()).
+ * 5)do not overflow in several days.
+ * 
+ * NOTE: correct ordering of messages, generated on one CPU,
+ *  is not required.
+ * 
+ * Points 4,5 may be violated in not-release versions.
+ * 
+ */
+static u64
+kedr_clock(void)
+{
+    //first interpolation
+    return jiffies;
+}
+
+/*
+ * Converter from clock result to the nanoseconds, passed from
+ * the system starts.
+ */
+
+static u64
+kedr_clock_to_ns(u64 clock_result)
+{
+    return (u64)((unsigned long)clock_result - INITIAL_JIFFIES) * (NSEC_PER_SEC / HZ);
+}
+
+/*
+ * Maximum time which may go since message timestamping with our clock
+ * until message will become available for read (ring_buffer_consume).
+ * 
+ * Should be measured in the same units as returning value of our clock.
+ * 
+ * Error in this time may lead in some message cross-cpu disordering
+ * when read is concurrent with write.
+ */
+
+#define KEDR_MESSAGE_DELTA_TIME 1
+
 /*
  * Configurable parameters for internal implementation of the buffer.
  */
@@ -65,22 +118,21 @@
  * There are two different types of this struct:
  * 
  * First - for existent last message:
- * event = ring_buffer_consume(buffer, cpu, &.ts);
+ * .ts - timestamp(with out clock) of the message
+ *
+ * .msg - content of the message
+ * .size - size of the message
  * 
- * .msg = ring_buffer_event_data(event),
- * .size = ring_buffer_event_length(event),
- * .ts - time stamp of the event.
- * 
- * Second - for empty per-cpu buffer:
- * .msg = NULL,
- * .size = 0,
+ * Second - for empty corresponded per-cpu buffer:
  * .ts - time stamp, at which buffer was definitly empty.
+ * 
+ * .msg and .size may be NULL and 0 correspondingly,
+ * or point to the message, which was already consumed, but not freed.
+ * .
  */
 struct last_message
 {
-    int cpu;
     u64 ts;
-    bool is_exist;
     
     void *msg;
     size_t size;
@@ -88,28 +140,85 @@ struct last_message
     struct list_head list;//ordered array of 'struct last_message'
 };
 
-static int last_message_init(struct last_message* message, int cpu, u64 ts)
+struct last_message_array
 {
-    message->cpu = cpu;
-    message->ts = ts;
-    message->is_exist = 0;
-    
+    //Array of 'last_message' content for corresponding CPUs.
+    struct last_message messages[NR_CPUS];
+    //mask describing per-cpu buffers with existing messages.
+    cpumask_t message_exist;
+    //List organization of 'last_messages', ordered by .ts in ascended order.
+    struct list_head messages_ordered;
+};
+
+//Insert last_message into the list, taking time ordering into account.
+static void last_message_list_add(struct list_head* messages,
+    struct last_message* message)
+{
+    struct last_message* insert_point = NULL, *point;
+    list_for_each_entry_reverse(point, messages, list)
+    {
+        if(point->ts <= message->ts)
+        {
+            insert_point = point;
+            break;
+        }
+    }
+    if(insert_point)
+        list_add(&message->list, &insert_point->list);
+    else
+        list_add(&message->list, messages);
+}
+
+
+static int
+last_message_array_init_cpu(struct last_message_array* array,
+    int cpu, u64 ts)
+{
+    struct last_message* message = &array->messages[cpu];
     message->msg = NULL;
-    message->size = 0;
+    message->ts = ts;
+    
+    last_message_list_add(&array->messages_ordered,
+        message);
     return 0;
 }
-static void
-last_message_set_timestamp(struct last_message* message, u64 ts)
-{
-    message->ts = ts;
-}
 static int
-last_message_set(struct last_message* message, struct ring_buffer_event* event)
+last_message_array_init(struct last_message_array* array, u64 ts)
 {
-    size_t size;
-    BUG_ON(message->is_exist);
-    size = ring_buffer_event_length(event);
+    int cpu;
+    INIT_LIST_HEAD(&array->messages_ordered);
+    cpumask_clear(&array->message_exist);
+    for_each_possible_cpu(cpu)
+        last_message_array_init_cpu(array, cpu, ts);
+    return 0;
+}
+
+/*
+ * Update timestamp of unexistent message.
+ */
+static void
+last_message_array_update_cpu_nonexist(struct last_message_array* array,
+    int cpu, u64 ts)
+{
+    struct last_message* message = &array->messages[cpu];
+    BUG_ON(cpumask_test_cpu(cpu, &array->message_exist));
+    message->ts = ts;
+    //update ordering
+    list_del(&message->list);
+    last_message_list_add(&array->messages_ordered,
+        message);
+
+}
+
+static int
+last_message_array_set_cpu_message(struct last_message_array* array,
+    int cpu, u64 ts, const void* data, size_t size)
+{
+    struct last_message* message = &array->messages[cpu];
+    BUG_ON(cpumask_test_cpu(cpu, &array->message_exist));
+
     message->msg = krealloc(message->msg, size, GFP_KERNEL);
+
     if(message->msg == NULL)
     {
         message->size = 0;
@@ -119,27 +228,47 @@ last_message_set(struct last_message* message, struct ring_buffer_event* event)
         return -ENOMEM;
     }
     memcpy(message->msg,
-        ring_buffer_event_data(event),
+        data,
         size);
     message->size = size;
-    message->is_exist = 1;
+    cpumask_set_cpu(cpu, &array->message_exist);
+    message->ts = ts;
+    //update ordering
+    list_del(&message->list);
+    last_message_list_add(&array->messages_ordered,
+        message);
+
+    pr_info("Message on cpu %d with timestamp %lu.",
+        cpu, (unsigned long)message->ts);
     return 0;
 }
 
-static void last_message_clear(struct last_message* message)
+static void
+last_message_array_clear_cpu_message(struct last_message_array* array,
+    int cpu)
 {
-    message->is_exist = 0;
+    cpumask_clear_cpu(cpu, &array->message_exist);
     // Do not free old message contents - for realloc
-    //kfree(message->msg);
-    //message->msg = NULL;
-    //message->size = 0;
 }
 
-static void last_message_destroy(struct last_message* message)
+static void
+last_message_array_destroy(struct last_message_array* array)
 {
-    kfree(message->msg);
+    int cpu;
+    for_each_possible_cpu(cpu)
+    {
+        kfree(array->messages[cpu].msg);
+    }
 }
 
+/* 
+ * Format of tracing data
+ */
+struct trace_data
+{
+    u64 ts;
+    char data[0];
+};
 
 /*
  * Struct, represented buffer which support two main operations:
@@ -156,11 +285,7 @@ struct trace_buffer
     /*
      * Array of last messages from all possible CPUs
      */
-    struct last_message last_messages[NR_CPUS];
-    
-    struct list_head last_messages_ordered;// from the oldest timestamp to the newest one
-    //number of per-cpu buffers, from which messages was readed into 'struct last_message'
-    int non_empty_buffers;
+    struct last_message_array last_message_array;
     
     /*
      * Prevent concurrent reading of messages.
@@ -177,12 +302,15 @@ struct trace_buffer
     // Work in which reader will wake up.
     // This work shedule only on demand.
     struct delayed_work work_wakeup_reader;
+    // Clock-related variables and functions
+    u64 (*clock)(void);
+    u64 message_delta_time;
+    u64 (*clock_to_ns)(u64);
 };
 
 static void wake_up_reader(struct work_struct *work)
 {
     struct trace_buffer* trace_buffer = container_of(to_delayed_work(work), struct trace_buffer, work_wakeup_reader);
-    //pr_info("Wake up all.");
     wake_up_all(&trace_buffer->rq);//unconditionally wakeup
 }
 
@@ -196,23 +324,10 @@ static void trace_buffer_clear_internal(struct trace_buffer* trace_buffer)
 {
     int cpu;
     //Clear last messages
-    INIT_LIST_HEAD(&trace_buffer->last_messages_ordered);
-    trace_buffer->non_empty_buffers = 0;
-
     for_each_possible_cpu(cpu)
     {
-        struct list_head* insert_point;
-        struct last_message* last_message =
-            &trace_buffer->last_messages[cpu];
-        u64 ts = ring_buffer_time_stamp(trace_buffer->buffer, cpu);
-        last_message_clear(last_message);
-        last_message_set_timestamp(last_message, ts);
-        //look for position for insert entry into the list
-        list_for_each_prev(insert_point, &trace_buffer->last_messages_ordered)
-        {
-            if(list_entry(insert_point, struct last_message, list)->ts <= ts) break;
-        }
-        list_add(&last_message->list, insert_point);
+        last_message_array_clear_cpu_message(&trace_buffer->last_message_array,
+            cpu);
     }
 
     trace_buffer->messages_lost_internal = 0;
@@ -231,8 +346,6 @@ static void trace_buffer_clear_internal(struct trace_buffer* trace_buffer)
 struct trace_buffer* trace_buffer_alloc(
     size_t size, bool mode_overwrite)
 {
-    int cpu;
-
     struct trace_buffer* trace_buffer = kmalloc(sizeof(*trace_buffer),
         GFP_KERNEL);
     
@@ -250,26 +363,7 @@ struct trace_buffer* trace_buffer_alloc(
         kfree(trace_buffer);
         return NULL;
     }
-
-    //Initialize array of the oldest messages from per-cpu buffers
-    INIT_LIST_HEAD(&trace_buffer->last_messages_ordered);
-    trace_buffer->non_empty_buffers = 0;
-    for_each_possible_cpu(cpu)
-    {
-        struct list_head* insert_point;
-        struct last_message* last_message =
-            &trace_buffer->last_messages[cpu];
-        u64 ts = ring_buffer_time_stamp(trace_buffer->buffer, cpu);
-        //now last_message_init return only 0(success)
-        last_message_init(last_message, cpu, ts);
-        //look for position for insert entry into the list
-        list_for_each_prev(insert_point, &trace_buffer->last_messages_ordered)
-        {
-            if(list_entry(insert_point, struct last_message, list)->ts <= ts) break;
-        }
-        list_add(&last_message->list, insert_point);
-    }
-    
+    last_message_array_init(&trace_buffer->last_message_array, 0);
     
     mutex_init(&trace_buffer->read_mutex);
     
@@ -278,6 +372,10 @@ struct trace_buffer* trace_buffer_alloc(
     init_waitqueue_head(&trace_buffer->rq);
     
     INIT_DELAYED_WORK(&trace_buffer->work_wakeup_reader, wake_up_reader);
+    //setup clock
+    trace_buffer->clock = kedr_clock;
+    trace_buffer->message_delta_time = KEDR_MESSAGE_DELTA_TIME;
+    trace_buffer->clock_to_ns = kedr_clock_to_ns;
     
     return trace_buffer;
 }
@@ -286,35 +384,14 @@ struct trace_buffer* trace_buffer_alloc(
  */
 void trace_buffer_destroy(struct trace_buffer* trace_buffer)
 {
-    int cpu;
-    
     cancel_delayed_work_sync(&trace_buffer->work_wakeup_reader);
     
     mutex_destroy(&trace_buffer->read_mutex);
-    //May be cpu-s, for which bit in subbuffers_empty is set,
-    //but which messages is not freed.
-    //So iterate over all possible cpu's
-    for_each_possible_cpu(cpu)
-    {
-        struct last_message* last_message =
-            &trace_buffer->last_messages[cpu];
-        
-        last_message_destroy(last_message);
-    }
+
+    last_message_array_destroy(&trace_buffer->last_message_array);
+    
     ring_buffer_free(trace_buffer->buffer);
     kfree(trace_buffer);
-}
-
-/*
- * Write message with data 'msg' of length 'size' to the buffer.
- * May be called in the atomic context.
- */
-void trace_buffer_write_message(struct trace_buffer* trace_buffer,
-    const void* msg, size_t size)
-{
-    //need to cast msg to non-constan pointer,
-    // but really its content is not changed inside function
-    ring_buffer_write(trace_buffer->buffer, size, (void*)msg);
 }
 
 /*
@@ -332,10 +409,13 @@ void trace_buffer_write_message(struct trace_buffer* trace_buffer,
 void* trace_buffer_write_lock(struct trace_buffer* trace_buffer,
     size_t size, void** msg)
 {
+    struct trace_data* msg_real;
     struct ring_buffer_event* event =
-        ring_buffer_lock_reserve(trace_buffer->buffer, size);
+        ring_buffer_lock_reserve(trace_buffer->buffer,
+            sizeof(*msg_real) + size);
     if(event == NULL) return NULL;
-    *msg = ring_buffer_event_data(event);
+    msg_real = ring_buffer_event_data(event);
+    *msg = (void*)msg_real->data;
     return event;
 }
 
@@ -349,12 +429,30 @@ void trace_buffer_write_unlock(struct trace_buffer* trace_buffer,
     void* id)
 {
     struct ring_buffer_event* event = (struct ring_buffer_event*)id;
+    struct trace_data *msg_real = ring_buffer_event_data(event);
+    msg_real->ts = trace_buffer->clock();
     ring_buffer_unlock_commit(trace_buffer->buffer, event);
+}
+
+/*
+ * Write message with data 'msg' of length 'size' to the buffer.
+ * May be called in the atomic context.
+ */
+void trace_buffer_write_message(struct trace_buffer* trace_buffer,
+    const void* msg, size_t size)
+{
+    void* data;
+    void* id = trace_buffer_write_lock(trace_buffer, size, &data);
+    if(id == NULL) return;
+
+    memcpy(data, msg, size);
+
+    trace_buffer_write_unlock(trace_buffer, id);
 }
 
 
 /*
- * Non-blocking read only current oldest message(without reading of the per-cpu buffers).
+ * Non-blocking read of only current oldest message(without reading of the per-cpu buffers).
  *
  * Should be executed under lock.
  */
@@ -367,24 +465,30 @@ static int trace_buffer_read_internal(struct trace_buffer* trace_buffer,
     bool consume = 0;//do not consume message by default
     int result;
     // Determine oldest message
-    struct last_message* oldest_message = 
-        list_first_entry(&trace_buffer->last_messages_ordered, struct last_message, list);
-    if(!oldest_message->is_exist)
+    struct last_message_array* last_message_array =
+        &trace_buffer->last_message_array;
+    int oldest_cpu;
+    struct last_message* oldest_message =
+        list_first_entry(&last_message_array->messages_ordered,
+                            struct last_message, list);
+    oldest_cpu = oldest_message - last_message_array->messages;
+
+    if(!cpumask_test_cpu(oldest_cpu, &last_message_array->message_exist))
     {
         return -EAGAIN;
     }
 
     result = process_data(oldest_message->msg,
         oldest_message->size,
-        oldest_message->cpu,
-        oldest_message->ts,
+        oldest_cpu,
+        trace_buffer->clock_to_ns(oldest_message->ts),
         &consume,
         user_data);
     //Remove oldest message if it is consumed
     if(consume)
     {
-        last_message_clear(oldest_message);
-        trace_buffer->non_empty_buffers--;
+        last_message_array_clear_cpu_message(last_message_array,
+            oldest_cpu);
     }
 
     return result;
@@ -410,33 +514,37 @@ static int trace_buffer_update_internal(struct trace_buffer* trace_buffer,
 {
     struct last_message* oldest_message;
     cpumask_t subbuffers_updated;
+    struct last_message_array* last_message_array = 
+        &trace_buffer->last_message_array;
 
     if(wait_function)
         wait_function(&trace_buffer->rq, data);
     
     cpumask_clear(&subbuffers_updated);
     // Try to determine oldest message in the buffer(from all cpu's)
-    for(oldest_message = list_first_entry(&trace_buffer->last_messages_ordered, struct last_message, list);
-        !oldest_message->is_exist;
-        oldest_message = list_first_entry(&trace_buffer->last_messages_ordered, struct last_message, list))
+    for(oldest_message = list_first_entry(&last_message_array->messages_ordered, struct last_message, list);
+        !cpumask_test_cpu(oldest_message - last_message_array->messages, &last_message_array->message_exist);
+        oldest_message = list_first_entry(&last_message_array->messages_ordered, struct last_message, list))
     {
         // Cannot determine latest message - need to update timestamp
-        int cpu = oldest_message->cpu;
+        int cpu = oldest_message - last_message_array->messages;
         u64 ts;
+        u64 empty_ts;
         struct ring_buffer_event* event;
-        struct list_head* insert_point;
         
         if(cpumask_test_cpu(cpu, &subbuffers_updated))
         {
             //This cpu-buffer has already been tested. Buffer is cannot read now.
             if(wait_function)
                 schedule_delayed_work(&trace_buffer->work_wakeup_reader,
-                    (trace_buffer->non_empty_buffers ? TIME_WAIT_SUBBUFFER : TIME_WAIT_BUFFER)
+                    (cpumask_empty(&last_message_array->message_exist) ? TIME_WAIT_BUFFER : TIME_WAIT_SUBBUFFER)
                     * HZ / 1000/*jiffies in ms*/);
             
             return -EAGAIN;
         }
-        ts = ring_buffer_time_stamp(trace_buffer->buffer, cpu);
+        cpumask_set_cpu(cpu, &subbuffers_updated);
+        
+        empty_ts = trace_buffer->clock() - trace_buffer->message_delta_time;
 #if defined(RING_BUFFER_CONSUME_HAS_4_ARGS)
 		event = ring_buffer_consume(trace_buffer->buffer, cpu, &ts, NULL);
 #elif defined(RING_BUFFER_CONSUME_HAS_3_ARGS)
@@ -444,26 +552,24 @@ static int trace_buffer_update_internal(struct trace_buffer* trace_buffer,
 #else
 #error RING_BUFFER_CONSUME_HAS_4_ARGS or RING_BUFFER_CONSUME_HAS_3_ARGS should be defined.
 #endif
-        last_message_set_timestamp(oldest_message, ts);
-        //rearrange 'oldest_message'
-        list_del(&oldest_message->list);
-        list_for_each_prev(insert_point, &trace_buffer->last_messages_ordered)
-        {
-            if(list_entry(insert_point, struct last_message, list)->ts <= ts) break;
-        }
-        list_add(&oldest_message->list, insert_point);
-        //mark cpu as 'updated'
-        cpumask_set_cpu(cpu, &subbuffers_updated);
-        
+
         if(event)
         {
-            if(last_message_set(oldest_message, event))
+            size_t size;
+            struct trace_data* msg = ring_buffer_event_data(event);
+            size = ring_buffer_event_length(event) - sizeof(*msg);
+            if(last_message_array_set_cpu_message(last_message_array,
+                cpu, msg->ts, msg->data, size))
             {
                 pr_err("Cannot allocate new message.");
                 trace_buffer->messages_lost_internal++;
                 return -ENOMEM;
             }
-            trace_buffer->non_empty_buffers++;
+        }
+        else
+        {
+            last_message_array_update_cpu_nonexist(last_message_array,
+                cpu, empty_ts);
         }
     }
    
@@ -536,15 +642,12 @@ trace_buffer_read_message(struct trace_buffer* trace_buffer,
     if(mutex_lock_killable(&trace_buffer->read_mutex))
         return -ERESTARTSYS;
 
-    
-    //pr_info("Updating buffers");
     while(((result = trace_buffer_update_internal(trace_buffer, NULL, NULL)) == -EAGAIN)
         && should_wait)
     {
         //perform wait_event_killable()
         struct read_wait_table table;
         read_wait_init(&table);
-        //pr_info("Waiting trace...");
         while(1)
         {
             set_current_state(TASK_KILLABLE);
@@ -573,7 +676,6 @@ trace_buffer_read_message(struct trace_buffer* trace_buffer,
     }
     if(result)
         goto out;
-    //pr_info("Reading message");
     result = trace_buffer_read_internal(trace_buffer, process_data, user_data);
 out:
     mutex_unlock(&trace_buffer->read_mutex);
