@@ -59,13 +59,15 @@ macro(kmodule_is_function_exist function_name RESULT_VAR)
         set(kmodule_is_function_exist_message "${kmodule_is_function_exist_message} [cached]")
     else(DEFINED ${RESULT_VAR})
         execute_process(
-            COMMAND perl ${kmodule_this_module_dir}/kmodule_files/scripts/look_kernel_function.pl ${function_name}
+            COMMAND sh ${kmodule_this_module_dir}/kmodule_files/scripts/look_kernel_function.sh ${function_name}
             RESULT_VARIABLE kmodule_is_function_exist_result
             OUTPUT_QUIET)
         if (kmodule_is_function_exist_result EQUAL 0)
             set(${RESULT_VAR} "TRUE" CACHE INTERNAL "Whether ${function_name} exist in the kernel")
-        else(kmodule_is_function_exist_result EQUAL 0)
+        elseif(kmodule_is_function_exist_result EQUAL 1)
             set(${RESULT_VAR} "FALSE" CACHE INTERNAL "Whether ${function_name} exist in the kernel")
+        else(kmodule_is_function_exist_result EQUAL 0)
+            message(FATAL_ERROR "Cannot determine whether function '${function_name}' exist in the kernel")
         endif(kmodule_is_function_exist_result EQUAL 0)
     endif(DEFINED ${RESULT_VAR})
     if (${RESULT_VAR})
