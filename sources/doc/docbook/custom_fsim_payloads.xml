@@ -23,7 +23,7 @@ provide a different set of variables to be passed to fault simulation indicator 
 </itemizedlist>
 
 <note><para>
-Note that the infrastructure provided by KEDR for fault simulation (<link linkend="fault_simulation_point">points</link>, <link linkend="fault_simulation_indicator">indicators</link> and the respective control facilities) could be used for other purposes as well. What it does in general, is to alter the behaviour of a call made by the target module if the indicator returns nonzero, or allow the target function to do its work normally if the indicator returns 0. The <quote>altered behaviour</quote> is controlled by the user, see the description of <code>fpoint.error_code</code> parameter below. So, instead of fault simulation, you could implement, say, timeout/sleep injection (i.e., delaying the return from the replacement function which might help with concurrency analysis, etc.) or whatever else you want.
+Note that the infrastructure provided by KEDR for fault simulation (<link linkend="fault_simulation_point">points</link>, <link linkend="fault_simulation_indicator">indicators</link> and the respective control facilities) could be used for other purposes as well. What it does in general, is to alter the behaviour of a call made by the target module if the indicator returns nonzero, or allow the target function to do its work normally if the indicator returns 0. The <quote>altered behaviour</quote> is controlled by the user, see the description of <code>fpoint.fault_code</code> parameter below. So, instead of fault simulation, you could implement, say, timeout/sleep injection (i.e., delaying the return from the replacement function which might help with concurrency analysis, etc.) or whatever else you want.
 </para></note>
 
     <para>
@@ -116,7 +116,7 @@ Until this moment, only parameters which are also used for the payload modules f
     </para>
     <para>
 <variablelist>
-    <varlistentry><term>fpoint.error_code</term>
+    <varlistentry><term>fpoint.fault_code</term>
         <listitem>code (may be multiline) which should be executed instead the call to the target function to simulate failure of the latter. Usually, this code simply sets <varname>returnValue</varname> variable which will be returned to the caller to indicate that a failure has occured.</listitem>
     </varlistentry>
     <varlistentry><term>fpoint.param.name</term>
@@ -154,7 +154,7 @@ Visibility of variables in different parts of code of the replacement function m
         }
         else
         {
-            <symbol>fpoint.error_code</symbol>;
+            <symbol>fpoint.fault_code</symbol>;
         }
         <symbol>middleCode</symbol>
         output(<symbol>trace.formatString</symbol>, <symbol>trace.param.name</symbol>...);
@@ -162,7 +162,7 @@ Visibility of variables in different parts of code of the replacement function m
     <symbol>epilogue</symbol>
 }
 </programlisting>
-If the target function does not return void, variable <varname>returnValue</varname> can be used as name of variable to output (<symbol>arg.name</symbol>) and in the <symbol>middleCode</symbol>. Also, this variable should be assigned in the <symbol>fpoint.error_code</symbol> (otherwise it will not be initialized if the failure of the target function is simulated).
+If the target function does not return void, variable <varname>returnValue</varname> can be used as name of variable to output (<symbol>arg.name</symbol>) and in the <symbol>middleCode</symbol>. Also, this variable should be assigned in the <symbol>fpoint.fault_code</symbol> (otherwise it will not be initialized if the failure of the target function is simulated).
     </para>
     <para>
 Here is an example of the group section for __kmalloc target function. Note the definition of <code>fpoint.fault_code</code> parameter. Its value is <quote><code>returnValue = NULL;</code></quote> because '=' characters after the leftmost one have no special meaning and are treated as the part of the value.

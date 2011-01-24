@@ -255,27 +255,33 @@ add_subdirectory(fault_simulation)
 
 add_subdirectory(include)
 
-# This file is used for create configuration file for call monitor payloads or empty one
-set(kedr_conf_file_data_default "${CMAKE_BINARY_DIR}/tools/control/kedr.conf.data")
-set(kedr_test_conf_file_data_default "${CMAKE_BINARY_DIR}/tools/control/kedr_test.conf.data")
+add_subdirectory(trace)
 
+# Because some call monitor payloads will be used in the configuration file for fault simulation,
+# Creating data file for fault simulation should be preceed to the processing call monitor payloads.
 if(KEDR_STANDARD_FSIM_PAYLOADS)
-# This file is used for create configuration file for fault simulation payloads
-set(kedr_conf_file_data_fsim "${CMAKE_BINARY_DIR}/tools/control/kedr_fsim.conf.data")
+    # This file is used for create configuration file for fault simulation payloads
+    set(kedr_conf_file_data_fsim "${CMAKE_BINARY_DIR}/tools/control/kedr_fsim.conf.data")
+    file(WRITE "${kedr_conf_file_data_fsim}" "")
+
+    add_subdirectory(payloads_fsim)
+    add_subdirectory(fault_indicators)
 endif(KEDR_STANDARD_FSIM_PAYLOADS)
 
-add_subdirectory(trace)
-# tools should be before payloads
-add_subdirectory(tools)
 
 if(KEDR_STANDARD_CALLM_PAYLOADS)
-add_subdirectory(payloads_callm)
+    # This file is used for create configuration file for call monitor payloads
+    set(kedr_conf_file_data_callm "${CMAKE_BINARY_DIR}/tools/control/kedr_callm.conf.data")
+    file(WRITE "${kedr_conf_file_data_callm}" "")
+    # Same but for test variant
+    set(kedr_test_conf_file_data_callm "${CMAKE_BINARY_DIR}/tools/control/kedr_test_callm.conf.data")
+    file(WRITE "${kedr_test_conf_file_data_callm}" "")
+
+    add_subdirectory(payloads_callm)
 endif(KEDR_STANDARD_CALLM_PAYLOADS)
 
-if(KEDR_STANDARD_FSIM_PAYLOADS)
-add_subdirectory(payloads_fsim)
-add_subdirectory(fault_indicators)
-endif(KEDR_STANDARD_FSIM_PAYLOADS)
+
+add_subdirectory(tools)
 
 add_subdirectory(examples)
 # Documentation

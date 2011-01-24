@@ -16,7 +16,7 @@
     <arg choice='plain'><replaceable>target_name</replaceable></arg>
     <group rep="repeat">
         <arg choice='plain'>-c <replaceable>conf_string</replaceable></arg>
-        <arg choice='plain'><replaceable>conf_file</replaceable></arg>
+        <arg choice='plain'>-f <replaceable>conf_file</replaceable></arg>
     </group>
 </cmdsynopsis>
 <cmdsynopsis>
@@ -37,15 +37,35 @@
         <term><option>-c</option> <replaceable>conf_string</replaceable></term>
         <listitem>
             <para>
-Use configuration string <replaceable>conf_string</replaceable> instead of the default configuration file.
+Use string <replaceable>conf_string</replaceable> for configuring KEDR while loading.
             </para>
         </listitem>
     </varlistentry>
     <varlistentry>
-        <term><replaceable>conf_file</replaceable></term>
+        <term>-f <replaceable>conf_file</replaceable></term>
         <listitem>
             <para>
-Use configuration file <replaceable>conf_file</replaceable> instead of the default configuration file.
+Use file <replaceable>conf_file</replaceable> for configuring KEDR while loading. For files in the default configuration directory (<filename class="directory">/var/opt/kedr/configs</filename>) or <filename class="directory">%prefix%/var/configs</filename>, depending on where KEDR is installed) directory part of the filename may be omitted. In the current version, default configuration directory contains follows configuration files:
+                <variablelist>
+                    <varlistentry>
+                        <term><filename>callm.conf</filename></term>
+                        <listitem>
+                            <para>Load call monitor payload set.</para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term><filename>fsim.conf</filename></term>
+                        <listitem>
+                            <para>Load fault simulation payload set.</para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term><filename>default.conf</filename></term>
+                        <listitem>
+                            <para>Default configuration file. Load call monitor payload set (same as <filename>callm.conf</filename>).</para>
+                        </listitem>
+                    </varlistentry>
+                </variablelist>
             </para>
         </listitem>
     </varlistentry>
@@ -54,7 +74,7 @@ Use configuration file <replaceable>conf_file</replaceable> instead of the defau
 All <replaceable>conf_string</replaceable> and <replaceable>conf_file</replaceable> arguments of the command are, in fact, joined into one configuration file in the same order as they are listed. The resulting file is used as configuration file for the command.
             </para>
             <para>
-If no <replaceable>conf_string</replaceable> and <replaceable>conf_file</replaceable> options are given, the command will use the default configuration file (<filename>/var/opt/kedr/kedr.conf</filename> or <filename>%prefix%/var/kedr.conf</filename>, depending on where KEDR is installed).
+If no <replaceable>conf_string</replaceable> and <replaceable>conf_file</replaceable> options are given, the command will use the default configuration file (<filename>/var/opt/kedr/configs/default.conf</filename> or <filename>%prefix%/var/configs/default.conf</filename>, depending on where KEDR is installed).
             </para>
 
 </section>
@@ -121,7 +141,7 @@ If <filename>kedr_base</filename> module is still loaded after <quote>stop</quot
 <section id="kedr_control.caveats">
 <title>Caveats</title>
     <para>
-In its <command>start</command>, <command>stop</command> and <command>restart</command> modes, <command>&kedr-service;</command> changes the state of tracepoints breaking usage of the trace. So, trace capturing mechanism should not be running when <command>&kedr-service;</command> command is executed in these modes. To be exact, <command>kedr_capture_trace</command> should not be in capturing state and <command>kedr_capture_trace session</command> should not be running in this case.
+In its <command>start</command>, <command>stop</command> and <command>restart</command> modes, <command>&kedr-service;</command> changes the state of tracepoints breaking usage of the trace. So, trace capturing mechanism (<command>kedr_capture_trace</command>) should not be running when <command>&kedr-service;</command> command is executed in these modes.
     </para>
 </section>
 

@@ -183,11 +183,11 @@ mount debugfs -t debugfs /sys/kernel/debug
 </programlisting>
 </para>
 <para>
-You can instruct KEDR to store the information about the calls to kernel functions in your own file. To do this, execute
+You can instruct KEDR to output the information about the calls to kernel functions. To do this, open another terminal and execute
 <programlisting>
-/usr/local/bin/kedr_capture_trace start <replaceable>file-to-store-trace</replaceable>
+/usr/local/bin/kedr_capture_trace
 </programlisting>
-From this moment, all tracing information will be stored in <replaceable>file-to-store-trace</replaceable> file. You still need to have debugfs mounted, because the output data will first appear there and then it will be copied from that temporary storage to a file of your choice.
+From this moment, all tracing information will be output into that terminal. Leave it for a time, and switch to the terminal, in which you have started KEDR.
 </para>
 <para>
 Everything is now ready to load the target kernel module:
@@ -202,11 +202,13 @@ dd if=/dev/zero of=/dev/cfake bs=1 count=10
 </programlisting>
 </para>
 <para>
-Open the file with the trace. This is the file the path to which you passed to <command>kedr_capture_trace</command> script. You can find the records like the following ones there:
+Switch to the terminal, in which you have run <command>kedr_capture_trace</command> program. You can find the records like the following ones there:
 </para>
 
 <programlisting><![CDATA[
-insmod-6416 [001] 805.997320: target_session_begins: target module: "kedr_sample_target"
+insmod-6416 [001] 805.997300: target_session_begins: target_name: "kedr_sample_target", payload_name: "kedr_cm_cmm"
+...
+insmod-6416 [001] 805.997320: target_session_begins: target_name: "kedr_sample_target", payload_name: "kedr_cm_vmm"
 insmod-6416 [001] 805.997615: called___kmalloc: ([<ffffffffa00e70b9>] init+0xb9) 
     arguments: (320, d0), result: ffff8800165a8000
 dd-6438     [000] 858.641942: called___kmalloc: ([<ffffffffa01d661e>] core+0x61e) 
@@ -217,11 +219,11 @@ dd-6438     [000] 858.642074: called_copy_from_user: ([<ffffffffa01d642a>] core+
 ]]></programlisting>
 
 <para>
-The first record says that KEDR has detected the loading of the target module.
+The first record says that KEDR payload with name "kedr_cm_cmm" has detected the loading of the target module and has prepared to monitor function calls in it. Several next lines says the same but for other payloads, ended with "kedr_cm_vmm".
 </para>
 
 <para>
-The second line shows information about the first detected call to a kernel function, <code>__kmalloc</code>. It shows the values of the parameters passed to the function (size=320, flags=0xd0) and its return value (address 0xffff8800165a8000). The operation was performed in the context of <quote>insmod</quote> process.
+Next (4th line in the listing above) line shows information about the first detected call to a kernel function, <code>__kmalloc</code>. It shows the values of the parameters passed to the function (size=320, flags=0xd0) and its return value (address 0xffff8800165a8000). The operation was performed in the context of <quote>insmod</quote> process.
 </para>
 
 <note><para>
@@ -229,10 +231,10 @@ The second line shows information about the first detected call to a kernel func
 </para></note>
 
 <para>
-The third record shows another detected call to <code>__kmalloc</code>. It was made when we were writing zeroes to <filename>/dev/cfake</filename> (it follows from the fact that the call was made in the context of <quote>dd</quote> process that we had launched).
+The fifth record shows another detected call to <code>__kmalloc</code>. It was made when we were writing zeroes to <filename>/dev/cfake</filename> (it follows from the fact that the call was made in the context of <quote>dd</quote> process that we had launched).
 </para>
 <para>
-The fourth record shows a detected call to another kernel function, <code>copy_from_user</code>, which was also made when we were writing data to <filename>/dev/cfake</filename> with <command>dd</command>.
+The sixth record shows a detected call to another kernel function, <code>copy_from_user</code>, which was also made when we were writing data to <filename>/dev/cfake</filename> with <command>dd</command>.
 </para>
 
 <para>
@@ -240,11 +242,11 @@ The remaining records in the trace are similar to those we have just described.
 </para>
 
 <para>
-Unload the target module using the following command:
+Unload the target module using the following command (from the terminal in which the target module was loaded):
 <programlisting>
 kedr_sample_target unload
 </programlisting>
-After that, the lines like the following ones should appear in the trace file:
+After that, the lines like the following ones should appear in the trace:
 </para>
 
 <programlisting><![CDATA[
@@ -254,16 +256,14 @@ rmmod-6441 [001] 869.438879: called_kfree: ([<ffffffffa01d60d8>] core+0xd8)
     arguments: ((null))
 rmmod-6441 [001] 869.438881: called_kfree: ([<ffffffffa01d6108>] core+0x108) 
     arguments: (ffff8800165a8000)
-rmmod-6441 [001] 869.438885: target_session_ends: target module: "kedr_sample_target"
+rmmod-6441 [001] 869.438885: target_session_ends: target_name: "kedr_sample_target", payload_name: "kedr_cm_cmm"
+...
+rmmod-6441 [001] 869.438895: target_session_ends: target_name: "kedr_sample_target", payload_name: "kedr_cm_vmm"
 ]]></programlisting>
 
 <para>
-There will be no new records in the trace file until the target module is loaded again. You can stop recording the trace to your file:
-<programlisting>
-/usr/local/bin/kedr_capture_trace stop
-</programlisting>
+There will be no new records in the trace file until the target module is loaded again. You can stop capturing the trace by pressing Ctrl+C in the terminal with running <command>kedr_capture_trace</command> program.
 </para>
-
 <para>
 The last step is stopping KEDR and unloading its components:
 <programlisting>
@@ -287,18 +287,13 @@ In general, it can be useful to see how a kernel module behaves on the code path
 </para>
 
 <para>
-Call monitoring facilities of KEDR are not needed here. So a custom configuration of KEDR can be used instead of the default one to make sure that only necessary components of KEDR are to be loaded. To do so, create file <filename>kedr.conf</filename> with the following contents in a directory of your choice:
-<programlisting><![CDATA[
-module /usr/local/lib/modules/`uname -r`/misc/kedr_fault_simulation.ko
-module /usr/local/lib/modules/`uname -r`/misc/kedr_fsim_cmm.ko
-]]></programlisting>
+KEDR has configuration file for performing fault simulation. For make KEDR use this configuration instead of default one, pass additional option to the KEDR control script:
+<programlisting>
+/usr/local/bin/kedr start kedr_sample_target -f fsim.conf
+</programlisting>
 </para>
 <para>
-Then you can call
-<programlisting>
-/usr/local/bin/kedr start kedr_sample_target <replaceable>path-to-conf-file</replaceable>
-</programlisting>
-<replaceable>path-to-conf-file</replaceable> is the path to the configuration file you have just created. Now KEDR is prepared to simulate the conditions when memory allocation (e.g., via <code>__kmalloc</code>) fails. Note that this simulation will be performed only with respect to the target module, other parts of the kernel will not be affected.
+Now KEDR is loaded and prepared to simulate, e.g., the conditions when memory allocation (e.g., via <code>__kmalloc</code>) fails. Note that this simulation will be performed only with respect to the target module, other parts of the kernel will not be affected.
 </para>
 <para>
 You can choose a scenario according to which KEDR will make calls to <code>__kmalloc</code> fail. A group of possible scenarios is already provided by KEDR and custom scenarios can also be developed. In this example, we will show how to configure and use a pre-defined scenario. To make it available, you should load the corresponding module:

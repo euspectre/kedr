@@ -103,7 +103,7 @@ For a fault simulation replacement function, the control flow is as follows in t
     }
     else
     {
-        <symbol>fpoint.error_code</symbol>;
+        <symbol>fpoint.fault_code</symbol>;
     }
     <symbol>epilogue</symbol>
 }

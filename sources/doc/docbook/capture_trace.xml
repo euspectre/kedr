@@ -4,7 +4,7 @@
 <section id="capture_trace.general">
 <title>General</title>
 <para>
-    <command>kedr_capture_trace</command> - a service-like tool to capture the data sent by payload modules to the trace (a special file in debugfs). Captured data are written to standard output or stored in the file specified by the user.
+    <command>kedr_capture_trace</command> - tool to capture the data sent by payload modules to the trace.
 </para>
 </section>
 
@@ -12,127 +12,101 @@
 <title>Usage</title>
 
 <cmdsynopsis>
-    <command>kedr_capture_trace start</command>
-    <arg>-d <replaceable>debugfs_mount_point</replaceable></arg>
-    <arg><replaceable>file</replaceable></arg>
+    <command>kedr_capture_trace</command>
+    <arg><replaceable>OPTIONS</replaceable></arg>
 </cmdsynopsis>
-<cmdsynopsis>
-    <command>kedr_capture_trace stop</command>
-</cmdsynopsis>
-<cmdsynopsis>
-    <command>kedr_capture_trace status</command>
-</cmdsynopsis>
-<cmdsynopsis>
-    <command>kedr_capture_trace session</command>
-    <arg>-d <replaceable>debugfs_mount_point</replaceable></arg>
-    <arg><replaceable>file</replaceable></arg>
-</cmdsynopsis>
-
 </section>
+
+<section id="capture_trace.description">
+<title>Description</title>
+    <para>
+<command>kedr_capture_trace</command> capture the trace information of payload modules until program is terminated with a SIGINT or, when used with '-s' option, until all trace information from target module session was recieved.
+    </para>
+    <para>
+Every trace line is stored it in the file(s) (option '-f') and/or passed to user-specified program(s) via STDIN(option '-p'). If neither '-f' nor '-p' option is specified, every trace line is output via STDOUT.
+    </para>
+</section>
+
 <section id="kedr_capture_trace.options">
 <title>Options</title>
 
 <variablelist>
     <varlistentry>
-        <term><replaceable>file</replaceable></term>
+        <term>-d <replaceable>debugfs_mount_point</replaceable></term>
         <listitem>
             <para>
-Path to the file where to store the captured trace. If the file exists, the contents of the trace will be appended to its previous content.
+Specify directory where debugfs filesystem is currently mounted. This filesystem contains the trace file from which the trace will be captured. If this argument is not supplied, it is assumed that the mount point of debugfs filesystem is <filename class="directory">/sys/kernel/debug</filename>.
             </para>
         </listitem>
     </varlistentry>
     <varlistentry>
-        <term>-d <replaceable>debugfs_mount_point</replaceable></term>
+        <term>-f, --file <replaceable>file</replaceable></term>
         <listitem>
             <para>
-Directory where debugfs filesystem is currently mounted. This filesystem contains the trace file from which the trace will be captured. If this argument is not supplied, it is assumed that the mount point of debugfs filesystem is <filename class="directory">/sys/kernel/debug</filename>.
+Store every trace line into the given file. If the file doesn't exist, create it at the start, otherwise append new data to the old file's content.
+            </para>
+        </listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>-p, --program <replaceable>program</replaceable></term>
+        <listitem>
+            <para>
+When start, launch <replaceable>program</replaceable>. Then pipe every trace line to this program via its STDIN. When stop capturing trace, close own side of pipe and wait until program terminates.
+            </para>
+        </listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>-s, --session</term>
+        <listitem>
+            <para>
+Read only those lines from the trace, which collected from the moment target module is loaded and until the moment target module is unloaded. After process the last line from the target session, stop capturing.
+            </para>
+            <para>
+NOTE: It is error to use this option when some trace lines from the current target has already processed.
             </para>
         </listitem>
     </varlistentry>
 </variablelist>
 </section>
-<section id="capture_trace.description">
-<title>Description</title>
-    <section id="capture_trace.description.start">
-    <title>kedr_capture_trace start</title>
-        <para>
-<command>kedr_capture_trace start</command> starts capturing the output of payload modules and storing it in the file <replaceable>file</replaceable>. If <replaceable>file</replaceable> parameter is not supplied, capturing data are written to the standard output. Note that all the records captured from the trace and stored in <replaceable>file</replaceable> or written to the standard output are deleted from the trace file in debugfs.
-        </para>
-        <para>
-If capturing has already started, <command>kedr_capture_trace start</command> does nothing and returns 1.
-        </para>
-    </section>
 
-    <section id="capture_trace.description.stop">
-    <title>kedr_capture_trace stop</title>
-        <para>
-<command>kedr_capture_trace stop</command> stops capturing the trace. When this command returns, all trace records will be stored in the specified file.
-        </para>
-        <para>
-If capturing has not started yet, <command>kedr_capture_trace stop</command> does nothing and returns 1.
-        </para>
-    </section>
-    <section id="capture_trace.description.status">
-    <title>kedr_capture_trace status</title>
-        <para>
-<command>kedr_capture_trace status</command> reports whether capturing is in progress or not. In the future, it will probably also report the path to the file the captured trace is stored in.
-        </para>
-    </section>
-    <section id="capture_trace.description.session">
-    <title>kedr_capture_trace session</title>
-        <para>
-<command>kedr_capture_trace session</command> is similar to the <command>kedr_capture_trace start</command>, but performs capturing in blocking mode until current target module is unloaded.
-        </para>
-        <para>
-Clearly, it captures the output of payload modules and storing it in the file <replaceable>file</replaceable>. If <replaceable>file</replaceable> parameter is not supplied, capturing data are written to the standard output. Capturing is stopped when marker record indicating that the target module has unloaded is encountered in the trace. Note that all the records captured from the trace and stored in <replaceable>file</replaceable> or written to the standard output are deleted from the trace file in debugfs.
-        </para>
-        <para>
-If <replaceable>file</replaceable> parameter is supplied and it points to the existing file, this file is treated as the beginning of the trace. Before start capturing, this file is scanned for markers records of target loading and unloading. If marker record indicating that target module is unloaded is found in the file, and there is no target load marker record after it, <command>kedr_capture_trace session</command> command immidiately returns without capturing. Otherwise, capturing trace is performed as described previously.
-        </para>
-        <note><para>
-Commands <command>kedr_capture_trace stop</command> and <command>kedr_capture_trace status</command> do not correlate with <command>kedr_capture_trace session</command>.
-        </para></note>
-    </section>
-</section>
-<section id="capture_trace.caveats">
-<title>Caveats</title>
-    <para>
-<command>kedr_capture_trace start</command> and <command>kedr_capture_trace session</command> commands operate on the same trace file in debugfs. So, they should not be used simultaneously. That is, do not call <command>kedr_capture_trace session</command> while <command>kedr_capture_trace</command> is in capturing state and do not call <command>kedr_capture_trace start</command> while <command>kedr_capture_trace session</command> is running.
-    </para>
-</section>
 <section id="capture_trace.examples">
 <title>Examples</title>
     <para>
 <programlisting>
-kedr_capture_trace start trace.txt
-...
-kedr_capture_trace stop
+kedr_capture_trace -f trace.txt
+^C
 </programlisting>
-store in the file <filename>trace.txt</filename> all records from the trace, generated up to <command>kedr_capture_trace stop</command> call.
+store in the file <filename>trace.txt</filename> all records from the trace, until 'Ctrl+C' is pressed.
     </para>
     <para>
 <programlisting>
-kedr start moduleA
-/sbin/modprobe moduleA
-...
-/sbin/modprobe -r moduleA
-kedr_capture_trace session trace.txt
-kedr stop
+kedr_capture_trace -p "grep called_kfree > frees.txt"
+^C
 </programlisting>
-store in the file <filename>trace.txt</filename> all records from the trace, generated up to unloading of the moduleA.
+store in the file <filename>frees.txt</filename> all records from the trace, generated by kfree() call, until 'Ctrl+C' is pressed.
     </para>
     <para>
 <programlisting>
+kedr_capture_trace \
+-p "grep called_kfree > frees.txt" \
+-p "grep called___kmalloc > allocs.txt" \
+-f trace.txt
+^C
+</programlisting>
+store all records from the trace, records generated by kfree() call, and records generated by __kmalloc() call in the files frees.txt, allocs.txt and trace.txt correspondingly.
+    </para>
+    <para>
+<programlisting><![CDATA[
 kedr start moduleA
-kedr_capture_trace start trace.txt
+kedr_capture_trace -s -f trace.txt &
+pid=$!
 /sbin/modprobe moduleA
 ...
 /sbin/modprobe -r moduleA
-kedr_capture_trace stop trace.txt
-kedr_capture_trace session trace.txt
+wait $pid
 kedr stop
-</programlisting>
-store in the file <filename>trace.txt</filename> all records from the trace, generated up to unloading of the moduleA. The difference from previous example is that file <filename>trace.txt</filename> is updated at runtime. Call <code>kedr_capture_trace session trace.txt</code> is needed because trace really is generated asynchronously. So, there is no garantee that all records of the trace will generated after <code>/sbin/modprobe -r moduleA</code> returns.
+]]></programlisting>
+store in the file <filename>trace.txt</filename> all records from the trace, generated by moduleA.
     </para>
     <para>
 See also <xref linkend="getting_started.call_monitoring"/>.

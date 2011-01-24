@@ -32,9 +32,11 @@ struct trace_file
     struct dentry* file;
     //Copy of file operations with module set.
     struct file_operations trace_file_ops;
-    // Trace buffer interpretator
+    //Trace buffer interpretator
     snprintf_message print_message;
     void* user_data;
+    //Counter of file readers
+    atomic_t readers;
 };
 
 
@@ -55,6 +57,7 @@ static int trace_process_data(const void* msg,
 
 // Trace file operations
 static int trace_file_open(struct inode *inode, struct file *filp);
+static int trace_file_release(struct inode *inode, struct file *filp);
 // Consume messages from the trace.
 static ssize_t trace_file_read(struct file *filp,
     char __user* buf, size_t count, loff_t *f_pos);
@@ -65,18 +68,31 @@ static struct file_operations trace_file_ops =
 {
     .owner = NULL, //placeholder for module
     .open = trace_file_open,
+    .release = trace_file_release,
     .read = trace_file_read,
     .poll = trace_file_poll,
 };
 
 
 //Implementation of trace file operations
-static int trace_file_open(struct inode *inode, struct file *filp)
+int trace_file_open(struct inode *inode, struct file *filp)
 {
-    filp->private_data = inode->i_private;
+    struct trace_file* trace_file = (struct trace_file*)inode->i_private;
+    if(!atomic_add_unless(&trace_file->readers, 1, 1))
+    {
+        //Only one reader at a time is allowed.
+        return -EBUSY;
+    }
+    filp->private_data = trace_file;
     return nonseekable_open(inode, filp);
 }
 
+int trace_file_release(struct inode *inode, struct file *filp)
+{
+    struct trace_file* trace_file = (struct trace_file*)inode->i_private;
+    atomic_dec(&trace_file->readers);
+    return 0;
+}
 
 ssize_t trace_file_read(struct file *filp,
     char __user* buf, size_t count, loff_t *f_pos)
@@ -228,14 +244,14 @@ struct trace_file* trace_file_create(
     mutex_init(&trace_file->m);
     trace_file->print_message = print_message;
     trace_file->user_data = user_data;
-
+    atomic_set(&trace_file->readers, 0);
     // Create trace file
     memcpy(&trace_file->trace_file_ops, &trace_file_ops,
         sizeof(trace_file_ops));
     trace_file->trace_file_ops.owner = m;
 
     trace_file->file = debugfs_create_file(trace_file_name,
-        S_IRUGO,
+        S_IRUSR,
         work_dir,
         trace_file,
         &trace_file->trace_file_ops);
@@ -257,6 +273,7 @@ struct trace_file* trace_file_create(
  */
 void trace_file_destroy(struct trace_file* trace_file)
 {
+    BUG_ON(atomic_read(&trace_file->readers) != 0);
     debugfs_remove(trace_file->file);
     mutex_destroy(&trace_file->m);
     trace_buffer_destroy(trace_file->trace_buffer);

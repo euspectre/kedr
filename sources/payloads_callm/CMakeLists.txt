@@ -74,13 +74,13 @@ endfunction(kedr_test_add_trigger_for_function payload)
 
 # Macro for add loading of given payload into default configuration file(and its variant for test)
 macro(kedr_conf_default_add_payload payload_name)
-    file(APPEND ${kedr_conf_file_data_default} "payload.name = ${payload_name}\n")
-	file(APPEND ${kedr_conf_file_data_default} "payload.path = ${KEDR_INSTALL_PREFIX_KMODULE}/${payload_name}.ko\n")
-	file(APPEND ${kedr_conf_file_data_default} "payload.is_fsim =\n")
+    file(APPEND ${kedr_conf_file_data_callm} "payload.name = ${payload_name}\n")
+	file(APPEND ${kedr_conf_file_data_callm} "payload.path = ${KEDR_INSTALL_PREFIX_KMODULE}/${payload_name}.ko\n")
+	file(APPEND ${kedr_conf_file_data_callm} "payload.is_fsim =\n")
 
-	file(APPEND ${kedr_test_conf_file_data_default} "payload.name = ${payload_name}\n")
-	file(APPEND ${kedr_test_conf_file_data_default} "payload.path = ${CMAKE_CURRENT_BINARY_DIR}/${payload_name}.ko\n")
-	file(APPEND ${kedr_test_conf_file_data_default} "payload.is_fsim =\n")
+	file(APPEND ${kedr_test_conf_file_data_callm} "payload.name = ${payload_name}\n")
+	file(APPEND ${kedr_test_conf_file_data_callm} "payload.path = ${CMAKE_CURRENT_BINARY_DIR}/${payload_name}.ko\n")
+	file(APPEND ${kedr_test_conf_file_data_callm} "payload.is_fsim =\n")
 endmacro(kedr_conf_default_add_payload payload_name)
 
 # Macro for add loading of given payload into fault simulation configuration file

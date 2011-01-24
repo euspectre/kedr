@@ -238,8 +238,8 @@ last_message_array_set_cpu_message(struct last_message_array* array,
     last_message_list_add(&array->messages_ordered,
         message);
 
-    pr_info("Message on cpu %d with timestamp %lu.",
-        cpu, (unsigned long)message->ts);
+    //pr_info("Message on cpu %d with timestamp %lu.",
+    //    cpu, (unsigned long)message->ts);
     return 0;
 }
 

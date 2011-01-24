@@ -45,8 +45,9 @@ version()
 	printf "KEDR version %s.%s.%s.\n" "@KEDR_VERSION_MAJOR@" "@KEDR_VERSION_MINOR@" "@KEDR_VERSION_MICRO@"
 }
 
-# default config file
-default_config_file=@KEDR_FILE_DEFAULT_CONTROL_CONFIG@
+# default config directory and file
+default_config_dir=@KEDR_DEFAULT_CONFIG_DIR@
+default_config_file=@KEDR_DEFAULT_CONFIG_FILE@
 
 # commands for kernel module control
 MODPROBE=/sbin/modprobe
@@ -293,7 +294,17 @@ start)
 		;;
 		f)
 			non_default_config=1
-			cat "$OPTARG" >> "${start_conf_file}"
+			if test -e "$OPTARG"; then
+                conf_file="$OPTARG"
+            else
+                if test -e "${default_config_dir}/$OPTARG"; then
+                    conf_file="${default_config_dir}/$OPTARG"
+                else
+                    printf "Configuration file '%s' is not exist.\n" "$OPTARG"
+                    exit 1
+                fi
+            fi
+			cat "${conf_file}" >> "${start_conf_file}"
 			printf "\n" >> "${start_conf_file}"
 		;;
 		?)
