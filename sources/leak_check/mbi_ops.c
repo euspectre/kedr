@@ -78,6 +78,31 @@ mbi_table_add(struct klc_memblock_info *mbi, struct hlist_head *mbi_table)
     return;
 }
 
+/* Must be called under 'spinlock_mbi_storage'. 
+ * A helper function that looks for an item with 'block' field equal
+ * to 'block'. If found, the item is removed from the storage and a pointer
+ * to it is returned. If not found, NULL is returned.
+ */
+static struct klc_memblock_info *
+mbi_find_and_remove_alloc(const void *block)
+{
+    struct hlist_head *head;
+    struct klc_memblock_info *mbi = NULL;
+    struct klc_memblock_info *found = NULL;
+    struct hlist_node *node = NULL;
+    struct hlist_node *tmp = NULL;
+    
+    head = &alloc_table[hash_ptr((void *)block, MBI_HASH_BITS)];
+    hlist_for_each_entry_safe(mbi, node, tmp, head, hlist) {
+        if (mbi->block == block) {
+            hlist_del(&mbi->hlist);
+            found = mbi;
+            break;
+        }
+    }
+    return found;
+}
+
 void
 klc_add_alloc_impl(struct klc_memblock_info *alloc_info)
 {
@@ -85,9 +110,36 @@ klc_add_alloc_impl(struct klc_memblock_info *alloc_info)
     BUG_ON(alloc_info == NULL);
 
     spin_lock_irqsave(&spinlock_mbi_storage, irq_flags);
-    mbi_table_add(alloc_info, alloc_table);
     ++total_allocs;
     ++total_leaks;
+
+#ifdef KEDR_DEBUG
+    /* Additional checks when in debugging mode. 
+     * [WARNING] This will probably slow down the operation of the target
+     * module a lot.
+     */
+    { 
+        struct klc_memblock_info *mbi = NULL;
+        mbi = mbi_find_and_remove_alloc(alloc_info->block);
+        if (mbi != NULL) {
+            /* There was already a with the same address allocated, 
+               we have missed free()-like call for it for some reason.
+               Do not count it as a leak and report to the system log.
+             */
+            --total_leaks;
+            printk (KERN_WARNING "[kedr_leak_check] "
+            "Failed to detect deallocation of the block at 0x%p, size: %zu "
+            "allocated at [<%p>] %pS\n",
+                mbi->block, mbi->size, 
+                (void *)(mbi->stack_entries[0]), 
+                (void *)(mbi->stack_entries[0])
+            );
+        }
+    }
+#endif
+
+    /* Add info about the newly allocated block anyway. */
+    mbi_table_add(alloc_info, alloc_table);
     spin_unlock_irqrestore(&spinlock_mbi_storage, irq_flags);
     return;    
 }
@@ -109,26 +161,20 @@ int
 klc_find_and_remove_alloc(const void *block)
 {
     unsigned long irq_flags;
-    struct hlist_head *head;
-    struct klc_memblock_info *mbi = NULL;
-    struct hlist_node *node = NULL;
-    struct hlist_node *tmp = NULL;
     int ret = 0;
+    struct klc_memblock_info *mbi = NULL;
     
     WARN_ON(block == NULL);
     
     spin_lock_irqsave(&spinlock_mbi_storage, irq_flags);
-    head = &alloc_table[hash_ptr((void *)block, MBI_HASH_BITS)];
-    hlist_for_each_entry_safe(mbi, node, tmp, head, hlist) {
-        if (mbi->block == block) {
-            ret = 1;
-            hlist_del(&mbi->hlist);
-            klc_memblock_info_destroy(mbi);
-            --total_leaks;
-        }
+    mbi = mbi_find_and_remove_alloc(block);
+    if (mbi) {
+        ret = 1;
+        klc_memblock_info_destroy(mbi);
+        --total_leaks;
     }
     spin_unlock_irqrestore(&spinlock_mbi_storage, irq_flags);
-    return ret;    
+    return ret;
 }
 
 void
@@ -137,18 +183,45 @@ klc_flush_allocs(void)
     struct klc_memblock_info *mbi = NULL;
     struct hlist_node *node = NULL;
     struct hlist_node *tmp = NULL;
+    struct hlist_head *head = NULL;
+    const void *block;
     unsigned int i = 0;
+    unsigned int missed_free = 0;
 
     /* No need to protect the storage because this function is called
      * from on_target_unload handler when no replacement function can
      * interfere.*/
     for (; i < MBI_TABLE_SIZE; ++i) {
-        hlist_for_each_entry_safe(mbi, node, tmp, &alloc_table[i], hlist) {
+        head = &alloc_table[i];
+        while (!hlist_empty(head)) {
+        /* Output only the most recent allocation with a given address */
+            mbi = hlist_entry(head->first, struct klc_memblock_info, hlist);
             klc_print_alloc_info(mbi);
+            block = mbi->block;
             hlist_del(&mbi->hlist);
             klc_memblock_info_destroy(mbi);
-        }
-    }
+            
+            hlist_for_each_entry_safe(mbi, node, tmp, head, hlist) {
+                if (mbi->block == block) {
+                /* We have missed free() for these allocations somehow.
+                 */
+                    hlist_del(&mbi->hlist);
+                    klc_memblock_info_destroy(mbi);
+                    --total_leaks;
+                    ++missed_free;
+                }
+            }
+        } /* end while */
+    } /* end for */
+    
+    /* If we have missed some deallocations, rebuilding leak_check with 
+     * -DKEDR_DEBUG, re-running the tests and then checking the system log 
+     * may help obtain more detailed information about what was going on.
+     */
+    if (missed_free != 0)
+        printk (KERN_WARNING "[kedr_leak_check] "
+            "Failed to detect deallocation of at least %u block(s).\n",
+            missed_free);
     return;
 }
 
