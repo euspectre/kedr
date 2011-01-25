@@ -624,6 +624,8 @@ payload_init_module(void)
         return -EINVAL;
     }
     
+    klc_init_mbi_storage();
+    
     ret = klc_output_init();
     if (ret != 0)
         return ret;

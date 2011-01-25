@@ -11,6 +11,15 @@
 
 #include "memblock_info.h"
 
+/* Initializes the storage for klc_memblock_info structures corresponding
+ * to memory allocation and deallocation events.
+ * 
+ * This function should better be called once during the initialization of 
+ * the module.
+ */
+void 
+klc_init_mbi_storage(void);
+
 /* Adds the structure pointed to by 'alloc_info' to the list of 
  * "allocation events".
  *

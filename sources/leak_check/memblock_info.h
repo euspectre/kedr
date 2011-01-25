@@ -18,12 +18,12 @@
  * the appropriate call to an allocation or deallocation function 
  * ('stack_entries' array containing 'num_entries' meaningful elements).
  * 
- * The instances of this structure are to be stored in a linked list, hence
- * 'list' field here.
+ * The instances of this structure are to be stored in a hash table
+ * with linked lists as buckets, hence 'list' field here.
  */
 struct klc_memblock_info
 {
-    struct list_head list;
+    struct hlist_node hlist;
     
     /* Pointer to the memory block and the size of that block.
      * 'size' is (size_t)(-1) if the block was freed rather than allocated
@@ -51,11 +51,11 @@ struct klc_memblock_info
  * This macro can be used in atomic context too (it uses GFP_ATOMIC flag 
  * when it allocates memory).
  */
-#define klc_memblock_info_create(block_, size_, max_stack_depth_)  \
+#define klc_memblock_info_create(block_, size_, max_stack_depth_)   \
 ({                                                                  \
-    struct klc_memblock_info *ptr;                                 \
-    ptr = (struct klc_memblock_info *)kzalloc(                     \
-        sizeof(struct klc_memblock_info),                          \
+    struct klc_memblock_info *ptr;                                  \
+    ptr = (struct klc_memblock_info *)kzalloc(                      \
+        sizeof(struct klc_memblock_info),                           \
         GFP_ATOMIC);                                                \
     if (ptr != NULL) {                                              \
         ptr->block = (block_);                                      \
@@ -63,7 +63,7 @@ struct klc_memblock_info
         kedr_save_stack_trace(&(ptr->stack_entries[0]),             \
             (max_stack_depth_),                                     \
             &ptr->num_entries);                                     \
-        INIT_LIST_HEAD(&ptr->list);                                 \
+        INIT_HLIST_NODE(&ptr->hlist);                               \
     }                                                               \
     ptr;                                                            \
 })

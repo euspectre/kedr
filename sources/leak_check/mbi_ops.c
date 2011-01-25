@@ -21,26 +21,33 @@
 #include <linux/kernel.h>
 #include <linux/spinlock.h>
 #include <linux/list.h>
+#include <linux/hash.h>
 
 #include "mbi_ops.h"
 #include "klc_output.h"
+
+/* klc_memblock_info structures are stored in a has table with 
+ * MBI_TABLE_SIZE buckets.
+ */
+#define MBI_HASH_BITS   10
+#define MBI_TABLE_SIZE  (1 << MBI_HASH_BITS)
+
+/* The storage of klc_memblock_info structures corresponding to memory 
+ * allocation events.
+ * Order of elements: last in - first found. 
+ */
+static struct hlist_head alloc_table[MBI_TABLE_SIZE];
+
+/* The storage of klc_memblock_info structures corresponding to memory 
+ * deallocation events (only "unallocated frees" are stored).
+ * Order of elements: last in - first found. 
+ */
+static struct hlist_head bad_free_table[MBI_TABLE_SIZE];
 
 /* A spinlock to serialize access to the storage of klc_memblock_info
  * structures.
  */
 DEFINE_SPINLOCK(spinlock_mbi_storage);
-
-/* The list of klc_memblock_info structures corresponding to memory 
- * allocation events.
- * Order of elements: LIFO.
- */
-LIST_HEAD(alloc_list);
-
-/* The list of klc_memblock_info structures corresponding to memory 
- * deallocation events (only "unallocated frees" are stored).
- * Order of elements: LIFO.
- */
-LIST_HEAD(bad_free_list);
 
 /* Statistics: total number of memory allocations, possible leaks and
  * unallocated frees.
@@ -50,6 +57,27 @@ u64 total_leaks = 0;
 u64 total_bad_frees = 0;
 /* ================================================================ */
 
+void 
+klc_init_mbi_storage(void)
+{
+    unsigned int i = 0;
+    for (; i < MBI_TABLE_SIZE; ++i) {
+        INIT_HLIST_HEAD(&alloc_table[i]);
+        INIT_HLIST_HEAD(&bad_free_table[i]);
+    }
+    return;
+}
+
+/* Must be called under 'spinlock_mbi_storage'. */
+static void 
+mbi_table_add(struct klc_memblock_info *mbi, struct hlist_head *mbi_table)
+{
+    struct hlist_head *head;
+    head = &mbi_table[hash_ptr((void *)(mbi->block), MBI_HASH_BITS)];
+    hlist_add_head(&mbi->hlist, head);
+    return;
+}
+
 void
 klc_add_alloc_impl(struct klc_memblock_info *alloc_info)
 {
@@ -57,7 +85,7 @@ klc_add_alloc_impl(struct klc_memblock_info *alloc_info)
     BUG_ON(alloc_info == NULL);
 
     spin_lock_irqsave(&spinlock_mbi_storage, irq_flags);
-    list_add(&alloc_info->list, &alloc_list);
+    mbi_table_add(alloc_info, alloc_table);
     ++total_allocs;
     ++total_leaks;
     spin_unlock_irqrestore(&spinlock_mbi_storage, irq_flags);
@@ -71,7 +99,7 @@ klc_add_bad_free_impl(struct klc_memblock_info *dealloc_info)
     BUG_ON(dealloc_info == NULL);
 
     spin_lock_irqsave(&spinlock_mbi_storage, irq_flags);
-    list_add(&dealloc_info->list, &bad_free_list);
+    mbi_table_add(dealloc_info, bad_free_table);
     ++total_bad_frees;
     spin_unlock_irqrestore(&spinlock_mbi_storage, irq_flags);
     return;    
@@ -81,17 +109,20 @@ int
 klc_find_and_remove_alloc(const void *block)
 {
     unsigned long irq_flags;
-    int ret = 0;
+    struct hlist_head *head;
     struct klc_memblock_info *mbi = NULL;
-    struct klc_memblock_info *tmp = NULL;
+    struct hlist_node *node = NULL;
+    struct hlist_node *tmp = NULL;
+    int ret = 0;
     
     WARN_ON(block == NULL);
     
     spin_lock_irqsave(&spinlock_mbi_storage, irq_flags);
-    list_for_each_entry_safe(mbi, tmp, &alloc_list, list) {
+    head = &alloc_table[hash_ptr((void *)block, MBI_HASH_BITS)];
+    hlist_for_each_entry_safe(mbi, node, tmp, head, hlist) {
         if (mbi->block == block) {
             ret = 1;
-            list_del(&mbi->list);
+            hlist_del(&mbi->hlist);
             klc_memblock_info_destroy(mbi);
             --total_leaks;
         }
@@ -104,12 +135,19 @@ void
 klc_flush_allocs(void)
 {
     struct klc_memblock_info *mbi = NULL;
-    struct klc_memblock_info *tmp = NULL;
-    
-    list_for_each_entry_safe(mbi, tmp, &alloc_list, list) {
-        klc_print_alloc_info(mbi);
-        list_del(&mbi->list);
-        klc_memblock_info_destroy(mbi);
+    struct hlist_node *node = NULL;
+    struct hlist_node *tmp = NULL;
+    unsigned int i = 0;
+
+    /* No need to protect the storage because this function is called
+     * from on_target_unload handler when no replacement function can
+     * interfere.*/
+    for (; i < MBI_TABLE_SIZE; ++i) {
+        hlist_for_each_entry_safe(mbi, node, tmp, &alloc_table[i], hlist) {
+            klc_print_alloc_info(mbi);
+            hlist_del(&mbi->hlist);
+            klc_memblock_info_destroy(mbi);
+        }
     }
     return;
 }
@@ -118,12 +156,19 @@ void
 klc_flush_deallocs(void)
 {
     struct klc_memblock_info *mbi = NULL;
-    struct klc_memblock_info *tmp = NULL;
-    
-    list_for_each_entry_safe(mbi, tmp, &bad_free_list, list) {
-        klc_print_dealloc_info(mbi);
-        list_del(&mbi->list);
-        klc_memblock_info_destroy(mbi);
+    struct hlist_node *node = NULL;
+    struct hlist_node *tmp = NULL;
+    unsigned int i = 0;
+
+    /* No need to protect the storage because this function is called
+     * from on_target_unload handler when no replacement function can
+     * interfere.*/
+    for (; i < MBI_TABLE_SIZE; ++i) {
+        hlist_for_each_entry_safe(mbi, node, tmp, &bad_free_table[i], hlist) {
+            klc_print_dealloc_info(mbi);
+            hlist_del(&mbi->hlist);
+            klc_memblock_info_destroy(mbi);
+        }
     }
     return;
 }
