@@ -110,36 +110,9 @@ klc_add_alloc_impl(struct klc_memblock_info *alloc_info)
     BUG_ON(alloc_info == NULL);
 
     spin_lock_irqsave(&spinlock_mbi_storage, irq_flags);
+    mbi_table_add(alloc_info, alloc_table);
     ++total_allocs;
     ++total_leaks;
-
-#ifdef KEDR_DEBUG
-    /* Additional checks when in debugging mode. 
-     * [WARNING] This will probably slow down the operation of the target
-     * module a lot.
-     */
-    { 
-        struct klc_memblock_info *mbi = NULL;
-        mbi = mbi_find_and_remove_alloc(alloc_info->block);
-        if (mbi != NULL) {
-            /* There was already a with the same address allocated, 
-               we have missed free()-like call for it for some reason.
-               Do not count it as a leak and report to the system log.
-             */
-            --total_leaks;
-            printk (KERN_WARNING "[kedr_leak_check] "
-            "Failed to detect deallocation of the block at 0x%p, size: %zu "
-            "allocated at [<%p>] %pS\n",
-                mbi->block, mbi->size, 
-                (void *)(mbi->stack_entries[0]), 
-                (void *)(mbi->stack_entries[0])
-            );
-        }
-    }
-#endif
-
-    /* Add info about the newly allocated block anyway. */
-    mbi_table_add(alloc_info, alloc_table);
     spin_unlock_irqrestore(&spinlock_mbi_storage, irq_flags);
     return;    
 }
@@ -177,16 +150,34 @@ klc_find_and_remove_alloc(const void *block)
     return ret;
 }
 
+/* Returns 0 if the call stacks in the given klc_memblock_info structures
+ * are not equal, non-zero otherwise.
+ */
+static int
+call_stacks_equal(struct klc_memblock_info *lhs, 
+    struct klc_memblock_info *rhs)
+{
+    unsigned int i;
+    if (lhs->num_entries != rhs->num_entries)
+        return 0;
+    
+    for (i = 0; i < lhs->num_entries; ++i) {
+        if (lhs->stack_entries[i] != rhs->stack_entries[i])
+            return 0;
+    }
+    return 1;
+}
+
 void
 klc_flush_allocs(void)
 {
     struct klc_memblock_info *mbi = NULL;
+    struct klc_memblock_info *pos = NULL;
     struct hlist_node *node = NULL;
     struct hlist_node *tmp = NULL;
     struct hlist_head *head = NULL;
-    const void *block;
     unsigned int i = 0;
-    unsigned int missed_free = 0;
+    unsigned int k;
 
     /* No need to protect the storage because this function is called
      * from on_target_unload handler when no replacement function can
@@ -194,34 +185,29 @@ klc_flush_allocs(void)
     for (; i < MBI_TABLE_SIZE; ++i) {
         head = &alloc_table[i];
         while (!hlist_empty(head)) {
-        /* Output only the most recent allocation with a given address */
+    /* We output only the most recent allocation with a given call stack 
+     * to reduce the needed size of the output buffer and to make the report
+     * more readable.
+     */
+            u64 similar_allocs = 0;
             mbi = hlist_entry(head->first, struct klc_memblock_info, hlist);
-            klc_print_alloc_info(mbi);
-            block = mbi->block;
             hlist_del(&mbi->hlist);
-            klc_memblock_info_destroy(mbi);
             
-            hlist_for_each_entry_safe(mbi, node, tmp, head, hlist) {
-                if (mbi->block == block) {
-                /* We have missed free() for these allocations somehow.
-                 */
-                    hlist_del(&mbi->hlist);
-                    klc_memblock_info_destroy(mbi);
-                    --total_leaks;
-                    ++missed_free;
+            for (k = i; k < MBI_TABLE_SIZE; ++k) {
+                hlist_for_each_entry_safe(pos, node, tmp, 
+                    &alloc_table[k], hlist) {
+                    if (call_stacks_equal(mbi, pos)) {
+                        hlist_del(&pos->hlist);
+                        klc_memblock_info_destroy(pos);
+                        ++similar_allocs;
+                    }
                 }
             }
+            
+            klc_print_alloc_info(mbi, similar_allocs);
+            klc_memblock_info_destroy(mbi);
         } /* end while */
     } /* end for */
-    
-    /* If we have missed some deallocations, rebuilding leak_check with 
-     * -DKEDR_DEBUG, re-running the tests and then checking the system log 
-     * may help obtain more detailed information about what was going on.
-     */
-    if (missed_free != 0)
-        printk (KERN_WARNING "[kedr_leak_check] "
-            "Failed to detect deallocation of at least %u block(s).\n",
-            missed_free);
     return;
 }
 

@@ -427,8 +427,35 @@ klc_print_target_module_info(struct module *target_module)
     return;
 }
 
+/* A helper function to print an unsigned 64-bit value using the specified
+ * format. The format must contain "%llu", "%llx" or the like.
+ */
+static void 
+klc_print_u64(enum klc_output_type output_type, u64 data, const char *fmt)
+{
+    char one_char[1];
+    char *buf = NULL;
+    int len;
+    
+    BUG_ON(fmt == NULL);
+    
+    len = snprintf(&one_char[0], 1, fmt, data);
+    buf = (char*)kmalloc(len + 1, GFP_KERNEL);
+    if (buf == NULL) {
+        printk(KERN_ERR "[kedr_leak_check] klc_print_u64: "
+            "not enough memory to prepare a message of size %d\n",
+            len);
+    }
+    snprintf(buf, len + 1, fmt, data);
+    klc_print_string(output_type, buf);
+    kfree(buf);
+    
+    return;    
+}
+
 void 
-klc_print_alloc_info(struct klc_memblock_info *alloc_info)
+klc_print_alloc_info(struct klc_memblock_info *alloc_info, 
+    u64 similar_allocs)
 {
     static const char* fmt = 
         "Block at 0x%p, size: %zu; stack trace of the allocation:";
@@ -453,6 +480,11 @@ klc_print_alloc_info(struct klc_memblock_info *alloc_info)
     
     klc_print_stack_trace(KLC_UNFREED_ALLOC, 
         &(alloc_info->stack_entries[0]), alloc_info->num_entries);
+    
+    if (similar_allocs != 0) {
+        klc_print_u64(KLC_UNFREED_ALLOC, similar_allocs, 
+            "+%llu more allocation(s) with the same call stack.");
+    }
     
     klc_print_string(KLC_UNFREED_ALLOC, 
         "----------------------------------------"); /* separator */
@@ -488,32 +520,6 @@ klc_print_dealloc_info(struct klc_memblock_info *dealloc_info)
     klc_print_string(KLC_UNALLOCATED_FREE, 
         "----------------------------------------"); /* separator */
     return;
-}
-
-/* A helper function to print an unsigned 64-bit value using the specified
- * format. The format must contain "%llu", "%llx" or the like.
- */
-static void 
-klc_print_u64(enum klc_output_type output_type, u64 data, const char *fmt)
-{
-    char one_char[1];
-    char *buf = NULL;
-    int len;
-    
-    BUG_ON(fmt == NULL);
-    
-    len = snprintf(&one_char[0], 1, fmt, data);
-    buf = (char*)kmalloc(len + 1, GFP_KERNEL);
-    if (buf == NULL) {
-        printk(KERN_ERR "[kedr_leak_check] klc_print_u64: "
-            "not enough memory to prepare a message of size %d\n",
-            len);
-    }
-    snprintf(buf, len + 1, fmt, data);
-    klc_print_string(output_type, buf);
-    kfree(buf);
-    
-    return;    
 }
 
 void

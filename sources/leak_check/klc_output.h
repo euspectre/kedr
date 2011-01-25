@@ -96,7 +96,8 @@ klc_print_target_module_info(struct module *target_module);
  * Cannot be used in atomic context.
  */
 void 
-klc_print_alloc_info(struct klc_memblock_info *alloc_info);
+klc_print_alloc_info(struct klc_memblock_info *alloc_info,
+    u64 similar_allocs);
 
 void 
 klc_print_dealloc_info(struct klc_memblock_info *dealloc_info);
