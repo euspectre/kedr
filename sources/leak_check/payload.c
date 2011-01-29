@@ -287,8 +287,11 @@ static void
 repl___free_pages(struct page *page, unsigned int order)
 {
     if (page != NULL) {
+        /* If the page is not mapped to the virtual memory,
+         * (highmem?) page_address(page) returns NULL.
+         */
         const void *p = (const void *)page_address(page);
-        if (!ZERO_OR_NULL_PTR(p) && !klc_find_and_remove_alloc(p)) 
+        if (p != NULL && !klc_find_and_remove_alloc(p)) 
             klc_add_bad_free(p, stack_depth);
     }
     
@@ -304,8 +307,9 @@ repl___alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order,
     page = __alloc_pages_nodemask(gfp_mask, order, zonelist, nodemask);
     
     if (page != NULL) {
-        klc_add_alloc((const void *)page_address(page), 
-            (size_t)(PAGE_SIZE << order), stack_depth);
+        const void *p = (const void *)page_address(page);
+        if (p != NULL)
+            klc_add_alloc(p, (size_t)(PAGE_SIZE << order), stack_depth);
     }
     
     return page;
@@ -319,8 +323,9 @@ repl_alloc_pages_current(gfp_t gfp, unsigned order)
     page = alloc_pages_current(gfp, order);
     
     if (page != NULL) {
-        klc_add_alloc((const void *)page_address(page), 
-            (size_t)(PAGE_SIZE << order), stack_depth);
+        const void *p = (const void *)page_address(page);
+        if (p != NULL) 
+            klc_add_alloc(p, (size_t)(PAGE_SIZE << order), stack_depth);
     }
     
     return page;
