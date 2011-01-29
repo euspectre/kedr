@@ -288,7 +288,7 @@ repl___free_pages(struct page *page, unsigned int order)
 {
     if (page != NULL) {
         const void *p = (const void *)page_address(page);
-        if (!klc_find_and_remove_alloc(p)) 
+        if (!ZERO_OR_NULL_PTR(p) && !klc_find_and_remove_alloc(p)) 
             klc_add_bad_free(p, stack_depth);
     }
     
