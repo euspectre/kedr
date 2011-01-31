@@ -1,0 +1,72 @@
+#!/bin/sh
+tmpdir="@KEDR_TEST_PREFIX_TEMP_SESSION@/kedr_trace_cross_cpu_ordering"
+debugfs_mount_point="${tmpdir}/debugfs"
+control_file="${debugfs_mount_point}/cross_cpu_ordering_module/control"
+trace_file="${debugfs_mount_point}/kedr_tracing/trace"
+trace_file_copy="@CMAKE_CURRENT_BINARY_DIR@/trace.txt"
+
+trace_module="@CMAKE_CURRENT_BINARY_DIR@/../../kedr_trace.ko"
+module="@CMAKE_CURRENT_BINARY_DIR@/module/cross_cpu_ordering_module.ko"
+
+mkdir -p "${debugfs_mount_point}"
+
+if ! mount -t debugfs debugfs "${debugfs_mount_point}"; then
+	printf "Cannot mount debugfs filesystem.\n"
+	exit 1
+fi
+
+if ! insmod "${trace_module}"; then
+	printf "Cannot kedr trace module.\n"
+	umount "${debugfs_mount_point}"
+	exit 1
+fi
+
+
+if ! insmod "${module}"; then
+	printf "Cannot load module for test.\n"
+	rmmod "${trace_module}"
+	umount "${debugfs_mount_point}"
+	exit 1
+fi
+
+# Parallel reading file
+for i in 1 2 3 4; do
+	dd bs=1 count=15 "if=${control_file}" of=/dev/null > /dev/null &
+done
+
+wait
+
+# Because standard opening trace file will block read at the end of the trace,
+# use background mode for copiing file.
+cat "${trace_file}" > "${trace_file_copy}" &
+capture_pid=$!
+sleep 0.5
+kill $capture_pid
+
+if ! rmmod "${module}"; then
+	printf "Cannot unload module for test.\n"
+	#Unloading of kedr_trace module will definitly fail
+	umount "${debugfs_mount_point}"
+	exit 1
+fi
+
+if ! rmmod "${trace_module}"; then
+	printf "Cannot unload kedr trace module.\n"
+	umount "${debugfs_mount_point}"
+	exit 1
+fi
+
+if ! umount "${debugfs_mount_point}"; then
+	printf "Fail to un mount debugfs filesystem."
+fi
+
+# Verify trace
+if ! awk -f "@CMAKE_CURRENT_SOURCE_DIR@/../verify_trace_format.awk" "${trace_file_copy}"; then
+	printf "Trace file has incorrect format.\n"
+	exit 1
+fi
+
+if ! awk -f "@CMAKE_CURRENT_SOURCE_DIR@/verify_trace.awk" -v count_expected=60 "${trace_file_copy}"; then
+	printf "Trace file inconsistent.\n"
+	exit 1
+fi
