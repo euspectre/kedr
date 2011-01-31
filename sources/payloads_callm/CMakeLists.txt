@@ -42,38 +42,49 @@ endfunction(rules_build_datafile)
 set(triggers_include_filename "triggers_include.list")
 # Add include directives, needed for triggers for functions
 # from ${triggers_include_filename} file
-# (in the current source or binary directory)
-# kedr_test_add_triggers_include()
-function(kedr_test_add_triggers_include)
-	file(APPEND ${function_triggers_file} "include =>>\n")
+# (in the current source or binary directory) and for call interception
+# payload for these functions
+#
+# kedr_test_add_ci_include()
+function(kedr_test_add_ci_include)
+	# Add include directive for triggers
 	to_abs_path(triggers_include_file "${triggers_include_filename}")
 	file(READ "${triggers_include_file}" triggers_include_code)
-	file(APPEND ${function_triggers_file} "${triggers_include_code}" "\n")
-	file(APPEND ${function_triggers_file} "<<\n")
-endfunction(kedr_test_add_triggers_include)
-# Add triggers and tests for given functions in the payload module
+	file(APPEND "${function_triggers_file}" "include =>>\n")
+	file(APPEND "${function_triggers_file}" "${triggers_include_code}" "\n")
+	file(APPEND "${function_triggers_file}" "<<\n")
+	# Add the same for call interception payload
+	file(APPEND "${function_intercepts_file}" "include =>>\n")
+	file(APPEND "${function_intercepts_file}" "${triggers_include_code}" "\n")
+	file(APPEND "${function_intercepts_file}" "<<\n")
+endfunction(kedr_test_add_ci_include)
+# Add call interception test for the given function.
 # For each function 'f' its trigger code should be in the file 'f.trigger'
-# kedr_test_add_trigger_for_function(payload function ...)
-function(kedr_test_add_trigger_for_function payload)
+# and its signature should be contained in 'f.data'.
+# kedr_test_add_ci_test(function ...)
+function(kedr_test_add_ci_test)
 	foreach(function ${ARGN})
-		file(APPEND ${function_triggers_file} "function = ${function}\n")
-		file(APPEND ${function_triggers_file} "payload = ${payload}\n")
-		file(APPEND ${function_triggers_file} "code =>>\n")
+		file(APPEND ${function_triggers_file} "function.name = ${function}\n")
+		file(APPEND ${function_triggers_file} "trigger_code =>>\n")
 		to_abs_path(trigger_file "${function}.trigger")
 		file(READ "${trigger_file}" trigger_code)
 		file(APPEND ${function_triggers_file} "${trigger_code}" "\n")
 		file(APPEND ${function_triggers_file} "<<\n")
 
+		to_abs_path(data_file_abs "${function}.data")
+		file(READ "${data_file_abs}" signature_data)
+		file(APPEND "${function_intercepts_file}" "${signature_data}" "\n")
+
 		kedr_test_add_script("controller.call_interception.${function}.01"
 				"${CMAKE_BINARY_DIR}/controller/tests/call_interception/test.sh"
 				"${function}"
-				"${payload}"
 		)
 	endforeach(function ${ARGN})
-endfunction(kedr_test_add_trigger_for_function payload)
+endfunction(kedr_test_add_ci_test)
 
-# Macro for add loading of given payload into default configuration file(and its variant for test)
-macro(kedr_conf_default_add_payload payload_name)
+# Macro for add loading of given payload into call monitor configuration file file
+#(and into its variant for tests)
+macro(kedr_conf_callm_add_payload payload_name)
     file(APPEND ${kedr_conf_file_data_callm} "payload.name = ${payload_name}\n")
 	file(APPEND ${kedr_conf_file_data_callm} "payload.path = ${KEDR_INSTALL_PREFIX_KMODULE}/${payload_name}.ko\n")
 	file(APPEND ${kedr_conf_file_data_callm} "payload.is_fsim =\n")
@@ -81,7 +92,7 @@ macro(kedr_conf_default_add_payload payload_name)
 	file(APPEND ${kedr_test_conf_file_data_callm} "payload.name = ${payload_name}\n")
 	file(APPEND ${kedr_test_conf_file_data_callm} "payload.path = ${CMAKE_CURRENT_BINARY_DIR}/${payload_name}.ko\n")
 	file(APPEND ${kedr_test_conf_file_data_callm} "payload.is_fsim =\n")
-endmacro(kedr_conf_default_add_payload payload_name)
+endmacro(kedr_conf_callm_add_payload payload_name)
 
 # Macro for add loading of given payload into fault simulation configuration file
 macro(kedr_conf_fsim_add_payload payload_name)

@@ -242,9 +242,13 @@ message (STATUS "Creating \"kedr_gen\" - done")
 #######################################################################
 add_subdirectory(base)
 
-# This file will be used for tests, whether controller really intercept
+# This files will be used for tests, whether controller really intercept
 # particular functions calls
 set(function_triggers_file "${CMAKE_BINARY_DIR}/controller/tests/call_interception/function_triggers.data")
+file(WRITE "${function_triggers_file}" "")
+set(function_intercepts_file "${CMAKE_BINARY_DIR}/controller/tests/call_interception/function_intercepts.data")
+file(WRITE "${function_intercepts_file}" "")
+
 add_subdirectory(controller)
 
 # For tests only

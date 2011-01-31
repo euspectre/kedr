@@ -28,12 +28,32 @@ rules_generate_payload()
 
 rules_build_datafile(${functions})
 
-kedr_test_add_triggers_include()
-kedr_test_add_trigger_for_function(
-	"${CMAKE_CURRENT_BINARY_DIR}/${kmodule_name}.ko"
-	${functions}
-)
+# Because copy_*_user functions require pointer to user-space data,
+# common trigger target module is not applicable for trigger this functions.
+# Special trigger module will be built in the
+# controller/tests/call_interception directory.
+
+# Here we all other jobs.
+to_abs_path(triggers_include_file "${triggers_include_filename}")
+file(READ "${triggers_include_file}" triggers_include_code)
+file(APPEND "${function_intercepts_file}" "include =>>\n")
+file(APPEND "${function_intercepts_file}" "${triggers_include_code}" "\n")
+file(APPEND "${function_intercepts_file}" "<<\n")
+
+configure_file("${CMAKE_SOURCE_DIR}/controller/tests/call_interception/test_user_space_access.sh.in"
+	"${CMAKE_BINARY_DIR}/controller/tests/call_interception/test_user_space_access.sh"
+	@ONLY)
+foreach(function ${functions})
+	to_abs_path(data_file_abs "${function}.data")
+	file(READ "${data_file_abs}" signature_data)
+	file(APPEND "${function_intercepts_file}" "${signature_data}" "\n")
+
+	kedr_test_add_script("controller.call_interception.${function}.01"
+			"${CMAKE_BINARY_DIR}/controller/tests/call_interception/test_user_space_access.sh"
+			"${function}"
+	)
+endforeach(function ${ARGN})
 
 kedr_install_kmodule(${kmodule_name})
 
-kedr_conf_default_add_payload(${kmodule_name})
+kedr_conf_callm_add_payload(${kmodule_name})

@@ -78,6 +78,10 @@ if(KEDR_STANDARD_CALLM_PAYLOADS)
     add_custom_target(kedr_config_file_default ALL
                     DEPENDS "${kedr_conf_file_default}")
     rule_copy_file("${kedr_conf_file_default}" "${kedr_conf_file_callm}")
+    # Both targets kedr_config_file_default and kedr_config_file_callm depends from one file
+    # ${kedr_conf_file_callm}. For do not allow them to create this file concurrently,
+    # force some ordering between these targets.
+    add_dependencies(kedr_config_file_default kedr_config_file_callm)
 else(KEDR_STANDARD_CALLM_PAYLOADS)
     # Default config file will be empty
     FILE(WRITE "${kedr_conf_file_default}" "#Empty configuration file\n")

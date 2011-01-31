@@ -17,12 +17,12 @@ endfunction(rule_copy_source rel_source_file)
 # use path in source tree, if file already exist there.
 # otherwise use path in binary tree.
 # If initial path already absolute, return it.
-macro(to_abs_path output_var)
-    set(${output_var})
+function(to_abs_path output_var)
+    set(result)
     foreach(path ${ARGN})
         string(REGEX MATCH "^/" _is_abs_path ${path})
         if(_is_abs_path)
-            list(APPEND ${output_var} ${path})
+            list(APPEND result ${path})
         else(_is_abs_path)
             file(GLOB to_abs_path_file 
                 "${CMAKE_CURRENT_SOURCE_DIR}/${path}"
@@ -30,10 +30,11 @@ macro(to_abs_path output_var)
             if(NOT to_abs_path_file)
                 set (to_abs_path_file "${CMAKE_CURRENT_BINARY_DIR}/${path}")
             endif(NOT to_abs_path_file)
-            list(APPEND ${output_var} ${to_abs_path_file})
+            list(APPEND result ${to_abs_path_file})
         endif(_is_abs_path)
     endforeach(path ${ARGN})
-endmacro(to_abs_path output_var path)
+    set("${output_var}" ${result} PARENT_SCOPE)
+endfunction(to_abs_path output_var path)
 
 #is_path_inside_dir(output_var dir path)
 #
