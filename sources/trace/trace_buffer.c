@@ -16,7 +16,9 @@
 
 #include <linux/sched.h> /* TASK_NORMAL, TASK_INTERRUPTIBLE*/
 
-#include <linux/jiffies.h> /* jiffies and constants for it*/
+#include <linux/hardirq.h> /* in_nmi() */
+
+#include <linux/hrtimer.h> /* high resolution timer for clock*/
 
 #include "config.h"
 
@@ -29,7 +31,7 @@
  * 2)when called one different processors at the nearest the same time,
  * return near values.
  * 3)be convertable(with some precision) to the real time, passed from
- * the system starts
+ * the system starts.
  * 4)have precision which allows correct ordering of messages on
  * different CPUs, which represent strictly ordered actions
  * (such as spin_unlock() and spin_lock(), or kfree() and kmalloc()).
@@ -41,35 +43,51 @@
  * Points 4,5 may be violated in not-release versions.
  * 
  */
+
+/*
+ * We want timestamps to be strongly monotonic.
+ */
+static u64 last_ts = 0;
+static DEFINE_SPINLOCK(last_ts_lock);
+
+static u64 correct_ts(u64 ts)
+{
+    unsigned long flags;
+
+    /*
+     * If in an NMI context then dont risk lockups and return the
+     * input timestamp:
+     */
+
+    if (in_nmi()) return ts;
+    
+    spin_lock_irqsave(&last_ts_lock, flags);
+
+    if ((s64)(ts - last_ts) <= 0)
+        ts = last_ts + 1;
+    last_ts = ts;
+
+    spin_unlock_irqrestore(&last_ts_lock, flags);
+
+    return ts;
+}
+
 static u64
 kedr_clock(void)
 {
-    //first interpolation
-    return jiffies;
-}
-
-/*
- * Converter from clock result to the nanoseconds, passed from
- * the system starts.
- */
-
-static u64
-kedr_clock_to_ns(u64 clock_result)
-{
-    return (u64)((unsigned long)clock_result - INITIAL_JIFFIES) * (NSEC_PER_SEC / HZ);
+    //should be correct with garantee
+    return correct_ts(ktime_to_ns(ktime_get()));
 }
 
 /*
  * Maximum time which may go since message timestamping with our clock
  * until message will become available for read (ring_buffer_consume).
  * 
- * Should be measured in the same units as returning value of our clock.
- * 
  * Error in this time may lead in some message cross-cpu disordering
  * when read is concurrent with write.
  */
 
-#define KEDR_MESSAGE_DELTA_TIME 1
+#define KEDR_CLOCK_DELTA 100
 
 /*
  * Configurable parameters for internal implementation of the buffer.
@@ -304,8 +322,7 @@ struct trace_buffer
     struct delayed_work work_wakeup_reader;
     // Clock-related variables and functions
     u64 (*clock)(void);
-    u64 message_delta_time;
-    u64 (*clock_to_ns)(u64);
+    u64 clock_delta;
 };
 
 static void wake_up_reader(struct work_struct *work)
@@ -374,8 +391,7 @@ struct trace_buffer* trace_buffer_alloc(
     INIT_DELAYED_WORK(&trace_buffer->work_wakeup_reader, wake_up_reader);
     //setup clock
     trace_buffer->clock = kedr_clock;
-    trace_buffer->message_delta_time = KEDR_MESSAGE_DELTA_TIME;
-    trace_buffer->clock_to_ns = kedr_clock_to_ns;
+    trace_buffer->clock_delta = KEDR_CLOCK_DELTA;
     
     return trace_buffer;
 }
@@ -481,7 +497,7 @@ static int trace_buffer_read_internal(struct trace_buffer* trace_buffer,
     result = process_data(oldest_message->msg,
         oldest_message->size,
         oldest_cpu,
-        trace_buffer->clock_to_ns(oldest_message->ts),
+        oldest_message->ts,
         &consume,
         user_data);
     //Remove oldest message if it is consumed
@@ -544,7 +560,7 @@ static int trace_buffer_update_internal(struct trace_buffer* trace_buffer,
         }
         cpumask_set_cpu(cpu, &subbuffers_updated);
         
-        empty_ts = trace_buffer->clock() - trace_buffer->message_delta_time;
+        empty_ts = trace_buffer->clock() - trace_buffer->clock_delta;
 #if defined(RING_BUFFER_CONSUME_HAS_4_ARGS)
 		event = ring_buffer_consume(trace_buffer->buffer, cpu, &ts, NULL);
 #elif defined(RING_BUFFER_CONSUME_HAS_3_ARGS)
