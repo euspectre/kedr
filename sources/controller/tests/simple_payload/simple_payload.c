@@ -77,7 +77,6 @@ static void
 simple_payload_cleanup_module(void)
 {
     kedr_payload_unregister(&payload);
-    /*printk(KERN_INFO "[simple_payload] Cleanup complete\n");*/
     return;
 }
 
@@ -87,7 +86,6 @@ simple_payload_init_module(void)
     BUG_ON( ARRAY_SIZE(orig_addrs) != 
         ARRAY_SIZE(repl_addrs));
     
-    /*printk(KERN_INFO "[simple_payload] Initializing\n");*/
     return kedr_payload_register(&payload);
 }
 

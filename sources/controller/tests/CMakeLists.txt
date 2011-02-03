@@ -22,6 +22,12 @@ set (CONTROLLER_NAME "kedr_controller")
 set (BASE_DIR "${CMAKE_BINARY_DIR}/base")
 set (BASE_NAME "kedr_base")
 
+set (TARGET_NAME "kedr_sample_target")
+set (TARGET_LOAD_CMD 
+    "sh ${CMAKE_BINARY_DIR}/examples/sample_target/kedr_sample_target load")
+set (TARGET_UNLOAD_CMD 
+    "sh ${CMAKE_BINARY_DIR}/examples/sample_target/kedr_sample_target unload")
+
 # '@ONLY' is essential when doing substitutions in the shell scripts. 
 # Without it, CMake would replace "${...}" too, which is usually not what 
 # you want.
@@ -41,6 +47,9 @@ kedr_test_add_script (controller.basics.01
     ins_rm.sh
 )
 
+# Here, kedr_sample_target.ko module (from the examples) will be used as 
+# a target.
+
 # Check common usage scenarios
 kedr_test_add_script (controller.basics.02 
     ins_rm_with_target.sh 0
@@ -51,8 +60,8 @@ kedr_test_add_script (controller.basics.03
     ins_rm_with_target.sh 1
 )
 
-# The following subdirectories contain the stuff necessary for the testing
-add_subdirectory (simple_target)
+# The stuff necessary for testing
 add_subdirectory (simple_payload)
 
+# More tests
 add_subdirectory (call_interception)

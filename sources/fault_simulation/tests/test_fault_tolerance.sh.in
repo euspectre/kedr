@@ -14,8 +14,6 @@ module_b="@CMAKE_CURRENT_BINARY_DIR@/module_b/fsim_test_module_b.ko"
 current_value_file="/sys/module/${module_a_name}/parameters/current_value"
 
 device=kedr_test_device
-char_device_script="sh @CMAKE_BINARY_DIR@/tests/scripts/char_device.sh"
-
 debugfs_mount_point="@CMAKE_CURRENT_BINARY_DIR@/debugfs"
 control_root="$debugfs_mount_point/kedr_fault_simulation"
 
@@ -68,8 +66,6 @@ cat > "$commands_file_module_a" << eof
 
 on_load insmod "$module_a" || ! printf "Cannot load module 'a' into kernel.\n"
 on_unload rmmod "$module_a" || ! printf "Fail to unload module 'a'.\n"
-on_load $char_device_script "$device" create || ! printf "Cannot create file for use character device.\n"
-on_unload $char_device_script "$device" delete || ! printf "Cannot delete file for use character device.\n"
 
 eof
 

@@ -6,10 +6,7 @@ module_a="@CMAKE_CURRENT_BINARY_DIR@/module_a/${module_a_name}.ko"
 module_a_params_dir="/sys/module/${module_a_name}/parameters"
 
 device="kedr_test_device"
-
 do_commands_script="sh @CMAKE_BINARY_DIR@/tests/scripts/do_commands.sh"
-char_device_script="sh @CMAKE_BINARY_DIR@/tests/scripts/char_device.sh"
-
 commands_file="@CMAKE_CURRENT_BINARY_DIR@/commands"
 
 ####################  Indicators  ####################
@@ -81,8 +78,6 @@ test_failed()
 cat > $commands_file << eof
 on_load insmod "$module_a" || ! printf "Cannot load module for test into kernel.\n"
 on_unload rmmod "$module_a" || ! printf "Cannot unload module for test.\n"
-on_load $char_device_script "$device" create || ! printf "Cannot create device file for test.\n"
-on_unload $char_device_script "$device" delete || ! printf "Cannot remove device file for test.\n"
 eof
 
 if ! $do_commands_script "$commands_file" load; then

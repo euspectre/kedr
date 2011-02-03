@@ -12,43 +12,19 @@ shift
 
 case $command in
 load)
-    mode="664"
-
-    # Group: since distributions do it differently, look for wheel or use staff
-    if grep -q '^staff:' /etc/group; then
-        group="staff"
-    else
-        group="wheel"
-    fi
+    mode="666"
 
     # Invoke insmod with all arguments we got
     # and use a pathname, as insmod doesn't look in . by default
     /sbin/insmod ${current_dir}/${module}.ko $* || exit 1
 
-    # retrieve major number
-    major=$(awk "\$2==\"$device\" {print \$1}" /proc/devices)
-    if test "t$major" = "t"; then
-    	printf "No device found for \"$module\" module\n";
-    	exit 1;
-    fi
-
-    # Remove stale nodes and replace them, then give gid and perms.
-
-    rm -f /dev/${device}[0-1]
-    mknod /dev/${device}0 c $major 0
-    mknod /dev/${device}1 c $major 1
-
-    ln -sf ${device}0 /dev/${device}
-
-    chgrp $group /dev/${device}[0-1] 
-    chmod $mode  /dev/${device}[0-1]
+    # Udev should have created the device nodes, no need for mknod
+    chmod $mode  /dev/${device}*
     ;;
 unload)
     # Invoke rmmod with all arguments we got
+    # The device nodes will be removed automatically
     /sbin/rmmod $module $* || exit 1
-
-    # Remove stale nodes
-    rm -f /dev/${device} /dev/${device}[0-1] 
     ;;
 *)
     echo "Incorrect command '$command' is specified. Should be 'load' or 'unload'"

@@ -25,11 +25,6 @@ checkPrereqs()
         exit 1
     fi
     
-    if test ! -f "${TARGET_MODULE}"; then
-        printf "Target module is missing: ${TARGET_MODULE}\n"
-        exit 1
-    fi
-    
     if test ! -f "${PAYLOAD_MODULE}"; then
         printf "Payload module is missing: ${PAYLOAD_MODULE}\n"
         exit 1
@@ -45,8 +40,7 @@ cleanupAll()
     
     lsmod | grep "${TARGET_NAME}" > /dev/null 2>&1
     if test $? -eq 0; then
-        cd "${TARGET_NAME}"
-        sh ./target_unload.sh
+        ${TARGET_UNLOAD_CMD}
         cd "${WORK_DIR}"
     fi
     
@@ -95,9 +89,9 @@ checkCommonScenario()
         exit 1
     fi
 
-    cd "${TARGET_NAME}" && sh ./target_load.sh
+    ${TARGET_LOAD_CMD}
     if test $? -ne 0; then
-        printf "Failed to load the target module: ${TARGET_MODULE}\n"
+        printf "Failed to load the target module: ${TARGET_NAME}.ko\n"
         cleanupAll
         exit 1
     fi
@@ -119,9 +113,9 @@ checkCommonScenario()
     fi
     printf "This error was expected, continuing.\n"
 
-    sh ./target_unload.sh
+    ${TARGET_UNLOAD_CMD}
     if test $? -ne 0; then
-        printf "Failed to unload the target module: ${TARGET_NAME}\n"
+        printf "Failed to unload the target module: ${TARGET_NAME}.ko\n"
         cleanupAll
         exit 1
     fi
@@ -165,9 +159,9 @@ checkTargetFirstScenario()
         exit 1
     fi
 
-    cd "${TARGET_NAME}" && sh ./target_load.sh
+    ${TARGET_LOAD_CMD}
     if test $? -ne 0; then
-        printf "Failed to load the target module: ${TARGET_MODULE}\n"
+        printf "Failed to load the target module: ${TARGET_NAME}.ko\n"
         cleanupAll
         exit 1
     fi
@@ -183,9 +177,9 @@ checkTargetFirstScenario()
     fi
     printf "This error was expected, continuing.\n"
 
-    sh ./target_unload.sh
+    ${TARGET_UNLOAD_CMD}
     if test $? -ne 0; then
-        printf "Failed to unload the target module: ${TARGET_NAME}\n"
+        printf "Failed to unload the target module: ${TARGET_NAME}.ko\n"
         cleanupAll
         exit 1
     fi
@@ -205,7 +199,7 @@ checkTargetFirstScenario()
 # main
 ########################################################################
 WORK_DIR=${PWD}
-KEDR_TEST_DEVICE=/dev/kedr_test
+KEDR_TEST_DEVICE=/dev/cfake0
 
 if test $# -ne 1; then
     printf "Usage: sh ins_rm_with_target.sh <target_before_controller>\n"
@@ -215,8 +209,9 @@ fi
 BASE_MODULE="@BASE_DIR@/@BASE_NAME@.ko"
 CONTROLLER_MODULE="@CONTROLLER_DIR@/@CONTROLLER_NAME@.ko"
 
-TARGET_NAME="simple_target"
-TARGET_MODULE="${TARGET_NAME}/${TARGET_NAME}.ko"
+TARGET_NAME="@TARGET_NAME@"
+TARGET_LOAD_CMD="@TARGET_LOAD_CMD@"
+TARGET_UNLOAD_CMD="@TARGET_UNLOAD_CMD@"
 
 PAYLOAD_NAME="simple_payload"
 PAYLOAD_MODULE="${PAYLOAD_NAME}/${PAYLOAD_NAME}.ko"
@@ -225,7 +220,7 @@ checkPrereqs
 
 printf "Base module: ${BASE_MODULE}\n"
 printf "Controller module: ${CONTROLLER_MODULE}\n"
-printf "Target module: ${TARGET_MODULE}\n"
+printf "Target module: ${TARGET_NAME}.ko\n"
 printf "Payload module: ${PAYLOAD_MODULE}\n"
 
 # Select the test scenario

@@ -10,8 +10,6 @@ current_value_file="/sys/module/${module_a_name}/parameters/current_value"
 external_value_file="/sys/module/${module_a_name}/parameters/a_external_value"
 
 device=kedr_test_device
-char_device_script="sh @CMAKE_BINARY_DIR@/tests/scripts/char_device.sh"
-
 commands_file="@CMAKE_CURRENT_BINARY_DIR@/commands"
 do_commands_script="sh @CMAKE_BINARY_DIR@/tests/scripts/do_commands.sh"
 
@@ -21,8 +19,6 @@ on_load insmod "$fsim_base_module" || ! printf "Cannot load fault simulation bas
 on_unload rmmod "$fsim_base_module" || ! printf "Cannot unload fault simulation base module.\n"
 on_load insmod "$module_a" || ! printf "Cannot load module 'a' into kernel.\n"
 on_unload rmmod "$module_a" || ! printf "Fail to unload module 'a'.\n"
-on_load $char_device_script "$device" create || ! printf "Cannot create file for use character device.\n"
-on_unload $char_device_script "$device" delete || ! printf "Cannot delete file for use character device.\n"
 
 eof
 

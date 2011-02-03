@@ -12,7 +12,7 @@ kedr_fault_simulation_module="@CMAKE_BINARY_DIR@/fault_simulation/kedr_fault_sim
 
 sample_target_module_name=kedr_sample_target
 sample_target_script="sh @CMAKE_BINARY_DIR@/examples/sample_target/kedr_sample_target"
-sample_target_device="/dev/cfake"
+sample_target_device="/dev/cfake0"
 
 kedr_conf_file="@CMAKE_CURRENT_BINARY_DIR@/kedr.conf"
 commands_file="@CMAKE_CURRENT_BINARY_DIR@/commands"
