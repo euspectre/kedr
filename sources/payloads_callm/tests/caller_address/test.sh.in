@@ -46,7 +46,7 @@ if ! ${target_module_script} load; then
 fi
 
 # Do something with target_module for collect trace.
-echo 1 > /dev/cfake
+echo 1 > /dev/cfake0
 
 # Need for correct work of capture_trace_script
 #sleep 0.2
