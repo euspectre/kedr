@@ -3,8 +3,9 @@ set(KEDR_INCLUDE_FILES
 	base/common.h
 
     fault_simulation/fault_simulation.h
-	fault_simulation/calculator.h
+	calculator/calculator.h
 	control_file/control_file.h
+	kedr_stack_trace/kedr_stack_trace.h
 	trace/trace.h
 )
 

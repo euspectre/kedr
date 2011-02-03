@@ -1156,7 +1156,7 @@ filter_line_session(const char* str, size_t size,
     if(markers_counter == 0)
     {
         print_error("Trace line '%.*s' outside target session.",
-            str_end - str, str);
+            (int)(str_end - str), str);
         //only warning
         return 1;
     }

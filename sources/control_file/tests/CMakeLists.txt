@@ -4,6 +4,6 @@ set(module_name "kedr_control_file_test_module")
 kbuild_add_module(${module_name} module.c control_file.c)
 
 rule_copy_file("${CMAKE_CURRENT_BINARY_DIR}/control_file.c"
-	"${CMAKE_CURRENT_BINARY_DIR}/../control_file.c")
+	"${CMAKE_CURRENT_SOURCE_DIR}/../control_file.c")
 
 kedr_test_add_target(${module_name})

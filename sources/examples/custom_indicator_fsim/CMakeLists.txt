@@ -16,19 +16,13 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/makefile.in"
     @ONLY
 )
 
-# Copy additional headers into this directory
-rule_copy_file("control_file.h"
-	"${CMAKE_SOURCE_DIR}/include/kedr/control_file/control_file.h")
-rule_copy_file("calculator.h"
-	"${CMAKE_SOURCE_DIR}/include/kedr/fault_simulation/calculator.h")
-
-# Configure additional sources into this directory
-set(CONTROL_FILE_HEADER "control_file.h")
-configure_file("${CMAKE_SOURCE_DIR}/control_file/control_file.c.in"
-	"${CMAKE_CURRENT_BINARY_DIR}/control_file.c")
-set(CALCULATOR_HEADER "calculator.h")
-configure_file("${CMAKE_SOURCE_DIR}/fault_simulation/calculator/calculator.c.in"
-	"${CMAKE_CURRENT_BINARY_DIR}/calculator.c")
+# Copy additional sources into this directory
+rule_copy_file("control_file.c"
+	"${CMAKE_SOURCE_DIR}/control_file/control_file.c")
+rule_copy_file("calculator.c"
+	"${CMAKE_SOURCE_DIR}/calculator/calculator.c")
+rule_copy_file("kedr_stack_trace.c"
+	"${CMAKE_SOURCE_DIR}/kedr_stack_trace/kedr_stack_trace.c")
 
 
 # Copy templates files into build dir
@@ -36,9 +30,6 @@ set(templates_root_dir_src "${CMAKE_SOURCE_DIR}/fault_indicators/templates")
 set(templates_root_dir_dst "${CMAKE_CURRENT_BINARY_DIR}/templates")
 
 set(templates_dirs "indicator.c/block" "indicator.c/document" "indicator_internal.data/block" "indicator_internal.data/document")
-if(KEDR_FSIM_CALLER_ADDRESS)
-	list(APPEND templates_dirs "indicator_caller_address_internal.data/block" "indicator_caller_address_internal.data/document")
-endif(KEDR_FSIM_CALLER_ADDRESS)
 set(templates_dirs_src)
 set(templates_dirs_dst)
 set(templates_files_glob_expr)
@@ -83,9 +74,8 @@ add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${module_name}.ko"
         COMMAND $(MAKE) -f makefile_test
         DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/indicator.data"
 				"${CMAKE_CURRENT_BINARY_DIR}/calculator.c"
-				"${CMAKE_CURRENT_BINARY_DIR}/calculator.h"
 				"${CMAKE_CURRENT_BINARY_DIR}/control_file.c"
-				"${CMAKE_CURRENT_BINARY_DIR}/control_file.h"
+				"${CMAKE_CURRENT_BINARY_DIR}/kedr_stack_trace.c"
                 "${CMAKE_CURRENT_BINARY_DIR}/makefile_test"
                 "${CMAKE_CURRENT_BINARY_DIR}/Kbuild"
                 )
@@ -109,10 +99,9 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/makefile.in"
 kedr_test_add_target("custom_fsim_indicator")
 
 install(FILES   "${CMAKE_CURRENT_SOURCE_DIR}/indicator.data"
-				"${CMAKE_CURRENT_BINARY_DIR}/calculator.c"
-				"${CMAKE_SOURCE_DIR}/include/kedr/fault_simulation/calculator.h"
-				"${CMAKE_CURRENT_BINARY_DIR}/control_file.c"
-				"${CMAKE_SOURCE_DIR}/include/kedr/control_file/control_file.h"
+				"${CMAKE_SOURCE_DIR}/control_file/control_file.c"
+				"${CMAKE_SOURCE_DIR}/calculator/calculator.c"
+				"${CMAKE_SOURCE_DIR}/kedr_stack_trace/kedr_stack_trace.c"
         DESTINATION "${example_install_dir}"
 )
 

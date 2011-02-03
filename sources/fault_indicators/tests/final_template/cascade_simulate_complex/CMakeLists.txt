@@ -4,7 +4,7 @@ set(kmodule_name "kedr_test_indicator_cascade_simulate_complex")
 kbuild_add_module(${kmodule_name} "indicator.c" "control_file.c")
 
 rule_copy_file("${CMAKE_CURRENT_BINARY_DIR}/control_file.c"
-	"${CMAKE_BINARY_DIR}/control_file/control_file.c")
+	"${CMAKE_SOURCE_DIR}/control_file/control_file.c")
 
 rules_generate_internal_indicator()
 

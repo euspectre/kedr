@@ -13,17 +13,32 @@ indicator.name = <$indicator.name$>
 # Declarations for the expression
 
 global =>>
-#include <kedr/fault_simulation/calculator.h>
+#include <kedr/calculator/calculator.h>
 
 #include <kedr/base/common.h> /* in_init */
 #include <linux/random.h> /* random32() */
 
+#include <kedr/kedr_stack_trace/kedr_stack_trace.h> /* kedr_save_stack_trace() */
+
+/*
+ * This is distance in the stack from returning address of
+ * the indicator simulate function to the returning address of
+ * the replacement function.
+ * 
+ * Value is very subtle, it depends on implementation
+ * of the indicator module, fault_simulation module, payload module.
+ * 
+ * But it doesn't depend on kernel and kernel configuration
+ * (this dependency is hidden in kedr_save_stack_trace()).
+ */
+#define REPLACEMENT_STACK_DEPTH 3
 // Constants in the expression
 <$expressionConstDeclarations$>
 
 // Variables in the expression
 static const char* var_names[]= {
     "times",//local variable of indicator state
+    "caller_address",//address of the caller of the replacement function
 <$expressionVarNames$>
 };
 // Runtime variables in the expression
@@ -67,9 +82,19 @@ indicator.simulate.first =
 indicator.simulate.code =>>
 	int result;
     int *kcalc;
+    unsigned long entries[REPLACEMENT_STACK_DEPTH];
+    unsigned int nr_entries;
 	kedr_calc_int_t vars[ARRAY_SIZE(var_names)];
 
+    kedr_save_stack_trace(entries, ARRAY_SIZE(entries),
+        &nr_entries);
+
     vars[0] = atomic_inc_return(&state(times));
+    vars[1] = (nr_entries == ARRAY_SIZE(entries))
+        ? (kedr_calc_int_t)entries[ARRAY_SIZE(entries) - 1]
+        : -1;
+    //debug
+    //pr_info("Caller address is (%p)%pF", (void*)vars[1], (void*)vars[1]);
 <$expressionVarsSet$>
 
     rcu_read_lock();
@@ -126,7 +151,6 @@ indicator.file.set =>>
 	char *new_expression;
     kedr_calc_t *old_calc;
     kedr_calc_t *new_calc;
-    /*int *tmp_calc; */
     
     new_calc = kedr_calc_parse(str,
         <$expressionConstParams$>,

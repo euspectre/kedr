@@ -5,8 +5,6 @@ payload_data_file := payload.data
 
 payload_c_file := payload.c
 
-is_caller_address := @KEDR_FSIM_CALLER_ADDRESS_DEF@
-
 kedr_gen_templates_dir := ./templates
 kedr_gen_tool := @kedr_gen_tool@
 
@@ -23,22 +21,10 @@ $(module_name).ko: $(payload_c_file) $(kedr_base_symbols) $(kedr_trace_symbols) 
 	cat "$(kedr_base_symbols)" "$(kedr_trace_symbols)" "$(fault_simulation_symbols)" > ./Module.symvers
 	$(MAKE) -C $(KBUILD_DIR) M=$(PWD) modules
 
-ifeq ("@KEDR_FSIM_CALLER_ADDRESS_DEF@", "")
 $(payload_c_file): $(payload_data_file)
 	$(kedr_gen_tool) $(kedr_gen_templates_dir)/payload.c/ $^ > $@
-else
-fsim_caller_address_data_file := fsim_caller_address_internal.data
-$(payload_c_file): $(fsim_caller_address_data_file)
-	$(kedr_gen_tool) $(kedr_gen_templates_dir)/payload.c/ $^ > $@
-
-$(fsim_caller_address_data_file): $(payload_data_file)
-	$(kedr_gen_tool) $(kedr_gen_templates_dir)/fsim_caller_address_internal.data/ $^ > $@
-endif
 clean:
 	$(MAKE) -C $(KBUILD_DIR) M=$(PWD) clean
 	rm -f $(payload_c_file)
-ifneq ("@KEDR_FSIM_CALLER_ADDRESS_DEF@", "")
-	rm -f $(fsim_caller_address_data_file)
-endif
 
 .PHONY: all clean
