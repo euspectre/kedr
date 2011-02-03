@@ -5,7 +5,7 @@ BEGIN {
 	timestamp = -1
 }
 # 
-($2 !~ "^\\[[[:digit:]]+\\]") || ($3 !~ "^[[:digit:]]+\\.[[:digit:]]+") {
+($2 !~ "^\\[[0-9]+\\]") || ($3 !~ "^[0-9]+\\.[0-9]+") {
 	print "Line '" $0 "' has incorrect format."
 	exit 1
 }
