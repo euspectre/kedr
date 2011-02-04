@@ -1,0 +1,40 @@
+[group]
+	# Name and return type of the target function
+	function.name = __alloc_pages_nodemask
+	returnType = struct page *
+
+	# Names and types of the arguments of the target function
+	arg.type = gfp_t
+	arg.name = flags
+
+	arg.type = unsigned int 
+	arg.name = order
+
+	arg.type = struct zonelist *
+	arg.name = zonelist
+	
+	arg.type = nodemask_t *
+	arg.name = nodemask
+
+	# The parameters to be output to the trace. 
+	trace.param.type = unsigned int
+	trace.param.name = flags
+
+	trace.param.type = unsigned int
+	trace.param.name = order
+
+	trace.param.type = void *
+	trace.param.name = zonelist
+
+	trace.param.type = void *
+	trace.param.name = nodemask
+
+	trace.param.type = void *
+	trace.param.name = returnValue
+
+	# The format string to be used for trace output.
+	trace.formatString = "arguments: (%x, %u, %p, %p), result: %p"
+
+# End of the group of definitions for __alloc_pages_nodemask().
+
+#######################################################################

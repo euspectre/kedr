@@ -1,0 +1,27 @@
+[group]
+	# Name and return type of the target function
+	function.name = free_pages_exact
+
+	# Names and types of the arguments of the target function
+	arg.type = void *
+	arg.name = p
+
+	arg.type = size_t
+	arg.name = size
+	
+	# The parameters to be output to the trace. 
+	trace.param.type = void *
+	trace.param.name = p
+	
+	trace.param.type = size_t
+	trace.param.name = size
+
+	# Happens-before relationship with alloc_pages_exact
+	trace.happensBefore = yes
+
+	# The format string to be used for trace output.
+	trace.formatString = "arguments: (%p, %zu)"
+
+# End of the group of definitions for free_pages_exact().
+
+#######################################################################

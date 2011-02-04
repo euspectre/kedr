@@ -1,1 +1,4 @@
-#include <linux/slab.h>     /* kmalloc() */
+#include <linux/slab.h>
+#include <linux/gfp.h>
+#include <linux/mm.h>
+#include <linux/topology.h> /* NUMA-related stuff */
