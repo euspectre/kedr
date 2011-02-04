@@ -4,7 +4,7 @@
 	returnType = void*
 
 	# Names and types of the arguments of the target function
-	arg.type = size_t
+	arg.type = unsigned long
 	arg.name = size
 
 	arg.type = gfp_t
@@ -28,7 +28,7 @@
 	trace.param.name = returnValue
 
 	# The format string to be used for trace output.
-	trace.formatString = "arguments: (%zu, %lu, {value_cannot_be_printed}), result: %p"
+	trace.formatString = "arguments: (%zu, %lu, {pgprot_t - value cannot be printed}), result: %p"
 
 # End of the group of definitions for __vmalloc().
 

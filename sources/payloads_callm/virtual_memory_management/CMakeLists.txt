@@ -11,6 +11,7 @@ kmodule_configure_kernel_functions(functions REQUIRED
 	"vmalloc_user"
 	"vmalloc_node"
 	"vmalloc_32"
+	"vmalloc_32_user"
 	"vfree"
 )
 

@@ -1,6 +1,6 @@
 [group]
 	# Name and return type of the target function
-	function.name = vmalloc_user
+	function.name = vmalloc_32_user
 	returnType = void*
 
 	# Names and types of the arguments of the target function
@@ -17,6 +17,6 @@
 	# The format string to be used for trace output.
 	trace.formatString = "arguments: (%zu), result: %p"
 
-# End of the group of definitions for vmalloc_user().
+# End of the group of definitions for vmalloc_32_user().
 
 #######################################################################

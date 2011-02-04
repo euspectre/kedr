@@ -4,7 +4,7 @@
 	returnType = void*
 
 	# Names and types of the arguments of the target function
-	arg.type = size_t
+	arg.type = unsigned long
 	arg.name = size
 	
 	# The parameters to be output to the trace. 
