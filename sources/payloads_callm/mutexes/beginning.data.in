@@ -17,5 +17,5 @@ header =>>
  * by the Free Software Foundation.
  ======================================================================== */
 
-#include <linux/mutex.h>   /* mutex related functions */
+#include <linux/mutex.h>   /* mutex-related functions */
 <<

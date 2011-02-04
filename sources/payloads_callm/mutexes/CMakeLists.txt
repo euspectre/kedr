@@ -11,6 +11,7 @@ kmodule_configure_kernel_functions(functions REQUIRED
 	"__mutex_init"
 	OPTIONAL "mutex_lock"
 	"mutex_lock_interruptible"
+	"mutex_lock_killable"
 	"mutex_trylock"
 	REQUIRED "mutex_unlock"
 )
