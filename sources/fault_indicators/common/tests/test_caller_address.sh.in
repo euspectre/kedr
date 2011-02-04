@@ -68,7 +68,7 @@ if simulate; then
 	exit 1
 fi
 
-${capture_trace_script} -f ${trace_file} &
+${capture_trace_script} -d "${debugfs}" -f "${trace_file}" &
 capture_pid=$!
 
 sleep 0.5
