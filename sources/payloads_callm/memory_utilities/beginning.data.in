@@ -1,7 +1,8 @@
-# This module processes the calls to functions for access to user space.
+# This module processes the calls to memory-related utility functions
+# like kstrdup(), etc.
 
 module.name = @kmodule_name@
-module.author = Tsyvarev
+module.author = Eugene A. Shatokhin
 module.license = GPL
 
 header =>>
@@ -17,7 +18,8 @@ header =>>
  * by the Free Software Foundation.
  ======================================================================== */
 
-#include <linux/uaccess.h>   /*  user space access functions */
-#include <linux/string.h>	 /*  *dup_user() */
-#include <linux/err.h>
+#include <linux/slab.h>
+#include <linux/gfp.h>
+#include <linux/mm.h>
+#include <linux/string.h>
 <<

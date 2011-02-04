@@ -113,6 +113,7 @@ add_subdirectory(schedule)
 add_subdirectory(waitqueue)
 add_subdirectory(capable)
 add_subdirectory(virtual_memory_management)
+add_subdirectory(memory_utilities)
 
 add_subdirectory(tests)
 

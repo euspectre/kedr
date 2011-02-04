@@ -12,6 +12,9 @@ MODULE_LICENSE("GPL");
 #include <linux/fs.h> /*file operations*/
 #include <linux/cdev.h> /*character device definition*/
 #include <linux/device.h> /*class_create*/
+#include <linux/string.h>
+#include <linux/err.h>
+#include <linux/slab.h>
 
 struct tt_dev
 {
@@ -56,6 +59,9 @@ ssize_t
 ttd_write(struct file *filp, const char __user *buf, size_t count,
 	loff_t *f_pos)
 {
+    void *raw = NULL;
+    char *str = NULL;
+    
 	struct tt_dev* sdev = container_of(filp->f_dentry->d_inode->i_cdev,
 		struct tt_dev, cdev);
 
@@ -71,6 +77,26 @@ ttd_write(struct file *filp, const char __user *buf, size_t count,
 		mutex_unlock(&sdev->mutex);
 		return -EFAULT;
 	}
+    
+    /* trigger memdup_user() and strndup_user */
+    raw = memdup_user(buf, 1);
+    if (!IS_ERR(raw)) {
+    	kfree(raw);
+    } else {
+    	printk(KERN_INFO 
+    "Failed to copy data from user space with memdup_user(), errno=%d.", 
+    		(int)PTR_ERR(raw)); 
+    }
+    
+    str = strndup_user(buf, 1);
+    if (!IS_ERR(str)) {
+    	kfree(str);
+    } else {
+    	printk(KERN_INFO 
+    "Failed to copy data from user space with strndup_user(), errno=%d.", 
+    		(int)PTR_ERR(str)); 
+    }
+    
 	mutex_unlock(&sdev->mutex);
 	*f_pos += count;
 	

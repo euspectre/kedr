@@ -27,8 +27,12 @@ case "${function_name}" in
 ;;
 @copy_from_user_FUNCTION@)
 ;;
+@memdup_user_FUNCTION@)
+;;
+@strndup_user_FUNCTION@)
+;;
 *)
-	printf "Only @copy_to_user_FUNCTION@ and @copy_from_user_FUNCTION@ functions may be tested with this script.\n"
+	printf "Only *_user() functions may be tested with this script.\n"
 	exit 1
 ;;
 esac
