@@ -1,4 +1,16 @@
 __kmalloc
 krealloc
+__krealloc
 kmem_cache_alloc
 kmem_cache_alloc_notrace
+kmem_cache_alloc_trace
+__get_free_pages
+get_zeroed_page
+__kmalloc_node
+kmem_cache_alloc_node
+kmem_cache_alloc_node_notrace
+kmem_cache_alloc_node_trace
+__alloc_pages_nodemask
+alloc_pages_current
+alloc_pages_exact
+

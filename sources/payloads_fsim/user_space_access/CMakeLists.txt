@@ -18,7 +18,20 @@ kmodule_configure_kernel_functions(copy_from_user_FUNCTION REQUIRED
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/copy_from_user.data.in
 	"${CMAKE_CURRENT_BINARY_DIR}/${copy_from_user_FUNCTION}.data")
 
-set(functions ${copy_to_user_FUNCTION} ${copy_from_user_FUNCTION})
+kmodule_configure_kernel_functions(strndup_user_FUNCTION REQUIRED 
+	"strndup_user"
+)
+
+kmodule_configure_kernel_functions(memdup_user_FUNCTION REQUIRED 
+	"memdup_user"
+)
+
+set(functions 
+	${copy_to_user_FUNCTION} 
+	${copy_from_user_FUNCTION} 
+	${strndup_user_FUNCTION}
+	${memdup_user_FUNCTION}
+)
 
 kbuild_include_directories ("${CMAKE_CURRENT_BINARY_DIR}")
 kbuild_add_module(${kmodule_name}

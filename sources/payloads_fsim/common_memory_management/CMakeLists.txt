@@ -5,16 +5,29 @@ set(kmodule_name "kedr_fsim_cmm")
 configure_file("beginning.data.in"
 	"${CMAKE_CURRENT_BINARY_DIR}/beginning.data")
 
+# free()-like functions are only monitored (they cannot fail anyway)
 kmodule_configure_kernel_functions(functions REQUIRED
 	"__kmalloc"
 	"krealloc"
+	"__krealloc"
+	"kfree"
+	"kzfree"
 	"kmem_cache_alloc"
 	OPTIONAL "kmem_cache_alloc_notrace"
+	"kmem_cache_alloc_trace" 
+	REQUIRED "kmem_cache_free"
 	"__get_free_pages"
-# In call monitoring mode
-	"kmem_cache_free"
-	"kfree"
+	"get_zeroed_page"
 	"free_pages"
+	OPTIONAL "__kmalloc_node"
+	"kmem_cache_alloc_node"
+	"kmem_cache_alloc_node_notrace"
+	"kmem_cache_alloc_node_trace"
+	"__alloc_pages_nodemask"
+	"alloc_pages_current"
+	"__free_pages"
+	"alloc_pages_exact"
+	"free_pages_exact"
 )
 
 set(kmem_cache_alloc_FUNCTION "kmem_cache_alloc")

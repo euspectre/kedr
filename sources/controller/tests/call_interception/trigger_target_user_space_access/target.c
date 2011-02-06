@@ -78,7 +78,7 @@ ttd_write(struct file *filp, const char __user *buf, size_t count,
 		return -EFAULT;
 	}
     
-    /* trigger memdup_user() and strndup_user */
+    /* trigger memdup_user() and strndup_user() */
     raw = memdup_user(buf, 1);
     if (!IS_ERR(raw)) {
     	kfree(raw);
