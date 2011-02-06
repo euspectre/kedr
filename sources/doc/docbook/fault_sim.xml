@@ -301,6 +301,8 @@ Here is the list of payload modules for fault simulation provided with KEDR:
         <member>
         <function>copy_from_user</function>/<function>_copy_from_user</function>
         </member>
+        <member><function>strndup_user</function></member>
+        <member><function>memdup_user</function></member>
         </simplelist>
     </listitem>
 </varlistentry>
@@ -310,16 +312,49 @@ Here is the list of payload modules for fault simulation provided with KEDR:
         <simplelist type='inline'>
         <member><function>__kmalloc</function></member>
         <member><function>krealloc</function></member>
+        <member><function>__krealloc</function></member>
         <member><function>kmem_cache_alloc</function></member>
         <member>[<function>kmem_cache_alloc_notrace</function>]</member>
+        <member>[<function>kmem_cache_alloc_trace</function>]</member>
         <member><function>__get_free_pages</function></member>
+        <member><function>get_zeroed_page</function></member>
+    	<member>[<function>__kmalloc_node</function>]</member>
+    	<member>[<function>kmem_cache_alloc_node</function>]</member>
+    	<member>[<function>kmem_cache_alloc_node_notrace</function>]</member>
+    	<member>[<function>kmem_cache_alloc_node_trace</function>]</member>
+    	<member>[<function>__alloc_pages_nodemask</function>]</member>
+    	<member>[<function>alloc_pages_current</function>]</member>
+    	<member>[<function>alloc_pages_exact</function>]</member>
+        </simplelist>
+    </listitem>
+</varlistentry>
+<varlistentry>
+    <term><filename>kedr_fsim_mem_util.ko</filename></term>
+    <listitem>implements fault simulation for functions
+        <simplelist type='inline'>
+        <member><function>kstrdup</function></member>
+        <member><function>kstrndup</function></member>
+        <member><function>kmemdup</function></member>
+        </simplelist>
+    </listitem>
+</varlistentry>
+<varlistentry>
+    <term><filename>kedr_fsim_vmm.ko</filename></term>
+    <listitem>implements fault simulation for functions
+        <simplelist type='inline'>
+        <member><function>vmalloc</function></member>
+        <member><function>__vmalloc</function></member>
+        <member><function>vmalloc_user</function></member>
+        <member><function>vmalloc_node</function></member>
+        <member><function>vmalloc_32</function></member>
+        <member><function>vmalloc_32_user</function></member>
         </simplelist>
     </listitem>
 </varlistentry>
 </variablelist>
 
 <note><para>
-Although KEDR module <filename>kedr_fsim_cmm.ko</filename> currently provides fault simulation facilities for 5 functions, it exports only one directory (<filename class='directory'>__kmalloc</filename>) to manage fault simulation scenarios. All those 5 functions use the same scenario that is set for <function>__kmalloc</function> function.
+Although KEDR module <filename>kedr_fsim_cmm.ko</filename> currently provides fault simulation facilities for several functions, it exports only one directory (<filename class='directory'>__kmalloc</filename>) to manage fault simulation scenarios. All those supported functions use the same scenario that is set for <function>__kmalloc</function> function. Same for <filename>kedr_fsim_vmm.ko</filename> module where the scenario for <function>vmalloc</function> function is used for all other functions too.
 </para></note>
     
 <para>

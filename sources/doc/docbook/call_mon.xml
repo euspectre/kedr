@@ -76,18 +76,33 @@ Only calls to the subset of all kernel functions are detected. This subset howev
     <simplelist type='vert'>
     <member>__kmalloc</member>
     <member>krealloc</member>
+    <member>__krealloc</member>
     <member>kfree</member>
+    <member>kzfree</member>
     <member>kmem_cache_alloc</member>
     <member>[kmem_cache_alloc_notrace]</member>
+    <member>[kmem_cache_alloc_trace]</member>
     <member>kmem_cache_free</member>
     <member>__get_free_pages</member>
+    <member>get_zeroed_page</member>
     <member>free_pages</member>
+	<member>[__kmalloc_node]</member>
+	<member>[kmem_cache_alloc_node]</member>
+	<member>[kmem_cache_alloc_node_notrace]</member>
+	<member>[kmem_cache_alloc_node_trace]</member>
+	<member>[__alloc_pages_nodemask]</member>
+	<member>[alloc_pages_current]</member>
+	<member>[__free_pages]</member>
+	<member>[alloc_pages_exact]</member>
+	<member>[free_pages_exact]</member>
     </simplelist>
 </listitem>
 <listitem><phrase role="emphasized">kedr_cm_user_space_access.ko:</phrase>
     <simplelist type='vert'>
     <member>copy_to_user/_copy_to_user</member>
     <member>copy_from_user/_copy_from_user</member>
+    <member>strndup_user</member>
+    <member>memdup_user</member>
     </simplelist>
 </listitem>
 <listitem><phrase role="emphasized">kedr_cm_mutexes.ko:</phrase>
@@ -95,6 +110,7 @@ Only calls to the subset of all kernel functions are detected. This subset howev
     <member>__mutex_init</member>
     <member>mutex_lock</member>
     <member>mutex_lock_interruptible</member>
+    <member>mutex_lock_killable</member>
     <member>mutex_trylock</member>
     <member>mutex_unlock</member>
     </simplelist>
@@ -135,6 +151,7 @@ Only calls to the subset of all kernel functions are detected. This subset howev
     <member>vmalloc_user</member>
     <member>vmalloc_node</member>
     <member>vmalloc_32</member>
+    <member>vmalloc_32_user</member>
     <member>vfree</member>
     </simplelist>
 </listitem>
@@ -148,6 +165,13 @@ Only calls to the subset of all kernel functions are detected. This subset howev
     <member>schedule_timeout_interruptible</member>
     <member>io_schedule</member>
     <member>cond_resched_lock/__cond_resched_lock</member>
+    </simplelist>
+</listitem>
+<listitem><phrase role="emphasized">kedr_cm_mem_util.ko:</phrase>
+    <simplelist type='vert'>
+    <member>kstrdup</member>
+    <member>kstrndup</member>
+    <member>kmemdup</member>
     </simplelist>
 </listitem>
 </itemizedlist>
