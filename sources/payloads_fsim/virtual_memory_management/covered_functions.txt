@@ -1,0 +1,7 @@
+vmalloc
+__vmalloc
+vmalloc_user
+vmalloc_node
+vmalloc_32
+vmalloc_32_user
+vfree

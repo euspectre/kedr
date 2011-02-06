@@ -1,10 +1,11 @@
-#name of module created
-set(kmodule_name "kedr_cm_vmm")
+# Name of the module to be created
+set(kmodule_name "kedr_fsim_vmm")
 
-#first part of data-file
+# The header of the data file
 configure_file("beginning.data.in"
 	"${CMAKE_CURRENT_BINARY_DIR}/beginning.data")
 
+# free()-like functions are only monitored (they cannot fail anyway) 
 kmodule_configure_kernel_functions(functions REQUIRED
 	"vmalloc"
 	"__vmalloc"
@@ -23,9 +24,6 @@ rules_generate_payload()
 
 rules_build_datafile(${functions})
 
-kedr_test_add_ci_include()
-kedr_test_add_ci_test(${functions})
-
 kedr_install_kmodule(${kmodule_name})
 
-kedr_conf_callm_add_payload(${kmodule_name})
+kedr_conf_fsim_add_payload(${kmodule_name})
