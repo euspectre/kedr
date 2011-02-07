@@ -17,6 +17,12 @@ load)
     # Invoke insmod with all arguments we got
     # and use a pathname, as insmod doesn't look in . by default
     /sbin/insmod ${current_dir}/${module}.ko $* || exit 1
+    
+    # It seems, udev does not always create the device nodes instantly,
+    # so wait a little if necessary.
+    if ! test -c /dev/${device}0; then
+        sleep 0.5
+    fi
 
     # Udev should have created the device nodes, no need for mknod
     chmod $mode  /dev/${device}*
