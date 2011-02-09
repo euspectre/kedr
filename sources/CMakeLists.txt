@@ -18,7 +18,7 @@ endif ()
 # Names and versions
 set(KEDR_PACKAGE_NAME "kedr")
 set(KEDR_VERSION_MAJOR 0)
-set(KEDR_VERSION_MINOR 1)
+set(KEDR_VERSION_MINOR 2)
 set(KEDR_VERSION_MICRO 0)
 
 #######################################################################
@@ -33,7 +33,7 @@ include(path_prefixes)
 #######################################################################
 #######################################################################
 # Initialize test-related stuff
-kedr_test_init ()
+kedr_test_init()
 
 #######################################################################
 #kedr_install_library(library_name)
