@@ -230,8 +230,11 @@ endif ()
 # "kedr_gen" tool during the build of payload modules, etc.
 set (KEDR_GEN_TOOL ${KEDR_GEN_INSTALL_PREFIX}/kedr_gen)
 message (STATUS "Creating \"kedr_gen\" - done")
-
 #######################################################################
+
+prepare_function_lookup()
+#######################################################################
+
 add_subdirectory(base)
 
 # This files will be used for tests, whether controller really intercept
