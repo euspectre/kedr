@@ -172,7 +172,7 @@ parameter of the module. That is, at most this many stack frames will be
 shown. 
 
 "stack_depth" parameter is an unsigned integer, not greater than 16. 
-Default value: 7. 
+Default value: 12. 
 
 For example, to display at most 10 stack frames for each 
 allocation/deallocation, modify the above configuration file as follows:

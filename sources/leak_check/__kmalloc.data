@@ -1,0 +1,26 @@
+[group]
+	# Name and return type of the target function
+	function.name = __kmalloc
+	returnType = void *
+
+	# Names and types of the arguments of the target function
+	arg.type = size_t
+	arg.name = size
+
+	arg.type = gfp_t
+	arg.name = flags
+	
+	# The body of the replacement function
+	handler.body =>>
+	void *ret_val;
+	ret_val = __kmalloc(size, flags);
+	
+	if (!ZERO_OR_NULL_PTR(ret_val))
+		klc_add_alloc(ret_val, size, stack_depth);
+
+	return ret_val;
+	<<
+
+# End of the group of definitions for __kmalloc().
+
+#######################################################################

@@ -1,0 +1,25 @@
+[group]
+	# Name and return type of the target function
+	function.name = get_zeroed_page
+	returnType = unsigned long
+
+	# Names and types of the arguments of the target function
+	arg.type = gfp_t
+	arg.name = gfp_mask
+
+	# The body of the replacement function
+	handler.body =>>
+	unsigned long ret_val;
+	ret_val = get_zeroed_page(gfp_mask);
+	
+	if ((void *)ret_val != NULL) {
+		klc_add_alloc((const void *)ret_val, 
+			(size_t)PAGE_SIZE, stack_depth);
+	}
+
+	return ret_val;
+	<<
+
+# End of the group of definitions for get_zeroed_page().
+
+#######################################################################

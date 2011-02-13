@@ -11,7 +11,7 @@
 #include <linux/list.h>
 #include <linux/slab.h>
 
-#include "kedr_stack_trace.h"
+#include <kedr/util/stack_trace.h>
 
 /* This structure contains data about a block of memory:
  * the pointer to that block ('block') and a portion of the call stack for

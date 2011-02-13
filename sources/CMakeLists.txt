@@ -99,9 +99,20 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif()
 
 #######################################################################
-# Configuration of payloads set
-option(KEDR_STANDARD_CALLM_PAYLOADS "Whether need to build standard set of call monitor payloads" ON)
-option(KEDR_STANDARD_FSIM_PAYLOADS "Whether need to build standard set of fault simulation payloads" ON)
+# Supported types of analysis (and, consequently, the sets of payload 
+# modules).
+option(KEDR_STANDARD_CALLM_PAYLOADS 
+	"Enable support for call monitoring" 
+	ON
+)
+option(KEDR_STANDARD_FSIM_PAYLOADS 
+	"Enable support for fault simulation" 
+	ON
+)
+option(KEDR_LEAK_CHECK
+	"Enable support for memory leak detection" 
+	ON
+)
 #######################################################################
 
 # kedr_gen is built here explicitly and installed to a temporary location.
@@ -280,10 +291,14 @@ if(KEDR_STANDARD_CALLM_PAYLOADS)
     add_subdirectory(payloads_callm)
 endif(KEDR_STANDARD_CALLM_PAYLOADS)
 
+if(KEDR_LEAK_CHECK)
+	add_subdirectory(leak_check)
+endif(KEDR_LEAK_CHECK)
 
 add_subdirectory(tools)
 
 add_subdirectory(examples)
+
 # Documentation
 add_subdirectory(doc)
 

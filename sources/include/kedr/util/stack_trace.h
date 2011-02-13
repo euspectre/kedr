@@ -21,7 +21,7 @@
  * The additional entries may help handle the case when there are more than
  * KEDR_LOWER_FRAMES lower frames.
  * 
- * [NB] To round up a nonnegative number x to a multiple of N, use
+ * [NB] To round up a nonnegative number x to a multiple of N (N=2^k), use
  * (x + N - 1) & ~(N - 1) 
  */
 #define KEDR_NUM_FRAMES_INTERNAL \

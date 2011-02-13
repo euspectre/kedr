@@ -1,0 +1,22 @@
+[group]
+	# Name and return type of the target function
+	function.name = free_pages_exact
+
+	# Names and types of the arguments of the target function
+	arg.type = void *
+	arg.name = virt
+
+	arg.type = size_t
+	arg.name = size
+	
+	# The body of the replacement function
+	handler.body =>>
+	if (!ZERO_OR_NULL_PTR(virt) && !klc_find_and_remove_alloc(virt)) 
+		klc_add_bad_free(virt, stack_depth);
+	
+	free_pages_exact(virt, size);
+	<<
+
+# End of the group of definitions for free_pages_exact().
+
+#######################################################################

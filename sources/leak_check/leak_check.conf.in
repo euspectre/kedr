@@ -1,0 +1,2 @@
+# The payload module for memory leak detection
+payload @leak_check_install_dir@/@kmodule_name@.ko

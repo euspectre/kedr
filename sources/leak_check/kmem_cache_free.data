@@ -1,0 +1,21 @@
+[group]
+	# Name and return type of the target function
+	function.name = kmem_cache_free
+
+	# Names and types of the arguments of the target function
+	arg.type = struct kmem_cache *
+	arg.name = mc
+	
+	arg.type = void *
+	arg.name = p
+	
+	# The body of the replacement function
+	handler.body =>>
+	if (!ZERO_OR_NULL_PTR(p) && !klc_find_and_remove_alloc(p)) 
+		klc_add_bad_free(p, stack_depth);
+
+	kmem_cache_free(mc, p);
+	<<
+
+# End of the group of definitions for kmem_cache_free().
+#######################################################################

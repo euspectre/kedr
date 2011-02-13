@@ -1,0 +1,29 @@
+[group]
+	# Name and return type of the target function
+	function.name = kmem_cache_alloc_trace
+	returnType = void *
+
+	# Names and types of the arguments of the target function
+	arg.type = size_t
+	arg.name = size
+
+	arg.type = struct kmem_cache *
+	arg.name = mc
+	
+	arg.type = gfp_t
+	arg.name = flags
+	
+	# The body of the replacement function
+	handler.body =>>
+	void *ret_val;
+	ret_val = kmem_cache_alloc_trace(size, mc, flags);
+
+	if (ret_val != NULL)
+		klc_add_alloc(ret_val, (size_t)kmem_cache_size(mc), stack_depth);
+	
+	return ret_val;
+	<<
+
+# End of the group of definitions for kmem_cache_alloc_trace().
+
+#######################################################################

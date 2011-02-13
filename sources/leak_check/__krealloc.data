@@ -1,0 +1,40 @@
+[group]
+	# Name and return type of the target function
+	function.name = __krealloc
+	returnType = void *
+
+	# Names and types of the arguments of the target function
+	arg.type = const void *
+	arg.name = p
+
+	arg.type = size_t
+	arg.name = size
+
+	arg.type = gfp_t
+	arg.name = flags
+	
+	# The body of the replacement function
+	handler.body =>>
+	void *ret_val;
+	ret_val = __krealloc(p, size, flags);
+	
+	if (size == 0) /* do nothing */
+		return ret_val;
+	
+	if (p == NULL) { 
+		/* same as kmalloc */
+		if (ret_val != NULL)
+			klc_add_alloc(ret_val, size, stack_depth);
+	} else {
+		/* this part is more tricky as __krealloc may or may not call
+		 * kmalloc and, in addition, it does not free 'p'.
+		 */
+		if (ret_val != NULL && ret_val != p) /* allocation has been done */
+			klc_add_alloc(ret_val, size, stack_depth);
+	}
+	return ret_val;
+	<<
+
+# End of the group of definitions for __krealloc().
+
+#######################################################################

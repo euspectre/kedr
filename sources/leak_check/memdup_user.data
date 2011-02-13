@@ -1,0 +1,26 @@
+[group]
+	# Name and return type of the target function
+	function.name = memdup_user
+	returnType = void *
+
+	# Names and types of the arguments of the target function
+	arg.type = const void __user *
+	arg.name = src
+
+	arg.type = size_t
+	arg.name = len
+
+	# The body of the replacement function
+	handler.body =>>
+	void *ret_val;
+	ret_val = memdup_user(src, len);
+	
+	if (!IS_ERR(ret_val))
+		klc_add_alloc(ret_val, len, stack_depth);
+	
+	return ret_val;
+	<<
+
+# End of the group of definitions for memdup_user().
+
+#######################################################################

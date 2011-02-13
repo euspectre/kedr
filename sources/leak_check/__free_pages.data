@@ -1,0 +1,29 @@
+[group]
+	# Name and return type of the target function
+	function.name = __free_pages
+
+	# Names and types of the arguments of the target function
+	arg.type = struct page *
+	arg.name = page
+	
+	arg.type = unsigned int
+	arg.name = order
+
+	# The body of the replacement function
+	handler.body =>>
+	if (page != NULL) {
+		/* If the page is not mapped to the virtual memory (highmem?)
+		 * (highmem?), page_address(page) returns NULL.
+		 */
+		const void *p = (const void *)page_address(page);
+		if (p != NULL && !klc_find_and_remove_alloc(p)) 
+			klc_add_bad_free(p, stack_depth);
+	}
+	
+	__free_pages(page, order);
+	return;
+	<<
+
+# End of the group of definitions for __free_pages().
+
+#######################################################################

@@ -1,0 +1,26 @@
+[group]
+	# Name and return type of the target function
+	function.name = vmalloc_node
+	returnType = void *
+
+	# Names and types of the arguments of the target function
+	arg.type = unsigned long
+	arg.name = size
+	
+	arg.type = int
+	arg.name = node
+
+	# The body of the replacement function
+	handler.body =>>
+	void *ret_val;
+	ret_val = vmalloc_node(size, node);
+
+	if (ret_val != NULL)
+		klc_add_alloc(ret_val, size, stack_depth);
+
+	return ret_val;
+	<<
+
+# End of the group of definitions for vmalloc_node().
+
+#######################################################################

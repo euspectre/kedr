@@ -36,8 +36,6 @@ endfunction(create_config_file target_name file_name datafile_header_name datafi
 
 # Configure kedr script(install mode)
 kedr_load_install_prefixes()
-set(KEDR_DEFAULT_CONFIG_DIR "${KEDR_INSTALL_PREFIX_VAR}/configs")
-
 set(KEDR_DEFAULT_CONFIG_FILE "${KEDR_DEFAULT_CONFIG_DIR}/${kedr_conf_file_default_name}")
 
 set(KEDR_FILE_BASE "${KEDR_INSTALL_PREFIX_KMODULE}/kedr_base.ko")

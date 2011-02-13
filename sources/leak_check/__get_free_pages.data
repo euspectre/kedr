@@ -1,0 +1,28 @@
+[group]
+	# Name and return type of the target function
+	function.name = __get_free_pages
+	returnType = unsigned long
+
+	# Names and types of the arguments of the target function
+	arg.type = gfp_t
+	arg.name = flags
+	
+	arg.type = unsigned int
+	arg.name = order
+
+	# The body of the replacement function
+	handler.body =>>
+	unsigned long ret_val;
+	ret_val = __get_free_pages(flags, order);
+
+	if ((void *)ret_val != NULL) {
+		klc_add_alloc((const void *)ret_val, 
+			(size_t)(PAGE_SIZE << order), stack_depth);
+	}
+
+	return ret_val;
+	<<
+
+# End of the group of definitions for __get_free_pages().
+
+#######################################################################

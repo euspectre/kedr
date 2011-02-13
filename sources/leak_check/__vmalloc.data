@@ -1,0 +1,29 @@
+[group]
+	# Name and return type of the target function
+	function.name = __vmalloc
+	returnType = void *
+
+	# Names and types of the arguments of the target function
+	arg.type = unsigned long
+	arg.name = size
+
+	arg.type = gfp_t
+	arg.name = gfp_mask
+
+	arg.type = pgprot_t
+	arg.name = prot
+	
+	# The body of the replacement function
+	handler.body =>>
+	void *ret_val;
+	ret_val = __vmalloc(size, gfp_mask, prot);
+
+	if (ret_val != NULL)
+		klc_add_alloc(ret_val, size, stack_depth);
+
+	return ret_val;
+	<<
+
+# End of the group of definitions for __vmalloc().
+
+#######################################################################

@@ -125,6 +125,9 @@ set(KEDR_INSTALL_PREFIX_KINCLUDE
 set(KEDR_INSTALL_PREFIX_EXAMPLES
 		"${KEDR_INSTALL_PREFIX_READONLY}/examples")
 
+# Default directory for configuration files
+set(KEDR_DEFAULT_CONFIG_DIR "${KEDR_INSTALL_PREFIX_VAR}/configs")
+
 ########################################################################
 # Path prefixes for tests
 
