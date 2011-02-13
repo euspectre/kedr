@@ -1,4 +1,4 @@
-/* kedr_stack_trace.h 
+/* stack_trace.h 
  * Stack trace helpers for payload modules in KEDR.
  */
 

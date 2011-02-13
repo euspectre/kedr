@@ -2,10 +2,10 @@
 set(kmodule_name "kedr_fsim_indicator_kmalloc")
 
 kbuild_add_module(${kmodule_name} "indicator.c" "calculator.c" "control_file.c"
-	"kedr_stack_trace.c")
+	"stack_trace.c")
 
-rule_copy_file("${CMAKE_CURRENT_BINARY_DIR}/kedr_stack_trace.c"
-	"${CMAKE_SOURCE_DIR}/kedr_stack_trace/kedr_stack_trace.c")
+rule_copy_file("${CMAKE_CURRENT_BINARY_DIR}/stack_trace.c"
+	"${CMAKE_SOURCE_DIR}/util/stack_trace/stack_trace.c")
 
 rule_copy_file("${CMAKE_CURRENT_BINARY_DIR}/calculator.c"
 	"${CMAKE_SOURCE_DIR}/calculator/calculator.c")

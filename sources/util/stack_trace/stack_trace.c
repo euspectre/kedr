@@ -1,4 +1,4 @@
-/* kedr_stack_trace.c
+/* stack_trace.c
  * Stack trace helpers for payload modules in KEDR.
  */
 
@@ -17,7 +17,7 @@
 #include <linux/kernel.h>
 #include <linux/stacktrace.h>
 
-#include <kedr/kedr_stack_trace/kedr_stack_trace.h>
+#include <kedr/util/stack_trace.h>
 
 void
 kedr_save_stack_trace_impl(unsigned long *entries, unsigned int max_entries,

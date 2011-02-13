@@ -18,7 +18,7 @@ global =>>
 #include <kedr/base/common.h> /* in_init */
 #include <linux/random.h> /* random32() */
 
-#include <kedr/kedr_stack_trace/kedr_stack_trace.h> /* kedr_save_stack_trace() */
+#include <kedr/util/stack_trace.h> /* kedr_save_stack_trace() */
 
 /*
  * This is distance in the stack from returning address of

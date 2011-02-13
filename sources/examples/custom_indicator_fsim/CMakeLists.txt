@@ -21,8 +21,8 @@ rule_copy_file("control_file.c"
 	"${CMAKE_SOURCE_DIR}/control_file/control_file.c")
 rule_copy_file("calculator.c"
 	"${CMAKE_SOURCE_DIR}/calculator/calculator.c")
-rule_copy_file("kedr_stack_trace.c"
-	"${CMAKE_SOURCE_DIR}/kedr_stack_trace/kedr_stack_trace.c")
+rule_copy_file("stack_trace.c"
+	"${CMAKE_SOURCE_DIR}/util/stack_trace/stack_trace.c")
 
 
 # Copy templates files into build dir
@@ -75,7 +75,7 @@ add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${module_name}.ko"
         DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/indicator.data"
 				"${CMAKE_CURRENT_BINARY_DIR}/calculator.c"
 				"${CMAKE_CURRENT_BINARY_DIR}/control_file.c"
-				"${CMAKE_CURRENT_BINARY_DIR}/kedr_stack_trace.c"
+				"${CMAKE_CURRENT_BINARY_DIR}/stack_trace.c"
                 "${CMAKE_CURRENT_BINARY_DIR}/makefile_test"
                 "${CMAKE_CURRENT_BINARY_DIR}/Kbuild"
                 )
@@ -101,7 +101,7 @@ kedr_test_add_target("custom_fsim_indicator")
 install(FILES   "${CMAKE_CURRENT_SOURCE_DIR}/indicator.data"
 				"${CMAKE_SOURCE_DIR}/control_file/control_file.c"
 				"${CMAKE_SOURCE_DIR}/calculator/calculator.c"
-				"${CMAKE_SOURCE_DIR}/kedr_stack_trace/kedr_stack_trace.c"
+				"${CMAKE_SOURCE_DIR}/util/stack_trace/stack_trace.c"
         DESTINATION "${example_install_dir}"
 )
 
