@@ -100,7 +100,8 @@ klc_print_alloc_info(struct klc_memblock_info *alloc_info,
     u64 similar_allocs);
 
 void 
-klc_print_dealloc_info(struct klc_memblock_info *dealloc_info);
+klc_print_dealloc_info(struct klc_memblock_info *dealloc_info,
+    u64 similar_deallocs);
 
 /* Output statistics about the analysis session of the target module:
  * total number of memory allocations, potential memory leaks and 

@@ -215,20 +215,42 @@ void
 klc_flush_deallocs(void)
 {
     struct klc_memblock_info *mbi = NULL;
+    struct klc_memblock_info *pos = NULL;
     struct hlist_node *node = NULL;
     struct hlist_node *tmp = NULL;
+    struct hlist_head *head = NULL;
     unsigned int i = 0;
+    unsigned int k;
 
     /* No need to protect the storage because this function is called
      * from on_target_unload handler when no replacement function can
      * interfere.*/
     for (; i < MBI_TABLE_SIZE; ++i) {
-        hlist_for_each_entry_safe(mbi, node, tmp, &bad_free_table[i], hlist) {
-            klc_print_dealloc_info(mbi);
+        head = &bad_free_table[i];
+        while (!hlist_empty(head)) {
+    /* We output only one bad deallocation with a given call stack 
+     * to reduce the needed size of the output buffer and to make the report
+     * more readable.
+     */
+            u64 similar_deallocs = 0;
+            mbi = hlist_entry(head->first, struct klc_memblock_info, hlist);
             hlist_del(&mbi->hlist);
+            
+            for (k = i; k < MBI_TABLE_SIZE; ++k) {
+                hlist_for_each_entry_safe(pos, node, tmp, 
+                    &bad_free_table[k], hlist) {
+                    if (call_stacks_equal(mbi, pos)) {
+                        hlist_del(&pos->hlist);
+                        klc_memblock_info_destroy(pos);
+                        ++similar_deallocs;
+                    }
+                }
+            }
+            
+            klc_print_dealloc_info(mbi, similar_deallocs);
             klc_memblock_info_destroy(mbi);
-        }
-    }
+        } /* end while */
+    } /* end for */
     return;
 }
 
