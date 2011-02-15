@@ -85,6 +85,14 @@ KEDR simulates the failure without actually calling the respective
 (the calls to which functions must fail in what conditions) can be 
 controlled and customized by the user.
     </para></listitem>
+    <listitem><para>
+<link linkend="leak_check"><firstterm>Checking for memory leaks</firstterm></link> 
+The appropriate components of KEDR keep track of memory allocation and 
+deallocation operations made by the target module. After the target module 
+has unloaded, KEDR generates a report listing the memory blocks that have 
+been allocated but not freed by that module along with a call stack for 
+each of these blocks.
+    </para></listitem>
 </itemizedlist>
 
 <para>
@@ -99,8 +107,9 @@ Other types of analysis can be implemented with the help of KEDR. See
 
 <para>
 KEDR system supports Linux kernel versions 2.6.31 or newer. Of all kernel 
-facilities it relies upon, trace events currently have the highest requirements
-for the version of the kernel.
+facilities it relies upon, tracing facilities (implementation of ring 
+buffer, etc.) currently have the highest requirements for the version of 
+the kernel.
 </para>
 
 <para>
@@ -213,12 +222,17 @@ heavily used in the kernel itself, for example:
 </para>
 
 <listitem><para>
+<firstterm>notification system</firstterm>;
+</para></listitem>
+
+<listitem><para>
 <firstterm>instruction decoding facilities</firstterm> used in the kernel 
 to implement KProbes;
 </para></listitem>
 
 <listitem><para>
-<firstterm>trace points</firstterm> and <firstterm>trace events</firstterm> - 
+<firstterm>tracing support</firstterm> (namely, <firstterm>kernel markers</firstterm>
+and implementation of a special <firstterm>ring buffer</firstterm> - 
 the basis of various data collection systems used in the kernel;
 </para></listitem>
 
@@ -271,7 +285,13 @@ the calls to <code>create_foo()</code> too to be able to track this.
 
 <listitem>
     <para>
-The tools build using KEDR framework can operate only on the calls made by the target module. Although it is enough in many cases, sometimes it is not. For example, a detector of data race conditions would require information not only about the calls to locking functions or the like but also about memory read and write operations which KEDR cannot track.
+Currently, KEDR allows to analyze only one kernel module at a time. 
+    </para>
+</listitem>
+
+<listitem>
+    <para>
+The tools built using KEDR framework can operate only on the calls made by the target module. Although it is enough in many cases, sometimes it is not. For example, a detector of data race conditions would require information not only about the calls to locking functions or the like but also about memory read and write operations which KEDR cannot track.
     </para>
 </listitem>
 </itemizedlist>

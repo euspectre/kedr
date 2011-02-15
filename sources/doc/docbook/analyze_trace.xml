@@ -220,7 +220,7 @@ First we need disassemble the code sections of the module:
 </para>
 
 <programlisting><![CDATA[
-objdump -dSl kedr_sample_target.ko > kedr_sample_target.disasm
+objdump -dSlr kedr_sample_target.ko > kedr_sample_target.disasm
 ]]></programlisting>
 
 <para>

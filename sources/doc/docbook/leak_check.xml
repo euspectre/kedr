@@ -1,0 +1,222 @@
+﻿<section id="leak_check">
+<title>Detecting Memory Leaks</title>
+
+<para>
+<firstterm>LeakCheck</firstterm> (implemented as payload module <filename>kedr_leak_check.ko</filename>) allows, as its name implies, to check the target kernel module for memory leaks, that is to reveal which memory blocks were allocated but were not freed by that module. 
+</para>
+
+<note>
+<para>
+Note that LeakCheck may not detect all memory leaks in the target module. For the present, the tool monitors the usage of more than 30 kernel functions that allocate and deallocate memory (these are among the supported functions listed in <xref linkend='call_mon'/>). Still, the target module can use some other functions for this purpose and LeakCheck will not notice this. Nevertheless, it is possible to add support for more functions to LeakCheck.
+</para>
+
+<para>
+Besides that, if the target module allocates a memory block but it is another module (or the kernel proper) that frees it, this will also be reported as a memory leak by LeakCheck. That being said, possible leaks reported by LeakCheck should be further analyzed to find out whether they are actually leaks.
+</para>
+</note>
+
+<para>
+For the present, LeakCheck cannot be used simultaneously with 
+other kinds of payload modules provided by KEDR. In particular, you cannot 
+use LeakCheck and fault simulation for memory-related functions at 
+the same time. 
+</para>
+
+<!-- ============================================================== -->
+
+<section id="leak_check.usage">
+<title>Typical Usage</title>
+
+<para>
+LeakCheck can be used like any other payload module for KEDR. First you need to load KEDR core and the appropriate payload module:
+</para>
+
+<programlisting><![CDATA[
+kedr start <target_name> -f leak_check.conf
+]]></programlisting>
+
+<para>
+<filename>leak_check.conf</filename> is placed to the main directory for config files when KEDR is installed (default: <filename class="directory">/var/opt/kedr/configs</filename>), so you usually do not need to specify the full path to the file.
+</para>
+
+<para>
+Load the target module and do something with it as usual, then unload the 
+target. Do not stop KEDR yet.
+</para>
+
+<para>
+Take a look at <filename class="directory">/sys/kernel/debug/kedr_leak_check</filename> directory. Here we 
+assume that debugfs is mounted to <filename class="directory">/sys/kernel/debug</filename>. If it is not, you 
+should mount it: 
+</para>
+
+<programlisting><![CDATA[
+mount debugfs -t debugfs /sys/kernel/debug
+]]></programlisting>
+
+<itemizedlist>
+	<para>
+There should be the following files in kedr_leak_check directory:
+	</para>
+	<listitem><itemizedlist>
+		<para><filename>info</filename>:</para>
+		<listitem><para>information about the target module (its name, addresses of the <quote>init</quote> and <quote>core</quote> memory areas); </para></listitem>
+		<listitem><para>total number of memory allocations performed by the module;</para></listitem>
+		<listitem><para>number of possible memory leaks (allocations without matching frees);</para></listitem>
+		<listitem><para>number of free-like calls without matching allocation calls;</para></listitem>
+	</itemizedlist></listitem>
+	<listitem><itemizedlist>
+		<para><filename>possible_leaks</filename>:</para>
+		<listitem><para>information about each detected memory leak: address and size of the memory block and a portion of the call stack of allocation (the allocations with the same call stack are grouped together, only the most recent one is shown);</para></listitem>
+	</itemizedlist></listitem>
+	<listitem><itemizedlist>
+		<para><filename>unallocated_frees</filename>:</para>
+		<listitem><para>information about each free-like call without  matching allocation call: address of the memory block and a portion of the call stack of that deallocation call (the deallocations with the same call stack are grouped together)</para></listitem>
+	</itemizedlist></listitem>
+</itemizedlist>
+
+<para>
+<filename class="directory">unallocated_frees</filename> file should normally be empty. If it is not empty 
+in some of your analysis sessions, it could be a problem in LeakCheck itself (e.g., the target module used some allocation 
+function that LeakCheck was unaware of) or memory is probably allocated by some other module. If you suppose it is a problem in LeakCheck, please report it to <ulink url="http://developer.berlios.de/bugs/?group_id=11780">the bug tracker</ulink>.
+</para>
+
+</section>
+<!-- ============================================================== -->
+
+<section id="leak_check.reports">
+<title>Reports</title>
+
+<para>
+Here are the examples of <filename>info</filename> and <filename>possible_leaks</filename> files from a real analysis session.
+The target is <filename>vboxsf</filename> module from VirtualBox Guest Additions 4.0.3. The <ulink url="http://www.virtualbox.org/ticket/8185">memory leak caught there</ulink> should now be fixed.
+</para>
+
+<para><filename>info</filename>:</para>
+<programlisting><![CDATA[
+Target module: "vboxsf", 
+  init area at 0xfe2b6000, core area at 0xfe2aa000
+Memory allocations: 49
+Possible leaks: 11
+Unallocated frees: 0
+]]></programlisting>
+
+<para><filename>possible_leaks</filename>:</para>
+<programlisting><![CDATA[
+Block at 0xf617e000, size: 4096; stack trace of the allocation:
+[<fe2ab904>] sf_follow_link+0x34/0xa0 [vboxsf]
+[<c0303caf>] link_path_walk+0x79f/0x910
+[<c0303f19>] path_walk+0x49/0xb0
+[<c0304089>] do_path_lookup+0x59/0x90
+[<c03042bd>] user_path_at+0x3d/0x80
+[<c02fd6d7>] vfs_fstatat+0x37/0x70
+[<c02fd748>] vfs_stat+0x18/0x20
+[<c02fd9af>] sys_stat64+0xf/0x30
+[<c0203190>] sysenter_do_call+0x12/0x22
+[<ffffe430>] 0xffffe430
+[<ffffffff>] 0xffffffff
++8 more allocation(s) with the same call stack.
+----------------------------------------
+Block at 0xf659a000, size: 4096; stack trace of the allocation:
+[<fe2ab904>] sf_follow_link+0x34/0xa0 [vboxsf]
+[<c0303caf>] link_path_walk+0x79f/0x910
+[<c0303f19>] path_walk+0x49/0xb0
+[<c0304089>] do_path_lookup+0x59/0x90
+[<c03042bd>] user_path_at+0x3d/0x80
+[<c02f8825>] sys_chdir+0x25/0x90
+[<c0203190>] sysenter_do_call+0x12/0x22
+[<ffffe430>] 0xffffe430
+[<ffffffff>] 0xffffffff
++1 more allocation(s) with the same call stack.
+----------------------------------------
+]]></programlisting>
+
+<para>
+The format of stack traces is the same as it is used to output data about 
+warnings and errors to the system log:
+</para>
+
+<programlisting><![CDATA[
+[<call_address>] <function_name>+<offset_in_func>/<size_of_func> [<module>]
+]]></programlisting>
+
+<para>
+To be exact, each address corresponds to the instruction following the relevant call.
+</para>
+
+</section>
+<!-- ============================================================== -->
+
+<section id="leak_check.analysis">
+<title>Analyzing the Results</title>
+
+<para>
+GDB, Objdump or some other tools of this kind can be used to locate the 
+places in the source code corresponding to the entries in the stack traces. 
+The detailed description can be found, for example, in <xref linkend="analyze_trace"/>.
+</para>
+
+<para>
+In the current version of LeakCheck, the names of the functions from 
+<quote>init</quote> area (those marked with <code>__init</code> in 
+the source file of the target module) cannot be resolved and the relevant 
+stack trace entries contain only raw call addresses. This is because name 
+resolution is done when "init" area has already been dropped from memory. 
+</para>
+
+<para>
+Using the the start address of the <quote>init</quote> area that <filename>info</filename> file shows and 
+the technique described in <xref linkend="analyze_trace"/> referred to above, you can 
+overcome this.
+</para>
+
+</section>
+<!-- ============================================================== -->
+
+<section id="leak_check.stack_depth">
+<title>Stack Depth</title>
+
+<para>
+The maximum number of stack frames displayed is controlled by <code>stack_depth</code> 
+parameter of the module. That is, at most this many stack frames will be 
+shown.
+</para> 
+
+<para>
+<code>stack_depth</code> parameter is an unsigned integer, not greater than 16. 
+Default value: 12. 
+</para>
+
+<para>
+For example, to display at most 7 stack frames for each 
+allocation/deallocation, create a <link linkend="kedr_control.config_file">configuration file</link>
+for LeakCheck as follows (and use it instead of the default one when starting KEDR):
+</para>
+
+<programlisting><![CDATA[
+payload /usr/local/lib/modules/<kernel_version>/misc/kedr_leak_check.ko stack_depth=7
+]]></programlisting>
+
+</section>
+<!-- ============================================================== -->
+
+<section id="leak_check.caveats">
+<title>Caveats</title>
+
+<para>
+When the target module is loaded, the output files are cleared, the results 
+are reset. Please take this into account when loading and unloading the 
+target module more than once while LeakCheck is loaded.
+</para>
+
+<para>
+As usual with debugfs, the output files live only as long as 
+LeakCheck.ko module is loaded. In particular, after unloading the 
+target, please collect the results first and only after that reload the 
+target or stop KEDR.
+</para>
+
+</section>
+<!-- ============================================================== -->
+
+</section>

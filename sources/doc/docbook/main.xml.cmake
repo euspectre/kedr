@@ -7,14 +7,13 @@
 
         <!ENTITY kedr_overview SYSTEM "overview.xml">
 
-        <!ENTITY kedr_tips SYSTEM "tips.xml">
-
         <!ENTITY kedr_service SYSTEM "control.xml">
         <!ENTITY kedr_trace SYSTEM "capture_trace.xml">
         <!ENTITY kedr_work SYSTEM "how_kedr_works.xml">
         <!ENTITY kedr_call_mon SYSTEM "call_mon.xml">
         <!ENTITY kedr_fault_sim SYSTEM "fault_sim.xml">
         <!ENTITY kedr_analyze_trace SYSTEM "analyze_trace.xml">
+        <!ENTITY kedr_leak_check SYSTEM "leak_check.xml">
         <!ENTITY kedr_using SYSTEM "using_kedr.xml">
         
         <!ENTITY kedr_payload_api SYSTEM "payload_api.xml">
@@ -71,9 +70,6 @@
 
 <!-- Extending KEDR -->
 &kedr_extend;
-
-<!-- Tips and Tricks - TODO -->
-<!-- &kedr_tips; -->
 
 <!-- Reference -->
 &kedr_reference;

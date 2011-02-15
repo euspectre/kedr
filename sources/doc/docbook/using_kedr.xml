@@ -16,6 +16,9 @@
 <!-- Fault Simulation -->
 &kedr_fault_sim;
 
+<!-- Detecting Memory Leaks -->
+&kedr_leak_check;
+
 <!-- Analyzing the Trace -->
 &kedr_analyze_trace;
 </section>
