@@ -46,6 +46,10 @@ struct payload_module_list
 {
 	struct list_head list;
 	struct kedr_payload *payload;
+	
+	/* 1 if try_module_get() was called for the module with no module_put()
+	 * after that, 0 otherwise */
+	int locked; 
 };
 /* ================================================================ */
 
@@ -165,13 +169,15 @@ base_cleanup_module(void)
 	list_for_each_safe(pos, tmp, &payload_modules)
 	{
 		entry = list_entry(pos, struct payload_module_list, list);
+		BUG_ON(entry->locked);
+		
 		KEDR_MSG(COMPONENT_STRING
 			"payload module \"%s\" did not unregister itself, "
 			"unregistering it now\n",
 			module_name(entry->payload->mod));
 		kedr_payload_unregister(entry->payload);
 	}
-	
+		
 	/* Just in case the controller failed to unregister itself.
 	 * The controller must have been already unloaded anyway.
 	 */
@@ -193,7 +199,7 @@ base_init_module(void)
 		"initializing\n");
 
 	/* Initialize the list of payloads */
-	INIT_LIST_HEAD(&payload_modules);	
+	INIT_LIST_HEAD(&payload_modules);
 	return 0; 
 }
 
@@ -236,7 +242,7 @@ kedr_payload_register(struct kedr_payload *payload)
 	struct payload_module_list *new_elem = NULL;
 	
 	BUG_ON(payload == NULL);
-    
+	
 	result = mutex_lock_interruptible(&base_mutex);
 	if (result != 0)
 	{
@@ -275,6 +281,7 @@ kedr_payload_register(struct kedr_payload *payload)
 		
 	INIT_LIST_HEAD(&new_elem->list);
 	new_elem->payload = payload;
+	new_elem->locked = 0;
 	
 	list_add_tail(&new_elem->list, &payload_modules);
 
@@ -296,7 +303,7 @@ kedr_payload_unregister(struct kedr_payload *payload)
 			"failed to lock base_mutex\n");
 		return;
 	}
-    
+	
 	doomed = payload_find(payload);
 	if (doomed == NULL)
 	{
@@ -427,18 +434,18 @@ EXPORT_SYMBOL(kedr_impl_controller_unregister);
 
 int
 kedr_impl_on_target_load(struct module *target_module, 
-    struct kedr_repl_table *ptable)
+	struct kedr_repl_table *ptable)
 {
 	int result = 0;
 	struct payload_module_list *entry;
 	struct list_head *pos;
-    struct kedr_payload *payload;
-	
+	struct kedr_payload *payload;
+		
 	KEDR_MSG(COMPONENT_STRING
 	"kedr_impl_on_target_load()\n");
 	
 	BUG_ON(ptable == NULL);
-    BUG_ON(target_module == NULL);
+	BUG_ON(target_module == NULL);
 	
 	result = mutex_lock_interruptible(&base_mutex);
 	if (result != 0)
@@ -468,7 +475,7 @@ kedr_impl_on_target_load(struct module *target_module,
 	list_for_each(pos, &payload_modules)
 	{
 		entry = list_entry(pos, struct payload_module_list, list);
-        payload = entry->payload;
+		payload = entry->payload;
 		BUG_ON(payload->mod == NULL);
 		
 		KEDR_MSG(COMPONENT_STRING
@@ -477,24 +484,41 @@ kedr_impl_on_target_load(struct module *target_module,
 		
 		if (try_module_get(payload->mod) == 0)
 		{
-			KEDR_MSG(COMPONENT_STRING
+			printk(KERN_ERR COMPONENT_STRING
 		"try_module_get() failed for payload module \"%s\".\n",
 				module_name(payload->mod));
-			result = -EFAULT; 
-			goto out;
+			result = -EINVAL; 
+			break;
+		} else {
+			entry->locked = 1;
+			
+			/* Notify the payload module that the target has just loaded */
+			if (payload->target_load_callback != NULL)
+				(*(payload->target_load_callback))(target_module);
 		}
-        
-        /* Notify the payload module that the target has just loaded */
-        if (payload->target_load_callback != NULL)
-            (*(payload->target_load_callback))(target_module);
+	}
+	if (result != 0) {
+		/* "Unlock" the modules we have locked so far */
+		list_for_each(pos, &payload_modules) {
+			entry = list_entry(pos, struct payload_module_list, list);
+			if (entry->locked) {
+				entry->locked = 0;
+				payload = entry->payload;
+				module_put(payload->mod);
+			}
+		}
+		goto out;
 	}
 	
 	/* Make the controller stay loaded as long as the target stays loaded */
 	if(try_module_get(current_controller->mod) == 0)
 	{
-		KEDR_MSG(COMPONENT_STRING
+		/* Something bad happened, controller is now probably defunct. */
+		printk(KERN_ERR COMPONENT_STRING
 	"try_module_get() failed for the controller module \"%s\".\n",
 			module_name(current_controller->mod));
+		result = -EINVAL; 
+		goto out;
 	}
 	
 	ptable->orig_addrs = combined_repl_table.orig_addrs;
@@ -512,13 +536,13 @@ kedr_impl_on_target_unload(struct module *target_module)
 	int result;
 	struct payload_module_list *entry;
 	struct list_head *pos;
-    struct kedr_payload *payload;
+	struct kedr_payload *payload;
 	
 	KEDR_MSG(COMPONENT_STRING
 	"kedr_impl_on_target_unload()\n");
-    
-    BUG_ON(target_module == NULL);
 	
+	BUG_ON(target_module == NULL);
+		
 	result = mutex_lock_interruptible(&base_mutex);
 	if (result != 0)
 	{
@@ -535,19 +559,26 @@ kedr_impl_on_target_unload(struct module *target_module)
 	list_for_each(pos, &payload_modules)
 	{
 		entry = list_entry(pos, struct payload_module_list, list);
-        payload = entry->payload;
+		payload = entry->payload;
 		BUG_ON(payload->mod == NULL);
 		
 		/* Notify the payload module that the target is about to unload */
-        if (payload->target_unload_callback != NULL)
-            (*(payload->target_unload_callback))(target_module);
-		
-		KEDR_MSG(COMPONENT_STRING
-			"module_put() for payload module \"%s\".\n",
-			module_name(payload->mod));
-		module_put(payload->mod);
+		if (payload->target_unload_callback != NULL)
+			(*(payload->target_unload_callback))(target_module);
 	}
 	
+	/* "Unlock" the modules we have locked so far */
+	list_for_each(pos, &payload_modules) {
+		entry = list_entry(pos, struct payload_module_list, list);
+		if (entry->locked) {
+			entry->locked = 0;
+			payload = entry->payload;
+			KEDR_MSG(COMPONENT_STRING
+				"module_put() for payload module \"%s\".\n",
+				module_name(payload->mod));
+			module_put(payload->mod);
+		}
+	}	
 	/* Release the controller module as well */
 	module_put(current_controller->mod);
 	
