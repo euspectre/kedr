@@ -17,12 +17,13 @@ if(NOT DEFINED SRC_FILE)
 endif(NOT DEFINED SRC_FILE)
 
 configure_file(Kbuild.in Kbuild)
-# 'make all' should produce hello.ko file
+# 'make all' should produce try_compile.ko file
 add_custom_target(kmodule_compile ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/try_compile.ko)
-# Rule to produce hello.ko from hello.c
+# Rule to produce try_compile.ko from try_compile.c
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/try_compile.ko"
 					COMMAND $(MAKE) -C ${KERNELDIR} M=${PWD} modules
 					DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/try_compile.c")
+
 # Kbuild system cannot work with out-of-source build,
-# so copy source file into build dir.
+# so copy source file into build dir and rename it to try_compile.c.
 copy_source_file("${CMAKE_CURRENT_BINARY_DIR}/try_compile.c" "${SRC_FILE}")

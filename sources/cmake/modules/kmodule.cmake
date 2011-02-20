@@ -1,4 +1,5 @@
 set(kmodule_this_module_dir "${CMAKE_SOURCE_DIR}/cmake/modules/")
+set(kmodule_test_sources_dir "${CMAKE_SOURCE_DIR}/cmake/kmodule_sources")
 
 # kmodule_try_compile(RESULT_VAR bindir srcfile
 #           [COMPILE_DEFINITIONS flags]
@@ -200,3 +201,84 @@ macro(kmodule_configure_kernel_functions_hard output_list)
 "${kmodule_this_module_dir}/kmodule_files/scripts/lookup_kernel_function_hard.sh")
 	kmodule_configure_kernel_functions_impl(${output_list} ${ARGN})
 endmacro(kmodule_configure_kernel_functions_hard output_list)
+
+############################################################################
+# Utility macros to check for particular features. If the particular feature
+# is supported, the macros will set the corresponding variable to TRUE, 
+# otherwise - to FALSE (the name of variable is mentioned in the comments 
+# for the macro). 
+############################################################################
+
+# Check if the system has everything necessary to build at least simple
+# kernel modules. 
+# The macro sets variable 'MODULE_BUILD_SUPPORTED'.
+macro(check_module_build)
+	set(check_module_build_message 
+		"Checking if kernel modules can be built on this system"
+	)
+	message(STATUS "${check_module_build_message}")
+	if (DEFINED MODULE_BUILD_SUPPORTED)
+		set(check_module_build_message 
+"${check_module_build_message} [cached] - ${MODULE_BUILD_SUPPORTED}"
+		)
+	else (DEFINED MODULE_BUILD_SUPPORTED)
+		kmodule_try_compile(module_build_supported_impl 
+			"${CMAKE_BINARY_DIR}/check_module_build"
+			"${kmodule_test_sources_dir}/check_module_build/module.c"
+		)
+		if (module_build_supported_impl)
+			set(MODULE_BUILD_SUPPORTED "yes" CACHE INTERNAL
+				"Can kernel modules be built on this system?"
+			)
+		else (module_build_supported_impl)
+			set(MODULE_BUILD_SUPPORTED "no")
+			message(FATAL_ERROR 
+				"Kernel modules cannot be built on this system"
+			)
+		endif (module_build_supported_impl)
+				
+		set(check_module_build_message 
+"${check_module_build_message} - ${MODULE_BUILD_SUPPORTED}"
+		)
+	endif (DEFINED MODULE_BUILD_SUPPORTED)
+	message(STATUS "${check_module_build_message}")
+endmacro(check_module_build)
+
+# Check if the version of the kernel is acceptable
+# The macro sets variable 'KERNEL_VERSION_OK'.
+macro(check_kernel_version kversion_major kversion_minor kversion_micro)
+	set(check_kernel_version_string 
+"${kversion_major}.${kversion_minor}.${kversion_micro}"
+	)
+	set(check_kernel_version_message 
+"Checking if the kernel version is ${check_kernel_version_string} or newer"
+	)
+	message(STATUS "${check_kernel_version_message}")
+	if (DEFINED KERNEL_VERSION_OK)
+		set(check_kernel_version_message 
+"${check_kernel_version_message} [cached] - ${KERNEL_VERSION_OK}"
+		)
+	else (DEFINED KERNEL_VERSION_OK)
+		string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" 
+			real_kernel_version_string
+			"${CMAKE_SYSTEM_VERSION}"
+		)
+
+		if (real_kernel_version_string VERSION_LESS check_kernel_version_string)
+			set(KERNEL_VERSION_OK "no")
+			message(FATAL_ERROR 
+"Kernel version is ${real_kernel_version_string} but ${check_kernel_version_string} or newer is required."
+			)
+		else ()
+			set(KERNEL_VERSION_OK "yes" CACHE INTERNAL
+				"Is kernel version high enough?"
+			)
+		endif ()
+				
+		set(check_kernel_version_message 
+"${check_kernel_version_message} - ${KERNEL_VERSION_OK}"
+		)
+	endif (DEFINED KERNEL_VERSION_OK)
+	message(STATUS "${check_kernel_version_message}")
+endmacro(check_kernel_version kversion_major kversion_minor kversion_micro)
+############################################################################

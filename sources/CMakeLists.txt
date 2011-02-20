@@ -78,7 +78,7 @@ add_dependencies (uninstall_dirs uninstall_files)
 add_dependencies (uninstall uninstall_dirs)
 
 #######################################################################
-#${CMAKE_SOURCE_DIR}/include - root of the include tree (see convensions).
+#${CMAKE_SOURCE_DIR}/include - root of the include tree (see conventions).
 include_directories("${CMAKE_SOURCE_DIR}/include")
 kbuild_include_directories("${CMAKE_SOURCE_DIR}/include")
 #For configuration file
@@ -97,6 +97,15 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
         "-DKEDR_DEBUG"
     )
 endif()
+
+#######################################################################
+# Perform basic checks
+
+# Check if we use kernel version 2.6.31 or newer
+check_kernel_version(2 6 31)
+
+# Check if kernel modules can be built on this system
+check_module_build()
 
 #######################################################################
 # Supported types of analysis (and, consequently, the sets of payload 
