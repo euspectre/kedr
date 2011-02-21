@@ -5,8 +5,12 @@
 
 MODULE_LICENSE("GPL");
 
+#if !defined(CONFIG_STACKTRACE)
+#error Stack trace support is not available.
+#endif
+
 #if !defined(CONFIG_FRAME_POINTER) && !defined(CONFIG_UNWIND_INFO) && \
-	!defined(CONFIG_STACK_UNWIND)
+    !defined(CONFIG_STACK_UNWIND)
 #error Stack trace data can be unreliable on this system.
 #endif
 
