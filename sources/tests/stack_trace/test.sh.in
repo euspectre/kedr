@@ -1,0 +1,85 @@
+#!/bin/sh
+
+########################################################################
+# This test checks if kedr_save_stack_trace() allows to obtain more than
+# one reliable stack frame and, consequently, if kernel function 
+# save_stack_trace() is reliable.
+# Usage: 
+#   sh test.sh
+########################################################################
+
+########################################################################
+# A function to check prerequisites: whether the necessary files exist,
+# etc.
+########################################################################
+checkPrereqs()
+{
+    if test ! -f "${TEST_MODULE}.ko"; then
+        printf "Base module is missing: ${WORK_DIR}/${TEST_MODULE}.ko\n"
+        exit 1
+    fi
+}
+
+########################################################################
+# Cleanup function
+########################################################################
+cleanupAll()
+{
+    /sbin/rmmod "${TEST_MODULE}" || true
+}
+
+########################################################################
+# doTest() - preform the actual testing
+########################################################################
+doTest()
+{
+    /sbin/insmod "${TEST_MODULE}.ko"
+    if test $? -ne 0; then
+        printf "Failed to load ${TEST_MODULE}.ko\n"
+        cleanupAll
+        exit 1
+    fi
+    
+    OUT_PARAM_FILE="/sys/module/${TEST_MODULE}/parameters/stack_frames"
+    if test ! -e "${OUT_PARAM_FILE}"; then
+        printf "Parameter file does not exist: ${OUT_PARAM_FILE}\n"
+        cleanupAll
+        exit 1
+    fi
+
+    # Save and analyze the result.
+    stack_frames=$(cat "${OUT_PARAM_FILE}")
+
+    cleanupAll
+    
+    if test ${stack_frames} -eq 0; then
+        printf "Unspecified error: no stack frames have been obtained."
+        exit 1
+    fi
+
+    if test ${stack_frames} -eq 1; then
+        printf "Only one stack frame has been obtained. "
+        printf "save_stack_trace() failed to provide reliable stack trace.\n"
+        exit 1
+    fi
+
+    printf "Number of reliable stack frames obtained: ${stack_frames}\n"
+}
+
+########################################################################
+# main
+########################################################################
+WORK_DIR=${PWD}
+
+if test $# -ne 0; then
+    printf "Usage: sh test.sh\n"
+    exit 1
+fi
+
+TEST_MODULE="test_stack_trace"
+
+checkPrereqs
+doTest
+
+# test passed
+exit 0
