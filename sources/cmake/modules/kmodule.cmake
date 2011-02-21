@@ -222,20 +222,20 @@ macro(check_module_build)
 "${check_module_build_message} [cached] - ${MODULE_BUILD_SUPPORTED}"
 		)
 	else (DEFINED MODULE_BUILD_SUPPORTED)
-		kmodule_try_compile(module_build_supported_impl 
+		kmodule_try_compile(stack_trace_reliable_impl 
 			"${CMAKE_BINARY_DIR}/check_module_build"
 			"${kmodule_test_sources_dir}/check_module_build/module.c"
 		)
-		if (module_build_supported_impl)
+		if (stack_trace_reliable_impl)
 			set(MODULE_BUILD_SUPPORTED "yes" CACHE INTERNAL
 				"Can kernel modules be built on this system?"
 			)
-		else (module_build_supported_impl)
+		else (stack_trace_reliable_impl)
 			set(MODULE_BUILD_SUPPORTED "no")
 			message(FATAL_ERROR 
 				"Kernel modules cannot be built on this system"
 			)
-		endif (module_build_supported_impl)
+		endif (stack_trace_reliable_impl)
 				
 		set(check_module_build_message 
 "${check_module_build_message} - ${MODULE_BUILD_SUPPORTED}"
@@ -281,4 +281,39 @@ macro(check_kernel_version kversion_major kversion_minor kversion_micro)
 	endif (DEFINED KERNEL_VERSION_OK)
 	message(STATUS "${check_kernel_version_message}")
 endmacro(check_kernel_version kversion_major kversion_minor kversion_micro)
+
+# Check if reliable stack trace information can be obtained. 
+# This is the case, for example, if the kernel is compiled with support
+# for frame pointers and/or stack unwind on.
+# The macro sets variable 'STACK_TRACE_RELIABLE'.
+macro(check_stack_trace)
+	set(check_stack_trace_message 
+		"Checking if stack trace information is reliable"
+	)
+	message(STATUS "${check_stack_trace_message}")
+	if (DEFINED STACK_TRACE_RELIABLE)
+		set(check_stack_trace_message 
+"${check_stack_trace_message} [cached] - ${STACK_TRACE_RELIABLE}"
+		)
+	else (DEFINED STACK_TRACE_RELIABLE)
+		kmodule_try_compile(stack_trace_reliable_impl 
+			"${CMAKE_BINARY_DIR}/check_stack_trace"
+			"${kmodule_test_sources_dir}/check_stack_trace/module.c"
+		)
+		if (stack_trace_reliable_impl)
+			set(STACK_TRACE_RELIABLE "yes" CACHE INTERNAL
+				"Are stack traces reliable on this system?"
+			)
+		else (stack_trace_reliable_impl)
+			set(STACK_TRACE_RELIABLE "no" CACHE INTERNAL
+				"Are stack traces reliable on this system?"
+			)
+		endif (stack_trace_reliable_impl)
+				
+		set(check_stack_trace_message 
+"${check_stack_trace_message} - ${STACK_TRACE_RELIABLE}"
+		)
+	endif (DEFINED STACK_TRACE_RELIABLE)
+	message(STATUS "${check_stack_trace_message}")
+endmacro(check_stack_trace)
 ############################################################################

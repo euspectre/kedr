@@ -107,6 +107,11 @@ check_kernel_version(2 6 31)
 # Check if kernel modules can be built on this system
 check_module_build()
 
+# Check if stack trace information is reliable on this system.
+# STACK_TRACE_RELIABLE will hold the result.
+# This only checks relevant configuration parameters of kernel.
+check_stack_trace()
+
 #######################################################################
 # Supported types of analysis (and, consequently, the sets of payload 
 # modules).
@@ -122,6 +127,24 @@ option(KEDR_LEAK_CHECK
 	"Enable support for memory leak detection" 
 	ON
 )
+#######################################################################
+
+# caller_address
+option(KEDR_ENABLE_CALLER_ADDRESS 
+"Enable support for caller_address variable in fault simulation expressions"
+	ON
+)
+
+if (KEDR_ENABLE_CALLER_ADDRESS AND (NOT STACK_TRACE_RELIABLE))
+	message(WARNING 
+"To be able to use 'caller_address' variable in fault simulation "
+"expressions, reliable call stack traces are needed. "
+"It seems, however, that neither frame pointers nor stack unwind info are "
+"used on this system, so stack traces are likely to be unreliable.\n" 
+"Disabling support for 'caller_address' variable."
+	)
+	set(KEDR_ENABLE_CALLER_ADDRESS OFF)
+endif ()
 #######################################################################
 
 # kedr_gen is built here explicitly and installed to a temporary location.
