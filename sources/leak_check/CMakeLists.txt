@@ -24,10 +24,10 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/${leak_check_conf_file}.in"
 	"${CMAKE_CURRENT_BINARY_DIR}/${leak_check_conf_file}"
 	@ONLY)
 
-set(leak_check_install_dir ${CMAKE_CURRENT_BINARY_DIR})
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/${leak_check_conf_file}.in"
-	"${CMAKE_CURRENT_BINARY_DIR}/${leak_check_test_conf_file}"
-	@ONLY)
+#set(leak_check_install_dir ${CMAKE_CURRENT_BINARY_DIR})
+#configure_file("${CMAKE_CURRENT_SOURCE_DIR}/${leak_check_conf_file}.in"
+#	"${CMAKE_CURRENT_BINARY_DIR}/${leak_check_test_conf_file}"
+#	@ONLY)
 ########################################################################
 
 # Commands to generate payload.c from ${payload_data_file} and to store 
@@ -126,5 +126,5 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${leak_check_conf_file}"
 	DESTINATION "${KEDR_DEFAULT_CONFIG_DIR}") 
 ########################################################################
 
-# TODO add_subdirectory(tests)
+add_subdirectory(tests)
 ########################################################################

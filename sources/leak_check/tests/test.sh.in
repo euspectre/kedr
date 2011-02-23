@@ -1,0 +1,322 @@
+#!/bin/sh
+########################################################################
+# This script tests LeakCheck tool. 
+# Two modules are used: 
+# - "leaker" module leaves several memory leaks behind that should be 
+# detected by LeakCheck (the addresses of the blocks are made available
+# via parameters of the "leaker");
+# - "cleaner" module actually frees these leaked memory blocks to leave 
+# the system in a consistent state. In addition, this allows to verify
+# that LeakCheck detects "unallocated frees" too.
+########################################################################
+
+########################################################################
+# Checks prerequisites: whether the necessary files exist, etc.
+########################################################################
+checkPrereqs()
+{
+    if test ! -f "${LEAKER_MODULE}"; then
+        printf "\"Leaker\" module is missing: ${LEAKER_MODULE}\n"
+        exit 1
+    fi
+    
+    if test ! -f "${CLEANER_MODULE}"; then
+        printf "\"Cleaner\" module is missing: ${CLEANER_MODULE}\n"
+        exit 1
+    fi
+    
+    if test ! -f "${CONTROL_SCRIPT}"; then
+        printf "KEDR control script is missing: ${CONTROL_SCRIPT}\n"
+        exit 1
+    fi
+    
+    if test ! -f "${CONF_FILE}"; then
+        printf "KEDR configuration file is missing: ${CONF_FILE}\n"
+        exit 1
+    fi
+}
+
+########################################################################
+# Cleanup function (use it if errors occur)
+########################################################################
+cleanupAll()
+{
+    lsmod | grep "${LEAKER_NAME}" > /dev/null 2>&1
+    if test $? -eq 0; then
+        rmmod ${LEAKER_NAME}
+    fi
+    
+    lsmod | grep "${CLEANER_NAME}" > /dev/null 2>&1
+    if test $? -eq 0; then
+        rmmod ${CLEANER_NAME}
+    fi
+    
+    sh ${CONTROL_SCRIPT} stop
+}
+
+##########################################################################
+# Read the addresses of the leaked memory blocks and save them for the
+# future needs.
+##########################################################################
+readLeakAddresses()
+{
+    sysModuleDir="/sys/module/${LEAKER_NAME}/parameters/"
+    if test ! -d "${sysModuleDir}"; then
+        printf "Directory ${sysModuleDir} is missing\n"
+        cleanupAll
+        exit 1
+    fi
+    
+    LEAK_KMALLOC=$(cat "${sysModuleDir}/leak_kmalloc")
+    if test -z "${LEAK_KMALLOC}"; then
+        printf "Failed to read ${sysModuleDir}/leak_kmalloc\n"
+        cleanupAll
+        exit 1
+    fi
+    LEAK_KMALLOC_HEX=$(printf "0x%x" ${LEAK_KMALLOC})
+    
+    LEAK_GFP=$(cat "${sysModuleDir}/leak_gfp")
+    if test -z "${LEAK_GFP}"; then
+        printf "Failed to read ${sysModuleDir}/leak_gfp\n"
+        cleanupAll
+        exit 1
+    fi
+    LEAK_GFP_HEX=$(printf "0x%x" ${LEAK_GFP})
+    
+    LEAK_VMALLOC=$(cat "${sysModuleDir}/leak_vmalloc")
+    if test -z "${LEAK_VMALLOC}"; then
+        printf "Failed to read ${sysModuleDir}/leak_vmalloc\n"
+        cleanupAll
+        exit 1
+    fi
+    LEAK_VMALLOC_HEX=$(printf "0x%x" ${LEAK_VMALLOC})
+    
+    LEAK_KMEMDUP=$(cat "${sysModuleDir}/leak_kmemdup")
+    if test -z "${LEAK_KMEMDUP}"; then
+        printf "Failed to read ${sysModuleDir}/leak_kmemdup\n"
+        cleanupAll
+        exit 1
+    fi
+    LEAK_KMEMDUP_HEX=$(printf "0x%x" ${LEAK_KMEMDUP})
+}
+
+##########################################################################
+# Save LeakCheck's report files to the directory specified in $1.
+# The directory is cleaned up first
+##########################################################################
+saveLeakCheckReport()
+{
+    destDir="$1"
+    if test -z "$1"; then
+        printf "saveLeakCheckReport(): too few arguments.\n"
+        cleanupAll
+        exit 1
+    fi
+    
+    rm -rf "${destDir}"
+    mkdir -p "${destDir}"
+    if test $? -ne 0; then
+        printf "Failed to create directory ${destDir} to save LeakCheck's reports to.\n"
+        cleanupAll
+        exit 1
+    fi
+    
+# Debugfs is kind of a strange file system. It is probably more reliable 
+# to use 'cat ... > some_file' than copy the file directly from there.
+    cat "${DEBUGFS_LC_DIR}/info" > "${destDir}/info"
+    if test $? -ne 0; then
+        printf "Failed to copy 'info' file to ${destDir}.\n"
+        cleanupAll
+        exit 1
+    fi
+    
+    cat "${DEBUGFS_LC_DIR}/possible_leaks" > "${destDir}/possible_leaks"
+    if test $? -ne 0; then
+        printf "Failed to copy 'possible_leaks' file to ${destDir}.\n"
+        cleanupAll
+        exit 1
+    fi
+    
+    cat "${DEBUGFS_LC_DIR}/unallocated_frees" > "${destDir}/unallocated_frees"
+    if test $? -ne 0; then
+        printf "Failed to copy 'unallocated_frees' file to ${destDir}.\n"
+        cleanupAll
+        exit 1
+    fi
+}
+
+########################################################################
+doTest()
+{
+    cd "${WORK_DIR}" || exit 1
+
+    leakerReportDir="report_leaker"
+    cleanerReportDir="report_cleaner"
+    
+    # Load KEDR core and the payload module, mount debugfs
+    # Target: "leaker" module
+    sh ${CONTROL_SCRIPT} start ${LEAKER_NAME} -f "${CONF_FILE}" || exit 1
+    
+    # Check if the necessary files have been created in debugfs
+    if test ! -d "${DEBUGFS_LC_DIR}"; then
+        printf "Directory for LeakCheck files was not created in debugfs.\n"
+        cleanupAll
+        exit 1
+    fi
+    
+    insmod "${LEAKER_MODULE}"
+    if test $? -ne 0; then
+        printf "Failed to load \"leaker\" module\n"
+        cleanupAll
+        exit 1
+    fi
+    
+    # Save leak addresses, unload the "leaker" and save LeakCheck reports
+    readLeakAddresses
+    
+    rmmod ${LEAKER_NAME}
+    if test $? -ne 0; then
+        printf "Errors occured while trying to unload \"leaker\" module\n"
+        cleanupAll
+        exit 1
+    fi
+
+    saveLeakCheckReport "${leakerReportDir}"
+    sh ${CONTROL_SCRIPT} stop || exit 1
+    
+    # Check the report files
+    unallocatedFrees=$(cat "${leakerReportDir}/unallocated_frees")
+    if test -n "${unallocatedFrees}"; then
+        printf "'unallocated_frees' must be empty for \"leaker\" module\n"
+        # KEDR is already stopped, target is not loaded - no need to 
+        # clean up here.
+        exit 1
+    fi
+    
+    LC_ALL=C awk -f "${SCRIPT_DIR}/check_summary.awk" \
+        -v expectedAllocs=${EXP_ALLOCS_TOTAL} \
+        -v expectedLeaks=${EXP_LEAKS} \
+        -v expectedBadFrees=0 \
+        "${WORK_DIR}/${leakerReportDir}/info"
+    if test $? -ne 0; then
+        printf "'info' file for \"leaker\" module contains incorrect data\n"
+        exit 1
+    fi
+    
+    LC_ALL=C awk -f "${SCRIPT_DIR}/check_addresses.awk" \
+        -v totalRecords=${EXP_LEAKS} \
+        -v addrKmalloc=${LEAK_KMALLOC_HEX} \
+        -v addrGfp=${LEAK_GFP_HEX} \
+        -v addrKmemdup=${LEAK_KMEMDUP_HEX} \
+        -v addrVmalloc=${LEAK_VMALLOC_HEX} \
+        "${WORK_DIR}/${leakerReportDir}/possible_leaks"
+    if test $? -ne 0; then
+        printf "'possible_leaks' file for \"leaker\" module contains incorrect data\n"
+        exit 1
+    fi
+
+    # Load KEDR again - for "cleaner" module this time.
+    sh ${CONTROL_SCRIPT} start ${CLEANER_NAME} -f "${CONF_FILE}" || exit 1
+    
+    # Check if the necessary files have been created in debugfs
+    if test ! -d "${DEBUGFS_LC_DIR}"; then
+        printf "Directory for LeakCheck files was not created in debugfs.\n"
+        cleanupAll
+        exit 1
+    fi
+    
+    insmod "${CLEANER_MODULE}" \
+        leak_kmalloc=${LEAK_KMALLOC} \
+        leak_gfp=${LEAK_GFP} \
+        leak_vmalloc=${LEAK_VMALLOC} \
+        leak_kmemdup=${LEAK_KMEMDUP}
+    if test $? -ne 0; then
+        printf "Failed to load \"cleaner\" module\n"
+        cleanupAll
+        exit 1
+    fi
+    
+    # Unload the "cleaner", save LeakCheck reports and stop KEDR
+    rmmod ${CLEANER_NAME}
+    if test $? -ne 0; then
+        printf "Errors occured while trying to unload \"cleaner\" module\n"
+        cleanupAll
+        exit 1
+    fi
+    
+    saveLeakCheckReport "${cleanerReportDir}"
+    sh ${CONTROL_SCRIPT} stop || exit 1
+    
+    # Check the report files
+    possibleLeaks=$(cat "${cleanerReportDir}/possible_leaks")
+    if test -n "${possibleLeaks}"; then
+        printf "'possible_leaks' must be empty for \"cleaner\" module\n"
+        exit 1
+    fi
+
+# As far as the "cleaner" is concerned, the total number of allocations and 
+# the number of leaks should both be 0. The number of "unallocated frees"
+# should be the same as the number of leaks made by the "leaker" 
+# (${EXP_LEAKS})
+    LC_ALL=C awk -f "${SCRIPT_DIR}/check_summary.awk" \
+        -v expectedAllocs=0 \
+        -v expectedLeaks=0 \
+        -v expectedBadFrees=${EXP_LEAKS} \
+        "${WORK_DIR}/${cleanerReportDir}/info"
+    if test $? -ne 0; then
+        printf "'info' file for \"cleaner\" module contains incorrect data\n"
+        exit 1
+    fi
+    
+    LC_ALL=C awk -f "${SCRIPT_DIR}/check_addresses.awk" \
+        -v totalRecords=${EXP_LEAKS} \
+        -v addrKmalloc=${LEAK_KMALLOC_HEX} \
+        -v addrGfp=${LEAK_GFP_HEX} \
+        -v addrKmemdup=${LEAK_KMEMDUP_HEX} \
+        -v addrVmalloc=${LEAK_VMALLOC_HEX} \
+        "${WORK_DIR}/${cleanerReportDir}/unallocated_frees"
+    if test $? -ne 0; then
+        printf "'unallocated_frees' file for \"cleaner\" module contains incorrect data\n"
+        exit 1
+    fi
+}
+
+########################################################################
+# main
+########################################################################
+WORK_DIR=@CMAKE_CURRENT_BINARY_DIR@
+SCRIPT_DIR=@CMAKE_CURRENT_SOURCE_DIR@
+
+LEAKER_NAME="@KEDR_TEST_LEAKER_MODULE@"
+LEAKER_MODULE="${WORK_DIR}/leaker_module/${LEAKER_NAME}.ko"
+
+CLEANER_NAME="@KEDR_TEST_CLEANER_MODULE@"
+CLEANER_MODULE="${WORK_DIR}/cleaner_module/${CLEANER_NAME}.ko"
+
+CONTROL_SCRIPT="@KEDR_TOOLS_DIR@/control/kedr_test"
+CONF_FILE="${WORK_DIR}/leak_check_test.conf"
+
+DEBUGFS_LC_DIR="${WORK_DIR}/debugfs/kedr_leak_check"
+
+# Addresses of the leaked memory blocks and their hex representations
+LEAK_KMALLOC=""
+LEAK_GFP=""
+LEAK_VMALLOC=""
+LEAK_KMEMDUP=""
+
+LEAK_KMALLOC_HEX=""
+LEAK_GFP_HEX=""
+LEAK_VMALLOC_HEX=""
+LEAK_KMEMDUP_HEX=""
+
+# Expected values (for "leaker").
+# We expect that the system has enough memory for the allocations not to fail.
+EXP_ALLOCS_TOTAL=16
+EXP_LEAKS=4
+# There must be no unallocated frees made by the "leaker".
+
+checkPrereqs
+doTest
+
+# test passed
+exit 0
