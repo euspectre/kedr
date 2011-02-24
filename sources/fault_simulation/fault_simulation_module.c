@@ -150,7 +150,7 @@ static void clear_indicator_callback(wobj_weak_ref_t* instance_obj);
 
 /*
  * For reuse function for exported kedr_fsim_point_set_indicator() and for
- * changing indicator via writting file
+ * changing indicator via writing file
  *
  * Should be executed with mutex locked.
  */
@@ -607,7 +607,7 @@ void clear_indicator_callback(wobj_weak_ref_t* instance_obj)
 
 /*
  * For reuse function for exported kedr_fsim_point_set_indicator() and for
- * changing indicator via writting file
+ * changing indicator via writing file
  *
  * Should be executed with mutex locked.
  */
@@ -865,7 +865,7 @@ int point_indicator_file_set_str(const char* str, struct inode* inode)
     const char* params;
 
     int error;
-    //parce writting string
+    //parce writing string
     indicator_name_start = str;
     //trim leading spaces from indicator name
     while(isspace(*indicator_name_start)) indicator_name_start++;

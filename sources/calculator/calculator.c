@@ -389,7 +389,7 @@ parse_number16(const char* number,
  * and create its internal representation.
  *
  * Return internal representation of the expression,
- * or NULL, if expression is incorrect or other error occures.
+ * or NULL, if expression is incorrect or other error occurs.
  *
  * 'const_vec' - array of constant definitions,
  * 'const_vec_n' - number of elements in it.

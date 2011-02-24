@@ -345,7 +345,7 @@ ssize_t file_period_read(struct file *filp,
     
     size = scnprintf(str, sizeof(str), "%lu\n", period) + 1;
 
-    //Standard writting string to the buf in read file operation
+    //Standard writing string to the buf in read file operation
     if((*f_pos < 0) || (*f_pos > size)) return -EINVAL;
     if(*f_pos == size) return 0;// eof
 

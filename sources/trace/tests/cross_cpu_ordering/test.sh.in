@@ -16,7 +16,7 @@ if ! mount -t debugfs debugfs "${debugfs_mount_point}"; then
 fi
 
 if ! insmod "${trace_module}"; then
-	printf "Cannot kedr trace module.\n"
+	printf "Cannot load kedr trace module.\n"
 	umount "${debugfs_mount_point}"
 	exit 1
 fi
@@ -44,7 +44,7 @@ sleep 0.5
 kill $capture_pid
 
 if ! rmmod "${module}"; then
-	printf "Cannot unload module for test.\n"
+	printf "Cannot unload the module for testing.\n"
 	#Unloading of kedr_trace module will definitly fail
 	umount "${debugfs_mount_point}"
 	exit 1
@@ -57,7 +57,7 @@ if ! rmmod "${trace_module}"; then
 fi
 
 if ! umount "${debugfs_mount_point}"; then
-	printf "Fail to un mount debugfs filesystem."
+	printf "Failed to unmount debugfs filesystem."
 fi
 
 # Verify trace
@@ -71,6 +71,6 @@ fi
 LC_ALL=C awk -f "@CMAKE_CURRENT_SOURCE_DIR@/verify_trace.awk" \
     -v count_expected=60 "${trace_file_copy}"
 if $? -ne 0; then
-	printf "Trace file inconsistent.\n"
+	printf "Trace file is inconsistent.\n"
 	exit 1
 fi

@@ -58,9 +58,9 @@ on_load insmod "$fault_simulation_module" || ! printf "Cannot load fault simulat
 on_unload rmmod "$fault_simulation_module" || ! printf "Cannot unload fault simulation module.\n"
 on_load mkdir -p "$debugfs_mount_point" || ! printf "Cannot create mount point for debugfs.\n"
 on_load mount -t debugfs debugfs "$debugfs_mount_point" || ! printf "Cannot mount debufs.\n"
-on_unload umount "$debugfs_mount_point" || ! printf "Error occures while umount debufs.\n"
+on_unload umount "$debugfs_mount_point" || ! printf "Error occured while umounting debufs.\n"
 on_load insmod "$module_a" || ! printf "Cannot load module 'a' into kernel.\n"
-on_unload rmmod "$module_a" || ! printf "Fail to unload module 'a'.\n"
+on_unload rmmod "$module_a" || ! printf "Failed to unload module 'a'.\n"
 
 eof
 
@@ -72,7 +72,7 @@ fi
 #Verify, that indicators isn't set
 current_indicator=`get_indicator "$read_point_name"`
 if test "$current_indicator" != "none"; then
-    printf "'current_indicator' file for read point conatins '%s', but should be 'none'\n" "$current_indicator"
+    printf "'current_indicator' file for read point contains '%s', but should be 'none'\n" "$current_indicator"
     $do_commands_script "$commands_file" unload
     exit 1
 fi
@@ -81,7 +81,7 @@ fi
 
 simulate_point "$read_point_name"
 if test "$current_value" != "0"; then
-    printf "Expected, that simulation of read point returns '0'(no indicator was set), but it is '%s'.\n" "$current_value"
+    printf "The simulation of read point was expected to return '0' (no indicator was set) but it returned '%s'.\n" "$current_value"
     $do_commands_script "$commands_file" unload
     exit 1
 fi
@@ -106,7 +106,7 @@ fi
 simulate_point "$read_point_name"
 
 if test "$current_value" != "9"; then
-    printf "Expected, that simulation of read point returns '9', but it is '%s'.\n" "$current_value"
+    printf "The simulation of read point was expected to return '9' but it returned '%s'.\n" "$current_value"
     rmmod "$module_b"
     $do_commands_script "$commands_file" unload
     exit 1
@@ -124,7 +124,7 @@ fi
 simulate_point "$write_point_name" 25
 
 if test "$current_value" != "25"; then
-    printf "Expected, that simulation of write point returns '25'(size), but it is '%s'.\n" "$current_value"
+    printf "The simulation of write point was expected to return '25'(size) but it returned '%s'.\n" "$current_value"
     rmmod "$module_b"
     $do_commands_script "$commands_file" unload
     exit 1
@@ -142,7 +142,7 @@ fi
 simulate_point "$write_point_name" 25
 
 if test "$current_value" != "9"; then
-    printf "Expected, that simulation of write point with read indicator returns '9', but it is '%s'.\n" "$current_value"
+    printf "The simulation of write point with read indicator was expected to return '9' but it returned '%s'.\n" "$current_value"
     rmmod "$module_b"
     $do_commands_script "$commands_file" unload
     exit 1
@@ -150,7 +150,7 @@ fi
 
 #Clear indicator for read point
 if ! clear_indicator "$read_point_name"; then
-    printf "Cannot clear indicator for read point.\n"
+    printf "Cannot clear indicator for the read point.\n"
     rmmod "$module_b"
     $do_commands_script "$commands_file" unload
     exit 1
@@ -171,7 +171,7 @@ fi
 simulate_point "$read_point_name"
 
 if test "$current_value" != "0"; then
-    printf "Expected, that simulation of read point returns '0'(indicator was cleared), but it is '%s'.\n" "$current_value"
+    printf "The simulation of read point was expected to return '0' (indicator was cleared) but it returned '%s'.\n" "$current_value"
     rmmod "$module_b"
     $do_commands_script "$commands_file" unload
     exit 1
@@ -188,7 +188,7 @@ fi
 simulate_point "$write_point_name" 25
 
 if test "$current_value" != "0"; then
-    printf "Expected, that simulation of write point returns '0'(indicator was automatically cleared), but it is '%s'.\n" "$current_value"
+    printf "The simulation of write point was expected to return '0' (indicator was automatically cleared) but it returned '%s'.\n" "$current_value"
     $do_commands_script "$commands_file" unload
     exit 1
 fi
@@ -215,14 +215,14 @@ fi
 simulate_point "$read_point_name"
 
 if test "$current_value" != 0 ; then
-    printf "Expected, that simulation for read point returns '0' (scenario is 'never'), but it is '%s'.\n" "$current_value"
+    printf "The simulation for read point was expected to return '0' (scenario is 'never') but it returned '%s'.\n" "$current_value"
 	rmmod "$indicators_simple"
     $do_commands_script "$commands_file" unload
     exit 1
 fi
 
 if ! set_indicator "$read_point_name" "always"; then
-    printf "Cannot set "always" scenario for read point.\n"
+    printf "Cannot set \"always\" scenario for read point.\n"
     rmmod "$indicators_simple"
     $do_commands_script "$commands_file" unload
     exit 1
@@ -231,7 +231,7 @@ fi
 simulate_point "$read_point_name"
 
 if test "$current_value" != 1 ; then
-    printf "Expected, that simulation for read point returns '1' (scenario is 'always'), but it is '%s'.\n" "$current_value"
+    printf "The simulation for read point was expected to return '1' (scenario is 'always') but it returned '%s'.\n" "$current_value"
 	rmmod "$indicators_simple"
     $do_commands_script "$commands_file" unload
     exit 1
@@ -244,6 +244,6 @@ fi
 
 
 if ! $do_commands_script "$commands_file" unload; then
-    printf "Error occures while finalize test.\n"
+    printf "Errors occured while finalizing the test.\n"
     exit 1
 fi

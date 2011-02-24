@@ -16,13 +16,13 @@ if test $? -ne 0; then
 fi
 
 if  ! simulate; then
-	printf "First call of simulate shouldn't fail with \"every second call\" scenario.\n"
+	printf "The first call to simulate shouldn't fail with \"every second call\" scenario.\n"
 	finalize_test
 	exit 1
 fi
 
 if  simulate; then
-	printf "Second call of simulate should fail with \"every second call\" scenario.\n"
+	printf "The second call to simulate should fail with \"every second call\" scenario.\n"
 	finalize_test
 	exit 1
 fi
@@ -36,7 +36,7 @@ if test $? -ne 0; then
 fi
 
 if  ! simulate_with_params 1; then
-	printf "First call (for another instance) of simulate shouldn't fail with \"every second call\" scenario.\n"
+	printf "The first call to simulate (for another instance) shouldn't fail with \"every second call\" scenario.\n"
 	finalize_test
 	exit 1
 fi

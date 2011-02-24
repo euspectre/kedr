@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# Test standard "kedr_capture_trace" funcionality of the service, or "kedr_capture_trace -s".
+# Test standard "kedr_capture_trace" functionality of the service, or "kedr_capture_trace -s".
 # Accept parameter "kedr_capture_trace" or "kedr_capture_trace_until_done"
 
 if test $# -ne 1; then
@@ -142,7 +142,7 @@ fi
 
 # Stop capturing
 if test ! ${is_session}; then
-    # Time is implementation specific for kedr tracing system(kernel part)
+    # Time is implementation specific for kedr tracing system (kernel part)
     sleep 0.6
     kill -s INT "$capture_pid"
 fi
@@ -159,12 +159,12 @@ umount "${debugfs_mount_point}"
 
 #Verify trace existance
 if ! test -f "${trace_file}"; then
-    printf "Trace file wasn't created, but should\n"
+    printf "Trace file wasn't created, but it should\n"
     exit 1
 fi
-#Verify, that trace contain some strings, which was output by payload
+#Verify that the trace contains some strings output by the payload
 if ! grep "Capture me payload 2" "${trace_file}" > /dev/null; then
-    printf "Module output line into trace, but that line wasn't captured\n"
+    printf "Module output a line to the trace but that line was not captured\n"
     exit 1
 fi
 

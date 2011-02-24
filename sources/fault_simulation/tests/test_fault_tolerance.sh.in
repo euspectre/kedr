@@ -59,12 +59,12 @@ on_load insmod "$fault_simulation_module" || ! printf "Cannot load fault simulat
 on_unload rmmod "$fault_simulation_module" || ! printf "Cannot unload fault simulation module.\n"
 on_load mkdir -p "$debugfs_mount_point" || ! printf "Cannot create mount point for debugfs.\n"
 on_load mount -t debugfs debugfs "$debugfs_mount_point" || ! printf "Cannot mount debugfs.\n"
-on_unload umount "$debugfs_mount_point" || ! printf "Error occures while umount debugfs.\n"
+on_unload umount "$debugfs_mount_point" || ! printf "Error occured while umounting debugfs.\n"
 eof
 
 cat > "$commands_file_module_a" << eof
 
-on_load insmod "$module_a" || ! printf "Cannot load module 'a' into kernel.\n"
+on_load insmod "$module_a" || ! printf "Cannot load module 'a' into the kernel.\n"
 on_unload rmmod "$module_a" || ! printf "Fail to unload module 'a'.\n"
 
 eof
@@ -75,13 +75,13 @@ if ! $do_commands_script "$commands_file" load; then
 fi
 
 if ! $do_commands_script "$commands_file_module_a" load; then
-    printf "Cannot load module a corretly.\n"
+    printf "Cannot load module 'a' correctly.\n"
     exit 1
 fi
 
 
 if ! insmod "$module_b"; then
-    printf "Cannot load module 'b' into kernel.\n"
+    printf "Cannot load module 'b' into the kernel.\n"
     $do_commands_script "$commands_file_module_a" unload && $do_commands_script "$commands_file" unload
     exit 1
 fi
@@ -89,7 +89,7 @@ fi
 # Try to set write indicator for read point
 
 if set_indicator "$read_point_name" "$write_indicator_name"; then
-    printf "Indicator was set for point, which data it cannot process.\n"
+    printf "Indicator was set for a point which data it cannot process.\n"
     rmmod "$module_b"
 	$do_commands_script "$commands_file_module_a" unload    
 	$do_commands_script "$commands_file" unload
@@ -121,7 +121,7 @@ fi
 	echo "$write_indicator_name"  >&8 
 
 	if ! $do_commands_script "$commands_file_module_a" load; then
-		printf "Fail to load module 'a' again.\n"
+		printf "Failed to load module 'a' again.\n"
         rmmod "$module_b"
 		$do_commands_script "$commands_file" unload
 		exit 1
@@ -129,4 +129,6 @@ fi
 
 } 9<"$control_root/points/${read_point_name}/current_indicator" 8>"$control_root/points/${read_point_name}/current_indicator"
 
-rmmod "$module_b" && $do_commands_script "$commands_file_module_a" unload && $do_commands_script "$commands_file" unload
+rmmod "$module_b" && \
+    $do_commands_script "$commands_file_module_a" unload && \
+    $do_commands_script "$commands_file" unload

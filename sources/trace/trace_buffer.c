@@ -291,7 +291,7 @@ struct trace_data
 /*
  * Struct, represented buffer which support two main operations:
  *
- * 1.Writting message into buffer
+ * 1.Writing message into buffer
  * 2.Extract oldest message from the buffer.
  *   If buffer is empty, may wait.
  */
@@ -356,7 +356,7 @@ static void trace_buffer_clear_internal(struct trace_buffer* trace_buffer)
  * 
  * 'size' is size of the buffer created.
  * 'mode_overwrite' determine policy,
- *  when size is overflowed while writting message:
+ *  when size is overflowed while writing message:
  *   if 'mode_overwrite' is 0, then newest message will be dropped.
  *   otherwise the oldest message will be dropped.
  */
@@ -411,7 +411,7 @@ void trace_buffer_destroy(struct trace_buffer* trace_buffer)
 }
 
 /*
- * Reserve space in the buffer for writting message.
+ * Reserve space in the buffer for writing message.
  * 
  * After call, pointer to the reserved space is saved in the 'msg'.
  * 
@@ -642,7 +642,7 @@ read_wait_function(wait_queue_head_t* q, void* data)
  * If buffer is empty, and should_wait is 0,
  * return 0; otherwise wait until message will be available
  * 
- * If error occures, return negative error code.
+ * If error occurs, return negative error code.
  * 
  * Shouldn't be called in atomic context.
  */

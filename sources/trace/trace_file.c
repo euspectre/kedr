@@ -181,7 +181,7 @@ void trace_file_write_message(struct trace_file* trace_file,
 }
 
 /*
- * Reserve space in the buffer for writting message.
+ * Reserve space in the buffer for writing message.
  * 
  * After call, pointer to the reserved space is saved in the 'msg'.
  * 

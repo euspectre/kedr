@@ -1,5 +1,5 @@
 #
-# File for include into test scripts.
+# This file is to be included into test scripts (. <path_to_this_file>).
 #
 # 'indicator_module' variable should be declared before including.
 #
@@ -58,7 +58,7 @@ init_test()
 finalize_test()
 {
 	if ! $do_commands_script "$commands_file" unload; then
-		printf "Error occures while finalize test.\n"
+		printf "Errors occured while finalizing the test.\n"
 		exit 1
 	fi
 }

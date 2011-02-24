@@ -26,8 +26,8 @@ on_load ${control_script} start kedr_sample_target || ! printf "Cannot start KED
 on_unload ${control_script} stop || ! printf "Cannot stop KEDR.\n"
 
 on_load mkdir -p ${debugfs_mount_point}
-on_load mount -t debugfs debugfs "${debugfs_mount_point}" || ! printf "Cannot mount debugfs into '${debugfs_mount_point}'.\n"
-on_unload umount "${debugfs_mount_point}" || ! printf "Error occures while umount debugfs.\n"
+on_load mount -t debugfs debugfs "${debugfs_mount_point}" || ! printf "Cannot mount debugfs to '${debugfs_mount_point}'.\n"
+on_unload umount "${debugfs_mount_point}" || ! printf "Error occured while umounting debugfs.\n"
 
 # Clear trace collected previously
 on_load rm -f ${trace_file}
@@ -53,7 +53,7 @@ ${target_module_script} unload
 ${capture_trace_script} -s -d "${debugfs_mount_point}" -f "${trace_file}"
 
 if ! ${do_commands_script} "$commands_file" unload; then
-	printf "Error occurs while finalizing the test.\n"
+	printf "Error occured while finalizing the test.\n"
 	exit 1
 fi
 
@@ -65,6 +65,6 @@ fi
 
 cat "${trace_file}" | grep -F "unknown+0x"
 if test $? -eq 0; then
-	printf "failed to resolve some of the caller addresses. See ${trace_file}.\n"
+	printf "Failed to resolve some of the caller addresses. See ${trace_file}.\n"
 	exit 1
 fi

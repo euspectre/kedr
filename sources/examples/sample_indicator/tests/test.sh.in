@@ -59,31 +59,31 @@ if ! test -r "${point_dir}/period"; then
 fi
 
 if test "`cat "${point_dir}/period"`" != "3"; then
-	printf "Expected, that file 'period' will contatin '%s', but reading from it returns '%s'.\n" "3" "`cat "${point_dir}/period"`"
+	printf "It was expected that file 'period' would contatin '%s', but '%s' has been read from it.\n" "3" "`cat "${point_dir}/period"`"
 	$do_commands_script "$commands_file" unload
 	exit 1
 fi
 
 if ! simulate ; then
-	printf "First call of simulate should't fail with \"every third\" scenario.\n"
+	printf "The first call to the function should not fail with \"every third\" scenario.\n"
 	$do_commands_script "$commands_file" unload
 	exit 1
 fi
 
 if ! simulate ; then
-	printf "Second call of simulate should't fail with \"every third\" scenario.\n"
+	printf "The second call to the function should not fail with \"every third\" scenario.\n"
 	$do_commands_script "$commands_file" unload
 	exit 1
 fi
 
 if simulate ; then
-	printf "Third call of simulate should fail with \"every third\" scenario.\n"
+	printf "The third call to the function should fail with \"every third\" scenario.\n"
 	$do_commands_script "$commands_file" unload
 	exit 1
 fi
 
 
 if ! $do_commands_script "$commands_file" unload; then
-	printf "Error occures while finalize test.\n"
+	printf "Errors occured while finalizing the test.\n"
 	exit 1
 fi

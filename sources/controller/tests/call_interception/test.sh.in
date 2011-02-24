@@ -27,7 +27,7 @@ if ! insmod ${kedr_base_module}; then
 fi
 
 if ! insmod ${payload_module} "function_name=${function_name}"; then
-	printf "Failed to load payload module for test call interception\n"
+	printf "Failed to load payload module for testing call interception\n"
 	rmmod ${kedr_base_module}
 	exit 1
 fi
@@ -40,7 +40,7 @@ if ! insmod ${controller_module} "target_name=${target_module_name}"; then
 fi
 
 if ! insmod ${target_module} "function_name=${function_name}"; then
-	printf "Failed to load target module for test call interception\n"
+	printf "Failed to load target module for testing call interception\n"
 	rmmod ${controller_module}
 	rmmod ${payload_module}
 	rmmod ${kedr_base_module}
@@ -71,6 +71,6 @@ fi
 
 
 if ! test "$is_intercepted" -ne 0; then
-	printf "Trigger program fails to trigger function call or controller fails to intercept this call.\n"
+	printf "Trigger program failed to trigger function call or controller failed to intercept this call.\n"
 	exit 1
 fi

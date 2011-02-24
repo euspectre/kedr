@@ -10,7 +10,7 @@ fi
 ${work_dir}/test_sample_target
 test_result=$?
 if test ${test_result} -ne 0; then
-	echo "Tests for 'kedr_sample_target' returns ${test_result}"
+	echo "Tests for 'kedr_sample_target' return ${test_result}"
 	exit 1
 fi
 

@@ -64,7 +64,7 @@ ssize_t control_file_write_wrapper(struct file *filp,
     char* str;
     int error;
 
-    if(set_str == NULL) return -EINVAL;//writting is not supported
+    if(set_str == NULL) return -EINVAL;//writing is not supported
 
     if(count == 0)
     {
@@ -75,18 +75,18 @@ ssize_t control_file_write_wrapper(struct file *filp,
     /*
      * Feature of control files.
      *
-     * Because writting to such files is really command to the module to do something,
+     * Because writing to such files is really command to the module to do something,
      * and successive reading from this file return total effect of this command.
-     * it is meaningless to process writting not from the start.
+     * it is meaningless to process writing not from the start.
      *
-     * In other words, writting always affect to the global content of the file.
+     * In other words, writing always affect to the global content of the file.
      */
     if(*f_pos != 0)
     {
-        pr_err("Partial rewritting is not allowed.");
+        pr_err("Partial rewriting is not allowed.");
         return -EINVAL;
     }
-    //Allocate buffer for writting value - for its preprocessing.
+    //Allocate buffer for writing value - for its preprocessing.
     str = kmalloc(count + 1, GFP_KERNEL);
     if(str == NULL)
     {
@@ -105,8 +105,8 @@ ssize_t control_file_write_wrapper(struct file *filp,
     str[count] = '\0';
 
     /*
-     * Usually, writting to the control file is performed via 'echo' command,
-     * which append new-line symbol to the writting string.
+     * Usually, writing to the control file is performed via 'echo' command,
+     * which append new-line symbol to the writing string.
      *
      * Because, this symbol is usually not needed, we trim it.
      */

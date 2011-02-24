@@ -1,6 +1,6 @@
 # This script specifies the commands to prepare everything necessary to test 
 # "Counters" example and to clean up after the test is finished or if 
-# the intialization fails.
+# the initialization fails.
 
 # Mount debugfs 
 on_load mkdir -p "@CMAKE_CURRENT_BINARY_DIR@/debugfs"

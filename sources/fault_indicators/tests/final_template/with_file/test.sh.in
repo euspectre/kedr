@@ -37,13 +37,13 @@ if  ! test -r "${point_dir}/${result_file}"; then
 fi
 
 if  test "`cat "${point_dir}/${result_file}"`" != "0"; then
-	printf "File content is '%s', but should be '%s'.\n" `cat "${point_dir}/${result_file}"` "0"
+	printf "The contents of the file are '%s' but should be '%s'.\n" `cat "${point_dir}/${result_file}"` "0"
 	finalize_test
 	exit 1
 fi
 
 if  ! test -w "${point_dir}/${result_file}"; then
-	printf "File '%s' cannot be write.\n" "${point_dir}/${result_file}"
+	printf "File '%s' cannot be written.\n" "${point_dir}/${result_file}"
 	finalize_test
 	exit 1
 fi
@@ -57,7 +57,7 @@ if test $? -ne 0; then
 fi
 
 if  test "`cat "${point_dir}/${result_file}"`" == "0"; then
-	printf "File content has not changed.\n"
+	printf "The contents of the file have not changed.\n"
 	finalize_test
 	exit 1
 fi

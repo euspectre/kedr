@@ -7,7 +7,7 @@
 /*
  * Struct, represented buffer which support two main operations:
  *
- * 1.Writting message into buffer
+ * 1.Writing message into buffer
  * 2.Extract the oldest message from the buffer.
  *   If buffer is empty, may wait.
  */
@@ -19,7 +19,7 @@ struct trace_buffer;
  * 
  * 'size' is size of the buffer created.
  * 'mode_overwrite' determine policy,
- *  when size is overflowed while writting message:
+ *  when size is overflowed while writing message:
  *   if 'mode_overwrite' is 0, then newest message will be dropped.
  *   otherwise the oldest message will be dropped.
  */
@@ -38,7 +38,7 @@ void trace_buffer_write_message(struct trace_buffer* trace_buffer,
     const void* msg, size_t size);
 
 /*
- * Reserve space in the buffer for writting message.
+ * Reserve space in the buffer for writing message.
  * 
  * After call, pointer to the reserved space is saved in the 'msg'.
  * 
@@ -79,7 +79,7 @@ void trace_buffer_write_unlock(struct trace_buffer* trace_buffer,
  * If buffer is empty, and should_wait is 0,
  * return 0; otherwise wait until message will be available
  * 
- * If error occures, return negative error code.
+ * If error occurs, return negative error code.
  * 
  * Shouldn't be called in atomic context.
  */

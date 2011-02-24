@@ -14,24 +14,24 @@ output_file="`dirname $0`/tmp_output"
 
 ${control_script} start target1
 if test $? -ne 0; then
-    printf "Error occures when 'start' command is executed\n"
+    printf "Error occured when 'start' command was executed\n"
     exit 1
 fi
 
 if ! is_module_loading ${base_name}; then
-    printf "Base module is not loading after 'start' command\n"
+    printf "Base module is not loaded after 'start' command\n"
     exit 1
 fi
 
 if ! is_module_loading ${controller_name}; then
-    printf "Controller module is not loading after 'start' command\n"
+    printf "Controller module is not loaded after 'start' command\n"
 	${control_script} stop
     exit 1
 fi
 
 if test "${payload_name}"; then
 	if ! is_module_loading ${payload_name}; then
-	    printf "Payload module is not loading after 'start' command\n"
+	    printf "Payload module is not loaded after 'start' command\n"
 		${control_script} stop
 	    exit 1
 	fi
@@ -39,83 +39,83 @@ fi
 
 ${control_script} status > ${output_file}
 if test $? -ne 0; then
-    printf "Error occures when 'status' command is executed after 'start' command\n"
+    printf "Error occured when 'status' command was executed after 'start' command\n"
 	${control_script} stop
     exit 1
 fi
 
 grep "Base is running" ${output_file}
 if test $? -ne 0; then
-    printf "'status' command does not output '%s' string, but should\n" "Base is running"
+    printf "'status' command does not output '%s' string but it should\n" "Base is running"
 	${control_script} stop
     exit 1
 fi
 
 grep "Controller is running" ${output_file}
 if test $? -ne 0; then
-    printf "'status' command does not output '%s' string, but should\n" "Controller is running"
+    printf "'status' command does not output '%s' string but it should\n" "Controller is running"
 	${control_script} stop
     exit 1
 fi
 
 grep "target1" ${output_file}
 if test $? -ne 0; then
-    printf "'status' command does not output name of target for controller ('%s'), but should\n" "target1"
+    printf "'status' command does not output name of target for controller ('%s') but it should\n" "target1"
 	${control_script} stop
     exit 1
 fi
 
 grep "Target is running" ${output_file}
 if test $? -eq 0; then
-    printf "'status' command outputs '%s' string, but shouldn't\n" "Target is running"
+    printf "'status' command outputs '%s' string but it shouldn't\n" "Target is running"
 	${control_script} stop
     exit 1
 fi
 
 ${control_script} stop
 if test $? -ne 0; then
-    printf "Error occures when 'stop' command is executed\n"
+    printf "Error occured when 'stop' command was executed\n"
     exit 1
 fi
 
 ${control_script} status > ${output_file}
 if test $? -ne 0; then
-    printf "Error occures when 'status' command is executed after 'stop' command\n"
+    printf "Error occured when 'status' command was executed after 'stop' command\n"
     exit 1
 fi
 
 grep "Base is running" ${output_file}
 if test $? -eq 0; then
-    printf "'status' command output '%s' string, but shouldn't\n" "Base is running"
+    printf "'status' command outputs '%s' string but it shouldn't\n" "Base is running"
     exit 1
 fi
 
 ${control_script} start target2
 if test $? -ne 0; then
-    printf "Error occures when 'start' command is executed again\n"
+    printf "Error occured when 'start' command was executed again\n"
     exit 1
 fi
 
 ${control_script} restart
 if test $? -ne 0; then
-    printf "Error occures when 'restart' command is executed\n"
+    printf "Error occured when 'restart' command was executed\n"
     exit 1
 fi
 
 if ! is_module_loading ${base_name}; then
-    printf "Base module is not loading after 'restart' command\n"
+    printf "Base module is not loaded after 'restart' command\n"
     exit 1
 fi
 
 if ! is_module_loading ${controller_name}; then
-    printf "Controller module is not loading after 'restart' command\n"
+    printf "Controller module is not loaded after 'restart' command\n"
 	${control_script} stop
     exit 1
 fi
 
 if test "${payload_name}"; then
 	if ! is_module_loading ${payload_name}; then
-	    printf "Payload module is not loading after 'restart' command\n"
+	    printf "Payload module is not loaded after 'restart' command\n"
 		${control_script} stop
 	    exit 1
 	fi
@@ -123,21 +123,21 @@ fi
 
 ${control_script} stop
 if test $? -ne 0; then
-    printf "Error occures when 'stop' command is executed after restart\n"
+    printf "Error occured when 'stop' command was executed after restart\n"
     exit 1
 fi
 
 if is_module_loading ${base_name}; then
-    printf "Base module is loading after 'stop' command\n"
+    printf "Base module is loaded after 'stop' command\n"
     exit 1
 fi
 
 if is_module_loading ${controller_name}; then
-    printf "Controller module is loading after 'stop' command\n"
+    printf "Controller module is loaded after 'stop' command\n"
     exit 1
 fi
 
 if is_module_loading ${payload_name}; then
-    printf "Payload module is loading after 'stop' command\n"
+    printf "Payload module is loaded after 'stop' command\n"
     exit 1
 fi

@@ -1,4 +1,4 @@
-# Needed for all CMakeList files, otherwise cmake will warn
+# Needed for all CMakeLists files, otherwise cmake will warn
 cmake_minimum_required (VERSION 2.6)
 
 set(KERNELDIR /lib/modules/$\(shell uname -r\)/build)
@@ -13,7 +13,7 @@ add_custom_command(OUTPUT "${FILENAME}"
 endmacro(copy_source_file FILENAME SOURCE)
 
 if(NOT DEFINED SRC_FILE)
-	message(FATAL_ERROR "'SRC_FILE' should be defined, but it doesn't.")
+	message(FATAL_ERROR "'SRC_FILE' should be defined, but it is not.")
 endif(NOT DEFINED SRC_FILE)
 
 configure_file(Kbuild.in Kbuild)

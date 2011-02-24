@@ -86,7 +86,7 @@ if test $? -ne 0; then
 fi
 
 if  ! simulate; then
-	printf "Simulate shouldn't fail with "in_init" expression.\n"
+	printf "Simulate shouldn't fail with \"in_init\" expression.\n"
 	$do_commands_script "$commands_file" unload
 	exit 1
 fi
@@ -111,19 +111,19 @@ if test $? -ne 0; then
 fi
 
 if  simulate; then
-	printf "First call of simulate should fail with \"times %% 2\" expression.\n"
+	printf "The first call to the function should fail with \"times %% 2\" expression.\n"
 	$do_commands_script "$commands_file" unload
 	exit 1
 fi
 
 if  ! simulate; then
-	printf "Second call of simulate shouldn't fail with "times %% 2" expression.\n"
+	printf "The second call to the function shouldn't fail with \"times %% 2\" expression.\n"
 	$do_commands_script "$commands_file" unload
 	exit 1
 fi
 
 if  simulate; then
-	printf "Third call of simulate should fail with "times %% 2" expression.\n"
+	printf "The third call to the function should fail with \"times %% 2\" expression.\n"
 	$do_commands_script "$commands_file" unload
 	exit 1
 fi
@@ -140,12 +140,12 @@ if test $? -ne 0; then
 fi
 
 if  simulate; then
-	printf "Simulate should fail within shell, which set its pid for indicator.\n"
+	printf "Simulate should fail within the shell that has set its pid for the indicator.\n"
 	$do_commands_script "$commands_file" unload
 	exit 1
 fi
 
 if ! $do_commands_script "$commands_file" unload; then
-	printf "Error occures while finalize test.\n"
+	printf "Errors occured while finalizing the test.\n"
 	exit 1
 fi

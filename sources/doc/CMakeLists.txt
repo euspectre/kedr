@@ -9,7 +9,10 @@ add_custom_target(doc ALL)
 # from DocBook sources. Otherwise the stored version of the docs will be 
 # simply copied to the build tree, ready to be installed.
 ########################################################################
-option(KEDR_GENERATE_DOC "Whether need to generate documentation from sources." OFF)
+option(KEDR_GENERATE_DOC 
+	"Generate the HTML documentation from DocBook sources." 
+	OFF
+)
 
 # Directory for the documentation in HTML format in the binary tree.
 set (KEDR_HTML_DIR "${CMAKE_CURRENT_BINARY_DIR}/html")

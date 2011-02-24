@@ -47,7 +47,7 @@ END {
 	}
 	if(count != count_expected)
 	{
-		print "Number of blocks is " count ", but expected " count_expected "."
+		print "Number of blocks is " count ", but " count_expected " was expected."
 		exit 1
 	}
 }

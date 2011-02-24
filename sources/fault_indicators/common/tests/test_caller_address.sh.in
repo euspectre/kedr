@@ -49,12 +49,12 @@ on_load echo "${indicator_name}" > "${point_dir}/current_indicator"
 eof
 
 if ! $kedr_control_script start "${target_name}" -f "$kedr_config_file"; then
-	printf "Cannot load KEDR for test.\n"
+	printf "Cannot load KEDR for testing.\n"
 	exit 1
 fi
 
 if ! /sbin/insmod "${target_module}"; then
-	printf "Cannot load target module for test.\n"
+	printf "Cannot load target module for testing.\n"
 	$kedr_control_script stop
 	exit 1
 fi
@@ -62,7 +62,7 @@ fi
 echo 1 > "$point_dir/expression"
 
 if simulate; then
-	printf "Expected, that simulate should fail(expression is '%s'), but it succeed.\n" `cat "$point_dir/expression"`
+	printf "It was expected that simulate would fail (expression is '%s') but it succeeded.\n" `cat "$point_dir/expression"`
 	/sbin/rmmod "${target_module}"
 	$kedr_control_script stop
 	exit 1
@@ -75,7 +75,7 @@ sleep 0.5
 kill -2 $capture_pid
 
 if ! grep "__kmalloc" ${trace_file} > /dev/null; then
-	printf "__kmalloc call wasn't be traced.\n"
+	printf "The trace contains no records for __kmalloc() calls.\n"
 
 	/sbin/rmmod "${target_module}"
 	$kedr_control_script stop
@@ -87,7 +87,7 @@ caller_address=`sed -n '/called___kmalloc/ ! d; s/^.\{1,\}(\[<//; s/>\].\{1,\}$/
 
 
 if ! echo "$caller_address" | grep '^[[:xdigit:]]\{1,\}$' > /dev/null; then
-	printf "Failed to extract caller address from the trace(gets value \"%s\").\n" "$caller_address"
+	printf "Failed to extract caller address from the trace (got value \"%s\").\n" "$caller_address"
 
 	/sbin/rmmod "${target_module}"
 	$kedr_control_script stop
@@ -104,7 +104,7 @@ if ! echo "$expression" > "$point_dir/expression"; then
 fi
 
 if ! simulate; then
-	printf "Expected, that with expression \"%s\" fault simulation shouldn't be triggered for __kmalloc, but it was.\n" "$expression"
+	printf "Fault simulation was not expected to be triggered for __kmalloc with expression \"%s\".\n" "$expression"
 
 	/sbin/rmmod "${target_module}"
 	$kedr_control_script stop
@@ -114,11 +114,11 @@ fi
 
 
 if ! /sbin/rmmod "${target_module}"; then
-	printf "Error occures while unloading target module.\n"
+	printf "Error occured while unloading the target module.\n"
 	$kedr_control_script stop
 	exit 1
 fi
 if ! $kedr_control_script stop; then
-	printf "Error occures while unloading KEDR.\n"
+	printf "Error occured while unloading KEDR.\n"
 	exit 1
 fi

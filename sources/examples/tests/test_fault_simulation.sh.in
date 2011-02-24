@@ -29,7 +29,7 @@ eof
 cat > "$commands_file" << eof
 on_load $kedr_control_script start "$sample_target_module_name" -f "$kedr_conf_file" || ! printf "Cannot start KEDR.\n"
 on_unload $kedr_control_script stop || ! printf "Cannot stop KEDR.\n"
-on_load mkdir -p "$debugfs_mount_point" || ! printf "Cannot create directory for mount debugfs\n"
+on_load mkdir -p "$debugfs_mount_point" || ! printf "Cannot create directory to mount debugfs to\n"
 on_load mount -t debugfs debugfs "$debugfs_mount_point" || ! printf "Cannot mount debugfs.\n"
 on_unload umount "$debugfs_mount_point" || ! printf "Cannot unmount debugfs.\n"
 eof
@@ -52,8 +52,8 @@ fi
 ${sample_target_script} load
 
 if test $? -eq 0; then
-    printf "Expected, that target module fails to load with \"always\" fault simulation scenario.\n"
-    printf "But it was successfully loaded.\n"
+    printf "The target module was expected to fail to load with \"always\" fault simulation scenario, "
+    printf "but it was successfully loaded.\n"
     ${sample_target_script} unload
     $do_commands_script "$commands_file" unload
 	exit 1
@@ -68,17 +68,17 @@ if test $? -ne 0; then
 	exit 1
 fi
 
-#Now target module should successfully loaded
+#Now target module should be successfully loaded
 
 ${sample_target_script} load
 
 if test $? -ne 0; then
-    printf "Target module should successfully be loaded with \"fail every second call\" fault simulation scenario.\n"
+    printf "Target module should be loaded successfully with \"fail every second call\" fault simulation scenario.\n"
     $do_commands_script "$commands_file" unload
 	exit 1
 fi
 
-#But writting to the device should fail
+#But writing to the device should fail
 
 echo 123 > "$sample_target_device"
 result=$?
@@ -86,12 +86,12 @@ result=$?
 ${sample_target_script} unload
 
 if test "$result" -eq 0; then
-	printf "Expected, that writting to the device, created by sample target, will failed. But it succeed.\n"
+	printf "It was expected that writing to the device created by sample target would fail but it succeeded.\n"
 	$do_commands_script "$commands_file" unload
 	exit 1
 fi
 
 if ! $do_commands_script "$commands_file" unload; then
-	printf "Error occures while finalize test.\n"
+	printf "Errors occured while finalizing the test.\n"
 	exit 1
 fi

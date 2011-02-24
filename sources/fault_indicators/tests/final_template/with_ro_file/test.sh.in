@@ -37,7 +37,7 @@ if  ! test -r "${point_dir}/${filename}"; then
 fi
 
 if  test "`cat "${point_dir}/${filename}"`" != "${filecontent}"; then
-	printf "File content is '%s', but should be '%s'.\n" `cat "${point_dir}/${filename}"` "${filecontent}"
+	printf "The contents of the file are '%s' but should be '%s'.\n" `cat "${point_dir}/${filename}"` "${filecontent}"
 	finalize_test
 	exit 1
 fi

@@ -30,7 +30,7 @@ char str_result[10] = "";
 module_param_string(result, str_result, sizeof(str_result), S_IRUGO);
 
 
-//Whether error occures while parse 'complex' expression
+//Whether error occurs while parse 'complex' expression
 int sub_expr_error = 0;
 //
 static kedr_calc_int_t sub_expr_compute(void)
@@ -88,7 +88,7 @@ this_module_init(void)
     
     if(sub_expr_error)
     {
-        pr_err("Error occures while computing subexpression.");
+        pr_err("Error occurs while computing subexpression.");
         return -1;
     }
     

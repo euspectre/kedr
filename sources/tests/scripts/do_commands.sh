@@ -31,7 +31,7 @@ fi
 
 file="$1"
 if ! test -r "$file"; then
-    printf "'%s' file is not exist or cannot be read.\n" "$file"
+    printf "'%s' file does not exist or cannot be read.\n" "$file"
     exit 1
 fi
 mode="$2"
@@ -96,7 +96,7 @@ execute_conf_on_load()
             line_number="${LINE}"
         else
             if ! execute ${LINE}; then 
-                printf "Error occures in \"load\" mode.. rollback.\n"
+                printf "Error occured in \"load\" mode. Performing rollback.\n"
                 rollback "$1" "$line_number"
                 return 1
             fi
@@ -117,7 +117,7 @@ execute_conf_on_unload()
     for LINE in `parse_conf_on_unload "$1"`; do
         IFS=${OLD_IFS}
         if ! execute ${LINE}; then
-            printf "Error occures in \"unload\" mode.. stop.\n"
+            printf "Error occured in \"unload\" mode. Aborting.\n"
             return 1
         fi
         IFS="$newline"
@@ -148,5 +148,5 @@ unload)
     execute_conf_on_unload "$file"
     ;;
 *)
-    printf "%s\n" "Incorrect mode '$mode' to execute, should be 'load' or 'unload'."
+    printf "%s\n" "Incorrect mode '$mode' to operate in (should be 'load' or 'unload')."
 esac

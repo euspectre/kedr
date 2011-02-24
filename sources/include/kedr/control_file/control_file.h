@@ -28,7 +28,7 @@ int control_file_release_common (struct inode *inode, struct file *filp);
  *      which should return allocated string, which will be result of reading from file
  *
  * 'set_str' - function of type int (*set_str)(const char* str, struct inode *inode),
- *      which should perform actions in correspondence to the string, writting to file.
+ *      which should perform actions in correspondence to the string, writing to file.
  *      It should return 0 on success or negative error code.
  *
  * Each of function may be NULL, which mean that read/write operation shouldn't be supported.

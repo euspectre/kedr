@@ -45,6 +45,6 @@ if test $? -ne 0; then
 fi
 
 if test "$result_expected" != "$result"; then
-    printf "Expected result of evaluating of the expression %s, but module write %s\n" "$result_expected" "$result"
+    printf "Expected result of evaluation of the expression is %s, but the module writes %s\n" "$result_expected" "$result"
     exit 1
 fi

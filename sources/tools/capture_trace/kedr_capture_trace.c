@@ -57,34 +57,33 @@ static const char usage_message[] = "Usage:\n"
     "\t"PROGRAM_NAME" [options]\n"
     "\n"
     " Read messages from the trace until stopped by SIGINT signal (Ctrl+C) or\n"
-    "until no futher messages should be read (see option '-s' description).\n"
+    "until no futher messages should be read (see the description of '-s' option).\n"
     "\n"
-    "Options may be:\n"
+    "Options:\n"
     "\t-d <directory>\n"
-    "\t\t Assume debugfs filesystem mounted into the specified directory.\n"
-    "\t\tWithout this options debugfs filesystem is assumed to be mounted\n"
-    "\t\tinto '/sys/kernel/debug'.\n"
+    "\t\t Assume debugfs filesystem is mounted to the specified directory.\n"
+    "\t\tWithout this option debugfs filesystem is assumed to be mounted\n"
+    "\t\tto '/sys/kernel/debug'.\n"
     "\t-s, --session\n"
-    "\t\t Read only those messages from the trace, which collected from the\n"
-    "\t\tmoment when target module is loaded to the moment when target module\n"
-    "\t\tis unloaded. After the last message is read, stop capturing.\n"
+    "\t\t Read only those messages from the trace, that were collected from the\n"
+    "\t\tmoment when target module was loaded to the moment when target module\n"
+    "\t\twas unloaded. After the last message is read, stop capturing.\n"
     "\t-f, --file <file>\n"
     "\t\t Write all messages from the trace to the specified file.\n"
     "\t\tFilename '-' means STDOUT.\n"
     "\t-p, --program <program>\n"
-    "\t\t Run the program specified, and write all messages from the trace\n"
+    "\t\t Run the specified program and write all messages from the trace\n"
     "\t\tto the program's STDIN.\n"
     "\n"
     "If neither '-f' nor '-p' option is specified, all messages from the trace\n"
     "will be written to STDOUT. Several options '-f' and/or '-p' are allowed.\n"
     "\n"
     "\t"PROGRAM_NAME" --help\n"
-    "\n"
-    " Print usage of this program and exit.\n"
+    "\t\t Print this information and exit.\n"
     "\n";
     
 /*
- * Callback function for filter lines in trace.
+ * Callback function for filtering lines in trace.
  * 
  * Return 1, if line should be processed,
  * return 0, if line should be skipped.
@@ -399,18 +398,18 @@ int main(int argc, char* const argv[], char* const envp[])
         switch(errno)
         {
         case ENOENT:
-            print_error("Trace file '%s' is not exist.\n"
-                "Probably, debugfs is not mounted into \"%s\".",
+            print_error("Trace file '%s' does not exist.\n"
+                "Debugfs is probably not mounted to \"%s\".",
                 trace_file_name, debugfs_mount_point);
         break;
         case EBUSY:
             print_error("Trace file is busy.\n"
-                "Probably, another instance of %s process it.",
+                "Another instance of %s is probably processing it.",
                 PROGRAM_NAME);
         break;
         //case EACCESS: what message should be here?
         default:
-            print_error("Cannot open trace file '%s' for read: %s.",
+            print_error("Cannot open trace file '%s' for reading: %s.",
                 trace_file_name, strerror(errno));
         }
         free(trace_file_name);
@@ -495,7 +494,7 @@ int main(int argc, char* const argv[], char* const envp[])
                 &trace_consumers);
         if(result == -1)
         {
-            print_error0("Error occures while processing trace. Stop.");
+            print_error0("Error occured while processing the trace. Stop.");
             break;
         }
         else if((result == -2) || (result == 1))
@@ -609,11 +608,11 @@ trace_consumer_create_process(const char* command_line)
     struct trace_consumer* consumer;
     pid_t pid;
     int fd_pipe[2];
-    //Allocate consumer struture
+    //Allocate consumer structure
     consumer = malloc(sizeof(*consumer));
     if(consumer == NULL)
     {
-        print_error0("Cannot allocate consumer struture.");
+        print_error0("Cannot allocate consumer structure.");
         return NULL;
     }
     /*
@@ -655,7 +654,7 @@ trace_consumer_create_process(const char* command_line)
     pid = fork();
     if(pid == -1)
     {
-        print_error("Error when performs fork: %s.", strerror(errno));
+        print_error("Error when performing fork: %s.", strerror(errno));
         close(fd_pipe[0]);
         close(fd_pipe[1]);
         trace_consumer_free(consumer);
@@ -702,11 +701,11 @@ trace_consumer_create_file(const char* filename)
 {
     struct trace_consumer* consumer;
     int fd;
-    //Allocate consumer struture
+    //Allocate consumer structure
     consumer = malloc(sizeof(*consumer));
     if(consumer == NULL)
     {
-        print_error0("Cannot allocate consumer struture.");
+        print_error0("Cannot allocate consumer structure.");
         return NULL;
     }
     /*
@@ -721,7 +720,7 @@ trace_consumer_create_file(const char* filename)
         fd = open(filename, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
         if(fd == -1)
         {
-            print_error("Cannot open file \"%s\" for collect trace: %s.",
+            print_error("Cannot open file \"%s\" for collecting trace: %s.",
                 filename, strerror(errno));
             trace_consumer_free(consumer);
             return NULL;
@@ -742,7 +741,7 @@ trace_consumer_create_file(const char* filename)
 
     if(change_fl_flags(fd, O_NONBLOCK, O_NONBLOCK) == -1)
     {
-        print_error0("Cannot set O_NONBLOCK flag for file for collect trace.");
+        print_error0("Cannot set O_NONBLOCK flag for file for collecting trace.");
         close(fd);
         trace_consumer_free(consumer);
         return NULL;
@@ -751,7 +750,7 @@ trace_consumer_create_file(const char* filename)
 
     if(change_fd_flags(fd, FD_CLOEXEC, FD_CLOEXEC) == -1)
     {
-        print_error0("Cannot set FD_CLOEXEC flag for file for collect trace.");
+        print_error0("Cannot set FD_CLOEXEC flag for file for collecting trace.");
         close(fd);
         trace_consumer_free(consumer);
         return NULL;
@@ -958,7 +957,7 @@ read_trace_line(int fd,
         read_buffer = malloc(READ_BUFFER_SIZE_MIN);
         if(read_buffer == NULL)
         {
-            print_error0("Cannot allocate buffer for read from file.");
+            print_error0("Cannot allocate buffer for reading from file.");
             errno = ENOMEM;
             return -1;
         }
@@ -994,7 +993,7 @@ read_trace_line(int fd,
             read_buffer_size + additional_size);
         if(read_buffer == NULL)
         {
-            print_error0("Cannot increase buffer for read from file.");
+            print_error0("Cannot increase buffer for reading from file.");
             return -1;
         }
         read_buffer_size = read_buffer_size + additional_size;
@@ -1006,9 +1005,9 @@ read_trace_line(int fd,
             if(size_tmp > 0) break;
             if(size_tmp == 0)
             {
-               print_error0("Line was partially read from file, "
-                    "and next read encounter EOF.\n"
-                    "Perhaps, there is another reader from file, "
+               print_error0("Line was partially read from the file, "
+                    "and next read encountered EOF.\n"
+                    "Perhaps, there is another reader from the file, "
                     "or file access is not aligned on lines.\n"
                     "Please, fix this.");
                 return -1;
@@ -1020,9 +1019,9 @@ read_trace_line(int fd,
                 case ERESTART:
                     break;
                 case EAGAIN:
-                    print_error0("Line was partially read from file, "
+                    print_error0("Line was partially read from the file, "
                         "and next read should block.\n"
-                        "Perhaps, there is another reader from file, "
+                        "Perhaps, there is another reader from the file, "
                         "or file access is not aligned on lines.\n"
                         "Please, fix this.");
                     return -1;
@@ -1044,7 +1043,7 @@ read_trace_line(int fd,
 
 /*
  * Same as write(), but repeat write until all bytes will be written
- * or real error occures.
+ * or real error occurs.
  */
 static ssize_t
 write_str(int fd, const void* buffer, size_t size)
@@ -1103,7 +1102,7 @@ trace_consumers_process_line(const char* str, size_t len, void* data)
             }
             else
             {
-                print_error("Error occure while writting to the pipe with child process: %s.\n"
+                print_error("Error occured while writing to the pipe with child process: %s.\n"
                     "Writing to this process will stop.",
                     strerror(errno));
             }
@@ -1234,14 +1233,14 @@ static int process_options(int argc, char* const argv[],
     fnames = array_names_init();
     if(fnames == NULL)
     {
-        print_error0("Cannot allocate memory for options(names of files).");
+        print_error0("Cannot allocate memory for options (names of files).");
         return -1;
     }
     
     pnames = array_names_init();
     if(pnames == NULL)
     {
-        print_error0("Cannot allocate memory for options(names of programs).");
+        print_error0("Cannot allocate memory for options (names of programs).");
         free(fnames);
         return -1;
     }
@@ -1255,7 +1254,7 @@ static int process_options(int argc, char* const argv[],
             //error in options
             if(optind < argc)
                 print_error("Unknown option '%s'.\n"
-                    "Call kedr_capture_trace -h for description of program's parameters.",
+                    "Execute 'kedr_capture_trace -h' to see the description of program's parameters.",
                     argv[optind]);
             free(pnames);
             free(fnames);
@@ -1270,7 +1269,7 @@ static int process_options(int argc, char* const argv[],
             fnames = array_names_add(fnames, optarg);
             if(fnames == NULL)
             {
-                print_error0("Cannot allocate memory for options(names of files).");
+                print_error0("Cannot allocate memory for options (names of files).");
                 free(pnames);
                 return -1;
             }
@@ -1279,7 +1278,7 @@ static int process_options(int argc, char* const argv[],
             pnames = array_names_add(pnames, optarg);
             if(pnames == NULL)
             {
-                print_error0("Cannot allocate memory for options(names of programs).");
+                print_error0("Cannot allocate memory for options (names of programs).");
                 free(fnames);
                 return -1;
             }
@@ -1298,7 +1297,7 @@ static int process_options(int argc, char* const argv[],
         fnames = array_names_add(fnames, "-");
         if(fnames == NULL)
         {
-            print_error0("Cannot allocate memory for options(names of files).");
+            print_error0("Cannot allocate memory for options (names of files).");
             free(pnames);
             return -1;
         }
