@@ -6,8 +6,8 @@
  * parameter.
  *********************************************************************/
 /* ========================================================================
- * Copyright (C) 2010, Institute for System Programming 
- *                     of the Russian Academy of Sciences (ISPRAS)
+ * Copyright (C) 2010-2011, Institute for System Programming 
+ *                          of the Russian Academy of Sciences (ISPRAS)
  * Authors: 
  *      Eugene A. Shatokhin <spectre@ispras.ru>
  *      Andrey V. Tsyvarev  <tsyvarev@ispras.ru>
