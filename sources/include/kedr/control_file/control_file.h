@@ -1,5 +1,5 @@
-#ifndef CONTROL_FILE_H
-#define CONTROL_FILE_H
+#ifndef KEDR_CONTROL_FILE_H
+#define KEDR_CONTROL_FILE_H
 
 #include <linux/fs.h>
 
@@ -51,4 +51,4 @@ static struct file_operations name = {                                      \
     .write = name##_write                                                   \
 }
 
-#endif
+#endif /* KEDR_CONTROL_FILE */

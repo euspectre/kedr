@@ -61,12 +61,16 @@ if ! umount "${debugfs_mount_point}"; then
 fi
 
 # Verify trace
-if ! awk -f "@CMAKE_CURRENT_SOURCE_DIR@/../verify_trace_format.awk" "${trace_file_copy}"; then
+LC_ALL=C awk -f "@CMAKE_CURRENT_SOURCE_DIR@/../verify_trace_format.awk" \
+    "${trace_file_copy}"
+if $? -ne 0; then
 	printf "Trace file has incorrect format.\n"
 	exit 1
 fi
 
-if ! awk -f "@CMAKE_CURRENT_SOURCE_DIR@/verify_trace.awk" -v count_expected=60 "${trace_file_copy}"; then
+LC_ALL=C awk -f "@CMAKE_CURRENT_SOURCE_DIR@/verify_trace.awk" \
+    -v count_expected=60 "${trace_file_copy}"
+if $? -ne 0; then
 	printf "Trace file inconsistent.\n"
 	exit 1
 fi

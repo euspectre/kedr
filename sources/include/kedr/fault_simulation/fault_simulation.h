@@ -1,5 +1,5 @@
-#ifndef FAULT_SIMULATION_H
-#define FAULT_SIMULATION_H
+#ifndef KEDR_FAULT_SIMULATION_H
+#define KEDR_FAULT_SIMULATION_H
 
 #ifndef __KERNEL__
 #error "This header is only for kernel code"
@@ -135,4 +135,4 @@ int kedr_fsim_point_simulate(struct kedr_simulation_point* point,
     void *user_data);
 
 
-#endif
+#endif /* KEDR_FAULT_SIMULATION_H */
