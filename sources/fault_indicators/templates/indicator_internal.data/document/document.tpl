@@ -13,11 +13,14 @@ indicator.name = <$indicator.name$>
 # Declarations for the expression
 
 global =>>
+#include <kedr/defs.h>
+
 #include <kedr/calculator/calculator.h>
 
 #include <kedr/base/common.h> /* in_init */
 #include <linux/random.h> /* random32() */
 
+#ifdef KEDR_ENABLE_CALLER_ADDRESS
 #include <kedr/util/stack_trace.h> /* kedr_save_stack_trace() */
 
 /*
@@ -32,13 +35,27 @@ global =>>
  * (this dependency is hidden in kedr_save_stack_trace()).
  */
 #define REPLACEMENT_STACK_DEPTH 3
+
+
+#define get_caller_address() ({ \
+    unsigned long entries[REPLACEMENT_STACK_DEPTH]; \
+    unsigned int nr_entries; \
+    kedr_save_stack_trace(entries, ARRAY_SIZE(entries), &nr_entries); \
+    (nr_entries == ARRAY_SIZE(entries)) \
+        ? (kedr_calc_int_t)entries[ARRAY_SIZE(entries) - 1] \
+        : -1; \
+})
+
+#endif
 // Constants in the expression
 <$expressionConstDeclarations$>
 
 // Variables in the expression
 static const char* var_names[]= {
     "times",//local variable of indicator state
+#ifdef KEDR_ENABLE_CALLER_ADDRESS
     "caller_address",//address of the caller of the replacement function
+#endif
 <$expressionVarNames$>
 };
 // Runtime variables in the expression
@@ -63,8 +80,6 @@ static const struct kedr_calc_weak_var weak_vars[] = {
     { .name = "rnd10000", .compute = rnd10000_weak_var_compute },
 <$expressionRvarDeclarations$>
 };
-
-
 <<
 
 indicator.state.name = calc
@@ -82,17 +97,12 @@ indicator.simulate.first =
 indicator.simulate.code =>>
 	int result;
     int *kcalc;
-    unsigned long entries[REPLACEMENT_STACK_DEPTH];
-    unsigned int nr_entries;
 	kedr_calc_int_t vars[ARRAY_SIZE(var_names)];
 
-    kedr_save_stack_trace(entries, ARRAY_SIZE(entries),
-        &nr_entries);
-
     vars[0] = atomic_inc_return(&state(times));
-    vars[1] = (nr_entries == ARRAY_SIZE(entries))
-        ? (kedr_calc_int_t)entries[ARRAY_SIZE(entries) - 1]
-        : -1;
+#ifdef KEDR_ENABLE_CALLER_ADDRESS
+    vars[1] = get_caller_address();
+#endif
     //debug
     //pr_info("Caller address is (%p)%pF", (void*)vars[1], (void*)vars[1]);
 <$expressionVarsSet$>

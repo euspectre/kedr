@@ -8,9 +8,31 @@ kbuild_add_dependencies("kedr_fault_simulation")
 # Common name of data file
 set(indicator_data_file "indicator.data")
 
-# Commands for generate indicator.c and place it into current directory
-# from ${indicator_data_file}, placed in the current source or binary directory.
-function(rules_generate_indicator)
+# Commands for create indicator module from
+# ${indicator_data_file}, placed in the current source or binary directory.
+function(create_indicator module_name)
+	if (KEDR_ENABLE_CALLER_ADDRESS)
+		kbuild_add_module(${module_name} 
+			"indicator.c" 
+			"calculator.c" 
+			"control_file.c"
+			"stack_trace.c")
+		
+		rule_copy_file("${CMAKE_CURRENT_BINARY_DIR}/stack_trace.c"
+			"${CMAKE_SOURCE_DIR}/util/stack_trace/stack_trace.c")
+	else (KEDR_ENABLE_CALLER_ADDRESS)
+		kbuild_add_module(${module_name} 
+			"indicator.c" 
+			"calculator.c" 
+			"control_file.c")
+	endif (KEDR_ENABLE_CALLER_ADDRESS)
+
+	rule_copy_file("${CMAKE_CURRENT_BINARY_DIR}/calculator.c"
+		"${CMAKE_SOURCE_DIR}/calculator/calculator.c")
+
+	rule_copy_file("${CMAKE_CURRENT_BINARY_DIR}/control_file.c"
+		"${CMAKE_SOURCE_DIR}/control_file/control_file.c")
+
 	set(indicator_c_file "${CMAKE_CURRENT_BINARY_DIR}/indicator.c")
 	set(indicator_data_file_internal "${CMAKE_CURRENT_BINARY_DIR}/indicator_internal.data")
 	to_abs_path(indicator_data_file_abs ${indicator_data_file})
@@ -21,7 +43,7 @@ function(rules_generate_indicator)
 		COMMAND ${KEDR_GEN_TOOL} ${KEDR_GEN_TEMPLATES_DIR}/indicator_internal.data/ ${indicator_data_file_abs} > ${indicator_data_file_internal}
 		DEPENDS ${indicator_data_file_abs})
 	
-endfunction(rules_generate_indicator)
+endfunction(create_indicator module_name)
 
 add_subdirectory(common_memory_management)
 add_subdirectory(capable)

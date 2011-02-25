@@ -79,8 +79,11 @@ add_dependencies (uninstall uninstall_dirs)
 
 #######################################################################
 #${CMAKE_SOURCE_DIR}/include - root of the include tree (see conventions).
-include_directories("${CMAKE_SOURCE_DIR}/include")
-kbuild_include_directories("${CMAKE_SOURCE_DIR}/include")
+#include_directories("${CMAKE_SOURCE_DIR}/include")
+#kbuild_include_directories("${CMAKE_SOURCE_DIR}/include")
+include_directories("${CMAKE_BINARY_DIR}/include")
+kbuild_include_directories("${CMAKE_BINARY_DIR}/include")
+
 #For configuration file
 kbuild_include_directories("${CMAKE_BINARY_DIR}")
 #######################################################################

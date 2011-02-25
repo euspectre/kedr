@@ -8,7 +8,8 @@ set (KEDR_EXAMPLE_PATH "${KEDR_INSTALL_PREFIX_EXAMPLES}")
 # the testing ('make check'), two paths are provided.
 
 set (KEDR_INSTALL_INCLUDE_DIR "${CMAKE_INSTALL_PREFIX}/include")
-set (KEDR_TEST_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/include")
+# See comments in include/CMakeLists.txt about headers in examples.
+set (KEDR_TEST_INCLUDE_DIR "${CMAKE_BINARY_DIR}/include/install")
 #######################################################################
 
 add_subdirectory(sample_target)
