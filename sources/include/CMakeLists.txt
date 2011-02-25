@@ -16,20 +16,25 @@ set(KEDR_INCLUDE_FILES_SRC
 
 # List of include files, which should be installed.
 set(KEDR_INCLUDE_FILES_INSTALL
-	defs.h
 	base/common.h
-    fault_simulation/fault_simulation.h
 	calculator/calculator.h
 	control_file/control_file.h
-	util/stack_trace.h
+	defs.h
+    fault_simulation/fault_simulation.h
 	trace/trace.h
+	util/stack_trace.h
 )
 
 # Copy headers from src-tree into binary tree
 foreach(include_file ${KEDR_INCLUDE_FILES_SRC})
-    get_filename_component(dest_dir "${CMAKE_CURRENT_BINARY_DIR}/kedr/${include_file}" PATH)
-	file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/kedr/${include_file}"
-		DESTINATION "${dest_dir}")
+    set(include_file_src "${CMAKE_CURRENT_SOURCE_DIR}/kedr/${include_file}")
+	get_filename_component(dest_dir "${CMAKE_CURRENT_BINARY_DIR}/kedr/${include_file}" PATH)
+	file(MAKE_DIRECTORY "${dest_dir}")
+	execute_process(COMMAND cp -p "${include_file_src}" "${dest_dir}"
+		RESULT_VARIABLE copy_result)
+	if(copy_result)
+		message(FATAL_ERROR "Fail to copy header file ${include_file}.")
+	endif(copy_result)
 endforeach(include_file ${KEDR_INCLUDE_FILES_SRC})
 
 
@@ -38,7 +43,6 @@ foreach(include_file ${KEDR_INCLUDE_FILES_INSTALL})
 	get_filename_component(dest_dir "${KEDR_INSTALL_PREFIX_INCLUDE}/${include_file}" PATH)
     install(FILES "${CMAKE_CURRENT_BINARY_DIR}/kedr/${include_file}"
             DESTINATION "${dest_dir}")
-
 endforeach(include_file ${KEDR_INCLUDE_FILES_INSTALL})
 
 # Copy headers files for examples.
@@ -48,7 +52,12 @@ endforeach(include_file ${KEDR_INCLUDE_FILES_INSTALL})
 # components of the KEDR internally. These strategy allows to detect 
 # missing install headers at the testing stage.
 foreach(include_file ${KEDR_INCLUDE_FILES_INSTALL})
-    get_filename_component(dest_dir "${CMAKE_CURRENT_BINARY_DIR}/install/kedr/${include_file}" PATH)
-	file(COPY "${CMAKE_CURRENT_BINARY_DIR}/kedr/${include_file}"
-		DESTINATION "${dest_dir}")
+    set(include_file_src "${CMAKE_CURRENT_BINARY_DIR}/kedr/${include_file}")
+	get_filename_component(dest_dir "${CMAKE_CURRENT_BINARY_DIR}/install/kedr/${include_file}" PATH)
+	file(MAKE_DIRECTORY "${dest_dir}")
+	execute_process(COMMAND cp -p "${include_file_src}" "${dest_dir}"
+		RESULT_VARIABLE copy_result)
+	if(copy_result)
+		message(FATAL_ERROR "Fail to copy header file ${include_file} for examples.")
+	endif(copy_result)
 endforeach(include_file ${KEDR_INCLUDE_FILES_SRC})
