@@ -5,7 +5,7 @@ Fault simulation facilities provided by KEDR allow to put the target kernel modu
     </para>
 
 <para>
-Support for fault simulation is enabled in KEDR by default. If you would like to disable it, set CMake variable <code>KEDR_STANDARD_FSIM_PAYLOADS</code> to <code>OFF</code> when executing CMake before building KEDR:
+The standard payloads modules for fault simulation are built and installed with KEDR by default. If you would like to disable this, set CMake variable <code>KEDR_STANDARD_FSIM_PAYLOADS</code> to <code>OFF</code> when executing CMake before building KEDR:
 </para>
 
 <programlisting><![CDATA[

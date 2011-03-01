@@ -246,7 +246,7 @@ utility does for user-space applications.
     </p><p>
 KEDR contains a set of payload modules intended to perform call monitoring. They collect information about which kernel functions were called by the target module and in what order, about the parameters passed to these functions and about the return values. This information is output to a trace and can then be used by user-space applications in runtime with the help of <a class="link" href="using_kedr.html#capture_trace" title="4.2. Capturing the Trace">kedr_capture_trace</a> tool.
     </p><p>
-Support for call monitoring is enabled in KEDR by default. If you would like to disable it, set CMake variable <code class="code">KEDR_STANDARD_CALLM_PAYLOADS</code> to <code class="code">OFF</code> when executing CMake before building KEDR:
+The standard payloads modules for call monitoring are built and installed with KEDR by default. If you would like to disable this, set CMake variable <code class="code">KEDR_STANDARD_CALLM_PAYLOADS</code> to <code class="code">OFF</code> when executing CMake before building KEDR:
 </p><pre class="programlisting">
 cmake -DKEDR_STANDARD_CALLM_PAYLOADS=OFF &lt;other_options&gt; &lt;path_to_kedr_sources&gt;
 </pre><p>
@@ -295,7 +295,7 @@ Only calls to the subset of all kernel functions are detected. This subset howev
     </p></div><div class="section" title="4.5. Fault Simulation"><div class="titlepage"><div><div><h3 class="title"><a name="fault_sim"></a>4.5. Fault Simulation</h3></div></div></div><p>
 Fault simulation facilities provided by KEDR allow to put the target kernel module to the conditions that occur not very often during the normal operation of the module. For example, it is possible to simulate a situation when the system is short of memory or of another resource and consequently, at least some of the attempts to acquire the resource (e.g. allocate memory) fail. This allows to check if the target module handles such situations correctly.
     </p><p>
-Support for fault simulation is enabled in KEDR by default. If you would like to disable it, set CMake variable <code class="code">KEDR_STANDARD_FSIM_PAYLOADS</code> to <code class="code">OFF</code> when executing CMake before building KEDR:
+The standard payloads modules for fault simulation are built and installed with KEDR by default. If you would like to disable this, set CMake variable <code class="code">KEDR_STANDARD_FSIM_PAYLOADS</code> to <code class="code">OFF</code> when executing CMake before building KEDR:
 </p><pre class="programlisting">
 cmake -DKEDR_STANDARD_FSIM_PAYLOADS=OFF  &lt;other_options&gt; &lt;path_to_kedr_sources&gt;
 </pre><p>
