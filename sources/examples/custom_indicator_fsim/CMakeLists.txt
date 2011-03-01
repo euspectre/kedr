@@ -1,6 +1,9 @@
 set(module_name "indicator_fsim_kstrdup")
 set(example_install_dir "${KEDR_EXAMPLE_PATH}/custom_indicator_fsim")
 
+if(KEDR_ENABLE_CALLER_ADDRESS)
+	set(KEDR_ENABLE_CALLER_ADDRESS_DEF "yes")
+endif(KEDR_ENABLE_CALLER_ADDRESS)
 
 set(KEDR_INCLUDE_DIR "${KEDR_INSTALL_INCLUDE_DIR}")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Kbuild.in"
@@ -16,20 +19,45 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/makefile.in"
     @ONLY
 )
 
-# Copy additional sources into this directory
-rule_copy_file("control_file.c"
-	"${CMAKE_SOURCE_DIR}/control_file/control_file.c")
-rule_copy_file("calculator.c"
+# Additional sources from which indicator module will compile
+set(additional_sources
+	"${CMAKE_SOURCE_DIR}/control_file/control_file.c"
 	"${CMAKE_SOURCE_DIR}/calculator/calculator.c")
-rule_copy_file("stack_trace.c"
-	"${CMAKE_SOURCE_DIR}/util/stack_trace/stack_trace.c")
+	
+if(KEDR_ENABLE_CALLER_ADDRESS)
+	list(APPEND additional_sources
+		"${CMAKE_SOURCE_DIR}/util/stack_trace/stack_trace.c")
+endif(KEDR_ENABLE_CALLER_ADDRESS)
+
+# Same sources but after copiing them into current directory.
+# (This is needed for testing indicator module compilation).
+set(additional_sources_test)
+foreach(source ${additional_sources})
+	get_filename_component(source_name "${source}" NAME)
+	list(APPEND additional_sources_test
+		"${CMAKE_CURRENT_BINARY_DIR}/${source_name}")
+	#And how to get this file from source tree
+	rule_copy_file("${CMAKE_CURRENT_BINARY_DIR}/${source_name}"
+		"${source}")
+endforeach(source ${additional_sources})
+
+
+# Copy additional sources into this directory
+#rule_copy_file("control_file.c"
+#	"${CMAKE_SOURCE_DIR}/control_file/control_file.c")
+#rule_copy_file("calculator.c"
+#	"${CMAKE_SOURCE_DIR}/calculator/calculator.c")
+#rule_copy_file("stack_trace.c"
+#	"${CMAKE_SOURCE_DIR}/util/stack_trace/stack_trace.c")
 
 
 # Copy templates files into build dir
 set(templates_root_dir_src "${CMAKE_SOURCE_DIR}/fault_indicators/templates")
 set(templates_root_dir_dst "${CMAKE_CURRENT_BINARY_DIR}/templates")
 
-set(templates_dirs "indicator.c/block" "indicator.c/document" "indicator_internal.data/block" "indicator_internal.data/document")
+set(templates_dirs
+	"indicator.c/block" "indicator.c/document"
+	"indicator_internal.data/block" "indicator_internal.data/document")
 set(templates_dirs_src)
 set(templates_dirs_dst)
 set(templates_files_glob_expr)
@@ -70,12 +98,12 @@ add_custom_target("custom_fsim_indicator"
 # Copy template files into build directory only for test building process
 add_dependencies("custom_fsim_indicator" "custom_fsim_indicator_templates")
 
+
+
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${module_name}.ko"
         COMMAND $(MAKE) -f makefile_test
         DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/indicator.data"
-				"${CMAKE_CURRENT_BINARY_DIR}/calculator.c"
-				"${CMAKE_CURRENT_BINARY_DIR}/control_file.c"
-				"${CMAKE_CURRENT_BINARY_DIR}/stack_trace.c"
+				${additional_sources_test}
                 "${CMAKE_CURRENT_BINARY_DIR}/makefile_test"
                 "${CMAKE_CURRENT_BINARY_DIR}/Kbuild"
                 )
@@ -99,9 +127,7 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/makefile.in"
 kedr_test_add_target("custom_fsim_indicator")
 
 install(FILES   "${CMAKE_CURRENT_SOURCE_DIR}/indicator.data"
-				"${CMAKE_SOURCE_DIR}/control_file/control_file.c"
-				"${CMAKE_SOURCE_DIR}/calculator/calculator.c"
-				"${CMAKE_SOURCE_DIR}/util/stack_trace/stack_trace.c"
+				${additional_sources}
         DESTINATION "${example_install_dir}"
 )
 

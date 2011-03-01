@@ -138,7 +138,7 @@ foreach(var_suffix ${KEDR_ALL_PATH_SUFFIXES})
 endforeach(var_suffix ${KEDR_ALL_PATH_SUFFIXES})
 #rewrite some prefixes
 #Root of include tree in building package
-set(KEDR_TEST_PREFIX_INCLUDE "${CMAKE_SOURCE_DIR}/include")
+set(KEDR_TEST_PREFIX_INCLUDE "${CMAKE_BINARY_DIR}/include")
 
 
 #kedr_load_install_prefixes()

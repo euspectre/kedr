@@ -2,4 +2,9 @@ module_name=@module_name@
 
 ccflags-y :=  -I@KEDR_INCLUDE_DIR@
 obj-m := $(module_name).o
-$(module_name)-y := indicator.o calculator.o control_file.o stack_trace.o
+$(module_name)-y = indicator.o calculator.o control_file.o 
+
+ifneq ("@KEDR_ENABLE_CALLER_ADDRESS_DEF@", "")
+$(module_name)-y += stack_trace.o
+endif
+

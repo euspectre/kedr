@@ -6,8 +6,10 @@ indicator_data_file := indicator.data
 indicator_c_file := indicator.c
 indicator_internal_data_file := indicator_internal.data
 
-additional_sources := calculator.c control_file.c
-
+additional_sources = calculator.c control_file.c
+ifneq ("@KEDR_ENABLE_CALLER_ADDRESS_DEF@", "")
+additional_sources += stack_trace.c
+endif
 kedr_gen_templates_dir := ./templates
 kedr_gen_tool := @kedr_gen_tool@
 

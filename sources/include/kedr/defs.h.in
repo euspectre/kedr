@@ -1,0 +1,9 @@
+#ifndef KEDR_DEFS_H
+#define KEDR_DEFS_H
+
+/*
+ * Definitions for KEDR.
+ */
+#cmakedefine KEDR_ENABLE_CALLER_ADDRESS
+
+#endif
