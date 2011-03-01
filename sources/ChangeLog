@@ -1,4 +1,72 @@
 ---------------------------------------------------------------------------
+KEDR 0.2
+---------------------------------------------------------------------------
+Eugene A. Shatokhin <spectre@ispras.ru>:
+
+    * Made several fixes for KEDR to be able to work on the versions 2.6.37 
+and 2.6.38 of the kernel.
+    * Cleaned up the KEDR core, payloads, examples and the tests: removed 
+obsolete and unnecessary stuff, reduced code duplication.
+    * Prepared LeakCheck plugin that allows to detect memory leaks in the 
+kernel modules. Prepared the tests and documentation for it.
+    * Revisited sample modules for char devices, got rid of mknod, etc.
+    * Added support for call monitoring for 20 more functions (mostly - 
+memory allocation and deallocation routines). Support for fault simulation 
+for these functions was also provided where applicable.
+    * Added support for fault simulation for vmalloc()-like functions.
+    * Updated the build system: the presence of *node*-functions is now 
+checked in a more reliable way (fixes issues with exported but unusable 
+functions in Fedora 12-14 x86).
+    * Made stack trace helper stuff available for all components of KEDR 
+rather than for LeakCheck only.
+    * Call monitoring: made processing of additional spinlock functions 
+optional.
+    * Core: fixed incorrect handling of failures of try_module_get() for 
+payloads.
+    * Build system: fixed: kernel version and ability to build modules 
+were not checked.
+    * Build system: added a check for stack trace reliability. If the system
+does not provide reliable stack traces (e.g. neither CONFIG_FRAME_POINTER 
+nor CONFIG_STACK_UNWIND is set), some components of KEDR should be disabled
+(e.g. support for 'caller_address' in fault simulation). This is a temporary
+workaround for the problems, for example, on Debian 6.
+    * Added a test to additionally check (after KEDR is built) if 
+save_stack_trace() is reliable.
+    * Minor fixes: LC_ALL=C for awk, newlines at EOF, etc.
+    * Many cosmetic fixes in the messages and comments.
+
+
+Tsyvarev Andrey <tsyvarev@ispras.ru>:
+
+    * Fixed issues concerning parallel builds (bug #017731)
+    * Revisited kedr control script: added '--help' and '--version' options,
+added '-f' option to specify configuration files.
+    * Made support for the standard call monitoring and fault simulation 
+payloads optional.
+    * Replaced tracing mechanism based on trace events with our own one,
+which is more suitable for KEDR. The new mechanism gets rid of the hacks 
+like "nop" tracer, allows to channel the trace through several handler 
+applications at once and provides more guarantees the messages are in 
+appropriate order in the trace, even on SMP systems. It is built using the
+same basic blocks provided by the kernel that ftrace and trace event 
+mechanism uses: kernel markers, special ring buffer, etc.
+    * Rewrote kedr_capture_trace tool to make use of the new tracing 
+mechanism and to make the usage of the tool more intuitive.
+    * Added support for 'caller_address' variable in fault simulation 
+scenarios. This allows to restrict fault simulation to particular areas 
+in the target module.
+    * The controller no longer outputs messages about loading and unloading
+of the target module to the trace. Payload modules now do this.
+    * Removed dependency on Perl: the build system now uses shell commands 
+instead when checking for the existence of the functions.
+    * The tests for call interception no longer use trace. This allows to
+better distinguish the errors related to tracing support from the errors
+actually related to call interception.
+    * Made 'caller_address' optional. Support for this variable can be turned 
+off manually, it is also turned off if the system is unable to provide 
+reliable call stack traces.
+
+---------------------------------------------------------------------------
 KEDR 0.1
 ---------------------------------------------------------------------------
 This is the first public stable version of KEDR framework. 

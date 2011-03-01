@@ -1,12 +1,31 @@
+2011-03-02
+KEDR 0.2 released
+
+This release provides several enhancements and various fixes compared 
+to version 0.1. Most significant changes:
+    * Tracing subsystem has been completely rewritten to be more versatile 
+and reliable even on SMP systems.
+    * A memory leak detector (LeakCheck) has been implemented.
+    * It is now possible to restrict fault simulation to particular areas 
+in the target module (if the kernel provides reliable stack traces).
+    * Several fixes have been made for KEDR to be able to work on the 
+versions 2.6.37 and 2.6.38 of the kernel.
+    * Call monitoring for 20 more functions is now supported. Support for 
+fault simulation for many of these functions as well as for vmalloc() group
+has also been provided.
+    * The issues concerning parallel builds (bug #017731) have been fixed.
+
+See ChangeLog for detailed information about the changes in this version. 
+-----------------------------------------------------------
+
 2010-11-23
 KEDR 0.1 released
 
-This is the first public stable version of KEDR framework.
-
-This version supports call monitoring and fault simulation for the kernel 
-modules chosen by the user. The framework also provides the means to build 
-custom analysis systems on top of it.
-
-To learn more about KEDR, see the documentation:
-http://kedr.berlios.de/kedr-doc/index.html
+This is the first public stable version of KEDR framework. 
+Main features of this version:
+    * support for call monitoring for the kernel modules;
+    * support for fault simulation according to the scenarios chosen by 
+the user;
+    * the means to customize the analysis tools provided with KEDR and 
+to build new tools on top of it.
 -----------------------------------------------------------
