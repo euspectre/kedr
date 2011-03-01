@@ -1,4 +1,4 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><title>2. Overview</title><link rel="stylesheet" href="kedr-doc.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.75.2"><link rel="home" href="index.html" title="KEDR 0.1 Reference Manual"><link rel="up" href="index.html" title="KEDR 0.1 Reference Manual"><link rel="prev" href="intro.html" title="1. Introduction"><link rel="next" href="getting_started.html" title="3. Getting Started"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2. Overview</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="intro.html">Prev</a> </td><th width="60%" align="center"> </th><td width="20%" align="right"> <a accesskey="n" href="getting_started.html">Next</a></td></tr></table><hr></div><div class="section" title="2. Overview"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="overview"></a>2. Overview</h2></div></div></div><div class="toc"><dl><dt><span class="section"><a href="overview.html#overview.general">2.1. General</a></span></dt><dt><span class="section"><a href="overview.html#overview.analysis">2.2. Types of Analysis KEDR Supports</a></span></dt><dt><span class="section"><a href="overview.html#overview.sys_req">2.3. System Requirements</a></span></dt><dt><span class="section"><a href="overview.html#overview.use_case">2.4. Common Use Case</a></span></dt><dt><span class="section"><a href="overview.html#overview.technologies">2.5. Key Technologies KEDR Relies Upon</a></span></dt><dt><span class="section"><a href="overview.html#overview.limit">2.6. Limitations</a></span></dt></dl></div><div class="section" title="2.1. General"><div class="titlepage"><div><div><h3 class="title"><a name="overview.general"></a>2.1. General</h3></div></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><title>2. Overview</title><link rel="stylesheet" href="kedr-doc.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.75.2"><link rel="home" href="index.html" title="KEDR 0.2 Reference Manual"><link rel="up" href="index.html" title="KEDR 0.2 Reference Manual"><link rel="prev" href="intro.html" title="1. Introduction"><link rel="next" href="getting_started.html" title="3. Getting Started"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2. Overview</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="intro.html">Prev</a> </td><th width="60%" align="center"> </th><td width="20%" align="right"> <a accesskey="n" href="getting_started.html">Next</a></td></tr></table><hr></div><div class="section" title="2. Overview"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="overview"></a>2. Overview</h2></div></div></div><div class="toc"><dl><dt><span class="section"><a href="overview.html#overview.general">2.1. General</a></span></dt><dt><span class="section"><a href="overview.html#overview.analysis">2.2. Types of Analysis KEDR Supports</a></span></dt><dt><span class="section"><a href="overview.html#overview.sys_req">2.3. System Requirements</a></span></dt><dt><span class="section"><a href="overview.html#overview.use_case">2.4. Common Use Case</a></span></dt><dt><span class="section"><a href="overview.html#overview.technologies">2.5. Key Technologies KEDR Relies Upon</a></span></dt><dt><span class="section"><a href="overview.html#overview.limit">2.6. Limitations</a></span></dt></dl></div><div class="section" title="2.1. General"><div class="titlepage"><div><div><h3 class="title"><a name="overview.general"></a>2.1. General</h3></div></div></div><p>
 KEDR is a system for the analysis of Linux <a class="link" href="glossary.html" title="Glossary">kernel modules</a> (including 
 but not limited to device drivers) in 
 runtime. The types of analysis that can be performed with KEDR vary from simply 
@@ -44,11 +44,15 @@ Note that KEDR is not generally a tool to analyze the interaction between a low-
 Currently, the means to conduct two kinds of analysis are provided with 
 KEDR itself: 
     </p><ul class="itemizedlist" type="disc"><li class="listitem"><p>
-<a class="link" href="using_kedr.html#call_mon" title="4.4. Call Monitoring"><em class="firstterm">Call monitoring</em></a> 
+<a class="link" href="using_kedr.html#call_mon" title="4.4. Call Monitoring (Call Tracing)"><em class="firstterm">Call monitoring (call tracing)</em></a> 
 During the operation of the module under analysis, the information is 
 collected about the calls to <a class="link" href="glossary.html#target_function" title="Target function">target 
 functions</a>: arguments, return values, etc. This information can be 
 saved to a file (<em class="firstterm">trace</em>) for future analysis in the user space.
+    </p><p>
+This is similar to what <a class="ulink" href="http://sourceforge.net/projects/strace/" target="_top">strace</a> 
+utility does for user-space applications.
+    </p><p>
     </p></li><li class="listitem"><p>
 <a class="link" href="using_kedr.html#fault_sim" title="4.5. Fault Simulation"><em class="firstterm">Fault simulation</em></a> 
 KEDR forces some of the calls made by the target module to fail. In fact,
@@ -56,13 +60,21 @@ KEDR simulates the failure without actually calling the respective
 <a class="link" href="glossary.html#target_function" title="Target function">target function</a>. The scenarios 
 (the calls to which functions must fail in what conditions) can be 
 controlled and customized by the user.
+    </p></li><li class="listitem"><p>
+<a class="link" href="using_kedr.html#leak_check" title="4.6. Detecting Memory Leaks"><em class="firstterm">Checking for memory leaks</em></a> 
+The appropriate components of KEDR keep track of memory allocation and 
+deallocation operations made by the target module. After the target module 
+has unloaded, KEDR generates a report listing the memory blocks that have 
+been allocated but not freed by that module along with a call stack for 
+each of these blocks.
     </p></li></ul></div><p>
 Other types of analysis can be implemented with the help of KEDR. See 
 <a class="xref" href="extend.html#custom_analysis" title="5.6. Implementing Custom Types of Analysis">Section 5.6, “Implementing Custom Types of Analysis”</a> for more information and examples.
 </p></div><div class="section" title="2.3. System Requirements"><div class="titlepage"><div><div><h3 class="title"><a name="overview.sys_req"></a>2.3. System Requirements</h3></div></div></div><p>
 KEDR system supports Linux kernel versions 2.6.31 or newer. Of all kernel 
-facilities it relies upon, trace events currently have the highest requirements
-for the version of the kernel.
+facilities it relies upon, tracing facilities (implementation of ring 
+buffer, etc.) currently have the highest requirements for the version of 
+the kernel.
 </p><p>
 For the present time, only x86 and x86-64 architectures are supported.
 </p><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
@@ -73,8 +85,8 @@ implement KProbes. So it can operate even on the systems where support for
 kernel probes is disabled in the kernel. 
 </p></div></div><div class="section" title="2.4. Common Use Case"><div class="titlepage"><div><div><h3 class="title"><a name="overview.use_case"></a>2.4. Common Use Case</h3></div></div></div>
 
-Here is what a common use case for the runtime analysis of a driver with 
-KEDR may look like. This is just <span class="quote">“<span class="quote">a big picture</span>”</span>, see <a class="xref" href="getting_started.html" title="3. Getting Started">Section 3, “Getting Started”</a> for a detailed description which commands are 
+Here is what a common use case for the runtime analysis of a kernel module with 
+KEDR may look like. This is just <span class="quote">“<span class="quote">a big picture</span>”</span>, see <a class="xref" href="getting_started.html" title="3. Getting Started">Section 3, “Getting Started”</a> for a more detailed description of the operations
 executed at each step.
 
 The steps listed below can be performed manually or perhaps by a user-space 
@@ -101,8 +113,8 @@ or any other operation (s)he wants to. As this is being done, the payload
 modules collect the information about the operation of the module, perform 
 fault simulation, etc.
 </p><p>
-The tests checking various operations with the driver can also be run at 
-this step. The goal is to make the driver execute all the paths in its 
+The tests checking various operations with the kernel module can also be run at 
+this step. The goal is to make the module execute all the paths in its 
 code that the user wants to check.
 </p></li><li class="step" title="Step 5"><p>
 If necessary, the user may save (<span class="quote">“<span class="quote">capture</span>”</span>) the trace output by
@@ -129,10 +141,13 @@ functionality in the future versions of the system.
 The core components of KEDR have been developed based on the technologies 
 heavily used in the kernel itself, for example:
 </p><ul class="itemizedlist" type="disc"><li class="listitem"><p>
+<em class="firstterm">notification system</em>;
+</p></li><li class="listitem"><p>
 <em class="firstterm">instruction decoding facilities</em> used in the kernel 
 to implement KProbes;
 </p></li><li class="listitem"><p>
-<em class="firstterm">trace points</em> and <em class="firstterm">trace events</em> - 
+<em class="firstterm">tracing support</em> (namely, <em class="firstterm">kernel markers</em>
+and implementation of a special <em class="firstterm">ring buffer</em> - 
 the basis of various data collection systems used in the kernel;
 </p></li><li class="listitem"><p>
 <em class="firstterm">debugfs</em> file system as the mechanism for data exchange between 
@@ -141,7 +156,7 @@ the kernel space and the user space.
 The ideas KEDR is based upon and the technologies it currently uses impose 
 some limitations on what it can do.
 </p><ul class="itemizedlist" type="disc"><li class="listitem"><p>
-KEDR operates on the binary interface used by a target driver (ABI rather 
+KEDR operates on the binary interface used by a target module (ABI rather 
 than API) like many other runtime analysis systems. This not bad per se 
 but one of the consequences of this is that KEDR cannot detect, for example, 
 a call to <code class="code">kmalloc()</code> because it is usually a macro or an 
@@ -150,16 +165,18 @@ inconvenient. KEDR, however, <span class="emphasis"><em>can</em></span> detect t
 <code class="code">__kmalloc()</code>, <code class="code">kmem_cache_alloc()</code> and other 
 functions to which <code class="code">kmalloc()</code> eventually expands.
     </p></li><li class="listitem"><p>
-KEDR can only detect the calls directly made from the target driver. This 
-is because it is only the target driver that is instrumented by KEDR, the 
+KEDR can only detect the calls directly made from the target kernel module. This 
+is because it is only the target module that is instrumented by KEDR, the 
 rest of the kernel is not affected. 
     </p><p>
-Suppose the target driver calls function <code class="code">create_foo()</code> exported 
-by some other driver or by the kernel. Let that function allocate memory for 
+Suppose the target module calls function <code class="code">create_foo()</code> exported 
+by some other module or by the kernel proper. Let that function allocate memory for 
 some structure with <code class="code">kmalloc()</code>, initialize the structure and 
 return a pointer to it. In this case, KEDR is unaware that a memory 
 allocation has taken place. You need to tell KEDR explicitly to intercept 
 the calls to <code class="code">create_foo()</code> too to be able to track this.
     </p></li><li class="listitem"><p>
-The tools build using KEDR framework can operate only on the calls made by the target module. Although it is enough in many cases, sometimes it is not. For example, a detector of data race conditions would require information not only about the calls to locking functions or the like but also about memory read and write operations which KEDR cannot track.
+Currently, KEDR allows to analyze only one kernel module at a time. 
+    </p></li><li class="listitem"><p>
+The tools built using KEDR framework can operate only on the calls made by the target module. Although it is enough in many cases, sometimes it is not. For example, a detector of data race conditions would require information not only about the calls to locking functions or the like but also about memory read and write operations which KEDR cannot track.
     </p></li></ul></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="intro.html">Prev</a> </td><td width="20%" align="center"> </td><td width="40%" align="right"> <a accesskey="n" href="getting_started.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">1. Introduction </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 3. Getting Started</td></tr></table></div></body></html>

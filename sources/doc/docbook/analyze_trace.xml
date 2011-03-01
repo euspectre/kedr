@@ -6,11 +6,10 @@ This section describes a couple of techniques that can be used when analyzing th
 </para>
 
 <note>
-<!--
 <para>
-Please check if the kernel of your system is built with <code>CONFIG_STACKTRACE</code> and <code>CONFIG_FRAME_POINTER</code> parameters set to <quote>y</quote>. This is not the case on some systems by default. If these parameters are not defined, KEDR is sometimes unable to find the addresses of the calls to the target functions. Something like <code>([&lt;(null)&gt;] not_supported+0x0)</code> could appear in the trace instead of real addresses in this case.
+It is recommended that the kernel of your system should be built with <code>CONFIG_FRAME_POINTER</code> or <code>CONFIG_STACK_UNWIND</code> parameters set to <quote>y</quote>. This is not the case on some systems by default. If neither of these parameters are not defined, reliable stack trace information could probably be unavailable. KEDR will still work in this case but, for example, its reports concerning memory leaks may be less detailed. 
 </para>
--->
+
 <para>
 It is desirable to have the target module with debug information enabled. Note that it is only necessary if you would like to match the trace records to the appropriate fragments of the source code of the target module. KEDR itself <emphasis>does not</emphasis> require the modules under analysis to have debug information.
 </para>
@@ -28,9 +27,9 @@ Let us consider the trace from the example described in <xref linkend="getting_s
 <programlisting><![CDATA[
 [1] insmod-6416 [001] 805.997320: target_session_begins: target module: "kedr_sample_target"
 [2] insmod-6416 [001] 805.997615: called___kmalloc: ([<ffffffffa00e70b9>] init+0xb9) 
-    arguments: (320, d0), result: ffff8800165a8000
+    arguments: (320, 80d0), result: ffff8800165a8000
 [3] dd-6438     [000] 858.641942: called___kmalloc: ([<ffffffffa01d661e>] core+0x61e) 
-    arguments: (4000, d0), result: ffff88001659e000
+    arguments: (4000, 80d0), result: ffff88001659e000
 [4] dd-6438     [000] 858.642074: called_copy_from_user: ([<ffffffffa01d642a>] core+0x42a) 
     arguments: (ffff88001659e000, 000000000137d000, 1), result: 0
     ...
@@ -44,11 +43,7 @@ Let us consider the trace from the example described in <xref linkend="getting_s
 ]]></programlisting>
 
 <para>
-The <quote>marker records</quote> #1 and #8 denote the beginning and the end of the <quote>tracing session</quote>, i.e. the moments when the target module was loaded and unloaded, respectively. Let us analyze the remaining ones.
-</para>
-
-<para>
-Let us analyze the remaining ones. For each trace record of interest, we need to perform at least the following steps.
+The <quote>marker records</quote> #1 and #8 denote the beginning and the end of the <quote>tracing session</quote>, i.e. the moments when the target module was loaded and unloaded, respectively. Let us analyze the remaining ones. For each trace record of interest, we need to perform at least the following steps.
 </para>
 
 <procedure>
@@ -144,20 +139,20 @@ Consider the trace record #2. The detected call to <code>__kmalloc</code> was ma
 <programlisting><![CDATA[
 (gdb) list *(0x6bc + 0xb9)
 
-0x775 is in cfake_init_module (/home/tester/work/kedr/other/sample_target/cfake.c:153).
-148     
-149     /* Allocate the array of devices */
-150     cfake_devices = (struct cfake_dev*)kmalloc(
-151         cfake_ndevices * sizeof(struct cfake_dev), 
-152         GFP_KERNEL);
-153     if (cfake_devices == NULL) {
-154         result = -ENOMEM;
-155         goto fail;
-156     }
+0x775 is in cfake_init_module (/home/tester/work/kedr/other/sample_target/cfake.c:323).
+318     
+319     /* Allocate the array of devices */
+320     cfake_devices = (struct cfake_dev*)kzalloc(
+321         cfake_ndevices * sizeof(struct cfake_dev), 
+322         GFP_KERNEL);
+323     if (cfake_devices == NULL) {
+324         result = -ENOMEM;
+325         goto fail;
+326     }
 ]]></programlisting>
 
 <para>
-GDB points to the line following the call to <code>__kmalloc</code> (<code>kmalloc</code> is an inline function) we are interested in. If we used the exact offset of the call instruction rather than the offset of the next one, GDB would show the innards of the inline kmalloc function substituted to the source of the target module which is probably not very convenient:
+GDB points to the line following the call to <code>__kmalloc</code> (<code>kzalloc</code> is an inline function) we are interested in. If we used the exact offset of the call instruction rather than the offset of the next one, GDB would show the innards of the inline kmalloc function substituted to the source of the target module which is probably not very convenient:
 </para>
 
 <programlisting><![CDATA[
@@ -188,17 +183,15 @@ Let us consider the record #3. It corresponds to a call to <code>__kmalloc</code
 <programlisting><![CDATA[
 (gdb) list *(0x30 + 0x61e)
 
-0x64e is in cfake_open (/home/tester/work/kedr/other/sample_target/cfake.c:222).
-217     if (dev->data == NULL)
-218     {
-219         dev->data = (unsigned char*)kmalloc(
-220             dev->buffer_size, 
-221             GFP_KERNEL);
-222         if (dev->data == NULL)
-223         {
-224             printk(KERN_WARNING "[cr_target] open: out of memory\n");
-225             return -ENOMEM;
-226         }
+0x64e is in cfake_open (/home/tester/work/kedr/other/sample_target/cfake.c:85).
+82     if (dev->data == NULL)
+83     {
+84         dev->data = (unsigned char*)kzalloc(dev->buffer_size, GFP_KERNEL);
+85         if (dev->data == NULL)
+86         {
+87             printk(KERN_WARNING "[cr_target] open: out of memory\n");
+88             return -ENOMEM;
+89         }
 ]]></programlisting>
 
 <para>
@@ -231,19 +224,19 @@ Let us locate the call mentioned in the trace record #2. Its position is right b
  610:   48 8b 7b 08             mov    0x8(%rbx),%rdi
  614:   be d0 00 00 00          mov    $0xd0,%esi
  619:   e8 00 00 00 00          callq  61e <cfake_open+0x7e>
+              61a: R_X86_64_PC32 __kmalloc-0x4
 cfake_open():
-/home/tester/work/kedr/other/sample_target/cfake.c:222
+/home/tester/work/kedr/other/sample_target/cfake.c:85
     if (dev->data == NULL)
     {
-        dev->data = (unsigned char*)kmalloc(
-            dev->buffer_size, 
-            GFP_KERNEL);
+        dev->data = (unsigned char*)kzalloc(dev->buffer_size, GFP_KERNEL);
         if (dev->data == NULL)
  61e:   48 85 c0                test   %rax,%rax
+        
 ]]></programlisting>
 
 <para>
-The remaining records can be processed in a similar way.
+So we can see from the above listing that the trace records corresponds to the call to <code>kzalloc</code> at line 84 of <filename>cfake.c</filename>. The remaining records can be processed in a similar way.
 </para>
 
 </section>
@@ -263,7 +256,7 @@ Note that we are not actually going to do fault simulation here, we will just re
 </note>
 
 <para>
-Sometimes the technique described in the sections above is not enough to find out, what the target module was actually doing when it called the target function. Consider memory allocation and deallocation, for example. The developers of the target module may choose to use <code>kmalloc()</code> directly. Alternatively, they may choose to provide a set of their own functions for memory management that probably use <code>kmalloc()</code> internally but are higher-level and suit the needs of the developers better. If the latter is the case, it may happen that many of the calls to <code>kmalloc()</code> recorded in the trace are performed from the same address in the code even if the target module services completely different requests each time. If there are many such calls recorded, it could become difficult to analyze what was actually happening in the target module, for example, to track down a memory leak or the like.
+Sometimes the technique described in the sections above is not enough to find out, what the target module was actually doing when it called the target function. Consider memory allocation and deallocation, for example. The developers of the target module may choose to use <code>kmalloc()</code> directly. Alternatively, they may choose to provide a set of their own functions for memory management that probably use <code>kmalloc()</code> internally but are higher-level and suit the needs of the developers better. If the latter is the case, it may happen that many of the calls to <code>kmalloc()</code> recorded in the trace are performed from the same address in the code even if the target module services completely different requests each time. If there are many such calls recorded, it could become difficult to analyze what was actually happening in the target module.
 </para>
 
 <para>
@@ -365,29 +358,20 @@ That is all for the payload module. Now we can build it and instruct KEDR to loa
 </para>
 
 <programlisting><![CDATA[
-on_load mkdir -p "/tmp/kedr/debugfs"
-
-# Mount debugfs to enable tracepoints later
-on_load mount debugfs -t debugfs "/tmp/kedr/debugfs"
-
-# This allows to roll back in case of error while loading a payload
-on_unload mount | grep "/tmp/kedr/debugfs"; if test $? -eq 0; then umount "/tmp/kedr/debugfs"; fi
+# Tracing support
+module /usr/local/lib/modules/2.6.34.7-0.5-default/misc/kedr_trace.ko
 
 # Fault simulation infrastructure
 module /usr/local/lib/modules/2.6.34.7-0.5-default/misc/kedr_fault_simulation.ko
 
 # Payload modules
 payload /home/tester/work/kedr/payload_dump_stack/payload_dump_stack.ko 
-on_load echo 1 > /tmp/kedr/debugfs/tracing/events/payload_dump_stack/enable
 
 # Indicators 
 # We could use kedr_fsim_indicator_common.ko as well because we are 
 # not going to set scenarios involving restrictions on the arguments 
 # of __kmalloc.
 module /usr/local/lib/modules/2.6.34.7-0.5-default/misc/kedr_fsim_indicator_kmalloc.ko
-
-# After tracepoints are enabled for all payloads, unmount debugfs
-on_load umount "/tmp/kedr/debugfs"
 ]]></programlisting>
 
 <para>
@@ -433,6 +417,10 @@ Now that we have got the stack trace for that call, it will probably be easier t
 <para>
 If there are still too many calls to the target functions made from in the context of a given process, one might want to filter the calls further to avoid filling the system log with lots of call stacks. We could instruct our system to trigger stack dump only for the call with a given number, or for the first N calls, or only for the calls where <code>size</code> parameter is 36, etc. All features of fault simulation scenarios can be used here (see <xref linkend="fault_sim"/>). 
 </para>
+
+<note><para>
+Note that as far as detection of memory leaks is concerned, <link linkend="leak_check">the special plugin</link> provided by KEDR for this purpose automatically obtains call stack information for spurious memory allocations and deallocations. So it is not actually necessary to apply the technique described above when analyzing memory leaks. This example is here to demonstrate that <quote>point and indicator</quote> can be reused to obtain the desired information as well.
+</para></note>
 
 </section>
 <!-- ============================================================== -->

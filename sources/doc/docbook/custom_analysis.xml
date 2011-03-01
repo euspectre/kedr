@@ -32,7 +32,9 @@ Once the above steps are completed, KEDR utilities can be used to load your payl
 </para>
 
 <note><para>
-The source code of the analysis system developed in this example is available in <filename class="directory">&lt;kedr_install_dir&gt;/share/kedr/examples/counters/</filename>.
+The source code of the analysis system developed in this example is available in </para>
+
+<para><filename class="directory">&lt;kedr_install_dir&gt;/share/kedr/examples/counters/</filename>.
 </para></note>
 <!-- ============================================================== -->
 

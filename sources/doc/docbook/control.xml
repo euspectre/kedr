@@ -37,7 +37,7 @@
         <term><option>-c</option> <replaceable>conf_string</replaceable></term>
         <listitem>
             <para>
-Use string <replaceable>conf_string</replaceable> for configuring KEDR while loading.
+<replaceable>conf_string</replaceable> string provides configuration parameters that KEDR will use when loading and unloading.
             </para>
         </listitem>
     </varlistentry>
@@ -45,24 +45,30 @@ Use string <replaceable>conf_string</replaceable> for configuring KEDR while loa
         <term>-f <replaceable>conf_file</replaceable></term>
         <listitem>
             <para>
-Use file <replaceable>conf_file</replaceable> for configuring KEDR while loading. For files in the default configuration directory (<filename class="directory">/var/opt/kedr/configs</filename>) or <filename class="directory">%prefix%/var/configs</filename>, depending on where KEDR is installed) directory part of the filename may be omitted. In the current version, default configuration directory contains follows configuration files:
+<replaceable>conf_file</replaceable> file provides configuration parameters that KEDR will use when loading and unloading. For the files in the default configuration directory (<filename class="directory">/var/opt/kedr/configs</filename>) or <filename class="directory">&lt;install_prefix&gt;/var/configs</filename> depending on where KEDR is installed) directory part of the path may be omitted. In the current version, the default configuration directory contains the following files:
                 <variablelist>
                     <varlistentry>
                         <term><filename>callm.conf</filename></term>
                         <listitem>
-                            <para>Load call monitor payload set.</para>
+                            <para>Configuration profile for call monitoring (call tracing).</para>
                         </listitem>
                     </varlistentry>
                     <varlistentry>
                         <term><filename>fsim.conf</filename></term>
                         <listitem>
-                            <para>Load fault simulation payload set.</para>
+                            <para>Configuration profile for fault simulation.</para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term><filename>leak_check.conf</filename></term>
+                        <listitem>
+                            <para>Configuration profile for memory leak detection.</para>
                         </listitem>
                     </varlistentry>
                     <varlistentry>
                         <term><filename>default.conf</filename></term>
                         <listitem>
-                            <para>Default configuration file. Load call monitor payload set (same as <filename>callm.conf</filename>).</para>
+                            <para>Default configuration profile is the profile for call monitoring too (the same as <filename>callm.conf</filename>).</para>
                         </listitem>
                     </varlistentry>
                 </variablelist>
@@ -71,10 +77,10 @@ Use file <replaceable>conf_file</replaceable> for configuring KEDR while loading
     </varlistentry>
 </variablelist>
             <para>
-All <replaceable>conf_string</replaceable> and <replaceable>conf_file</replaceable> arguments of the command are, in fact, joined into one configuration file in the same order as they are listed. The resulting file is used as configuration file for the command.
+All <replaceable>conf_string</replaceable> and <replaceable>conf_file</replaceable> arguments of the command will actually be combined into one configuration file by KEDR control tool, in the same order as they are listed. The resulting profile will be used when loading and unloading KEDR.
             </para>
             <para>
-If no <replaceable>conf_string</replaceable> and <replaceable>conf_file</replaceable> options are given, the command will use the default configuration file (<filename>/var/opt/kedr/configs/default.conf</filename> or <filename>%prefix%/var/configs/default.conf</filename>, depending on where KEDR is installed).
+If no <replaceable>conf_string</replaceable> and <replaceable>conf_file</replaceable> options are given, the command will use the default configuration file (<filename>/var/opt/kedr/configs/default.conf</filename> or <filename>&lt;install_prefix&gt;/var/configs/default.conf</filename>, depending on where KEDR is installed).
             </para>
 
 </section>
@@ -83,7 +89,7 @@ If no <replaceable>conf_string</replaceable> and <replaceable>conf_file</replace
     <section id="kedr_control.description.start">
     <title>&kedr-service; start</title>
         <para>
-<command>&kedr-service; start</command> loads <filename>kedr_base</filename> module first (it is a part of KEDR core). Then it processes the  configuration file in the <quote>on_load</quote> mode and executes all resulting strings. The configuration file is the default one or the one prepared based on the options of the command (see <xref linkend="kedr_control.options"></xref>). Finally, <filename>kedr_controller</filename> module is loaded (the remaining part of the KEDR core) with <quote>target_name</quote> parameter equal to <replaceable>target_name</replaceable>. That is, the KEDR core is now configured to operate on the module named <replaceable>target_name</replaceable>.
+<command>&kedr-service; start</command> loads <filename>kedr_base</filename> module first (it is a part of KEDR core). Then it processes the  configuration file in the <quote>on_load</quote> mode and executes all resulting strings. The configuration file is the default one or the one prepared based on the options of the command (see <xref linkend="kedr_control.options"></xref>). Finally, <filename>kedr_controller</filename> module is loaded (also part of the KEDR core) with <quote>target_name</quote> parameter equal to <replaceable>target_name</replaceable>. That is, the KEDR core is now configured to operate on the module named <replaceable>target_name</replaceable>.
         </para>
         <para>
 If <filename>kedr_base</filename> module is already loaded, <command>&kedr-service; start</command> does nothing and returns 1.
@@ -113,7 +119,7 @@ If module with name <replaceable>target_name</replaceable> is currently running,
     <title>&kedr-service; status</title>
         <para>
 <command>&kedr-service; status</command> outputs information about the current status of KEDR.
-That is: whether <filename>kedr_base</filename> and <filename>kedr_controller</filename> modules are loaded, which payload modules are currently loaded, whether the target module (the module under analysis) is currently loaded.
+That is, whether <filename>kedr_base</filename> and <filename>kedr_controller</filename> modules are loaded, which payload modules are currently loaded, whether the target module (the module under analysis) is currently loaded.
         </para>
     </section>
 
@@ -141,7 +147,7 @@ If <filename>kedr_base</filename> module is still loaded after <quote>stop</quot
 <section id="kedr_control.caveats">
 <title>Caveats</title>
     <para>
-In its <command>start</command>, <command>stop</command> and <command>restart</command> modes, <command>&kedr-service;</command> changes the state of tracepoints breaking usage of the trace. So, trace capturing mechanism (<command>kedr_capture_trace</command>) should not be running when <command>&kedr-service;</command> command is executed in these modes.
+In its <command>start</command>, <command>stop</command> and <command>restart</command> modes, <command>&kedr-service;</command> may break the usage of the trace. So, trace capturing mechanism (<command>kedr_capture_trace</command>) should not be running when <command>&kedr-service;</command> command is executed in these modes.
     </para>
 </section>
 

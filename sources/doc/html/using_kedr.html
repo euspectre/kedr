@@ -1,15 +1,16 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><title>4. Using KEDR</title><link rel="stylesheet" href="kedr-doc.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.75.2"><link rel="home" href="index.html" title="KEDR 0.1 Reference Manual"><link rel="up" href="index.html" title="KEDR 0.1 Reference Manual"><link rel="prev" href="getting_started.html" title="3. Getting Started"><link rel="next" href="extend.html" title="5. Customizing and Extending KEDR"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">4. Using KEDR</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="getting_started.html">Prev</a> </td><th width="60%" align="center"> </th><td width="20%" align="right"> <a accesskey="n" href="extend.html">Next</a></td></tr></table><hr></div><div class="section" title="4. Using KEDR"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="using_kedr"></a>4. Using KEDR</h2></div></div></div><div class="toc"><dl><dt><span class="section"><a href="using_kedr.html#kedr_control">4.1. Controlling KEDR</a></span></dt><dd><dl><dt><span class="section"><a href="using_kedr.html#kedr_control.general">4.1.1. General</a></span></dt><dt><span class="section"><a href="using_kedr.html#kedr_control.syntax">4.1.2. Usage</a></span></dt><dt><span class="section"><a href="using_kedr.html#kedr_control.options">4.1.3. Options</a></span></dt><dt><span class="section"><a href="using_kedr.html#kedr_control.description">4.1.4. Description</a></span></dt><dt><span class="section"><a href="using_kedr.html#kedr_control.caveats">4.1.5. Caveats</a></span></dt><dt><span class="section"><a href="using_kedr.html#kedr_control.config_file">4.1.6. Configuration file</a></span></dt><dt><span class="section"><a href="using_kedr.html#kedr_control.examples">4.1.7. Examples</a></span></dt></dl></dd><dt><span class="section"><a href="using_kedr.html#capture_trace">4.2. Capturing the Trace</a></span></dt><dd><dl><dt><span class="section"><a href="using_kedr.html#capture_trace.general">4.2.1. General</a></span></dt><dt><span class="section"><a href="using_kedr.html#capture_trace.syntax">4.2.2. Usage</a></span></dt><dt><span class="section"><a href="using_kedr.html#kedr_capture_trace.options">4.2.3. Options</a></span></dt><dt><span class="section"><a href="using_kedr.html#capture_trace.description">4.2.4. Description</a></span></dt><dt><span class="section"><a href="using_kedr.html#capture_trace.caveats">4.2.5. Caveats</a></span></dt><dt><span class="section"><a href="using_kedr.html#capture_trace.examples">4.2.6. Examples</a></span></dt></dl></dd><dt><span class="section"><a href="using_kedr.html#how_kedr_works">4.3. How KEDR Works</a></span></dt><dt><span class="section"><a href="using_kedr.html#call_mon">4.4. Call Monitoring</a></span></dt><dt><span class="section"><a href="using_kedr.html#fault_sim">4.5. Fault Simulation</a></span></dt><dt><span class="section"><a href="using_kedr.html#analyze_trace">4.6. Analyzing the Trace</a></span></dt><dd><dl><dt><span class="section"><a href="using_kedr.html#analyze_trace.general">4.6.1. General</a></span></dt><dt><span class="section"><a href="using_kedr.html#analyze_trace.gdb">4.6.2. Locating the Calls in the Sources with GDB</a></span></dt><dt><span class="section"><a href="using_kedr.html#analyze_trace.objdump">4.6.3. Locating the Calls in the Sources with Objdump</a></span></dt><dt><span class="section"><a href="using_kedr.html#analyze_trace.stack">4.6.4. Obtaining the Call Stack</a></span></dt></dl></dd></dl></div><div class="section" title="4.1. Controlling KEDR"><div class="titlepage"><div><div><h3 class="title"><a name="kedr_control"></a>4.1. Controlling KEDR</h3></div></div></div><div class="section" title="4.1.1. General"><div class="titlepage"><div><div><h4 class="title"><a name="kedr_control.general"></a>4.1.1. General</h4></div></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><title>4. Using KEDR</title><link rel="stylesheet" href="kedr-doc.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.75.2"><link rel="home" href="index.html" title="KEDR 0.2 Reference Manual"><link rel="up" href="index.html" title="KEDR 0.2 Reference Manual"><link rel="prev" href="getting_started.html" title="3. Getting Started"><link rel="next" href="extend.html" title="5. Customizing and Extending KEDR"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">4. Using KEDR</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="getting_started.html">Prev</a> </td><th width="60%" align="center"> </th><td width="20%" align="right"> <a accesskey="n" href="extend.html">Next</a></td></tr></table><hr></div><div class="section" title="4. Using KEDR"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="using_kedr"></a>4. Using KEDR</h2></div></div></div><div class="toc"><dl><dt><span class="section"><a href="using_kedr.html#kedr_control">4.1. Controlling KEDR</a></span></dt><dd><dl><dt><span class="section"><a href="using_kedr.html#kedr_control.general">4.1.1. General</a></span></dt><dt><span class="section"><a href="using_kedr.html#kedr_control.syntax">4.1.2. Usage</a></span></dt><dt><span class="section"><a href="using_kedr.html#kedr_control.options">4.1.3. Options</a></span></dt><dt><span class="section"><a href="using_kedr.html#kedr_control.description">4.1.4. Description</a></span></dt><dt><span class="section"><a href="using_kedr.html#kedr_control.caveats">4.1.5. Caveats</a></span></dt><dt><span class="section"><a href="using_kedr.html#kedr_control.config_file">4.1.6. Configuration file</a></span></dt><dt><span class="section"><a href="using_kedr.html#kedr_control.examples">4.1.7. Examples</a></span></dt></dl></dd><dt><span class="section"><a href="using_kedr.html#capture_trace">4.2. Capturing the Trace</a></span></dt><dd><dl><dt><span class="section"><a href="using_kedr.html#capture_trace.general">4.2.1. General</a></span></dt><dt><span class="section"><a href="using_kedr.html#capture_trace.syntax">4.2.2. Usage</a></span></dt><dt><span class="section"><a href="using_kedr.html#capture_trace.description">4.2.3. Description</a></span></dt><dt><span class="section"><a href="using_kedr.html#kedr_capture_trace.options">4.2.4. Options</a></span></dt><dt><span class="section"><a href="using_kedr.html#capture_trace.examples">4.2.5. Examples</a></span></dt></dl></dd><dt><span class="section"><a href="using_kedr.html#how_kedr_works">4.3. How KEDR Works</a></span></dt><dt><span class="section"><a href="using_kedr.html#call_mon">4.4. Call Monitoring (Call Tracing)</a></span></dt><dt><span class="section"><a href="using_kedr.html#fault_sim">4.5. Fault Simulation</a></span></dt><dt><span class="section"><a href="using_kedr.html#leak_check">4.6. Detecting Memory Leaks</a></span></dt><dd><dl><dt><span class="section"><a href="using_kedr.html#leak_check.usage">4.6.1. Typical Usage</a></span></dt><dt><span class="section"><a href="using_kedr.html#leak_check.reports">4.6.2. Reports</a></span></dt><dt><span class="section"><a href="using_kedr.html#leak_check.analysis">4.6.3. Analyzing the Results</a></span></dt><dt><span class="section"><a href="using_kedr.html#leak_check.stack_depth">4.6.4. Stack Depth</a></span></dt><dt><span class="section"><a href="using_kedr.html#leak_check.caveats">4.6.5. Caveats</a></span></dt></dl></dd><dt><span class="section"><a href="using_kedr.html#analyze_trace">4.7. Analyzing the Trace</a></span></dt><dd><dl><dt><span class="section"><a href="using_kedr.html#analyze_trace.general">4.7.1. General</a></span></dt><dt><span class="section"><a href="using_kedr.html#analyze_trace.gdb">4.7.2. Locating the Calls in the Sources with GDB</a></span></dt><dt><span class="section"><a href="using_kedr.html#analyze_trace.objdump">4.7.3. Locating the Calls in the Sources with Objdump</a></span></dt><dt><span class="section"><a href="using_kedr.html#analyze_trace.stack">4.7.4. Obtaining the Call Stack</a></span></dt></dl></dd></dl></div><div class="section" title="4.1. Controlling KEDR"><div class="titlepage"><div><div><h3 class="title"><a name="kedr_control"></a>4.1. Controlling KEDR</h3></div></div></div><div class="section" title="4.1.1. General"><div class="titlepage"><div><div><h4 class="title"><a name="kedr_control.general"></a>4.1.1. General</h4></div></div></div><p>
     <span class="command"><strong>kedr</strong></span> - a service-like tool to control KEDR.
-</p></div><div class="section" title="4.1.2. Usage"><div class="titlepage"><div><div><h4 class="title"><a name="kedr_control.syntax"></a>4.1.2. Usage</h4></div></div></div><div class="cmdsynopsis"><p><code class="command">kedr start</code>   <em class="replaceable"><code>target_name</code></em>  [ -c <em class="replaceable"><code>conf_string</code></em>  |   <em class="replaceable"><code>conf_file</code></em> ...]</p></div><div class="cmdsynopsis"><p><code class="command">kedr stop</code> </p></div><div class="cmdsynopsis"><p><code class="command">kedr status</code> </p></div><div class="cmdsynopsis"><p><code class="command">kedr restart</code> </p></div></div><div class="section" title="4.1.3. Options"><div class="titlepage"><div><div><h4 class="title"><a name="kedr_control.options"></a>4.1.3. Options</h4></div></div></div><div class="variablelist"><dl><dt><span class="term"><code class="option">-c</code> <em class="replaceable"><code>conf_string</code></em></span></dt><dd><p>
-Use configuration string <em class="replaceable"><code>conf_string</code></em> instead of the default configuration file.
-            </p></dd><dt><span class="term"><em class="replaceable"><code>conf_file</code></em></span></dt><dd><p>
-Use configuration file <em class="replaceable"><code>conf_file</code></em> instead of the default configuration file.
+</p></div><div class="section" title="4.1.2. Usage"><div class="titlepage"><div><div><h4 class="title"><a name="kedr_control.syntax"></a>4.1.2. Usage</h4></div></div></div><div class="cmdsynopsis"><p><code class="command">kedr start</code>   <em class="replaceable"><code>target_name</code></em>  [ -c <em class="replaceable"><code>conf_string</code></em>  |   -f <em class="replaceable"><code>conf_file</code></em> ...]</p></div><div class="cmdsynopsis"><p><code class="command">kedr stop</code> </p></div><div class="cmdsynopsis"><p><code class="command">kedr status</code> </p></div><div class="cmdsynopsis"><p><code class="command">kedr restart</code> </p></div></div><div class="section" title="4.1.3. Options"><div class="titlepage"><div><div><h4 class="title"><a name="kedr_control.options"></a>4.1.3. Options</h4></div></div></div><div class="variablelist"><dl><dt><span class="term"><code class="option">-c</code> <em class="replaceable"><code>conf_string</code></em></span></dt><dd><p>
+<em class="replaceable"><code>conf_string</code></em> string provides configuration parameters that KEDR will use when loading and unloading.
+            </p></dd><dt><span class="term">-f <em class="replaceable"><code>conf_file</code></em></span></dt><dd><p>
+<em class="replaceable"><code>conf_file</code></em> file provides configuration parameters that KEDR will use when loading and unloading. For the files in the default configuration directory (<code class="filename">/var/opt/kedr/configs</code>) or <code class="filename">&lt;install_prefix&gt;/var/configs</code> depending on where KEDR is installed) directory part of the path may be omitted. In the current version, the default configuration directory contains the following files:
+                </p><div class="variablelist"><dl><dt><span class="term"><code class="filename">callm.conf</code></span></dt><dd><p>Configuration profile for call monitoring (call tracing).</p></dd><dt><span class="term"><code class="filename">fsim.conf</code></span></dt><dd><p>Configuration profile for fault simulation.</p></dd><dt><span class="term"><code class="filename">leak_check.conf</code></span></dt><dd><p>Configuration profile for memory leak detection.</p></dd><dt><span class="term"><code class="filename">default.conf</code></span></dt><dd><p>Default configuration profile is the profile for call monitoring too (the same as <code class="filename">callm.conf</code>).</p></dd></dl></div><p>
             </p></dd></dl></div><p>
-All <em class="replaceable"><code>conf_string</code></em> and <em class="replaceable"><code>conf_file</code></em> arguments of the command are, in fact, joined into one configuration file in the same order as they are listed. The resulting file is used as configuration file for the command.
+All <em class="replaceable"><code>conf_string</code></em> and <em class="replaceable"><code>conf_file</code></em> arguments of the command will actually be combined into one configuration file by KEDR control tool, in the same order as they are listed. The resulting profile will be used when loading and unloading KEDR.
             </p><p>
-If no <em class="replaceable"><code>conf_string</code></em> and <em class="replaceable"><code>conf_file</code></em> options are given, the command will use the default configuration file (<code class="filename">/var/opt/kedr/kedr.conf</code> or <code class="filename">%prefix%/var/kedr.conf</code>, depending on where KEDR is installed).
+If no <em class="replaceable"><code>conf_string</code></em> and <em class="replaceable"><code>conf_file</code></em> options are given, the command will use the default configuration file (<code class="filename">/var/opt/kedr/configs/default.conf</code> or <code class="filename">&lt;install_prefix&gt;/var/configs/default.conf</code>, depending on where KEDR is installed).
             </p></div><div class="section" title="4.1.4. Description"><div class="titlepage"><div><div><h4 class="title"><a name="kedr_control.description"></a>4.1.4. Description</h4></div></div></div><div class="section" title="4.1.4.1. kedr start"><div class="titlepage"><div><div><h5 class="title"><a name="kedr_control.description.start"></a>4.1.4.1. kedr start</h5></div></div></div><p>
-<span class="command"><strong>kedr start</strong></span> loads <code class="filename">kedr_base</code> module first (it is a part of KEDR core). Then it processes the  configuration file in the <span class="quote">“<span class="quote">on_load</span>”</span> mode and executes all resulting strings. The configuration file is the default one or the one prepared based on the options of the command (see <a class="xref" href="using_kedr.html#kedr_control.options" title="4.1.3. Options">Section 4.1.3, “Options”</a>). Finally, <code class="filename">kedr_controller</code> module is loaded (the remaining part of the KEDR core) with <span class="quote">“<span class="quote">target_name</span>”</span> parameter equal to <em class="replaceable"><code>target_name</code></em>. That is, the KEDR core is now configured to operate on the module named <em class="replaceable"><code>target_name</code></em>.
+<span class="command"><strong>kedr start</strong></span> loads <code class="filename">kedr_base</code> module first (it is a part of KEDR core). Then it processes the  configuration file in the <span class="quote">“<span class="quote">on_load</span>”</span> mode and executes all resulting strings. The configuration file is the default one or the one prepared based on the options of the command (see <a class="xref" href="using_kedr.html#kedr_control.options" title="4.1.3. Options">Section 4.1.3, “Options”</a>). Finally, <code class="filename">kedr_controller</code> module is loaded (also part of the KEDR core) with <span class="quote">“<span class="quote">target_name</span>”</span> parameter equal to <em class="replaceable"><code>target_name</code></em>. That is, the KEDR core is now configured to operate on the module named <em class="replaceable"><code>target_name</code></em>.
         </p><p>
 If <code class="filename">kedr_base</code> module is already loaded, <span class="command"><strong>kedr start</strong></span> does nothing and returns 1.
         </p><p>
@@ -24,7 +25,7 @@ If <code class="filename">kedr_base</code> module did not start, <span class="co
 If module with name <em class="replaceable"><code>target_name</code></em> is currently running, <span class="command"><strong>kedr stop</strong></span> does nothing and returns 1.
         </p></div><div class="section" title="4.1.4.3. kedr status"><div class="titlepage"><div><div><h5 class="title"><a name="kedr_control.description.status"></a>4.1.4.3. kedr status</h5></div></div></div><p>
 <span class="command"><strong>kedr status</strong></span> outputs information about the current status of KEDR.
-That is: whether <code class="filename">kedr_base</code> and <code class="filename">kedr_controller</code> modules are loaded, which payload modules are currently loaded, whether the target module (the module under analysis) is currently loaded.
+That is, whether <code class="filename">kedr_base</code> and <code class="filename">kedr_controller</code> modules are loaded, which payload modules are currently loaded, whether the target module (the module under analysis) is currently loaded.
         </p></div><div class="section" title="4.1.4.4. kedr restart"><div class="titlepage"><div><div><h5 class="title"><a name="kedr_control.description.restart"></a>4.1.4.4. kedr restart</h5></div></div></div><p>
 <span class="command"><strong>kedr restart</strong></span> does effectively the same as
 </p><pre class="programlisting">
@@ -38,7 +39,7 @@ If module with name <em class="replaceable"><code>target_name</code></em> is cur
         </p><p>
 If <code class="filename">kedr_base</code> module is still loaded after <span class="quote">“<span class="quote">stop</span>”</span> operation has been executed, <span class="quote">“<span class="quote">start</span>”</span> operation will not run and <span class="command"><strong>kedr restart</strong></span> will return 1.
         </p></div></div><div class="section" title="4.1.5. Caveats"><div class="titlepage"><div><div><h4 class="title"><a name="kedr_control.caveats"></a>4.1.5. Caveats</h4></div></div></div><p>
-In its <span class="command"><strong>start</strong></span>, <span class="command"><strong>stop</strong></span> and <span class="command"><strong>restart</strong></span> modes, <span class="command"><strong>kedr</strong></span> changes the state of tracepoints breaking usage of the trace. So, trace capturing mechanism should not be running when <span class="command"><strong>kedr</strong></span> command is executed in these modes. To be exact, <span class="command"><strong>kedr_capture_trace</strong></span> should not be in capturing state and <span class="command"><strong>kedr_capture_trace session</strong></span> should not be running in this case.
+In its <span class="command"><strong>start</strong></span>, <span class="command"><strong>stop</strong></span> and <span class="command"><strong>restart</strong></span> modes, <span class="command"><strong>kedr</strong></span> may break the usage of the trace. So, trace capturing mechanism (<span class="command"><strong>kedr_capture_trace</strong></span>) should not be running when <span class="command"><strong>kedr</strong></span> command is executed in these modes.
     </p></div><div class="section" title="4.1.6. Configuration file"><div class="titlepage"><div><div><h4 class="title"><a name="kedr_control.config_file"></a>4.1.6. Configuration file</h4></div></div></div><p>
 The configuration file is treated as an ordered list of lines each of which has one of the following forms:
         </p><table border="0" summary="Simple list" class="simplelist"><tr><td>
@@ -102,64 +103,68 @@ module module_aux
 payload payload1
 ...
 </pre></div></div><div class="section" title="4.2. Capturing the Trace"><div class="titlepage"><div><div><h3 class="title"><a name="capture_trace"></a>4.2. Capturing the Trace</h3></div></div></div><div class="section" title="4.2.1. General"><div class="titlepage"><div><div><h4 class="title"><a name="capture_trace.general"></a>4.2.1. General</h4></div></div></div><p>
-    <span class="command"><strong>kedr_capture_trace</strong></span> - a service-like tool to capture the data sent by payload modules to the trace (a special file in debugfs). Captured data are written to standard output or stored in the file specified by the user.
-</p></div><div class="section" title="4.2.2. Usage"><div class="titlepage"><div><div><h4 class="title"><a name="capture_trace.syntax"></a>4.2.2. Usage</h4></div></div></div><div class="cmdsynopsis"><p><code class="command">kedr_capture_trace start</code>  [-d <em class="replaceable"><code>debugfs_mount_point</code></em>] [<em class="replaceable"><code>file</code></em>]</p></div><div class="cmdsynopsis"><p><code class="command">kedr_capture_trace stop</code> </p></div><div class="cmdsynopsis"><p><code class="command">kedr_capture_trace status</code> </p></div><div class="cmdsynopsis"><p><code class="command">kedr_capture_trace session</code>  [-d <em class="replaceable"><code>debugfs_mount_point</code></em>] [<em class="replaceable"><code>file</code></em>]</p></div></div><div class="section" title="4.2.3. Options"><div class="titlepage"><div><div><h4 class="title"><a name="kedr_capture_trace.options"></a>4.2.3. Options</h4></div></div></div><div class="variablelist"><dl><dt><span class="term"><em class="replaceable"><code>file</code></em></span></dt><dd><p>
-Path to the file where to store the captured trace. If the file exists, the contents of the trace will be appended to its previous content.
-            </p></dd><dt><span class="term">-d <em class="replaceable"><code>debugfs_mount_point</code></em></span></dt><dd><p>
-Directory where debugfs filesystem is currently mounted. This filesystem contains the trace file from which the trace will be captured. If this argument is not supplied, it is assumed that the mount point of debugfs filesystem is <code class="filename">/sys/kernel/debug</code>.
-            </p></dd></dl></div></div><div class="section" title="4.2.4. Description"><div class="titlepage"><div><div><h4 class="title"><a name="capture_trace.description"></a>4.2.4. Description</h4></div></div></div><div class="section" title="4.2.4.1. kedr_capture_trace start"><div class="titlepage"><div><div><h5 class="title"><a name="capture_trace.description.start"></a>4.2.4.1. kedr_capture_trace start</h5></div></div></div><p>
-<span class="command"><strong>kedr_capture_trace start</strong></span> starts capturing the output of payload modules and storing it in the file <em class="replaceable"><code>file</code></em>. If <em class="replaceable"><code>file</code></em> parameter is not supplied, capturing data are written to the standard output. Note that all the records captured from the trace and stored in <em class="replaceable"><code>file</code></em> or written to the standard output are deleted from the trace file in debugfs.
-        </p><p>
-If capturing has already started, <span class="command"><strong>kedr_capture_trace start</strong></span> does nothing and returns 1.
-        </p></div><div class="section" title="4.2.4.2. kedr_capture_trace stop"><div class="titlepage"><div><div><h5 class="title"><a name="capture_trace.description.stop"></a>4.2.4.2. kedr_capture_trace stop</h5></div></div></div><p>
-<span class="command"><strong>kedr_capture_trace stop</strong></span> stops capturing the trace. When this command returns, all trace records will be stored in the specified file.
-        </p><p>
-If capturing has not started yet, <span class="command"><strong>kedr_capture_trace stop</strong></span> does nothing and returns 1.
-        </p></div><div class="section" title="4.2.4.3. kedr_capture_trace status"><div class="titlepage"><div><div><h5 class="title"><a name="capture_trace.description.status"></a>4.2.4.3. kedr_capture_trace status</h5></div></div></div><p>
-<span class="command"><strong>kedr_capture_trace status</strong></span> reports whether capturing is in progress or not. In the future, it will probably also report the path to the file the captured trace is stored in.
-        </p></div><div class="section" title="4.2.4.4. kedr_capture_trace session"><div class="titlepage"><div><div><h5 class="title"><a name="capture_trace.description.session"></a>4.2.4.4. kedr_capture_trace session</h5></div></div></div><p>
-<span class="command"><strong>kedr_capture_trace session</strong></span> is similar to the <span class="command"><strong>kedr_capture_trace start</strong></span>, but performs capturing in blocking mode until current target module is unloaded.
-        </p><p>
-Clearly, it captures the output of payload modules and storing it in the file <em class="replaceable"><code>file</code></em>. If <em class="replaceable"><code>file</code></em> parameter is not supplied, capturing data are written to the standard output. Capturing is stopped when marker record indicating that the target module has unloaded is encountered in the trace. Note that all the records captured from the trace and stored in <em class="replaceable"><code>file</code></em> or written to the standard output are deleted from the trace file in debugfs.
-        </p><p>
-If <em class="replaceable"><code>file</code></em> parameter is supplied and it points to the existing file, this file is treated as the beginning of the trace. Before start capturing, this file is scanned for markers records of target loading and unloading. If marker record indicating that target module is unloaded is found in the file, and there is no target load marker record after it, <span class="command"><strong>kedr_capture_trace session</strong></span> command immidiately returns without capturing. Otherwise, capturing trace is performed as described previously.
-        </p><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
-Commands <span class="command"><strong>kedr_capture_trace stop</strong></span> and <span class="command"><strong>kedr_capture_trace status</strong></span> do not correlate with <span class="command"><strong>kedr_capture_trace session</strong></span>.
-        </p></div></div></div><div class="section" title="4.2.5. Caveats"><div class="titlepage"><div><div><h4 class="title"><a name="capture_trace.caveats"></a>4.2.5. Caveats</h4></div></div></div><p>
-<span class="command"><strong>kedr_capture_trace start</strong></span> and <span class="command"><strong>kedr_capture_trace session</strong></span> commands operate on the same trace file in debugfs. So, they should not be used simultaneously. That is, do not call <span class="command"><strong>kedr_capture_trace session</strong></span> while <span class="command"><strong>kedr_capture_trace</strong></span> is in capturing state and do not call <span class="command"><strong>kedr_capture_trace start</strong></span> while <span class="command"><strong>kedr_capture_trace session</strong></span> is running.
-    </p></div><div class="section" title="4.2.6. Examples"><div class="titlepage"><div><div><h4 class="title"><a name="capture_trace.examples"></a>4.2.6. Examples</h4></div></div></div><p>
+    <span class="command"><strong>kedr_capture_trace</strong></span> - a tool to capture the data output by payload modules to the trace.
+</p></div><div class="section" title="4.2.2. Usage"><div class="titlepage"><div><div><h4 class="title"><a name="capture_trace.syntax"></a>4.2.2. Usage</h4></div></div></div><div class="cmdsynopsis"><p><code class="command">kedr_capture_trace</code>  [<em class="replaceable"><code>OPTIONS</code></em>]</p></div></div><div class="section" title="4.2.3. Description"><div class="titlepage"><div><div><h4 class="title"><a name="capture_trace.description"></a>4.2.3. Description</h4></div></div></div><p>
+<span class="command"><strong>kedr_capture_trace</strong></span> captures the trace information output by payload modules until terminated by SIGINT signal or, when used with '-s' option, until all trace information from target module session has been received.
+    </p><p>
+Each trace record can be written to the specified file(s) ('-f' option) and/or passed to user-specified application(s) as STDIN ('-p' option). If neither '-f' nor '-p' option is specified, all trace records are output to STDOUT.
+    </p></div><div class="section" title="4.2.4. Options"><div class="titlepage"><div><div><h4 class="title"><a name="kedr_capture_trace.options"></a>4.2.4. Options</h4></div></div></div><div class="variablelist"><dl><dt><span class="term">-d <em class="replaceable"><code>debugfs_mount_point</code></em></span></dt><dd><p>
+Specify the directory the debugfs filesystem is currently mounted to. This filesystem contains the trace file from which the trace will be captured. If this argument is not supplied, it is assumed that the mount point of debugfs filesystem is <code class="filename">/sys/kernel/debug</code>.
+            </p></dd><dt><span class="term">-f, --file <em class="replaceable"><code>file</code></em></span></dt><dd><p>
+Store every trace record in the given file. If the file doesn't exist, <span class="command"><strong>kedr_capture_trace</strong></span> creates it at the beginning, otherwise appends new data to the file.
+            </p></dd><dt><span class="term">-p, --program <em class="replaceable"><code>program</code></em></span></dt><dd><p>
+On start, <span class="command"><strong>kedr_capture_trace</strong></span> launches <em class="replaceable"><code>program</code></em>. Then it pipes every trace record to the standard input of this program. When capturing is to be stopped, <span class="command"><strong>kedr_capture_trace</strong></span> closes its side of pipe and waits until the program terminates.
+            </p></dd><dt><span class="term">-s, --session</span></dt><dd><p>
+Read only those records from the trace that were collected since the target module had been loaded and until the target module had been unloaded (<em class="firstterm">target session</em>). Capturing stops after the last record from the target session has been processed.
+            </p></dd></dl></div><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
+'-s' option should not be used if some trace records from the current target session have already been processed (and, consequently, removed from the trace).
+</p></div></div><div class="section" title="4.2.5. Examples"><div class="titlepage"><div><div><h4 class="title"><a name="capture_trace.examples"></a>4.2.5. Examples</h4></div></div></div><p>
 </p><pre class="programlisting">
-kedr_capture_trace start trace.txt
-...
-kedr_capture_trace stop
+kedr_capture_trace -f trace.txt
+^C
 </pre><p>
-store in the file <code class="filename">trace.txt</code> all records from the trace, generated up to <span class="command"><strong>kedr_capture_trace stop</strong></span> call.
+store all records from the trace in the file <code class="filename">trace.txt</code> until 'Ctrl+C' is pressed.
+    </p><p>
+</p><pre class="programlisting">
+kedr_capture_trace -p "grep called_kfree &gt; frees.txt"
+^C
+</pre><p>
+store all records from the trace corresponding to kfree() calls in the file <code class="filename">frees.txt</code>, until 'Ctrl+C' is pressed.
+    </p><p>
+</p><pre class="programlisting">
+kedr_capture_trace -p bzip2 &gt; trace.bz2"
+^C
+</pre><p>
+pack the trace records to <code class="filename">trace.bz2</code> archive on the fly.
+    </p><p>
+</p><pre class="programlisting">
+kedr_capture_trace \
+-p "grep called_kfree &gt; frees.txt" \
+-p "grep called___kmalloc &gt; allocs.txt" \
+-f trace.txt
+^C
+</pre><p>
+store all records from the trace in <code class="filename">trace.txt</code> and the records corresponding to kfree() calls and to __kmalloc() calls in <code class="filename">frees.txt</code> and <code class="filename">allocs.txt</code>, respectively.
     </p><p>
 </p><pre class="programlisting">
 kedr start moduleA
+kedr_capture_trace -s -f trace.txt &amp;
+pid=$!
 /sbin/modprobe moduleA
 ...
 /sbin/modprobe -r moduleA
-kedr_capture_trace session trace.txt
+wait $pid
 kedr stop
 </pre><p>
-store in the file <code class="filename">trace.txt</code> all records from the trace, generated up to unloading of the moduleA.
+store all records from the trace generated by <code class="filename">moduleA</code> in the file <code class="filename">trace.txt</code>.
     </p><p>
-</p><pre class="programlisting">
-kedr start moduleA
-kedr_capture_trace start trace.txt
-/sbin/modprobe moduleA
-...
-/sbin/modprobe -r moduleA
-kedr_capture_trace stop trace.txt
-kedr_capture_trace session trace.txt
-kedr stop
-</pre><p>
-store in the file <code class="filename">trace.txt</code> all records from the trace, generated up to unloading of the moduleA. The difference from previous example is that file <code class="filename">trace.txt</code> is updated at runtime. Call <code class="code">kedr_capture_trace session trace.txt</code> is needed because trace really is generated asynchronously. So, there is no garantee that all records of the trace will generated after <code class="code">/sbin/modprobe -r moduleA</code> returns.
-    </p><p>
-See also <a class="xref" href="getting_started.html#getting_started.call_monitoring" title="3.3. Call monitoring">Section 3.3, “Call monitoring”</a>.
+See also <a class="xref" href="getting_started.html#getting_started.call_monitoring" title="3.3. Call Monitoring (Call Tracing)">Section 3.3, “Call Monitoring (Call Tracing)”</a>.
     </p></div></div><div class="section" title="4.3. How KEDR Works"><div class="titlepage"><div><div><h3 class="title"><a name="how_kedr_works"></a>4.3. How KEDR Works</h3></div></div></div><p>
-The interaction between the software components involved in 
+KEDR has a plugin-based architecture similar to the architecture of <a class="ulink" href="http://valgrind.org/" target="_top">Valgrind</a> and other binary analysis frameworks for user-space applications and libraries.
+</p><div class="itemizedlist"><p>
+Each data collection and analysis tool based on KEDR has at least the following parts:
+</p><ul class="itemizedlist" type="disc"><li class="listitem"><p><span class="emphasis"><em>KEDR core</em></span> - the core components provided by the framework, their main responsibility it to instrument the target module when it is loaded. The core also provides utilities to simplify commonly used operations, for example, output of the collected data, etc.</p></li><li class="listitem"><p>One or more <span class="emphasis"><em>tool plugins</em></span> (<span class="quote">“<span class="quote">payload modules</span>”</span>) that actually collect and, if necessary, analyze the data about the target module.</p></li></ul></div><p>
+The interaction between the components involved in the 
 analysis of Linux kernel modules with KEDR is outlined at the figure below. The logical components related to KEDR are colored in green.
 </p><div class="mediaobject"><img src="images/system_architecture.png" alt="KEDR: system architecture"></div><p>
 KEDR core (<em class="firstterm"><span class="quote">“<span class="quote">Loading Detector</span>”</span></em> and <em class="firstterm"><span class="quote">“<span class="quote">Call Instrumentation Facilities</span>”</span></em> on the figure) detect when the module to be analyzed (<em class="firstterm">target module</em>) is loaded. The notification system provided by the Linux kernel is used to do this. 
@@ -177,7 +182,7 @@ function</em></a>), that payload module takes control and executes
 the corresponding <a class="link" href="glossary.html#replacement_function" title="Replacement function"><em class="firstterm">replacement
 function</em></a> instead. This way, the payload
 module can get access to the arguments of the target function. In addition,
-the payload module can change the behaviour of the target driver, for 
+the payload module can change the behaviour of the target module, for 
 example make it look like the target function has failed, etc.
 </p><div class="itemizedlist"><p>
 Payload modules can do various things:
@@ -198,16 +203,11 @@ conditions, if possible failures of the called functions are properly
 handled by the module, etc. 
     </p></li><li class="listitem"><p>
 Check various requirements for the operation of the module 
-(<em class="firstterm"><span class="quote">“<span class="quote">Base Checker</span>”</span></em> on the figure): whether 
-it properly copies data to and from user space, whether it 
+(<em class="firstterm"><span class="quote">“<span class="quote">Base Checker</span>”</span></em> on the figure): whether it 
 uses virtual memory facilities in a right way, etc. 
 </p></li><li class="listitem"><p>
 ...And much more (see <a class="xref" href="extend.html#custom_analysis" title="5.6. Implementing Custom Types of Analysis">Section 5.6, “Implementing Custom Types of Analysis”</a>).
-</p></li></ul></div><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
-Currently, KEDR already provides the sets of payload modules to perform 
-call monitoring and fault simulation. Payload modules for other types of 
-analysis can be developed separately.
-</p></div><p>
+</p></li></ul></div><p>
 When loaded, payload modules register themselves with the KEDR core 
 (<code class="filename">kedr-base</code> module, actually) - see 
 <a class="xref" href="reference.html#payload_api" title="6.1. API for Payload Modules">Section 6.1, “API for Payload Modules”</a>.
@@ -218,8 +218,8 @@ on the figure) - either manually or via a user-space application.
 </p><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
 Note that the term <span class="quote">“<span class="quote">API</span>”</span> is used here in a rather broad sense. Currently, it is not a set of functions or classes provided for the applications written in some programming language. It rather consists of all the means that KEDR provides for the user-space applications to start the analysis process, to control it and to retrieve the results. These means include the parameters of the kernel modules from KEDR, the special files that allow to configure fault simulation scenarios, etc. All these facilities are described in the respective sections of this manual.
 </p></div><div class="orderedlist"><p>
-<a class="link" href="using_kedr.html#kedr_control" title="4.1. Controlling KEDR">KEDR service script</a> makes sure each 
-component of KEDR is loaded in proper order. It does roughly the following 
+<a class="link" href="using_kedr.html#kedr_control" title="4.1. Controlling KEDR">KEDR control tool</a> makes sure each 
+component of KEDR is loaded in proper order and with proper parameters. It does roughly the following 
 (the more precise description is available in <a class="xref" href="using_kedr.html#kedr_control" title="4.1. Controlling KEDR">Section 4.1, “Controlling KEDR”</a>):
 </p><ol class="orderedlist" type="1"><li class="listitem"><p>
 Loads the <code class="filename">kedr-base</code> module responsible to keep track 
@@ -233,18 +233,23 @@ of the target module as a parameter (<span class="quote">“<span class="quote">
 this moment, the KEDR core begins watching for the specified target module 
 to load (see also <a class="xref" href="getting_started.html" title="3. Getting Started">Section 3, “Getting Started”</a>).
 </p></li></ol></div><p>
-When the analysis is done, the <a class="link" href="using_kedr.html#kedr_control" title="4.1. Controlling KEDR">KEDR service 
-script</a> unloads the modules mentioned above, in appropriate order.
+When the analysis is done, the <a class="link" href="using_kedr.html#kedr_control" title="4.1. Controlling KEDR">KEDR control tool</a> unloads the modules mentioned above, in appropriate order.
 </p><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
-Note that the KEDR core (<code class="filename">kedr-base</code> and 
-<code class="filename">kedr-controller</code> modules) makes no assumptions about what 
+Note that the KEDR core makes no assumptions about what 
 exactly the currently registered payload modules do. This allows to 
 implement different types of analysis with the help of KEDR.
-</p></div></div><div class="section" title="4.4. Call Monitoring"><div class="titlepage"><div><div><h3 class="title"><a name="call_mon"></a>4.4. Call Monitoring</h3></div></div></div><p>
+</p></div></div><div class="section" title="4.4. Call Monitoring (Call Tracing)"><div class="titlepage"><div><div><h3 class="title"><a name="call_mon"></a>4.4. Call Monitoring (Call Tracing)</h3></div></div></div><p>
 Call monitoring facilities provided by KEDR allow to collect data about the calls to the functions of interest (target functions) made by a kernel module. In this case, each <a class="link" href="glossary.html#replacement_function" title="Replacement function">replacement function</a> calls the corresponding <a class="link" href="glossary.html#replacement_function" title="Replacement function">target function</a> and outputs its arguments and return value to a trace.
+    </p><p>
+This is similar to what <a class="ulink" href="http://sourceforge.net/projects/strace/" target="_top">strace</a> 
+utility does for user-space applications.
     </p><p>
 KEDR contains a set of payload modules intended to perform call monitoring. They collect information about which kernel functions were called by the target module and in what order, about the parameters passed to these functions and about the return values. This information is output to a trace and can then be used by user-space applications in runtime with the help of <a class="link" href="using_kedr.html#capture_trace" title="4.2. Capturing the Trace">kedr_capture_trace</a> tool.
     </p><p>
+Support for call monitoring is enabled in KEDR by default. If you would like to disable it, set CMake variable <code class="code">KEDR_STANDARD_CALLM_PAYLOADS</code> to <code class="code">OFF</code> when executing CMake before building KEDR:
+</p><pre class="programlisting">
+cmake -DKEDR_STANDARD_CALLM_PAYLOADS=OFF &lt;other_options&gt; &lt;path_to_kedr_sources&gt;
+</pre><p>
 The format of the output data is similar to the trace format of the <span class="command"><strong>ftrace</strong></span> system.
 Here is an example of such trace (the header line is shown only for the purpose of description):
     </p><pre class="programlisting">
@@ -276,7 +281,7 @@ called_&lt;function-name&gt;: (&lt;call_address&gt;) arguments(&lt;arguments-lis
 </pre><p>
 <code class="code">&lt;absolute_address&gt;</code> is the absolute address of the instruction immediately following the call in the memory image of the target module. <code class="code">&lt;area&gt;</code> can be <span class="quote">“<span class="quote">init</span>”</span> or <span class="quote">“<span class="quote">core</span>”</span>. It is the name of the area containing the executable code of the module (these terms are used by module loader in the Linux kernel). An area may contain one or more sections (ELF sections) of the module. <code class="code">&lt;offset&gt;</code> is the offset of the instruction from the beginning of the area. 
 </p><p>
-If you would like to find the lines in the source code of the target module corresponding to the addresses given in the trace records, see <a class="xref" href="using_kedr.html#analyze_trace" title="4.6. Analyzing the Trace">Section 4.6, “Analyzing the Trace”</a> for details.
+If you would like to find the lines in the source code of the target module corresponding to the addresses given in the trace records, see <a class="xref" href="using_kedr.html#analyze_trace" title="4.7. Analyzing the Trace">Section 4.7, “Analyzing the Trace”</a> for details.
 </p><p>
 A different format is used for marker records indicating loading and unloading of the target module:
 </p><pre class="synopsis">
@@ -284,12 +289,16 @@ target_session_&lt;begins|ends&gt;: target_module: "&lt;target-module-name&gt;"
 </pre><p>
 Only calls to the subset of all kernel functions are detected. This subset however can be easy extended by implementing your own modules (see <a class="xref" href="extend.html#custom_callm_payloads" title="5.2. Writing Custom Payloads for Call Monitoring">Section 5.2, “Writing Custom Payloads for Call Monitoring”</a>). Here is a full list of the payload modules that currently may be used for call monitoring, and the lists of the functions detected by each module. A function name in square brackets means that this function is detected only if it is exported by the kernel (it may or may not be exported in each particular system). Only one of the functions separated by a slash is detected depending on which one of them is actually exported by the kernel.
     </p><p>
-</p><div class="itemizedlist"><ul class="itemizedlist" type="opencircle"><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_cmm.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>__kmalloc</td></tr><tr><td>krealloc</td></tr><tr><td>kfree</td></tr><tr><td>kmem_cache_alloc</td></tr><tr><td>[kmem_cache_alloc_notrace]</td></tr><tr><td>kmem_cache_free</td></tr><tr><td>__get_free_pages</td></tr><tr><td>free_pages</td></tr></table></li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_user_space_access.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>copy_to_user/_copy_to_user</td></tr><tr><td>copy_from_user/_copy_from_user</td></tr></table></li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_mutexes.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>__mutex_init</td></tr><tr><td>mutex_lock</td></tr><tr><td>mutex_lock_interruptible</td></tr><tr><td>mutex_trylock</td></tr><tr><td>mutex_unlock</td></tr></table></li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_spinlocks.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>_spin_lock_irqsave/_raw_spin_lock_irqsave</td></tr><tr><td>_spin_unlock_irqrestore/_raw_spin_unlock_irqrestore</td></tr></table>
+</p><div class="itemizedlist"><ul class="itemizedlist" type="opencircle"><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_cmm.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>__kmalloc</td></tr><tr><td>krealloc</td></tr><tr><td>__krealloc</td></tr><tr><td>kfree</td></tr><tr><td>kzfree</td></tr><tr><td>kmem_cache_alloc</td></tr><tr><td>[kmem_cache_alloc_notrace]</td></tr><tr><td>[kmem_cache_alloc_trace]</td></tr><tr><td>kmem_cache_free</td></tr><tr><td>__get_free_pages</td></tr><tr><td>get_zeroed_page</td></tr><tr><td>free_pages</td></tr><tr><td>[__kmalloc_node]</td></tr><tr><td>[kmem_cache_alloc_node]</td></tr><tr><td>[kmem_cache_alloc_node_notrace]</td></tr><tr><td>[kmem_cache_alloc_node_trace]</td></tr><tr><td>[__alloc_pages_nodemask]</td></tr><tr><td>[alloc_pages_current]</td></tr><tr><td>[__free_pages]</td></tr><tr><td>[alloc_pages_exact]</td></tr><tr><td>[free_pages_exact]</td></tr></table></li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_user_space_access.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>copy_to_user/_copy_to_user</td></tr><tr><td>copy_from_user/_copy_from_user</td></tr><tr><td>strndup_user</td></tr><tr><td>memdup_user</td></tr></table></li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_mutexes.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>__mutex_init</td></tr><tr><td>mutex_lock</td></tr><tr><td>mutex_lock_interruptible</td></tr><tr><td>mutex_lock_killable</td></tr><tr><td>mutex_trylock</td></tr><tr><td>mutex_unlock</td></tr></table></li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_spinlocks.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>_spin_lock_irqsave/_raw_spin_lock_irqsave</td></tr><tr><td>_spin_unlock_irqrestore/_raw_spin_unlock_irqrestore</td></tr></table>
     additionally, if KEDR was configured with <span class="quote">“<span class="quote">enable_full_spinlock</span>”</span> option set,
-    <table border="0" summary="Simple list" class="simplelist"><tr><td>_spin_lock/_raw_spin_lock</td></tr><tr><td>_spin_lock_irq/_raw_spin_lock_irq</td></tr><tr><td>_spin_unlock/_raw_spin_unlock</td></tr><tr><td>_spin_unlock_irq/_raw_spin_unlock_irq</td></tr></table></li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_waitqueue.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>__wake_up</td></tr><tr><td>init_waitqueue_head/__init_waitqueue_head</td></tr><tr><td>prepare_to_wait</td></tr><tr><td>finish_wait</td></tr><tr><td>remove_wait_queue</td></tr><tr><td>add_wait_queue</td></tr><tr><td>add_wait_queue_exclusive</td></tr></table></li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_capable.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>capable</td></tr></table></li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_vmm.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>vmalloc</td></tr><tr><td>__vmalloc</td></tr><tr><td>vmalloc_user</td></tr><tr><td>vmalloc_node</td></tr><tr><td>vmalloc_32</td></tr><tr><td>vfree</td></tr></table></li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_schedule.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>schedule</td></tr><tr><td>[preempt_schedule]</td></tr><tr><td>_cond_resched</td></tr><tr><td>schedule_timeout</td></tr><tr><td>schedule_timeout_uninterruptible</td></tr><tr><td>schedule_timeout_interruptible</td></tr><tr><td>io_schedule</td></tr><tr><td>cond_resched_lock/__cond_resched_lock</td></tr></table></li></ul></div><p>
+    <table border="0" summary="Simple list" class="simplelist"><tr><td>_spin_lock/_raw_spin_lock</td></tr><tr><td>_spin_lock_irq/_raw_spin_lock_irq</td></tr><tr><td>_spin_unlock/_raw_spin_unlock</td></tr><tr><td>_spin_unlock_irq/_raw_spin_unlock_irq</td></tr></table></li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_waitqueue.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>__wake_up</td></tr><tr><td>init_waitqueue_head/__init_waitqueue_head</td></tr><tr><td>prepare_to_wait</td></tr><tr><td>finish_wait</td></tr><tr><td>remove_wait_queue</td></tr><tr><td>add_wait_queue</td></tr><tr><td>add_wait_queue_exclusive</td></tr></table></li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_capable.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>capable</td></tr></table></li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_vmm.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>vmalloc</td></tr><tr><td>__vmalloc</td></tr><tr><td>vmalloc_user</td></tr><tr><td>vmalloc_node</td></tr><tr><td>vmalloc_32</td></tr><tr><td>vmalloc_32_user</td></tr><tr><td>vfree</td></tr></table></li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_schedule.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>schedule</td></tr><tr><td>[preempt_schedule]</td></tr><tr><td>_cond_resched</td></tr><tr><td>schedule_timeout</td></tr><tr><td>schedule_timeout_uninterruptible</td></tr><tr><td>schedule_timeout_interruptible</td></tr><tr><td>io_schedule</td></tr><tr><td>cond_resched_lock/__cond_resched_lock</td></tr></table></li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_mem_util.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>kstrdup</td></tr><tr><td>kstrndup</td></tr><tr><td>kmemdup</td></tr></table></li></ul></div><p>
     </p></div><div class="section" title="4.5. Fault Simulation"><div class="titlepage"><div><div><h3 class="title"><a name="fault_sim"></a>4.5. Fault Simulation</h3></div></div></div><p>
 Fault simulation facilities provided by KEDR allow to put the target kernel module to the conditions that occur not very often during the normal operation of the module. For example, it is possible to simulate a situation when the system is short of memory or of another resource and consequently, at least some of the attempts to acquire the resource (e.g. allocate memory) fail. This allows to check if the target module handles such situations correctly.
     </p><p>
+Support for fault simulation is enabled in KEDR by default. If you would like to disable it, set CMake variable <code class="code">KEDR_STANDARD_FSIM_PAYLOADS</code> to <code class="code">OFF</code> when executing CMake before building KEDR:
+</p><pre class="programlisting">
+cmake -DKEDR_STANDARD_FSIM_PAYLOADS=OFF  &lt;other_options&gt; &lt;path_to_kedr_sources&gt;
+</pre><p>
 The <em class="firstterm">fault simulation scenarios</em> (i.e. the instructions that define the calls to which functions to make fail and in what conditions) can be customized by the user.
     </p><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
 Note that only the target module is affected during fault simulation, the other parts of the kernel are not. 
@@ -298,7 +307,7 @@ It is possible to restrict fault simulation even more, to handling of only those
     </p></div><p>
 During fault simulation, each replacement function serves as a <a class="link" href="glossary.html#fault_simulation_point" title="Fault simulation point">fault simulation point</a> among other things. That is, it calls a special <a class="link" href="glossary.html#fault_simulation_indicator" title="Fault simulation indicator">indicator function</a> and decides based on its return value whether to call the corresponding <a class="link" href="glossary.html#target_function" title="Target function">target function</a> normally or simulate its failure. In the latter case the target is often not called at all, just the appropriate value is returned (as if it was returned by the target function).
     </p><p>
-Like in <a class="link" href="using_kedr.html#call_mon" title="4.4. Call Monitoring">call monitoring</a>, a trace of the calls to the target functions is recorded by the payload modules used for fault simulation. This allows user-space applications to analyze the behaviour of the target module further, for example, to find out whether it has released all the resources correctly even in case of failure, etc. The format of trace records is the same as for call monitoring (see <a class="xref" href="using_kedr.html#call_mon" title="4.4. Call Monitoring">Section 4.4, “Call Monitoring”</a>), so are the tools and techniques for working with the trace. 
+Like in <a class="link" href="using_kedr.html#call_mon" title="4.4. Call Monitoring (Call Tracing)">call monitoring</a>, a trace of the calls to the target functions is recorded by the payload modules used for fault simulation. This allows user-space applications to analyze the behaviour of the target module further, for example, to find out whether it has released all the resources correctly even in case of failure, etc. The format of trace records is the same as for call monitoring (see <a class="xref" href="using_kedr.html#call_mon" title="4.4. Call Monitoring (Call Tracing)">Section 4.4, “Call Monitoring (Call Tracing)”</a>), so are the tools and techniques for working with the trace. 
     </p><p>
 Note that unlike call monitoring, the return values stored in the trace are the return values of the replacement functions rather than those of the target functions. This is because it is these very values that will be actually returned to the caller function in the target module. As for the calls for which no failure was simulated, the return value is the the same for both the target anf the corresponding replacement functions.
     </p><p>
@@ -334,10 +343,11 @@ Each fault simulation point uses its own instance of an indicator. That is, chan
 The indicator with name <span class="quote">“<span class="quote">common</span>”</span> is the common indicator that can be used for any target function. By default, the indicator function always returns 0 (<span class="quote">“<span class="quote">never make the calls fail</span>”</span>). Once the indicator has been set, it creates three control files in <code class="filename">/sys/kernel/debug/kedr_fault_simulation/points/&lt;function-name&gt;</code> directory: <code class="filename">expression</code>, <code class="filename">times</code> and <code class="filename">pid</code>. 
     </p><p>
 <code class="filename">expression</code> file corresponds to the mathematical expression. The indicator function will return the resulting value of this expression when called from a fault simulation point. Reading from this file returns the expression currently used by the indicator function. If you would like to instruct the indicator to use another expression, write the expression to this file. 
-    </p><div class="itemizedlist"><p>The expression may contain the following.</p><ul class="itemizedlist" type="opencircle"><li class="listitem" style="list-style-type: circle">Signed decimal integer numbers
-</li><li class="listitem" style="list-style-type: circle">Any mathematical operation from the list:
+    </p><div class="itemizedlist"><p>The expression may contain the following.</p><ul class="itemizedlist" type="opencircle"><li class="listitem" style="list-style-type: circle"><p>Signed or unsigned decimal integer numbers</p></li><li class="listitem" style="list-style-type: circle"><p>Unsigned hexadecimal integer numbers with the format <span class="quote">“<span class="quote">0x[0-9a-f]+</span>”</span> (similar to <span class="quote">“<span class="quote">0x%x</span>”</span> format for printf() function)</p></li><li class="listitem" style="list-style-type: circle">Any mathematical operation from the list:
     <table border="0" summary="Simple list" class="simplelist"><tr><td><span class="quote">“<span class="quote">!</span>”</span> - logical not</td></tr><tr><td><span class="quote">“<span class="quote">~</span>”</span> - binary not</td></tr><tr><td><span class="quote">“<span class="quote">+</span>”</span> - unary plus</td></tr><tr><td><span class="quote">“<span class="quote">-</span>”</span> - unary minus</td></tr><tr><td><span class="quote">“<span class="quote">*</span>”</span> - multiplication</td></tr><tr><td><span class="quote">“<span class="quote">/</span>”</span> - integer division</td></tr><tr><td><span class="quote">“<span class="quote">%</span>”</span> - remainder of division</td></tr><tr><td><span class="quote">“<span class="quote">+</span>”</span> - binary plus</td></tr><tr><td><span class="quote">“<span class="quote">-</span>”</span> - binary minus</td></tr><tr><td><span class="quote">“<span class="quote">&gt;&gt;</span>”</span> - arithmetic right shift</td></tr><tr><td><span class="quote">“<span class="quote">&lt;&lt;</span>”</span> - arithmetic left shift</td></tr><tr><td><span class="quote">“<span class="quote">&lt;</span>”</span> - less</td></tr><tr><td><span class="quote">“<span class="quote">&gt;</span>”</span> - greater</td></tr><tr><td><span class="quote">“<span class="quote">&lt;=</span>”</span> - less or equal</td></tr><tr><td><span class="quote">“<span class="quote">&gt;=</span>”</span> - greater or equal</td></tr><tr><td><span class="quote">“<span class="quote">a=b</span>”</span> - equal</td></tr><tr><td><span class="quote">“<span class="quote">a!=b</span>”</span> - not equal</td></tr><tr><td><span class="quote">“<span class="quote">&amp;</span>”</span> - binary and</td></tr><tr><td><span class="quote">“<span class="quote">^</span>”</span> - binary xor</td></tr><tr><td><span class="quote">“<span class="quote">|</span>”</span> - binary or</td></tr><tr><td><span class="quote">“<span class="quote">&amp;&amp;</span>”</span> - logical and</td></tr><tr><td><span class="quote">“<span class="quote">a||b</span>”</span> - logical or</td></tr><tr><td><span class="quote">“<span class="quote">c ? a : b</span>”</span> - conditional operator</td></tr></table></li><li class="listitem" style="list-style-type: circle">Variables:
-    <div class="variablelist"><dl><dt><span class="term">in_init</span></dt><dd>evaluates to nonzero if the target module is currently executing its init function, evaluates to 0 otherwise</dd><dt><span class="term">rnd100</span></dt><dd>evaluates to a random integer number from [0...99]</dd><dt><span class="term">rnd10000</span></dt><dd>evaluates to a random integer number from [0...9999]</dd><dt><span class="term">times</span></dt><dd>evaluates to the ordinal number of the call to the corresponding target function since indicator has been set for it or since calls counter has been reseted(see below).</dd></dl></div></li></ul></div><p>
+    <div class="variablelist"><dl><dt><span class="term">in_init</span></dt><dd>evaluates to nonzero if the target module is currently executing its init function, evaluates to 0 otherwise</dd><dt><span class="term">rnd100</span></dt><dd>evaluates to a random integer number from [0...99]</dd><dt><span class="term">rnd10000</span></dt><dd>evaluates to a random integer number from [0...9999]</dd><dt><span class="term">times</span></dt><dd>evaluates to the ordinal number of the call to the corresponding target function since indicator has been set for it or since calls counter has been reset (see below)</dd><dt><span class="term">caller_address</span></dt><dd>evaluates to the address of the instruction following the call being processed (this can be used to simulate failures of, say, __kmalloc() only when this function is called from the particular places in the target module: from the particular functions, etc.) </dd></dl></div></li></ul></div><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
+If the kernel is configured to support reliable stack trace information (<code class="code">CONFIG_STACKTRACE</code> is set and <code class="code">CONFIG_FRAME_POINTER</code> or <code class="code">CONFIG_STACK_UNWIND</code> are set), support for <code class="code">caller_address</code> variable is enabled by default. Otherwise, it is disabled. If you would like to disable it manually, set CMake variable <code class="code">KEDR_ENABLE_CALLER_ADDRESS</code> to <code class="code">OFF</code> when executing CMake before building KEDR.
+</p></div><p>
 <code class="filename">times</code> file corresponds to the counter of target function calls(see description of <code class="varname">times</code> times variable, which may be used in the expression for the indicator). This counter is incremented every time when target function is called (while this fault simulation indicator is set fo this function). Reading from the file returns current value of counter, any writing to this file resets value of the counter to 0.
     </p><p>
 Examples:
@@ -364,12 +374,17 @@ echo '!in_init &amp;&amp; (rnd100 &lt; 20)'&gt; \
 </pre><p>
 This will set the scenario to <span class="pcite"><span class="quote">“<span class="quote">after the target module is initialized, simulate failures of approximately 20% of all calls to the target function</span>”</span></span>.
     </p><pre class="programlisting">
+echo '(caller_address &lt; 0xfe2ab8d0) &amp;&amp; (caller_address &gt; 0xfe2ab970) &amp;&amp; (rnd100 &lt; 20)'&gt; \
+    /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/expression
+</pre><p>
+This will set the scenario to <span class="pcite"><span class="quote">“<span class="quote">simulate failures of approximately 20% of the calls to the target function made outside of the range <code class="code">[0xfe2ab8d0, 0xfe2ab970]</code>, the calls from within the range should succeed</span>”</span></span>. This helps restrict fault simulation to only particular areas of the target module.
+    </p><pre class="programlisting">
 echo 'times = 1'&gt; \
     /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/expression
 echo '0'&gt; \
     /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/times
 </pre><p>
-This will set the scenario to <span class="pcite"><span class="quote">“<span class="quote">make only the first call to the target function fail</span>”</span></span> (all other calls will succeed). The second command force to count calls only from this moment.
+This will set the scenario to <span class="pcite"><span class="quote">“<span class="quote">make only the first call to the target function fail</span>”</span></span> (all other calls should succeed). The second command resets the call counter, i.e. forces KEDR to count calls only from this moment.
     </p><pre class="programlisting">
 echo '(times % 3) = 0'&gt; \
     /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/expression
@@ -386,7 +401,7 @@ echo common &gt; /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/curren
 echo 1 &gt; /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/expression
 echo $$ &gt; /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/pid
 </pre><p>
-Other indicators provided with KEDR extend the abilities of <span class="quote">“<span class="quote">common</span>”</span> indicator. They suppopt additional variables that can be used in the expression.
+Other indicators provided with KEDR extend the abilities of <span class="quote">“<span class="quote">common</span>”</span> indicator. They support additional variables that can be used in the expression.
     </p><p>
 The indicator named <span class="quote">“<span class="quote">kmalloc</span>”</span> allows to use <code class="varname">size</code> and <code class="varname">flags</code> variables, that is, the parameters of <code class="code">__kmalloc</code> function. It also accepts several named constants of <code class="code">gfp_t</code> type like <code class="code">GFP_KERNEL</code> and <code class="varname">GFP_ATOMIC</code>. Example:
     </p><pre class="programlisting">
@@ -414,23 +429,142 @@ Here is the list of payload modules for fault simulation provided with KEDR:
         <code class="function">copy_to_user</code>/<code class="function">_copy_to_user</code>
         , 
         <code class="function">copy_from_user</code>/<code class="function">_copy_from_user</code>
-        </span></dd><dt><span class="term"><code class="filename">kedr_fsim_cmm.ko</code></span></dt><dd>implements fault simulation for functions
-        <span class="simplelist"><code class="function">__kmalloc</code>, <code class="function">krealloc</code>, <code class="function">kmem_cache_alloc</code>, [<code class="function">kmem_cache_alloc_notrace</code>], <code class="function">__get_free_pages</code></span></dd></dl></div><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
-Although KEDR module <code class="filename">kedr_fsim_cmm.ko</code> currently provides fault simulation facilities for 5 functions, it exports only one directory (<code class="filename">__kmalloc</code>) to manage fault simulation scenarios. All those 5 functions use the same scenario that is set for <code class="function">__kmalloc</code> function.
+        , <code class="function">strndup_user</code>, <code class="function">memdup_user</code></span></dd><dt><span class="term"><code class="filename">kedr_fsim_cmm.ko</code></span></dt><dd>implements fault simulation for functions
+        <span class="simplelist"><code class="function">__kmalloc</code>, <code class="function">krealloc</code>, <code class="function">__krealloc</code>, <code class="function">kmem_cache_alloc</code>, [<code class="function">kmem_cache_alloc_notrace</code>], [<code class="function">kmem_cache_alloc_trace</code>], <code class="function">__get_free_pages</code>, <code class="function">get_zeroed_page</code>, [<code class="function">__kmalloc_node</code>], [<code class="function">kmem_cache_alloc_node</code>], [<code class="function">kmem_cache_alloc_node_notrace</code>], [<code class="function">kmem_cache_alloc_node_trace</code>], [<code class="function">__alloc_pages_nodemask</code>], [<code class="function">alloc_pages_current</code>], [<code class="function">alloc_pages_exact</code>]</span></dd><dt><span class="term"><code class="filename">kedr_fsim_mem_util.ko</code></span></dt><dd>implements fault simulation for functions
+        <span class="simplelist"><code class="function">kstrdup</code>, <code class="function">kstrndup</code>, <code class="function">kmemdup</code></span></dd><dt><span class="term"><code class="filename">kedr_fsim_vmm.ko</code></span></dt><dd>implements fault simulation for functions
+        <span class="simplelist"><code class="function">vmalloc</code>, <code class="function">__vmalloc</code>, <code class="function">vmalloc_user</code>, <code class="function">vmalloc_node</code>, <code class="function">vmalloc_32</code>, <code class="function">vmalloc_32_user</code></span></dd></dl></div><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
+Although KEDR module <code class="filename">kedr_fsim_cmm.ko</code> currently provides fault simulation facilities for several functions, it exports only one directory (<code class="filename">__kmalloc</code>) to manage fault simulation scenarios. All those supported functions use the same scenario that is set for <code class="function">__kmalloc</code> function. Same for <code class="filename">kedr_fsim_vmm.ko</code> module where the scenario for <code class="function">vmalloc</code> function is used for all other functions too.
 </p></div><p>
 If you would like to create a payload module to perform fault simulation for other functions, see <a class="xref" href="extend.html#custom_fsim_payloads" title="5.3. Writing Custom Payloads for Fault Simulation">Section 5.3, “Writing Custom Payloads for Fault Simulation”</a>.
-</p></div><div class="section" title="4.6. Analyzing the Trace"><div class="titlepage"><div><div><h3 class="title"><a name="analyze_trace"></a>4.6. Analyzing the Trace</h3></div></div></div><p>
-This section describes a couple of techniques that can be used when analyzing the traces output by payload modules for call monitoring or fault simulation. In particular, it shows how to find out which place in the source code of the target module each particular trace record corresponds to and <a class="link" href="using_kedr.html#analyze_trace.stack" title="4.6.4. Obtaining the Call Stack">how to obtain call stack</a> for a call of interest.
+</p></div><div class="section" title="4.6. Detecting Memory Leaks"><div class="titlepage"><div><div><h3 class="title"><a name="leak_check"></a>4.6. Detecting Memory Leaks</h3></div></div></div><p>
+<em class="firstterm">LeakCheck</em> (implemented as payload module <code class="filename">kedr_leak_check.ko</code>) allows, as its name implies, to check the target kernel module for memory leaks, that is to reveal which memory blocks were allocated but were not freed by that module. 
+</p><p>
+LeakCheck is enabled in KEDR by default. If you would like to disable it, set CMake variable <code class="code">KEDR_LEAK_CHECK</code> to <code class="code">OFF</code> when executing CMake before building KEDR:
+</p><pre class="programlisting">
+cmake -DKEDR_LEAK_CHECK=OFF &lt;other_options&gt; &lt;path_to_kedr_sources&gt;
+</pre><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
+Note that LeakCheck may not detect all memory leaks in the target module. For the present, the tool monitors the usage of more than 30 kernel functions that allocate and deallocate memory (these are among the supported functions listed in <a class="xref" href="using_kedr.html#call_mon" title="4.4. Call Monitoring (Call Tracing)">Section 4.4, “Call Monitoring (Call Tracing)”</a>). Still, the target module can use some other functions for this purpose and LeakCheck will not notice this. Nevertheless, it is possible to add support for more functions to LeakCheck.
+</p><p>
+Besides that, if the target module allocates a memory block but it is another module (or the kernel proper) that frees it, this will also be reported as a memory leak by LeakCheck. That being said, possible leaks reported by LeakCheck should be further analyzed to find out whether they are actually leaks.
+</p></div><p>
+For the present, LeakCheck cannot be used simultaneously with 
+other kinds of payload modules provided by KEDR. In particular, you cannot 
+use LeakCheck and fault simulation for memory-related functions at 
+the same time. 
+</p><div class="section" title="4.6.1. Typical Usage"><div class="titlepage"><div><div><h4 class="title"><a name="leak_check.usage"></a>4.6.1. Typical Usage</h4></div></div></div><p>
+LeakCheck can be used like any other payload module for KEDR. First you need to load KEDR core and the appropriate payload module:
+</p><pre class="programlisting">
+kedr start &lt;target_name&gt; -f leak_check.conf
+</pre><p>
+<code class="filename">leak_check.conf</code> is placed to the main directory for config files when KEDR is installed (default: <code class="filename">/var/opt/kedr/configs</code>), so you usually do not need to specify the full path to the file.
+</p><p>
+Load the target module and do something with it as usual, then unload the 
+target. Do not stop KEDR yet.
+</p><p>
+Take a look at <code class="filename">/sys/kernel/debug/kedr_leak_check</code> directory. Here we 
+assume that debugfs is mounted to <code class="filename">/sys/kernel/debug</code>. If it is not, you 
+should mount it: 
+</p><pre class="programlisting">
+mount debugfs -t debugfs /sys/kernel/debug
+</pre><div class="itemizedlist"><p>
+There should be the following files in kedr_leak_check directory:
+	</p><ul class="itemizedlist" type="disc"><li class="listitem"><div class="itemizedlist"><p><code class="filename">info</code>:</p><ul class="itemizedlist" type="circle"><li class="listitem"><p>information about the target module (its name, addresses of the <span class="quote">“<span class="quote">init</span>”</span> and <span class="quote">“<span class="quote">core</span>”</span> memory areas); </p></li><li class="listitem"><p>total number of memory allocations performed by the module;</p></li><li class="listitem"><p>number of possible memory leaks (allocations without matching frees);</p></li><li class="listitem"><p>number of free-like calls without matching allocation calls;</p></li></ul></div></li><li class="listitem"><div class="itemizedlist"><p><code class="filename">possible_leaks</code>:</p><ul class="itemizedlist" type="circle"><li class="listitem"><p>information about each detected memory leak: address and size of the memory block and a portion of the call stack of allocation (the allocations with the same call stack are grouped together, only the most recent one is shown);</p></li></ul></div></li><li class="listitem"><div class="itemizedlist"><p><code class="filename">unallocated_frees</code>:</p><ul class="itemizedlist" type="circle"><li class="listitem"><p>information about each free-like call without  matching allocation call: address of the memory block and a portion of the call stack of that deallocation call (the deallocations with the same call stack are grouped together)</p></li></ul></div></li></ul></div><p>
+<code class="filename">unallocated_frees</code> file should normally be empty. If it is not empty 
+in some of your analysis sessions, it could be a problem in LeakCheck itself (e.g., the target module used some allocation 
+function that LeakCheck was unaware of) or memory is probably allocated by some other module. If you suppose it is a problem in LeakCheck, please report it to <a class="ulink" href="http://developer.berlios.de/bugs/?group_id=11780" target="_top">the bug tracker</a>.
+</p></div><div class="section" title="4.6.2. Reports"><div class="titlepage"><div><div><h4 class="title"><a name="leak_check.reports"></a>4.6.2. Reports</h4></div></div></div><p>
+Here are the examples of <code class="filename">info</code> and <code class="filename">possible_leaks</code> files from a real analysis session.
+The target is <code class="filename">vboxsf</code> module from VirtualBox Guest Additions 4.0.3. The <a class="ulink" href="http://www.virtualbox.org/ticket/8185" target="_top">memory leak caught there</a> was fixed in VirtualBox 4.0.4.
+</p><p><code class="filename">info</code>:</p><pre class="programlisting">
+Target module: "vboxsf", 
+  init area at 0xfe2b6000, core area at 0xfe2aa000
+Memory allocations: 49
+Possible leaks: 11
+Unallocated frees: 0
+</pre><p><code class="filename">possible_leaks</code>:</p><pre class="programlisting">
+Block at 0xf617e000, size: 4096; stack trace of the allocation:
+[&lt;fe2ab904&gt;] sf_follow_link+0x34/0xa0 [vboxsf]
+[&lt;c0303caf&gt;] link_path_walk+0x79f/0x910
+[&lt;c0303f19&gt;] path_walk+0x49/0xb0
+[&lt;c0304089&gt;] do_path_lookup+0x59/0x90
+[&lt;c03042bd&gt;] user_path_at+0x3d/0x80
+[&lt;c02fd6d7&gt;] vfs_fstatat+0x37/0x70
+[&lt;c02fd748&gt;] vfs_stat+0x18/0x20
+[&lt;c02fd9af&gt;] sys_stat64+0xf/0x30
+[&lt;c0203190&gt;] sysenter_do_call+0x12/0x22
+[&lt;ffffe430&gt;] 0xffffe430
+[&lt;ffffffff&gt;] 0xffffffff
++8 more allocation(s) with the same call stack.
+----------------------------------------
+Block at 0xf659a000, size: 4096; stack trace of the allocation:
+[&lt;fe2ab904&gt;] sf_follow_link+0x34/0xa0 [vboxsf]
+[&lt;c0303caf&gt;] link_path_walk+0x79f/0x910
+[&lt;c0303f19&gt;] path_walk+0x49/0xb0
+[&lt;c0304089&gt;] do_path_lookup+0x59/0x90
+[&lt;c03042bd&gt;] user_path_at+0x3d/0x80
+[&lt;c02f8825&gt;] sys_chdir+0x25/0x90
+[&lt;c0203190&gt;] sysenter_do_call+0x12/0x22
+[&lt;ffffe430&gt;] 0xffffe430
+[&lt;ffffffff&gt;] 0xffffffff
++1 more allocation(s) with the same call stack.
+----------------------------------------
+</pre><p>
+The format of stack traces is the same as it is used to output data about 
+warnings and errors to the system log:
+</p><pre class="programlisting">
+[&lt;call_address&gt;] &lt;function_name&gt;+&lt;offset_in_func&gt;/&lt;size_of_func&gt; [&lt;module&gt;]
+</pre><p>
+To be exact, each address corresponds to the instruction following the relevant call.
+</p></div><div class="section" title="4.6.3. Analyzing the Results"><div class="titlepage"><div><div><h4 class="title"><a name="leak_check.analysis"></a>4.6.3. Analyzing the Results</h4></div></div></div><p>
+GDB, Objdump or some other tools of this kind can be used to locate the 
+places in the source code corresponding to the entries in the stack traces. 
+The detailed description can be found, for example, in <a class="xref" href="using_kedr.html#analyze_trace" title="4.7. Analyzing the Trace">Section 4.7, “Analyzing the Trace”</a>.
+</p><p>
+In the current version of LeakCheck, the names of the functions from 
+<span class="quote">“<span class="quote">init</span>”</span> area (those marked with <code class="code">__init</code> in 
+the source file of the target module) cannot be resolved and the relevant 
+stack trace entries contain only raw call addresses. This is because name 
+resolution is done when "init" area has already been dropped from memory. 
+</p><p>
+Using the the start address of the <span class="quote">“<span class="quote">init</span>”</span> area that <code class="filename">info</code> file shows and 
+the technique described in <a class="xref" href="using_kedr.html#analyze_trace" title="4.7. Analyzing the Trace">Section 4.7, “Analyzing the Trace”</a> referred to above, you can 
+overcome this.
+</p></div><div class="section" title="4.6.4. Stack Depth"><div class="titlepage"><div><div><h4 class="title"><a name="leak_check.stack_depth"></a>4.6.4. Stack Depth</h4></div></div></div><p>
+The maximum number of stack frames displayed is controlled by <code class="code">stack_depth</code> 
+parameter of the module. That is, at most this many stack frames will be 
+shown.
+</p><p>
+<code class="code">stack_depth</code> parameter is an unsigned integer, not greater than 16. 
+Default value: 12. 
+</p><p>
+For example, to display at most 7 stack frames for each 
+allocation/deallocation, create a <a class="link" href="using_kedr.html#kedr_control.config_file" title="4.1.6. Configuration file">configuration file</a>
+for LeakCheck as follows (and use it instead of the default one when starting KEDR):
+</p><pre class="programlisting">
+payload /usr/local/lib/modules/&lt;kernel_version&gt;/misc/kedr_leak_check.ko stack_depth=7
+</pre></div><div class="section" title="4.6.5. Caveats"><div class="titlepage"><div><div><h4 class="title"><a name="leak_check.caveats"></a>4.6.5. Caveats</h4></div></div></div><p>
+When the target module is loaded, the output files are cleared, the results 
+are reset. Please take this into account when loading and unloading the 
+target module more than once while LeakCheck is loaded.
+</p><p>
+As usual with debugfs, the output files live only as long as 
+LeakCheck.ko module is loaded. In particular, after unloading the 
+target, please collect the results first and only after that reload the 
+target or stop KEDR.
+</p></div></div><div class="section" title="4.7. Analyzing the Trace"><div class="titlepage"><div><div><h3 class="title"><a name="analyze_trace"></a>4.7. Analyzing the Trace</h3></div></div></div><p>
+This section describes a couple of techniques that can be used when analyzing the traces output by payload modules for call monitoring or fault simulation. In particular, it shows how to find out which place in the source code of the target module each particular trace record corresponds to and <a class="link" href="using_kedr.html#analyze_trace.stack" title="4.7.4. Obtaining the Call Stack">how to obtain call stack</a> for a call of interest.
 </p><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
+It is recommended that the kernel of your system should be built with <code class="code">CONFIG_FRAME_POINTER</code> or <code class="code">CONFIG_STACK_UNWIND</code> parameters set to <span class="quote">“<span class="quote">y</span>”</span>. This is not the case on some systems by default. If neither of these parameters are not defined, reliable stack trace information could probably be unavailable. KEDR will still work in this case but, for example, its reports concerning memory leaks may be less detailed. 
+</p><p>
 It is desirable to have the target module with debug information enabled. Note that it is only necessary if you would like to match the trace records to the appropriate fragments of the source code of the target module. KEDR itself <span class="emphasis"><em>does not</em></span> require the modules under analysis to have debug information.
-</p></div><div class="section" title="4.6.1. General"><div class="titlepage"><div><div><h4 class="title"><a name="analyze_trace.general"></a>4.6.1. General</h4></div></div></div><p>
+</p></div><div class="section" title="4.7.1. General"><div class="titlepage"><div><div><h4 class="title"><a name="analyze_trace.general"></a>4.7.1. General</h4></div></div></div><p>
 Let us consider the trace from the example described in <a class="xref" href="getting_started.html" title="3. Getting Started">Section 3, “Getting Started”</a> (the records are numbered just for convenience):
 </p><pre class="programlisting">
 [1] insmod-6416 [001] 805.997320: target_session_begins: target module: "kedr_sample_target"
 [2] insmod-6416 [001] 805.997615: called___kmalloc: ([&lt;ffffffffa00e70b9&gt;] init+0xb9) 
-    arguments: (320, d0), result: ffff8800165a8000
+    arguments: (320, 80d0), result: ffff8800165a8000
 [3] dd-6438     [000] 858.641942: called___kmalloc: ([&lt;ffffffffa01d661e&gt;] core+0x61e) 
-    arguments: (4000, d0), result: ffff88001659e000
+    arguments: (4000, 80d0), result: ffff88001659e000
 [4] dd-6438     [000] 858.642074: called_copy_from_user: ([&lt;ffffffffa01d642a&gt;] core+0x42a) 
     arguments: (ffff88001659e000, 000000000137d000, 1), result: 0
     ...
@@ -442,9 +576,7 @@ Let us consider the trace from the example described in <a class="xref" href="ge
     arguments: (ffff8800165a8000)
 [8] rmmod-6441 [001] 869.438885: target_session_ends: target module: "kedr_sample_target"
 </pre><p>
-The <span class="quote">“<span class="quote">marker records</span>”</span> #1 and #8 denote the beginning and the end of the <span class="quote">“<span class="quote">tracing session</span>”</span>, i.e. the moments when the target module was loaded and unloaded, respectively. Let us analyze the remaining ones.
-</p><p>
-Let us analyze the remaining ones. For each trace record of interest, we need to perform at least the following steps.
+The <span class="quote">“<span class="quote">marker records</span>”</span> #1 and #8 denote the beginning and the end of the <span class="quote">“<span class="quote">tracing session</span>”</span>, i.e. the moments when the target module was loaded and unloaded, respectively. Let us analyze the remaining ones. For each trace record of interest, we need to perform at least the following steps.
 </p><div class="procedure"><ol class="procedure" type="1"><li class="step" title="Step 1">Determine the ELF section in the target module from which the reported call was made.</li><li class="step" title="Step 2">Translate the offset of that call from the beginning of <span class="quote">“<span class="quote">init</span>”</span> or <span class="quote">“<span class="quote">core</span>”</span> area to the offset from the beginning of the section.</li><li class="step" title="Step 3">Find the line corresponding to that instruction in the source code of the target module. This can be done, for example, with GDB or Objdump as described below.</li></ol></div><p>
 In each of the trace records corresponding to the function calls, there is the address of an instruction immediately following the call instruction. Consider, for example, the address in the record #3: <code class="code">[&lt;ffffffffa01d661e&gt;] core+0x61e</code>. This means, the absolute address of that location is <code class="code">0xffffffffa01d661e</code>. At the same time, that location is at the offset of <code class="code">0x61e</code> from the beginning of the <span class="quote">“<span class="quote">core</span>”</span> area of the memory image of the target. For now, it is technically easier for KEDR to obtain the offset of a location from the beginning of such area than of a section like <code class="code">.text</code>, etc. 
 </p><p>
@@ -461,7 +593,7 @@ Note that when the target module is unloaded and then loaded again, its sections
 On the other hand, you could assume that the order in which the sections are located in each of <span class="quote">“<span class="quote">init</span>”</span> and <span class="quote">“<span class="quote">core</span>”</span> areas is the same as in the object file of the module. So, taking the sizes of the sections and their alignment in memory into account, you could obtain the section layout in these memory areas. For example, Readelf (<span class="command"><strong>readelf -S</strong></span>) or GDB (<span class="command"><strong>info files</strong></span> command) can be used to list the sections for the object file.
 </p><p>
 Now that you have found the section a call of interest belongs to as well as its offset in that section, you can use the debug information in the target module to find the corresponding place in its source code. The following sections show how to do this.
-</p></div><div class="section" title="4.6.2. Locating the Calls in the Sources with GDB"><div class="titlepage"><div><div><h4 class="title"><a name="analyze_trace.gdb"></a>4.6.2. Locating the Calls in the Sources with GDB</h4></div></div></div><p>
+</p></div><div class="section" title="4.7.2. Locating the Calls in the Sources with GDB"><div class="titlepage"><div><div><h4 class="title"><a name="analyze_trace.gdb"></a>4.7.2. Locating the Calls in the Sources with GDB</h4></div></div></div><p>
 Start GDB and feed the object file of the target module to it:
 </p><pre class="programlisting">
 gdb kedr_sample_target.ko
@@ -497,18 +629,18 @@ Consider the trace record #2. The detected call to <code class="code">__kmalloc<
 </p><pre class="programlisting">
 (gdb) list *(0x6bc + 0xb9)
 
-0x775 is in cfake_init_module (/home/tester/work/kedr/other/sample_target/cfake.c:153).
-148     
-149     /* Allocate the array of devices */
-150     cfake_devices = (struct cfake_dev*)kmalloc(
-151         cfake_ndevices * sizeof(struct cfake_dev), 
-152         GFP_KERNEL);
-153     if (cfake_devices == NULL) {
-154         result = -ENOMEM;
-155         goto fail;
-156     }
+0x775 is in cfake_init_module (/home/tester/work/kedr/other/sample_target/cfake.c:323).
+318     
+319     /* Allocate the array of devices */
+320     cfake_devices = (struct cfake_dev*)kzalloc(
+321         cfake_ndevices * sizeof(struct cfake_dev), 
+322         GFP_KERNEL);
+323     if (cfake_devices == NULL) {
+324         result = -ENOMEM;
+325         goto fail;
+326     }
 </pre><p>
-GDB points to the line following the call to <code class="code">__kmalloc</code> (<code class="code">kmalloc</code> is an inline function) we are interested in. If we used the exact offset of the call instruction rather than the offset of the next one, GDB would show the innards of the inline kmalloc function substituted to the source of the target module which is probably not very convenient:
+GDB points to the line following the call to <code class="code">__kmalloc</code> (<code class="code">kzalloc</code> is an inline function) we are interested in. If we used the exact offset of the call instruction rather than the offset of the next one, GDB would show the innards of the inline kmalloc function substituted to the source of the target module which is probably not very convenient:
 </p><pre class="programlisting">
 (gdb) list *(0x6bc + 0xb4)
 
@@ -529,48 +661,46 @@ Let us consider the record #3. It corresponds to a call to <code class="code">__
 </p><pre class="programlisting">
 (gdb) list *(0x30 + 0x61e)
 
-0x64e is in cfake_open (/home/tester/work/kedr/other/sample_target/cfake.c:222).
-217     if (dev-&gt;data == NULL)
-218     {
-219         dev-&gt;data = (unsigned char*)kmalloc(
-220             dev-&gt;buffer_size, 
-221             GFP_KERNEL);
-222         if (dev-&gt;data == NULL)
-223         {
-224             printk(KERN_WARNING "[cr_target] open: out of memory\n");
-225             return -ENOMEM;
-226         }
+0x64e is in cfake_open (/home/tester/work/kedr/other/sample_target/cfake.c:85).
+82     if (dev-&gt;data == NULL)
+83     {
+84         dev-&gt;data = (unsigned char*)kzalloc(dev-&gt;buffer_size, GFP_KERNEL);
+85         if (dev-&gt;data == NULL)
+86         {
+87             printk(KERN_WARNING "[cr_target] open: out of memory\n");
+88             return -ENOMEM;
+89         }
 </pre><p>
 The remaining records can be processed in a similar way.
-</p></div><div class="section" title="4.6.3. Locating the Calls in the Sources with Objdump"><div class="titlepage"><div><div><h4 class="title"><a name="analyze_trace.objdump"></a>4.6.3. Locating the Calls in the Sources with Objdump</h4></div></div></div><p>
+</p></div><div class="section" title="4.7.3. Locating the Calls in the Sources with Objdump"><div class="titlepage"><div><div><h4 class="title"><a name="analyze_trace.objdump"></a>4.7.3. Locating the Calls in the Sources with Objdump</h4></div></div></div><p>
 Once we know section names and the offsets in these sections for the call instructions of interest, <span class="command"><strong>objdump</strong></span> tool can be used instead of GDB to find the corresponding lines in the source code of target module.
 </p><p>
 First we need disassemble the code sections of the module:
 </p><pre class="programlisting">
-objdump -dSl kedr_sample_target.ko &gt; kedr_sample_target.disasm
+objdump -dSlr kedr_sample_target.ko &gt; kedr_sample_target.disasm
 </pre><p>
 Let us locate the call mentioned in the trace record #2. Its position is right before the offset of 0x61e in <code class="code">.text</code> section. The instructions in <code class="filename">kedr_sample_target.disasm</code> are marked with their offsets in the corresponding section, so we can get the following:
 </p><pre class="programlisting">
  610:   48 8b 7b 08             mov    0x8(%rbx),%rdi
  614:   be d0 00 00 00          mov    $0xd0,%esi
  619:   e8 00 00 00 00          callq  61e &lt;cfake_open+0x7e&gt;
+              61a: R_X86_64_PC32 __kmalloc-0x4
 cfake_open():
-/home/tester/work/kedr/other/sample_target/cfake.c:222
+/home/tester/work/kedr/other/sample_target/cfake.c:85
     if (dev-&gt;data == NULL)
     {
-        dev-&gt;data = (unsigned char*)kmalloc(
-            dev-&gt;buffer_size, 
-            GFP_KERNEL);
+        dev-&gt;data = (unsigned char*)kzalloc(dev-&gt;buffer_size, GFP_KERNEL);
         if (dev-&gt;data == NULL)
  61e:   48 85 c0                test   %rax,%rax
+        
 </pre><p>
-The remaining records can be processed in a similar way.
-</p></div><div class="section" title="4.6.4. Obtaining the Call Stack"><div class="titlepage"><div><div><h4 class="title"><a name="analyze_trace.stack"></a>4.6.4. Obtaining the Call Stack</h4></div></div></div><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
+So we can see from the above listing that the trace records corresponds to the call to <code class="code">kzalloc</code> at line 84 of <code class="filename">cfake.c</code>. The remaining records can be processed in a similar way.
+</p></div><div class="section" title="4.7.4. Obtaining the Call Stack"><div class="titlepage"><div><div><h4 class="title"><a name="analyze_trace.stack"></a>4.7.4. Obtaining the Call Stack</h4></div></div></div><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
 The technique described below is quite easy to use. Still, to understand it better, it is recommended that you familiarize yourself first with the instructions on how to create custom payload modules using template-based code generation and fault simulation infrastructure (see <a class="xref" href="extend.html" title="5. Customizing and Extending KEDR">Section 5, “Customizing and Extending KEDR”</a>). 
 </p><p>
 Note that we are not actually going to do fault simulation here, we will just reuse the infrastructure for a different purpose.
 </p></div><p>
-Sometimes the technique described in the sections above is not enough to find out, what the target module was actually doing when it called the target function. Consider memory allocation and deallocation, for example. The developers of the target module may choose to use <code class="code">kmalloc()</code> directly. Alternatively, they may choose to provide a set of their own functions for memory management that probably use <code class="code">kmalloc()</code> internally but are higher-level and suit the needs of the developers better. If the latter is the case, it may happen that many of the calls to <code class="code">kmalloc()</code> recorded in the trace are performed from the same address in the code even if the target module services completely different requests each time. If there are many such calls recorded, it could become difficult to analyze what was actually happening in the target module, for example, to track down a memory leak or the like.
+Sometimes the technique described in the sections above is not enough to find out, what the target module was actually doing when it called the target function. Consider memory allocation and deallocation, for example. The developers of the target module may choose to use <code class="code">kmalloc()</code> directly. Alternatively, they may choose to provide a set of their own functions for memory management that probably use <code class="code">kmalloc()</code> internally but are higher-level and suit the needs of the developers better. If the latter is the case, it may happen that many of the calls to <code class="code">kmalloc()</code> recorded in the trace are performed from the same address in the code even if the target module services completely different requests each time. If there are many such calls recorded, it could become difficult to analyze what was actually happening in the target module.
 </p><p>
 If we need to analyze only a few of the recorded calls, it could be helpful if we obtained call stack for each of these calls somehow.
 </p><p>
@@ -630,29 +760,20 @@ That is, if the indicator function returns non-zero for a given call to <code cl
 </p></li></ul></div><p>
 That is all for the payload module. Now we can build it and instruct KEDR to load it along with the corresponding core modules and the indicator. A configuration file like the following could be used to do this.
 </p><pre class="programlisting">
-on_load mkdir -p "/tmp/kedr/debugfs"
-
-# Mount debugfs to enable tracepoints later
-on_load mount debugfs -t debugfs "/tmp/kedr/debugfs"
-
-# This allows to roll back in case of error while loading a payload
-on_unload mount | grep "/tmp/kedr/debugfs"; if test $? -eq 0; then umount "/tmp/kedr/debugfs"; fi
+# Tracing support
+module /usr/local/lib/modules/2.6.34.7-0.5-default/misc/kedr_trace.ko
 
 # Fault simulation infrastructure
 module /usr/local/lib/modules/2.6.34.7-0.5-default/misc/kedr_fault_simulation.ko
 
 # Payload modules
 payload /home/tester/work/kedr/payload_dump_stack/payload_dump_stack.ko 
-on_load echo 1 &gt; /tmp/kedr/debugfs/tracing/events/payload_dump_stack/enable
 
 # Indicators 
 # We could use kedr_fsim_indicator_common.ko as well because we are 
 # not going to set scenarios involving restrictions on the arguments 
 # of __kmalloc.
 module /usr/local/lib/modules/2.6.34.7-0.5-default/misc/kedr_fsim_indicator_kmalloc.ko
-
-# After tracepoints are enabled for all payloads, unmount debugfs
-on_load umount "/tmp/kedr/debugfs"
 </pre><p>
 Now we can set the indicator for the point corresponding to <code class="code">__kmalloc</code>. We use <span class="quote">“<span class="quote">kmalloc</span>”</span> indicator but <span class="quote">“<span class="quote">common</span>”</span> would also do this time. We restrict the scenario to the processes launched from the current shell and then enable the scenario as usual:
 </p><pre class="programlisting">
@@ -685,4 +806,6 @@ After that, we can load the target module by executing <span class="command"><st
 Now that we have got the stack trace for that call, it will probably be easier to find out what exactly was allocated there. The ordinary trace that KEDR facilities have also prepared, could be used to check if this is the call we need to analyze.
 </p><p>
 If there are still too many calls to the target functions made from in the context of a given process, one might want to filter the calls further to avoid filling the system log with lots of call stacks. We could instruct our system to trigger stack dump only for the call with a given number, or for the first N calls, or only for the calls where <code class="code">size</code> parameter is 36, etc. All features of fault simulation scenarios can be used here (see <a class="xref" href="using_kedr.html#fault_sim" title="4.5. Fault Simulation">Section 4.5, “Fault Simulation”</a>). 
-</p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="getting_started.html">Prev</a> </td><td width="20%" align="center"> </td><td width="40%" align="right"> <a accesskey="n" href="extend.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">3. Getting Started </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 5. Customizing and Extending KEDR</td></tr></table></div></body></html>
+</p><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
+Note that as far as detection of memory leaks is concerned, <a class="link" href="using_kedr.html#leak_check" title="4.6. Detecting Memory Leaks">the special plugin</a> provided by KEDR for this purpose automatically obtains call stack information for spurious memory allocations and deallocations. So it is not actually necessary to apply the technique described above when analyzing memory leaks. This example is here to demonstrate that <span class="quote">“<span class="quote">point and indicator</span>”</span> can be reused to obtain the desired information as well.
+</p></div></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="getting_started.html">Prev</a> </td><td width="20%" align="center"> </td><td width="40%" align="right"> <a accesskey="n" href="extend.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">3. Getting Started </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 5. Customizing and Extending KEDR</td></tr></table></div></body></html>

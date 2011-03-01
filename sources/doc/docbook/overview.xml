@@ -71,11 +71,15 @@ Currently, the means to conduct two kinds of analysis are provided with
 KEDR itself: 
     </para>
     <listitem><para>
-<link linkend="call_mon"><firstterm>Call monitoring</firstterm></link> 
+<link linkend="call_mon"><firstterm>Call monitoring (call tracing)</firstterm></link> 
 During the operation of the module under analysis, the information is 
 collected about the calls to <link linkend="target_function">target 
 functions</link>: arguments, return values, etc. This information can be 
 saved to a file (<firstterm>trace</firstterm>) for future analysis in the user space.
+    <para>
+This is similar to what <ulink url="http://sourceforge.net/projects/strace/">strace</ulink> 
+utility does for user-space applications.
+    </para>
     </para></listitem>
     <listitem><para>
 <link linkend="fault_sim"><firstterm>Fault simulation</firstterm></link> 
@@ -129,9 +133,9 @@ kernel probes is disabled in the kernel.
 <section id="overview.use_case">
 <title>Common Use Case</title>
 
-Here is what a common use case for the runtime analysis of a driver with 
+Here is what a common use case for the runtime analysis of a kernel module with 
 KEDR may look like. This is just <quote>a big picture</quote>, see <xref 
-linkend="getting_started"/> for a detailed description which commands are 
+linkend="getting_started"/> for a more detailed description of the operations
 executed at each step.
 
 The steps listed below can be performed manually or perhaps by a user-space 
@@ -171,8 +175,8 @@ fault simulation, etc.
 </para>
 
 <para>
-The tests checking various operations with the driver can also be run at 
-this step. The goal is to make the driver execute all the paths in its 
+The tests checking various operations with the kernel module can also be run at 
+this step. The goal is to make the module execute all the paths in its 
 code that the user wants to check.
 </para>
 </step>
@@ -256,7 +260,7 @@ some limitations on what it can do.
 
 <listitem>
     <para>
-KEDR operates on the binary interface used by a target driver (ABI rather 
+KEDR operates on the binary interface used by a target module (ABI rather 
 than API) like many other runtime analysis systems. This not bad per se 
 but one of the consequences of this is that KEDR cannot detect, for example, 
 a call to <code>kmalloc()</code> because it is usually a macro or an 
@@ -269,13 +273,13 @@ functions to which <code>kmalloc()</code> eventually expands.
 
 <listitem>
     <para>
-KEDR can only detect the calls directly made from the target driver. This 
-is because it is only the target driver that is instrumented by KEDR, the 
+KEDR can only detect the calls directly made from the target kernel module. This 
+is because it is only the target module that is instrumented by KEDR, the 
 rest of the kernel is not affected. 
     </para>
     <para>
-Suppose the target driver calls function <code>create_foo()</code> exported 
-by some other driver or by the kernel. Let that function allocate memory for 
+Suppose the target module calls function <code>create_foo()</code> exported 
+by some other module or by the kernel proper. Let that function allocate memory for 
 some structure with <code>kmalloc()</code>, initialize the structure and 
 return a pointer to it. In this case, KEDR is unaware that a memory 
 allocation has taken place. You need to tell KEDR explicitly to intercept 

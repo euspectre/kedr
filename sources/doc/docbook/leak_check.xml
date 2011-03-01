@@ -5,6 +5,14 @@
 <firstterm>LeakCheck</firstterm> (implemented as payload module <filename>kedr_leak_check.ko</filename>) allows, as its name implies, to check the target kernel module for memory leaks, that is to reveal which memory blocks were allocated but were not freed by that module. 
 </para>
 
+<para>
+LeakCheck is enabled in KEDR by default. If you would like to disable it, set CMake variable <code>KEDR_LEAK_CHECK</code> to <code>OFF</code> when executing CMake before building KEDR:
+</para>
+
+<programlisting><![CDATA[
+cmake -DKEDR_LEAK_CHECK=OFF <other_options> <path_to_kedr_sources>
+]]></programlisting>
+
 <note>
 <para>
 Note that LeakCheck may not detect all memory leaks in the target module. For the present, the tool monitors the usage of more than 30 kernel functions that allocate and deallocate memory (these are among the supported functions listed in <xref linkend='call_mon'/>). Still, the target module can use some other functions for this purpose and LeakCheck will not notice this. Nevertheless, it is possible to add support for more functions to LeakCheck.
@@ -89,7 +97,7 @@ function that LeakCheck was unaware of) or memory is probably allocated by some 
 
 <para>
 Here are the examples of <filename>info</filename> and <filename>possible_leaks</filename> files from a real analysis session.
-The target is <filename>vboxsf</filename> module from VirtualBox Guest Additions 4.0.3. The <ulink url="http://www.virtualbox.org/ticket/8185">memory leak caught there</ulink> should now be fixed.
+The target is <filename>vboxsf</filename> module from VirtualBox Guest Additions 4.0.3. The <ulink url="http://www.virtualbox.org/ticket/8185">memory leak caught there</ulink> was fixed in VirtualBox 4.0.4.
 </para>
 
 <para><filename>info</filename>:</para>

@@ -4,7 +4,7 @@
 <section id="capture_trace.general">
 <title>General</title>
 <para>
-    <command>kedr_capture_trace</command> - tool to capture the data sent by payload modules to the trace.
+    <command>kedr_capture_trace</command> - a tool to capture the data output by payload modules to the trace.
 </para>
 </section>
 
@@ -20,10 +20,10 @@
 <section id="capture_trace.description">
 <title>Description</title>
     <para>
-<command>kedr_capture_trace</command> capture the trace information of payload modules until program is terminated with a SIGINT or, when used with '-s' option, until all trace information from target module session was recieved.
+<command>kedr_capture_trace</command> captures the trace information output by payload modules until terminated by SIGINT signal or, when used with '-s' option, until all trace information from target module session has been received.
     </para>
     <para>
-Every trace line is stored it in the file(s) (option '-f') and/or passed to user-specified program(s) via STDIN(option '-p'). If neither '-f' nor '-p' option is specified, every trace line is output via STDOUT.
+Each trace record can be written to the specified file(s) ('-f' option) and/or passed to user-specified application(s) as STDIN ('-p' option). If neither '-f' nor '-p' option is specified, all trace records are output to STDOUT.
     </para>
 </section>
 
@@ -35,7 +35,7 @@ Every trace line is stored it in the file(s) (option '-f') and/or passed to user
         <term>-d <replaceable>debugfs_mount_point</replaceable></term>
         <listitem>
             <para>
-Specify directory where debugfs filesystem is currently mounted. This filesystem contains the trace file from which the trace will be captured. If this argument is not supplied, it is assumed that the mount point of debugfs filesystem is <filename class="directory">/sys/kernel/debug</filename>.
+Specify the directory the debugfs filesystem is currently mounted to. This filesystem contains the trace file from which the trace will be captured. If this argument is not supplied, it is assumed that the mount point of debugfs filesystem is <filename class="directory">/sys/kernel/debug</filename>.
             </para>
         </listitem>
     </varlistentry>
@@ -43,7 +43,7 @@ Specify directory where debugfs filesystem is currently mounted. This filesystem
         <term>-f, --file <replaceable>file</replaceable></term>
         <listitem>
             <para>
-Store every trace line into the given file. If the file doesn't exist, create it at the start, otherwise append new data to the old file's content.
+Store every trace record in the given file. If the file doesn't exist, <command>kedr_capture_trace</command> creates it at the beginning, otherwise appends new data to the file.
             </para>
         </listitem>
     </varlistentry>
@@ -51,7 +51,7 @@ Store every trace line into the given file. If the file doesn't exist, create it
         <term>-p, --program <replaceable>program</replaceable></term>
         <listitem>
             <para>
-When start, launch <replaceable>program</replaceable>. Then pipe every trace line to this program via its STDIN. When stop capturing trace, close own side of pipe and wait until program terminates.
+On start, <command>kedr_capture_trace</command> launches <replaceable>program</replaceable>. Then it pipes every trace record to the standard input of this program. When capturing is to be stopped, <command>kedr_capture_trace</command> closes its side of pipe and waits until the program terminates.
             </para>
         </listitem>
     </varlistentry>
@@ -59,14 +59,15 @@ When start, launch <replaceable>program</replaceable>. Then pipe every trace lin
         <term>-s, --session</term>
         <listitem>
             <para>
-Read only those lines from the trace, which collected from the moment target module is loaded and until the moment target module is unloaded. After process the last line from the target session, stop capturing.
-            </para>
-            <para>
-NOTE: It is error to use this option when some trace lines from the current target has already processed.
+Read only those records from the trace that were collected since the target module had been loaded and until the target module had been unloaded (<firstterm>target session</firstterm>). Capturing stops after the last record from the target session has been processed.
             </para>
         </listitem>
     </varlistentry>
 </variablelist>
+
+<note><para>
+'-s' option should not be used if some trace records from the current target session have already been processed (and, consequently, removed from the trace).
+</para></note>
 </section>
 
 <section id="capture_trace.examples">
@@ -76,14 +77,21 @@ NOTE: It is error to use this option when some trace lines from the current targ
 kedr_capture_trace -f trace.txt
 ^C
 </programlisting>
-store in the file <filename>trace.txt</filename> all records from the trace, until 'Ctrl+C' is pressed.
+store all records from the trace in the file <filename>trace.txt</filename> until 'Ctrl+C' is pressed.
     </para>
     <para>
 <programlisting>
 kedr_capture_trace -p "grep called_kfree > frees.txt"
 ^C
 </programlisting>
-store in the file <filename>frees.txt</filename> all records from the trace, generated by kfree() call, until 'Ctrl+C' is pressed.
+store all records from the trace corresponding to kfree() calls in the file <filename>frees.txt</filename>, until 'Ctrl+C' is pressed.
+    </para>
+    <para>
+<programlisting>
+kedr_capture_trace -p bzip2 > trace.bz2"
+^C
+</programlisting>
+pack the trace records to <filename>trace.bz2</filename> archive on the fly.
     </para>
     <para>
 <programlisting>
@@ -93,7 +101,7 @@ kedr_capture_trace \
 -f trace.txt
 ^C
 </programlisting>
-store all records from the trace, records generated by kfree() call, and records generated by __kmalloc() call in the files frees.txt, allocs.txt and trace.txt correspondingly.
+store all records from the trace in <filename>trace.txt</filename> and the records corresponding to kfree() calls and to __kmalloc() calls in <filename>frees.txt</filename> and <filename>allocs.txt</filename>, respectively.
     </para>
     <para>
 <programlisting><![CDATA[
@@ -106,7 +114,7 @@ pid=$!
 wait $pid
 kedr stop
 ]]></programlisting>
-store in the file <filename>trace.txt</filename> all records from the trace, generated by moduleA.
+store all records from the trace generated by <filename>moduleA</filename> in the file <filename>trace.txt</filename>.
     </para>
     <para>
 See also <xref linkend="getting_started.call_monitoring"/>.

@@ -3,6 +3,14 @@
     <para>
 Fault simulation facilities provided by KEDR allow to put the target kernel module to the conditions that occur not very often during the normal operation of the module. For example, it is possible to simulate a situation when the system is short of memory or of another resource and consequently, at least some of the attempts to acquire the resource (e.g. allocate memory) fail. This allows to check if the target module handles such situations correctly.
     </para>
+
+<para>
+Support for fault simulation is enabled in KEDR by default. If you would like to disable it, set CMake variable <code>KEDR_STANDARD_FSIM_PAYLOADS</code> to <code>OFF</code> when executing CMake before building KEDR:
+</para>
+
+<programlisting><![CDATA[
+cmake -DKEDR_STANDARD_FSIM_PAYLOADS=OFF  <other_options> <path_to_kedr_sources>
+]]></programlisting>
     
     <para>
 The <firstterm>fault simulation scenarios</firstterm> (i.e. the instructions that define the calls to which functions to make fail and in what conditions) can be customized by the user.
@@ -89,7 +97,10 @@ The indicator with name <quote>common</quote> is the common indicator that can b
 <itemizedlist mark='opencircle'>
 <para>The expression may contain the following.</para>
 
-<listitem>Signed decimal integer numbers
+<listitem><para>Signed or unsigned decimal integer numbers</para>
+</listitem>
+
+<listitem><para>Unsigned hexadecimal integer numbers with the format <quote>0x[0-9a-f]+</quote> (similar to <quote>0x%x</quote> format for printf() function)</para>
 </listitem>
 
 <listitem>Any mathematical operation from the list:
@@ -131,11 +142,18 @@ The indicator with name <quote>common</quote> is the common indicator that can b
         <listitem>evaluates to a random integer number from [0...9999]</listitem>
     </varlistentry>
     <varlistentry><term>times</term>
-        <listitem>evaluates to the ordinal number of the call to the corresponding target function since indicator has been set for it or since calls counter has been reseted(see below).</listitem>
+        <listitem>evaluates to the ordinal number of the call to the corresponding target function since indicator has been set for it or since calls counter has been reset (see below)</listitem>
+    </varlistentry>
+    <varlistentry><term>caller_address</term>
+        <listitem>evaluates to the address of the instruction following the call being processed (this can be used to simulate failures of, say, __kmalloc() only when this function is called from the particular places in the target module: from the particular functions, etc.) </listitem>
     </varlistentry>
     </variablelist>
 </listitem>
 </itemizedlist>
+
+<note><para>
+If the kernel is configured to support reliable stack trace information (<code>CONFIG_STACKTRACE</code> is set and <code>CONFIG_FRAME_POINTER</code> or <code>CONFIG_STACK_UNWIND</code> are set), support for <code>caller_address</code> variable is enabled by default. Otherwise, it is disabled. If you would like to disable it manually, set CMake variable <code>KEDR_ENABLE_CALLER_ADDRESS</code> to <code>OFF</code> when executing CMake before building KEDR.
+</para></note>
 
     <para>
 <filename>times</filename> file corresponds to the counter of target function calls(see description of <varname>times</varname> times variable, which may be used in the expression for the indicator). This counter is incremented every time when target function is called (while this fault simulation indicator is set fo this function). Reading from the file returns current value of counter, any writing to this file resets value of the counter to 0.
@@ -188,6 +206,15 @@ This will set the scenario to <phrase role="pcite"><quote>after the target modul
     </para>
 
 <programlisting><![CDATA[
+echo '(caller_address < 0xfe2ab8d0) && (caller_address > 0xfe2ab970) && (rnd100 < 20)'> \
+    /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/expression
+]]></programlisting>
+
+    <para>
+This will set the scenario to <phrase role="pcite"><quote>simulate failures of approximately 20% of the calls to the target function made outside of the range <code>[0xfe2ab8d0, 0xfe2ab970]</code>, the calls from within the range should succeed</quote></phrase>. This helps restrict fault simulation to only particular areas of the target module.
+    </para>
+
+<programlisting><![CDATA[
 echo 'times = 1'> \
     /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/expression
 echo '0'> \
@@ -195,7 +222,7 @@ echo '0'> \
 ]]></programlisting>
 
     <para>
-This will set the scenario to <phrase role="pcite"><quote>make only the first call to the target function fail</quote></phrase> (all other calls will succeed). The second command force to count calls only from this moment.
+This will set the scenario to <phrase role="pcite"><quote>make only the first call to the target function fail</quote></phrase> (all other calls should succeed). The second command resets the call counter, i.e. forces KEDR to count calls only from this moment.
     </para>
 
 <programlisting><![CDATA[
@@ -226,7 +253,7 @@ echo $$ > /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/pid
 ]]></programlisting>
 
     <para>
-Other indicators provided with KEDR extend the abilities of <quote>common</quote> indicator. They suppopt additional variables that can be used in the expression.
+Other indicators provided with KEDR extend the abilities of <quote>common</quote> indicator. They support additional variables that can be used in the expression.
     </para>
     
     <para>

@@ -2,19 +2,19 @@
 <title>Introduction</title>
 
 <para>
-<emphasis>KEDR framework</emphasis> provides the tools to facilitate runtime analysis of kernel modules (including device drivers) in Linux. <quote><phrase role="emphasized">KEDR</phrase></quote> is an acronym for <quote><phrase role="emphasized">KE</phrase>rnel-mode <phrase role="emphasized">D</phrase>rivers in <phrase role="emphasized">R</phrase>untime</quote>. The framework is intended to be used by the driver developers and may be useful for the driver certification systems as well.
+<emphasis>KEDR framework</emphasis> provides the tools to facilitate runtime analysis of kernel modules (including device drivers) in Linux. <quote><phrase role="emphasized">KEDR</phrase></quote> is an acronym for <quote><phrase role="emphasized">KE</phrase>rnel-mode <phrase role="emphasized">D</phrase>rivers in <phrase role="emphasized">R</phrase>untime</quote>. The framework is intended for the developers of kernel modules and, in particular, it may be useful for building automated driver verification systems.
 </para>
 
 <para>
-The tools provided by KEDR operate on a kernel module chosen by the user (<firstterm>target module</firstterm>). They monitor calls to the kernel functions that the module makes, perform fault simulation, etc. This may complement many existing tools for fault injection, memory checking, etc., that operate on the Linux kernel as a whole.
+The tools provided by KEDR operate on a kernel module chosen by the user (<firstterm>target module</firstterm>). They collect information about the calls to the kernel functions that the module makes and output it to the trace, perform fault simulation, detect memory leaks, etc. This may complement the existing tools for fault injection, memory checking, etc., that usually operate on the Linux kernel as a whole.
 </para>
 
 <para>
-The typical usage of KEDR is essentially as follows. The user works with the target kernel module as usual or may be runs some specific tests on it. At the same time, KEDR tools are monitoring the operation of the module, checking if it works correctly, doing fault simulation if requested, dumping the data about the actions made by the module to some kind of a trace for future analysis, etc. 
+The typical usage of KEDR is as follows. The user works with the target kernel module normally or may be runs some specific tests on it. At the same time, KEDR tools are monitoring the operation of the module, checking if it works correctly, doing fault simulation if requested, dumping the data about the actions made by the module to the trace file for future analysis, etc. 
 </para>
 
 <para>
-KEDR framework is designed to be easy to extend and build upon. For example, the set of kernel functions to be monitored is fully customizable; fault simulation scenarios can also be provided and controlled by the user. Besides that, KEDR provides an interface to implement custom types of analysis via pluggable modules - in addition to call monitoring and fault simulation.
+KEDR framework is designed to be easy to extend and build upon. For example, the set of kernel functions to be monitored is fully customizable; fault simulation scenarios can also be provided and controlled by the user. Besides that, KEDR features a plugin-based architecture and provides an interface to implement custom types of data collection and analysis in addition to the ones mentioned above.
 </para>
 
 <para>
@@ -26,7 +26,7 @@ KEDR is free software and is distributed under the terms of <ulink url="http://w
 </para>
 
 <para>
-The latest stable version of KEDR as well as the development versions can be found at <ulink url="&kedr-url;"><quote>KEDR</quote> project site at BerliOS Developer.</ulink>
+The latest stable version of KEDR as well as the development versions (Mercurial repository) can be found at <ulink url="&kedr-url;"><quote>KEDR</quote> project site at BerliOS Developer.</ulink>
 </para>
 
 </section>

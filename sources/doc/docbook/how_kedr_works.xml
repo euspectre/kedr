@@ -2,7 +2,20 @@
 <title>How KEDR Works</title>
 
 <para>
-The interaction between the software components involved in 
+KEDR has a plugin-based architecture similar to the architecture of <ulink url="http://valgrind.org/">Valgrind</ulink> and other binary analysis frameworks for user-space applications and libraries.
+</para>
+
+<itemizedlist>
+<para>
+Each data collection and analysis tool based on KEDR has at least the following parts:
+</para>
+<listitem><para><emphasis>KEDR core</emphasis> - the core components provided by the framework, their main responsibility it to instrument the target module when it is loaded. The core also provides utilities to simplify commonly used operations, for example, output of the collected data, etc.</para></listitem>
+
+<listitem><para>One or more <emphasis>tool plugins</emphasis> (<quote>payload modules</quote>) that actually collect and, if necessary, analyze the data about the target module.</para></listitem>
+</itemizedlist>
+
+<para>
+The interaction between the components involved in the 
 analysis of Linux kernel modules with KEDR is outlined at the figure below. The logical components related to KEDR are colored in green.
 </para>
 
@@ -39,7 +52,7 @@ function</firstterm></link>), that payload module takes control and executes
 the corresponding <link linkend="replacement_function"><firstterm>replacement
 function</firstterm></link> instead. This way, the payload
 module can get access to the arguments of the target function. In addition,
-the payload module can change the behaviour of the target driver, for 
+the payload module can change the behaviour of the target module, for 
 example make it look like the target function has failed, etc.
 </para>
 
@@ -71,8 +84,7 @@ handled by the module, etc.
 
 <listitem><para>
 Check various requirements for the operation of the module 
-(<firstterm><quote>Base Checker</quote></firstterm> on the figure): whether 
-it properly copies data to and from user space, whether it 
+(<firstterm><quote>Base Checker</quote></firstterm> on the figure): whether it 
 uses virtual memory facilities in a right way, etc. 
 </para></listitem>
 
@@ -81,12 +93,6 @@ uses virtual memory facilities in a right way, etc.
 </para></listitem>
 
 </itemizedlist>
-
-<note><para>
-Currently, KEDR already provides the sets of payload modules to perform 
-call monitoring and fault simulation. Payload modules for other types of 
-analysis can be developed separately.
-</para></note>
 
 <para>
 When loaded, payload modules register themselves with the KEDR core 
@@ -106,8 +112,8 @@ Note that the term <quote>API</quote> is used here in a rather broad sense. Curr
 
 <orderedlist>
 <para>
-<link linkend="kedr_control">KEDR service script</link> makes sure each 
-component of KEDR is loaded in proper order. It does roughly the following 
+<link linkend="kedr_control">KEDR control tool</link> makes sure each 
+component of KEDR is loaded in proper order and with proper parameters. It does roughly the following 
 (the more precise description is available in <xref 
 linkend="kedr_control"/>):
 </para>
@@ -132,13 +138,11 @@ to load (see also <xref linkend="getting_started"/>).
 </orderedlist>
 
 <para>
-When the analysis is done, the <link linkend="kedr_control">KEDR service 
-script</link> unloads the modules mentioned above, in appropriate order.
+When the analysis is done, the <link linkend="kedr_control">KEDR control tool</link> unloads the modules mentioned above, in appropriate order.
 </para>
 
 <note><para>
-Note that the KEDR core (<filename>kedr-base</filename> and 
-<filename>kedr-controller</filename> modules) makes no assumptions about what 
+Note that the KEDR core makes no assumptions about what 
 exactly the currently registered payload modules do. This allows to 
 implement different types of analysis with the help of KEDR.
 </para></note>

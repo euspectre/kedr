@@ -68,7 +68,7 @@ A payload module is a kernel module that actually contains <link linkend="replac
 It is payload modules rather than KEDR core that define which data should be collected about the target module, how the execution of the latter should be altered (if it should be at all), etc. Different sets of payload modules may allow to perform different kinds of analysis of the target module.
     </para>
     <para>
-Currently, KEDR provides payload modules for several groups of functions to perform call monitoring and fault simulation. Custom payload modules can be provided by the user. As long as the payload modules rely on the API defined by KEDR, KEDR makes no difference between the payloads provided with it and the ones supplied by the user.
+Currently, KEDR provides payload modules for several types of data collection and analysis operations. Custom payload modules can be provided by the user. As long as the payload modules rely on the API defined by KEDR, KEDR makes no difference between the payloads provided with it and the ones supplied by the user.
     </para>
 </glossdef>
 </glossentry>
