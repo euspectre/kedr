@@ -67,8 +67,7 @@ Note that KEDR is not generally a tool to analyze the interaction between a low-
 
 <itemizedlist>
     <para>
-Currently, the means to conduct two kinds of analysis are provided with 
-KEDR itself: 
+Currently, KEDR provides tools for the following kinds of analysis: 
     </para>
     <listitem><para>
 <link linkend="call_mon"><firstterm>Call monitoring (call tracing)</firstterm></link> 
