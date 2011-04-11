@@ -42,10 +42,7 @@ usage()
 
 version()
 {
-	printf "KEDR version %s.%s.%s.\n" \
-        "@KEDR_VERSION_MAJOR@" \
-        "@KEDR_VERSION_MINOR@" \
-        "@KEDR_VERSION_MICRO@"
+	printf "KEDR version @KEDR_VERSION@.\n"
 }
 
 # default config directory and file

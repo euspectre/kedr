@@ -17,9 +17,16 @@ endif ()
 #######################################################################
 # Names and versions
 set(KEDR_PACKAGE_NAME "kedr")
+
 set(KEDR_VERSION_MAJOR 0)
 set(KEDR_VERSION_MINOR 2)
 set(KEDR_VERSION_MICRO 0)
+set(KEDR_VERSION_SUFFIX "" CACHE STRING
+	"Version suffix, a string that should be appended ro the version"
+)
+set(KEDR_VERSION 
+"${KEDR_VERSION_MAJOR}.${KEDR_VERSION_MINOR}.${KEDR_VERSION_MICRO}${KEDR_VERSION_SUFFIX}"
+)
 
 #######################################################################
 # ARCH and CROSS_COMPILE variables that can be used when building 
@@ -390,3 +397,8 @@ kedr_test_add_subdirectory(tests)
 #######################################################################
 configure_file("${CMAKE_SOURCE_DIR}/config.h.in" "${CMAKE_BINARY_DIR}/config.h")
 message(STATUS "Creating config.h - done")
+
+#######################################################################
+message (STATUS "Configured ${KEDR_PACKAGE_NAME} version ${KEDR_VERSION}")
+
+#######################################################################
