@@ -49,5 +49,5 @@ add_subdirectory(common_memory_management)
 add_subdirectory(capable)
 add_subdirectory(common)
 
-add_subdirectory(tests)
+kedr_test_add_subdirectory(tests)
 

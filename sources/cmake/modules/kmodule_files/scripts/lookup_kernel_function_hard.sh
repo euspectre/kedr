@@ -9,8 +9,8 @@
 # to prepare the source code of the probe modules.
 ########################################################################
 
-if test $# -ne 1; then
-    echo "Usage: $0 <function>"
+if test $# -gt 2; then
+    echo "Usage: $0 <function> [map_file]"
     exit 2
 fi
 ########################################################################
@@ -25,10 +25,20 @@ if test "t${FUNC_NAME}" = "t"; then
 	exit 2
 fi
 
+MAP_FILE=/proc/kallsyms
+if test -n "$2"; then
+	MAP_FILE="$2"
+fi
+
+if ! test -f "${MAP_FILE}"; then
+	printf "Symbol map file ${MAP_FILE} does not exist\n" > /dev/stderr
+	exit 2
+fi
+
 # First look through /proc/kallsyms. If the function is listed there,
 # this script additionally tries to compile a probe module that calls it
 # to verify it is usable.
-grep -E "^[[:xdigit:]]+[[:space:]]+T[[:space:]]+${FUNC_NAME}$" /proc/kallsyms > /dev/null
+grep -E "^[[:xdigit:]]+[[:space:]]+T[[:space:]]+${FUNC_NAME}$" "${MAP_FILE}" > /dev/null
 RESULT_CODE=$?
 if test ${RESULT_CODE} -ne 0; then
 	# not found or error occured
@@ -36,12 +46,14 @@ if test ${RESULT_CODE} -ne 0; then
 fi
 
 if ! test -d "${TOP_PROBES_DIR}/${FUNC_NAME}"; then
-	printf "Directory ${TOP_PROBES_DIR}/${FUNC_NAME} does not exist\n"
+	printf "Directory ${TOP_PROBES_DIR}/${FUNC_NAME} does not exist\n" > /dev/stderr
 	exit 2
 fi
 
-make -C "${TOP_PROBES_DIR}/${FUNC_NAME}" clean > /dev/null 2>&1
-make -C "${TOP_PROBES_DIR}/${FUNC_NAME}" > /dev/null 2>&1
+make ARCH=${KEDR_ARCH} CROSS_COMPILE=${KEDR_CROSS_COMPILE} \
+	-C "${TOP_PROBES_DIR}/${FUNC_NAME}" clean > /dev/null 2>&1
+make ARCH=${KEDR_ARCH} CROSS_COMPILE=${KEDR_CROSS_COMPILE} \
+	-C "${TOP_PROBES_DIR}/${FUNC_NAME}" > /dev/null 2>&1
 if test $? -ne 0; then
 	exit 1
 fi

@@ -1,6 +1,19 @@
 set(kmodule_this_module_dir "${CMAKE_SOURCE_DIR}/cmake/modules/")
 set(kmodule_test_sources_dir "${CMAKE_SOURCE_DIR}/cmake/kmodule_sources")
 
+set(kmodule_function_map_file "")
+if (CMAKE_CROSSCOMPILING)
+	if (KEDR_SYSTEM_MAP_FILE)
+		set (kmodule_function_map_file "${KEDR_SYSTEM_MAP_FILE}")
+	else (KEDR_SYSTEM_MAP_FILE)
+# KEDR_SYSTEM_MAP_FILE is not specified, construct the default path 
+# to the symbol map file.
+		set (kmodule_function_map_file 
+	"${KEDR_ROOT_DIR}/boot/System.map-${KBUILD_VERSION_STRING}"
+		)
+	endif (KEDR_SYSTEM_MAP_FILE)
+endif (CMAKE_CROSSCOMPILING)
+
 # kmodule_try_compile(RESULT_VAR bindir srcfile
 #           [COMPILE_DEFINITIONS flags]
 #           [OUTPUT_VARIABLE var])
@@ -29,7 +42,12 @@ function(kmodule_try_compile RESULT_VAR bindir srcfile)
 			)
 		endif(arg STREQUAL "COMPILE_DEFINITIONS")
 	endforeach(arg ${ARGN})
-	set(cmake_params "-DSRC_FILE:path=${src_abs_path}")
+	set(cmake_params 
+		"-DSRC_FILE:path=${src_abs_path}" 
+		"-DKERNELDIR=${KBUILD_BUILD_DIR}"
+		"-DKEDR_ARCH=${KEDR_ARCH}"
+		"-DKEDR_CROSS_COMPILE=${KEDR_CROSS_COMPILE}"
+	)
 	if(DEFINED kmodule_cflags)
 		list(APPEND cmake_params "-Dkmodule_flags=${kmodule_cflags}")
 	endif(DEFINED kmodule_cflags)
@@ -86,8 +104,10 @@ macro(kmodule_is_function_exist_impl function_name RESULT_VAR)
     if(DEFINED ${RESULT_VAR})
         set(kmodule_is_function_exist_message "${kmodule_is_function_exist_message} [cached]")
     else(DEFINED ${RESULT_VAR})
+
         execute_process(
-            COMMAND sh ${kmodule_is_function_exist_script} ${function_name}
+            COMMAND sh ${kmodule_is_function_exist_script} 
+				${function_name} ${kmodule_function_map_file}
 			WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
             RESULT_VARIABLE kmodule_is_function_exist_result
             OUTPUT_QUIET)
@@ -230,20 +250,20 @@ macro(check_module_build)
 "${check_module_build_message} [cached] - ${MODULE_BUILD_SUPPORTED}"
 		)
 	else (DEFINED MODULE_BUILD_SUPPORTED)
-		kmodule_try_compile(stack_trace_reliable_impl 
+		kmodule_try_compile(module_build_supported_impl 
 			"${CMAKE_BINARY_DIR}/check_module_build"
 			"${kmodule_test_sources_dir}/check_module_build/module.c"
 		)
-		if (stack_trace_reliable_impl)
+		if (module_build_supported_impl)
 			set(MODULE_BUILD_SUPPORTED "yes" CACHE INTERNAL
 				"Can kernel modules be built on this system?"
 			)
-		else (stack_trace_reliable_impl)
+		else (module_build_supported_impl)
 			set(MODULE_BUILD_SUPPORTED "no")
 			message(FATAL_ERROR 
 				"Kernel modules cannot be built on this system"
 			)
-		endif (stack_trace_reliable_impl)
+		endif (module_build_supported_impl)
 				
 		set(check_module_build_message 
 "${check_module_build_message} - ${MODULE_BUILD_SUPPORTED}"
@@ -269,7 +289,7 @@ macro(check_kernel_version kversion_major kversion_minor kversion_micro)
 	else (DEFINED KERNEL_VERSION_OK)
 		string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" 
 			real_kernel_version_string
-			"${CMAKE_SYSTEM_VERSION}"
+			"${KBUILD_VERSION_STRING}"
 		)
 
 		if (real_kernel_version_string VERSION_LESS check_kernel_version_string)

@@ -43,8 +43,6 @@ rule_copy_source("sample_fsim_payload.c")
 
 kedr_test_add_target("sample_fsim_payload")
 
-#add_subdirectory(tests)
-
 install(FILES   "${CMAKE_CURRENT_SOURCE_DIR}/sample_fsim_payload.c"
         DESTINATION ${install_dir}
 )

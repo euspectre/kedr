@@ -20,4 +20,4 @@ add_subdirectory(custom_payload_callm)
 add_subdirectory(custom_payload_fsim)
 add_subdirectory(custom_indicator_fsim)
 
-add_subdirectory(tests)
+kedr_test_add_subdirectory(tests)

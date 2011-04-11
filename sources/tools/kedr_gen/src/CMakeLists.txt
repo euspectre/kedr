@@ -3,6 +3,9 @@ cmake_minimum_required (VERSION 2.6)
 #######################################################################
 # Name of the subproject and of the application
 project (kedr_gen)
+enable_language (C)
+enable_language(CXX)
+
 set (KEDR_GEN_APP ${PROJECT_NAME})
 
 #######################################################################
@@ -18,9 +21,7 @@ endif ()
 
 #######################################################################
 if (NOT KEDR_GEN_INSTALL_PREFIX)
-    message (FATAL_ERROR
-"KEDR_GEN_INSTALL_PREFIX (the path where \"${PROJECT_NAME}\" should be installed) is not defined"
-    )
+	set (KEDR_GEN_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 endif ()
 
 message (STATUS 

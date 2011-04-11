@@ -111,4 +111,4 @@ endif(KEDR_STANDARD_CALLM_PAYLOADS)
 
 kedr_test_add_target("kedr_test_config_file_default")
 
-add_subdirectory(tests)
+kedr_test_add_subdirectory(tests)

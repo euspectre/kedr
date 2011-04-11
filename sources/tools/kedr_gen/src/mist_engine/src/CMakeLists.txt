@@ -49,7 +49,7 @@ set (MIST_BASE_NAME ${PROJECT_NAME})
 # MiST Engine command line tool (built only if MiST Engine is packaged
 # standalone rather than as a part of KEDR).
 #######################################################################
-if (NOT KEDR_GEN_INSTALL_PREFIX)
+if (NOT KEDR_PACKAGE_NAME)
     set (MIST_ENGINE_SOURCES
         main.c 
         grar.c 

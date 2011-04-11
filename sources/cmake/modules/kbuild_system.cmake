@@ -1,17 +1,20 @@
 include(cmake_useful)
 
-# Where this CMake module is located
+# This environment variable can be used in Makefiles
+set (ENV{KERNELDIR} "${KBUILD_BUILD_DIR}")
+
+# Location of this CMake module
 set(kbuild_this_module_dir "${CMAKE_SOURCE_DIR}/cmake/modules")
 
-# Symvers files, which should be processed for build kernel module
+# Symvers files to be processed for building the kernel module
 set(kbuild_symbol_files)
 
-# Target names, from which builded kernel module should depends.
-# Usually, it is targets for build another kernel modules,
-# which symvers files are used via kbuild_use_symbols().
+# Names of the targets the built kernel module should depend on.
+# Usually, these are the targets used for building some other kernel 
+# modules which symvers files are used via kbuild_use_symbols().
 set(kbuild_dependencies_modules)
 
-#include directories for build kernel modules
+# #include directories for building kernel modules
 set(kbuild_include_dirs)
 
 # Additional compiler flags for the module
@@ -170,12 +173,14 @@ function(kbuild_add_module name)
 	if(kbuild_symbol_files)
     	add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${name}.ko ${symvers_file}
 				COMMAND cat ${kbuild_symbol_files} >> ${symvers_file}
-    			COMMAND $(MAKE) -C ${KBUILD_BUILD_DIR} M=${CMAKE_CURRENT_BINARY_DIR} modules
+    			COMMAND $(MAKE) ARCH=${KEDR_ARCH} CROSS_COMPILE=${KEDR_CROSS_COMPILE} 
+					-C ${KBUILD_BUILD_DIR} M=${CMAKE_CURRENT_BINARY_DIR} modules
     			DEPENDS ${depend_files} ${kbuild_symbol_files}
                 )
 	else(kbuild_symbol_files)
     	add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${name}.ko ${symvers_file}
-    			COMMAND $(MAKE) -C ${KBUILD_BUILD_DIR} M=${CMAKE_CURRENT_BINARY_DIR} modules
+    			COMMAND $(MAKE) ARCH=${KEDR_ARCH} CROSS_COMPILE=${KEDR_CROSS_COMPILE}
+					-C ${KBUILD_BUILD_DIR} M=${CMAKE_CURRENT_BINARY_DIR} modules
     			DEPENDS ${depend_files}
     			)
 	endif(kbuild_symbol_files)
@@ -227,7 +232,8 @@ function(kbuild_add_object source)
 	#create rules
 	list(APPEND clean_files_list "${CMAKE_CURRENT_BINARY_DIR}/Module.symvers")
 	add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${name}.o"
-			COMMAND $(MAKE) -C ${KBUILD_BUILD_DIR} M=${CMAKE_CURRENT_BINARY_DIR}
+			COMMAND $(MAKE) ARCH=${KEDR_ARCH} CROSS_COMPILE=${KEDR_CROSS_COMPILE}
+				-C ${KBUILD_BUILD_DIR} M=${CMAKE_CURRENT_BINARY_DIR}
 			DEPENDS ${depend_files}
 			)
 

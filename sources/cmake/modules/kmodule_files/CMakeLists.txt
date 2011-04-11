@@ -1,7 +1,10 @@
 # Needed for all CMakeLists files, otherwise cmake will warn
 cmake_minimum_required (VERSION 2.6)
 
-set(KERNELDIR /lib/modules/$\(shell uname -r\)/build)
+if (NOT KERNELDIR)
+	set(KERNELDIR /lib/modules/${KBUILD_VERSION_STRING}/build)
+endif (NOT KERNELDIR)
+
 set(PWD $\(shell pwd\))
 
 project(hello)
@@ -21,7 +24,7 @@ configure_file(Kbuild.in Kbuild)
 add_custom_target(kmodule_compile ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/try_compile.ko)
 # Rule to produce try_compile.ko from try_compile.c
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/try_compile.ko"
-					COMMAND $(MAKE) -C ${KERNELDIR} M=${PWD} modules
+	COMMAND $(MAKE) ARCH=${KEDR_ARCH} CROSS_COMPILE=${KEDR_CROSS_COMPILE} -C ${KERNELDIR} M=${PWD} modules
 					DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/try_compile.c")
 
 # Kbuild system cannot work with out-of-source build,

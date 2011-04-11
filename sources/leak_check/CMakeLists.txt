@@ -126,5 +126,5 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${leak_check_conf_file}"
 	DESTINATION "${KEDR_DEFAULT_CONFIG_DIR}") 
 ########################################################################
 
-add_subdirectory(tests)
+kedr_test_add_subdirectory(tests)
 ########################################################################

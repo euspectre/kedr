@@ -10,5 +10,5 @@ rule_copy_file("control_file.c"
 kedr_install_kmodule(${module_name})
 kedr_install_symvers(${module_name})
 
-add_subdirectory(tests)
+kedr_test_add_subdirectory(tests)
 

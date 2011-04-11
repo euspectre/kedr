@@ -54,36 +54,60 @@ endmacro(is_path_inside_dir output_var dir path)
 # Test-related macros
 ########################################################################
 
+# When we are building KEDR for another system (cross-build), testing is
+# disabled. This is because the tests need the build tree.
+# In the future, the tests could be prepared that need only the installed 
+# components of KEDR. It could be a separate test suite.
+
 # This macro enables testing support and performs other initialization tasks.
 # It should be used in the top-level CMakeLists.txt file before 
 # add_subdirectory () calls.
 macro (kedr_test_init)
-    enable_testing ()
-    add_custom_target (check 
-        COMMAND ${CMAKE_CTEST_COMMAND}
-    )
-    add_custom_target (build_tests)
-    add_dependencies (check build_tests)
+	if (NOT CMAKE_CROSSCOMPILING)
+	    enable_testing ()
+	    add_custom_target (check 
+	        COMMAND ${CMAKE_CTEST_COMMAND}
+	    )
+	    add_custom_target (build_tests)
+	    add_dependencies (check build_tests)
+	endif (NOT CMAKE_CROSSCOMPILING)
 endmacro (kedr_test_init)
 
 # Use this macro to specify an additional target to be built before the tests
 # are executed.
 macro (kedr_test_add_target target_name)
-    set_target_properties (${target_name}
-        PROPERTIES EXCLUDE_FROM_ALL true
-    )
-    add_dependencies (build_tests ${target_name})
+	if (NOT CMAKE_CROSSCOMPILING)
+	    set_target_properties (${target_name}
+	        PROPERTIES EXCLUDE_FROM_ALL true
+	    )
+	    add_dependencies (build_tests ${target_name})
+	endif (NOT CMAKE_CROSSCOMPILING)
 endmacro (kedr_test_add_target target_name)
 
 # This function adds a test script (a Bash script, actually) to the set of
 # tests for the package. The script may reside in current source or binary 
 # directory (the source directory is searched first).
 function (kedr_test_add_script test_name script_file)
-    set (TEST_SCRIPT_FILE)
-    to_abs_path (TEST_SCRIPT_FILE ${script_file})
-        
-    add_test (${test_name}
-        /bin/bash ${TEST_SCRIPT_FILE} ${ARGN}
-    )
+	if (NOT CMAKE_CROSSCOMPILING)
+	    set (TEST_SCRIPT_FILE)
+	    to_abs_path (TEST_SCRIPT_FILE ${script_file})
+	        
+	    add_test (${test_name}
+	        /bin/bash ${TEST_SCRIPT_FILE} ${ARGN}
+	    )
+	endif (NOT CMAKE_CROSSCOMPILING)
 endfunction (kedr_test_add_script)
+
+# Use this macro instead of add_subdirectory() for the subtrees related to 
+# testing of the package.
+
+# We could use other kedr_*test* macros to disable the tests when 
+# cross-building, but the rules of Kbuild system (concerning .symvers,
+# etc.) still need to be disabled explicitly. So it is more reliable to 
+# just turn off each add_subdirectory(tests) in this case.
+macro (kedr_test_add_subdirectory subdir)
+	if (NOT CMAKE_CROSSCOMPILING)
+		add_subdirectory(${subdir})
+	endif (NOT CMAKE_CROSSCOMPILING)
+endmacro (kedr_test_add_subdirectory subdir)
 ########################################################################

@@ -7,7 +7,7 @@ on_load mkdir -p "@CMAKE_CURRENT_BINARY_DIR@/debugfs"
 on_load mount debugfs -t debugfs "@CMAKE_CURRENT_BINARY_DIR@/debugfs"
 
 # Provide a way to roll back in case of error
-on_unload mount | grep "@CMAKE_CURRENT_BINARY_DIR@/debugfs"; if test $? -eq 0; then umount "@CMAKE_CURRENT_BINARY_DIR@/debugfs"; fi
+on_unload umount "@CMAKE_CURRENT_BINARY_DIR@/debugfs"
 
 # Load payloads
 payload @CMAKE_CURRENT_BINARY_DIR@/../kedr_leak_check.ko
