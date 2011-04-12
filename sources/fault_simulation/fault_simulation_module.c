@@ -223,14 +223,14 @@ kedr_fsim_point_register(const char* point_name,
     if(lookup_point(point_name))
     {
         mutex_unlock(&points_mutex);
-        print_error("Point with name '%s' already registered.", point_name);
+        print_error("Point with name '%s' is already registered.", point_name);
         return NULL;
     }
     point = kmalloc(sizeof(*point), GFP_KERNEL);
     if(point == NULL)
     {
         mutex_unlock(&points_mutex);
-        print_error0("Cannot allocate memory for point.");
+        print_error0("Cannot allocate memory for the fault simulation point.");
         return NULL;
     }
     point->name = point_name;
@@ -318,7 +318,7 @@ kedr_fsim_indicator_register(const char* indicator_name,
     if(lookup_indicator(indicator_name))
     {
         mutex_unlock(&points_mutex);
-        print_error("Indicator with name '%s' already registered.", indicator_name);
+        print_error("Indicator with name '%s' is already registered.", indicator_name);
         return NULL;
     }
     
@@ -401,7 +401,7 @@ int kedr_fsim_point_set_indicator(const char* point_name,
     if(point == NULL)
     {
         mutex_unlock(&points_mutex);
-        print_error("Point with name '%s' isn't exist.", point_name);
+        print_error("Point with name '%s' does not exist.", point_name);
         return -1;
     }
 
@@ -430,7 +430,7 @@ int kedr_fsim_point_clear_indicator(const char* point_name)
     if(point == NULL)
     {
         mutex_unlock(&points_mutex);
-        print_error("Point with name '%s' isn't exist.", point_name);
+        print_error("Point with name '%s' does not exist.", point_name);
         return -1;
     }
 
@@ -621,14 +621,14 @@ int kedr_fsim_point_set_indicator_internal(struct kedr_simulation_point* point,
     indicator = lookup_indicator(indicator_name);
     if(indicator == NULL)
     {
-        print_error("Indicator with name '%s' isn't exist.", indicator_name);
+        print_error("Indicator with name '%s' does not exist.", indicator_name);
         return -1;
     }
 
     if(!is_data_format_compatible(point->format_string, indicator->format_string))
     {
         print_error("Indicator with name '%s' has format of parameters '%s', "
-            "which is not compatible with format '%s', using by point with name '%s'.",
+            "which is not compatible with format '%s' used by the point with name '%s'.",
             indicator_name, indicator->format_string,
             point->format_string, point->name);
         return -1;
@@ -730,7 +730,7 @@ int fsim_point_create_indicator_file(struct kedr_simulation_point* point)
         point, &point_indicator_file_operations);
     if(point->indicator_file == NULL)
     {
-        print_error0("Cannot create indicator file for the point.");
+        print_error0("Cannot create indicator file for the fault simulation point.");
         return -1;
     }
     return 0;
@@ -930,7 +930,7 @@ char* point_format_string_file_get_str(struct inode* inode)
     }
     else
     {
-        str = NULL;//'device', corresponed to file, is not exist
+        str = NULL; //'device' corresponding to the file does not exist
     }
     mutex_unlock(&points_mutex);
     
