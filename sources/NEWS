@@ -1,3 +1,17 @@
+2011-04-12
+KEDR 0.2.1 released
+
+The most significant change in this release is the enhancement of build 
+system. It is now possible to build KEDR for a kernel different from the
+one running on the build machine. It is also possible to build it for a 
+different system (e.g. for Chromium OS, x86-generic). 
+
+The usage instructions are available in KEDR Wiki:
+http://openfacts2.berlios.de/wikien/index.php/BerliosProject:KEDR
+
+See ChangeLog for detailed information about the changes in this version. 
+-----------------------------------------------------------
+
 2011-03-02
 KEDR 0.2 released
 

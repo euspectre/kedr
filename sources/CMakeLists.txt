@@ -20,7 +20,7 @@ set(KEDR_PACKAGE_NAME "kedr")
 
 set(KEDR_VERSION_MAJOR 0)
 set(KEDR_VERSION_MINOR 2)
-set(KEDR_VERSION_MICRO 0)
+set(KEDR_VERSION_MICRO 1)
 set(KEDR_VERSION_SUFFIX "" CACHE STRING
 	"Version suffix, a string that should be appended ro the version"
 )

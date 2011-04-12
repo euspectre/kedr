@@ -1,2 +1,8 @@
 See doc/html/getting_started.html for installation instructions and other
-relevant information.
+relevant information. The manual is also available online:
+http://kedr.berlios.de/kedr-doc/index.html
+
+If you are looking for information about how to build KEDR for a different 
+kernel version on the same system or for another system, the "HowTos" in 
+the Wiki could be helpful:
+http://openfacts2.berlios.de/wikien/index.php/BerliosProject:KEDR

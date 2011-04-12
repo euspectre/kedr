@@ -1,4 +1,32 @@
 ---------------------------------------------------------------------------
+KEDR 0.2.1
+---------------------------------------------------------------------------
+Eugene A. Shatokhin <spectre@ispras.ru>:
+
+    * build: Added support for cross-building
+
+The build system has been revisited to allow building KEDR not only for the
+very system where the build process takes place ("build system") but also
+for a different one ("target system").
+
+For example, this allows to build KEDR on Ubuntu x86-64 for Chromium OS
+(x86-generic), to build KEDR for other versions or the kernel on the same
+system, etc.
+
+The mechanism uses "toolchain files". Two such files are already provided
+(sources/cmake/platform/*.cmake), more can be created by the users.
+
+For details on toolchain files, see the comments there as well as
+http://www.itk.org/Wiki/CMake_Cross_Compiling
+    
+    * Added support for user-definable version suffixes
+
+Using KEDR_VERSION_SUFFIX variable, one can specify a string to be appended
+to the version of KEDR like "-devel", "-build1234", etc.
+
+    * fsim: Spelling fixes
+
+---------------------------------------------------------------------------
 KEDR 0.2
 ---------------------------------------------------------------------------
 Eugene A. Shatokhin <spectre@ispras.ru>:
