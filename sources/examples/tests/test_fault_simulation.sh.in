@@ -6,18 +6,18 @@ indicator_name=periodic
 
 point_dir=${debugfs_mount_point}/kedr_fault_simulation/points/${point_name}
 
-fsim_payload_module="@CMAKE_BINARY_DIR@/examples/sample_fsim_payload/kedr_sample_fsim_payload.ko"
-indicator_module="@CMAKE_BINARY_DIR@/examples/sample_indicator/kedr_sample_indicator.ko"
+fsim_payload_module="@CMAKE_BINARY_DIR@/examples/sample_fsim_payload/tests/kedr_sample_fsim_payload.ko"
+indicator_module="@CMAKE_BINARY_DIR@/examples/sample_indicator/tests/kedr_sample_indicator.ko"
 kedr_fault_simulation_module="@CMAKE_BINARY_DIR@/fault_simulation/kedr_fault_simulation.ko"
 
 sample_target_module_name=kedr_sample_target
-sample_target_script="sh @CMAKE_BINARY_DIR@/examples/sample_target/kedr_sample_target"
+sample_target_script="sh @CMAKE_BINARY_DIR@/examples/sample_target/tests/kedr_sample_target"
 sample_target_device="/dev/cfake0"
 
 kedr_conf_file="@CMAKE_CURRENT_BINARY_DIR@/kedr.conf"
 commands_file="@CMAKE_CURRENT_BINARY_DIR@/commands"
 
-kedr_control_script="sh @CMAKE_BINARY_DIR@/tools/control/kedr_test"
+kedr_control_script="sh @CMAKE_BINARY_DIR@/tools/control/tests/kedr"
 do_commands_script="sh @CMAKE_BINARY_DIR@/tests/scripts/do_commands.sh"
 
 cat > "$kedr_conf_file" << eof

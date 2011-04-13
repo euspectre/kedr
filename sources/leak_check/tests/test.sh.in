@@ -293,7 +293,7 @@ LEAKER_MODULE="${WORK_DIR}/leaker_module/${LEAKER_NAME}.ko"
 CLEANER_NAME="@KEDR_TEST_CLEANER_MODULE@"
 CLEANER_MODULE="${WORK_DIR}/cleaner_module/${CLEANER_NAME}.ko"
 
-CONTROL_SCRIPT="@KEDR_TOOLS_DIR@/control/kedr_test"
+CONTROL_SCRIPT="@KEDR_TOOLS_DIR@/control/tests/kedr"
 CONF_FILE="${WORK_DIR}/leak_check_test.conf"
 
 DEBUGFS_LC_DIR="${WORK_DIR}/debugfs/kedr_leak_check"

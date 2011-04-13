@@ -10,4 +10,4 @@ on_load mount debugfs -t debugfs "@CMAKE_CURRENT_BINARY_DIR@/debugfs"
 on_unload mount | grep "@CMAKE_CURRENT_BINARY_DIR@/debugfs"; if test $? -eq 0; then umount "@CMAKE_CURRENT_BINARY_DIR@/debugfs"; fi
 
 # Load payloads
-payload @CMAKE_CURRENT_BINARY_DIR@/../kedr_counters.ko
+payload @CMAKE_CURRENT_BINARY_DIR@/kedr_counters.ko

@@ -1,4 +1,4 @@
-add_custom_target("custom_payload_callm"
+add_custom_target("custom_payload_fsim"
         DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${module_name}.ko"
                 )
 
@@ -22,11 +22,11 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/../Kbuild.in"
 )
 
 set(kedr_symbols "${CMAKE_BINARY_DIR}/core/Module.symvers")
-set(kedr_trace_symbols "${CMAKE_BINARY_DIR}/trace/Module.symvers")
+set(fault_simulation_symbols "${CMAKE_BINARY_DIR}/fault_simulation/Module.symvers")
 set(kedr_gen_tool "${KEDR_GEN_INSTALL_PREFIX}/kedr_gen")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/../makefile.in"
     "${CMAKE_CURRENT_BINARY_DIR}/makefile_test"
     @ONLY
 )
 
-kedr_test_add_target("custom_payload_callm")
+kedr_test_add_target("custom_payload_fsim")

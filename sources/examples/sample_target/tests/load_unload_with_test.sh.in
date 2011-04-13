@@ -1,7 +1,7 @@
 #!/bin/sh
 
 work_dir=@CMAKE_CURRENT_BINARY_DIR@
-/bin/sh ${work_dir}/../kedr_sample_target load
+/bin/sh ${work_dir}/kedr_sample_target load
 if test $? -ne 0; then
 	echo "Cannot load 'kedr_sample_target' module"
 	exit 1
@@ -15,7 +15,7 @@ if test ${test_result} -ne 0; then
 fi
 
 
-/bin/sh ${work_dir}/../kedr_sample_target unload
+/bin/sh ${work_dir}/kedr_sample_target unload
 if test $? -ne 0; then
 	echo "Cannot unload 'kedr_sample_target' module"
 	exit 1

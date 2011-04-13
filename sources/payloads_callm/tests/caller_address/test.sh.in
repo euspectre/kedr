@@ -1,6 +1,6 @@
 #!/bin/sh
 
-control_script="sh @CMAKE_BINARY_DIR@/tools/control/kedr_test"
+control_script="sh @CMAKE_BINARY_DIR@/tools/control/tests/kedr"
 
 capture_trace_script="@CMAKE_BINARY_DIR@/tools/capture_trace/kedr_capture_trace"
 
@@ -13,7 +13,7 @@ if ! mkdir -p ${tmpdir}; then
 	exit 1
 fi
 
-target_module_script="sh @CMAKE_BINARY_DIR@/examples/sample_target/kedr_sample_target"
+target_module_script="sh @CMAKE_BINARY_DIR@/examples/sample_target/tests/kedr_sample_target"
 
 commands_file="${tmpdir}/commands"
 do_commands_script="sh @CMAKE_BINARY_DIR@/tests/scripts/do_commands.sh"

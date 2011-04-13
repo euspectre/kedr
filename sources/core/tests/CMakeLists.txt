@@ -24,9 +24,9 @@ set (CORE_NAME "kedr")
 
 set (TARGET_NAME "kedr_sample_target")
 set (TARGET_LOAD_CMD 
-    "sh ${CMAKE_BINARY_DIR}/examples/sample_target/kedr_sample_target load")
+    "sh ${CMAKE_BINARY_DIR}/examples/sample_target/tests/kedr_sample_target load")
 set (TARGET_UNLOAD_CMD 
-    "sh ${CMAKE_BINARY_DIR}/examples/sample_target/kedr_sample_target unload")
+    "sh ${CMAKE_BINARY_DIR}/examples/sample_target/tests/kedr_sample_target unload")
 
 # '@ONLY' is essential when doing substitutions in the shell scripts. 
 # Without it, CMake would replace "${...}" too, which is usually not what 

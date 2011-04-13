@@ -3,7 +3,7 @@ fault_simulation_module="@CMAKE_BINARY_DIR@/fault_simulation/kedr_fault_simulati
 simulation_module="@CMAKE_CURRENT_BINARY_DIR@/module/kedr_sample_indicator_test_module.ko"
 point_name="common"
 
-indicator_module="@CMAKE_CURRENT_BINARY_DIR@/../kedr_sample_indicator.ko"
+indicator_module="@CMAKE_CURRENT_BINARY_DIR@/kedr_sample_indicator.ko"
 indicator_name="periodic"
 
 debugfs="@CMAKE_CURRENT_BINARY_DIR@/debugfs"

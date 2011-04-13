@@ -23,7 +23,7 @@ point_dir="${debugfs}/kedr_fault_simulation/points/${point_name}"
 
 trace_file="${tmpdir}/trace.txt"
 
-kedr_control_script="sh @CMAKE_BINARY_DIR@/tools/control/kedr_test"
+kedr_control_script="sh @CMAKE_BINARY_DIR@/tools/control/tests/kedr"
 capture_trace_script="@CMAKE_BINARY_DIR@/tools/capture_trace/kedr_capture_trace"
 
 simulate()

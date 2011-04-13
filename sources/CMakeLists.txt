@@ -348,7 +348,7 @@ if(KEDR_STANDARD_CALLM_PAYLOADS)
 	# This file is used for create configuration file for call monitor payloads
 	set(kedr_conf_file_data_callm "${CMAKE_BINARY_DIR}/tools/control/kedr_callm.conf.data")
 	# Same but for test variant
-	set(kedr_test_conf_file_data_callm "${CMAKE_BINARY_DIR}/tools/control/kedr_test_callm.conf.data")
+	set(kedr_test_conf_file_data_callm "${CMAKE_BINARY_DIR}/tools/control/tests/kedr_callm.conf.data")
 endif(KEDR_STANDARD_CALLM_PAYLOADS)
 if(KEDR_STANDARD_FSIM_PAYLOADS)
 	# This file is used for create configuration file for fault simulation payloads

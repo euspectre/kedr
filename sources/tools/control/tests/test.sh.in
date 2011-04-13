@@ -1,5 +1,5 @@
 #! /bin/sh
-control_script="sh @CMAKE_BINARY_DIR@/tools/control/kedr_test"
+control_script="sh @CMAKE_BINARY_DIR@/tools/control/tests/kedr"
 kedr_name="kedr"
 # Name of any payload (empty if shouldn't be tested)
 payload_name="@NAME_OF_PAYLOAD_LOADED@"
