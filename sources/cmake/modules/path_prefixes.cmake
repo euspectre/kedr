@@ -6,7 +6,7 @@
 
 set (KEDR_ALL_PATH_SUFFIXES EXEC READONLY GLOBAL_CONF LIB INCLUDE 
     TEMP_SESSION TEMP STATE CACHE VAR DOC 
-    KMODULE KSYMVERS KINCLUDE EXAMPLES)
+    KMODULE KSYMVERS KINCLUDE EXAMPLES TEMPLATES)
 
 # See conventions about paths of installed files
 # Determine type of installation
@@ -124,6 +124,9 @@ set(KEDR_INSTALL_PREFIX_KINCLUDE
 # additional, 4
 set(KEDR_INSTALL_PREFIX_EXAMPLES
 		"${KEDR_INSTALL_PREFIX_READONLY}/examples")
+# additional, 5
+set(KEDR_INSTALL_PREFIX_TEMPLATES
+		"${KEDR_INSTALL_PREFIX_READONLY}/templates")
 
 # Default directory for configuration files
 set(KEDR_DEFAULT_CONFIG_DIR "${KEDR_INSTALL_PREFIX_VAR}/configs")
@@ -139,6 +142,8 @@ endforeach(var_suffix ${KEDR_ALL_PATH_SUFFIXES})
 #rewrite some prefixes
 #Root of include tree in building package
 set(KEDR_TEST_PREFIX_INCLUDE "${CMAKE_BINARY_DIR}/include")
+
+set(KEDR_TEST_PREFIX_TEMPLATES "${CMAKE_SOURCE_DIR}/templates")
 
 
 #kedr_load_install_prefixes()

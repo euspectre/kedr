@@ -14,14 +14,9 @@
 	arg.name = flags
 	
 	# The body of the replacement function
-	handler.body =>>
-	void *ret_val;
-	ret_val = kmemdup(src, len, flags);
-	
-	if (ret_val != NULL)
-		klc_add_alloc(ret_val, len, stack_depth);
-
-	return ret_val;
+	handler.post =>>
+	if (returnValue != NULL)
+		klc_add_alloc(returnValue, len, stack_depth);
 	<<
 
 # End of the group of definitions for kmemdup().

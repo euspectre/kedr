@@ -11,14 +11,9 @@
 	arg.name = n
 
 	# The body of the replacement function
-	handler.body =>>
-	char *ret_val;
-	ret_val = strndup_user(src, n);
-	
-	if (!IS_ERR(ret_val))
-		klc_add_alloc((void *)ret_val, strnlen_user(src, n), stack_depth);
-	
-	return ret_val;
+	handler.post =>>
+	if (!IS_ERR(returnValue))
+		klc_add_alloc((void *)returnValue, strnlen_user(src, n), stack_depth);
 	<<
 
 # End of the group of definitions for strndup_user().

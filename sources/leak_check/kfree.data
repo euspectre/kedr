@@ -3,11 +3,11 @@
 	function.name = kfree
 
 	# Names and types of the arguments of the target function
-	arg.type = void *
+	arg.type = void*
 	arg.name = p
 	
 	# The body of the replacement function
-	handler.body =>>
+	handler.pre =>>
 	/* This is done before actually calling kfree(), because once the 
 	 * memory block pointed to by 'p' is freed, some other CPU might 
 	 * call an allocation function, get this address as a result and
@@ -16,8 +16,6 @@
 	 */
 	if (!ZERO_OR_NULL_PTR(p) && !klc_find_and_remove_alloc(p)) 
 		klc_add_bad_free(p, stack_depth);
-	
-	kfree(p);
 	<<
 
 # End of the group of definitions for kfree().

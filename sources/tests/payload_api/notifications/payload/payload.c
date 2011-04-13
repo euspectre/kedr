@@ -26,7 +26,7 @@
 
 #include <linux/slab.h>     /* __kmalloc() */
 
-#include <kedr/base/common.h>
+#include <kedr/core/kedr.h>
 
 /*********************************************************************/
 MODULE_AUTHOR("Eugene A. Shatokhin");
@@ -58,7 +58,8 @@ module_param(target_unload_name, charp, S_IRUGO);
  * Replacement functions
  *********************************************************************/
 static void*
-repl___kmalloc(size_t size, gfp_t flags)
+repl___kmalloc(size_t size, gfp_t flags,
+	struct kedr_function_call_info* call_info)
 {
 	return __kmalloc(size, flags);
 }
@@ -93,31 +94,34 @@ target_unload_callback(struct module *target_module)
 }
 /*********************************************************************/
 
-/* Names and addresses of the functions of interest */
-static void* orig_addrs[] = {
-	(void*)&__kmalloc
-};
-
-/* Addresses of the replacement functions */
-static void* repl_addrs[] = {
-	(void*)&repl___kmalloc
+static struct kedr_replace_pair replace_pairs[] =
+{
+	{
+		.orig = (void*)&__kmalloc,
+		.replace = (void*)&repl___kmalloc
+	},
+	{
+		.orig = NULL
+	}
 };
 
 static struct kedr_payload payload = {
-	.mod                    = THIS_MODULE,
-	.repl_table.orig_addrs  = &orig_addrs[0],
-	.repl_table.repl_addrs  = &repl_addrs[0],
-	.repl_table.num_addrs   = ARRAY_SIZE(orig_addrs),
-    .target_load_callback   = NULL,
-    .target_unload_callback = NULL
+	.mod            = THIS_MODULE,
+
+	.replace_pairs	= replace_pairs
 };
+
 /*********************************************************************/
+
+extern int functions_support_register(void);
+extern void functions_support_unregister(void);
 
 static void
 kedr_test_cleanup_module(void)
 {
 	kedr_payload_unregister(&payload);
-    
+    functions_support_unregister();
+
     kfree(target_load_name);
     kfree(target_unload_name);
 	return;
@@ -128,8 +132,6 @@ kedr_test_init_module(void)
 {
     int result = 0;
     
-	BUG_ON(	ARRAY_SIZE(orig_addrs) != 
-		ARRAY_SIZE(repl_addrs));
     
     target_load_name = kstrdup(&no_target[0], GFP_KERNEL);
     target_unload_name = kstrdup(&no_target[0], GFP_KERNEL);
@@ -139,7 +141,10 @@ kedr_test_init_module(void)
         goto err;
     }
     
-    if (set_load_fn != 0)
+    result = functions_support_register();
+	if(result) goto err;
+	
+	if (set_load_fn != 0)
         payload.target_load_callback = target_load_callback;
     
     if (set_unload_fn != 0)
@@ -147,9 +152,12 @@ kedr_test_init_module(void)
     
     result = kedr_payload_register(&payload);
     if (result != 0)
-        goto err;
+        goto err_payload;
     
 	return 0;
+
+err_payload:
+	functions_support_unregister();
 
 err:
     kfree(target_load_name);

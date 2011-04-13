@@ -1,7 +1,3 @@
-# Paths to and the names of the base and controller modules
-set (BASE_DIR "${CMAKE_BINARY_DIR}/base")
-set (BASE_NAME "kedr_base")
-
 # '@ONLY' is essential when doing substitutions in the shell scripts. 
 # Without it, CMake would replace "${...}" too, which is usually not what 
 # you want.

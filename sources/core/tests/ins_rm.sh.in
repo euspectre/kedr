@@ -1,0 +1,29 @@
+#!/bin/sh
+
+########################################################################
+# This test checks the basic operations with the KEDR core module.
+########################################################################
+KEDR_MODULE="@CORE_DIR@/@CORE_NAME@.ko"
+printf "KEDR core module: ${KEDR_MODULE}\n"
+
+if test ! -f "${KEDR_MODULE}"; then
+    printf "KEDR core module is missing: ${KEDR_MODULE}\n"
+    
+    # test failed
+    exit 1
+fi
+
+/sbin/insmod "${KEDR_MODULE}"
+if test $? -ne 0; then
+    printf "Failed to load the KEDR core module\n"
+    exit 1
+fi
+
+/sbin/rmmod "@CORE_NAME@"
+if test $? -ne 0; then
+    printf "Failed to unload the KEDR core module\n"
+    exit 1
+fi
+
+# test passed
+exit 0

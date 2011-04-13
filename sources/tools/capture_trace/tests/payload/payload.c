@@ -19,7 +19,7 @@
 MODULE_AUTHOR("Tsyvarev");
 MODULE_LICENSE("GPL");
 
-#include <kedr/base/common.h>
+#include <kedr/core/kedr.h>
 #include <kedr/trace/trace.h>
 
 #include <linux/cdev.h>
@@ -51,13 +51,21 @@ static void trace_kedr_payload(int some_arg)
 	kedr_trace(kedr_trace_pp_function_kfree, &data, sizeof(data));
 }
 
-void repl_kfree(void* p)
+static void pre_kfree(void* p, struct kedr_function_call_info* call_info)
 {
     trace_kedr_payload(2);
-    kfree(p);
 }
-static void* orig_addrs[] = {(void*)kfree};
-static void* repl_addrs[] = {(void*)repl_kfree};
+
+static struct kedr_pre_pair pre_pairs[] =
+{
+	{
+		.orig = (void*)&kfree,
+		.pre  = (void*)&pre_kfree,
+	},
+	{
+		.orig = NULL
+	}
+};
 
 static void
 target_load_callback(struct module *target_module)
@@ -74,25 +82,43 @@ target_unload_callback(struct module *target_module)
 
 static struct kedr_payload payload = {
 	.mod 			        = THIS_MODULE,
-	.repl_table.orig_addrs 	= &orig_addrs[0],
-	.repl_table.repl_addrs 	= &repl_addrs[0],
-	.repl_table.num_addrs	= sizeof(orig_addrs) / sizeof(orig_addrs[0]),
+
+	.pre_pairs              = pre_pairs,
+
     .target_load_callback   = target_load_callback,
     .target_unload_callback = target_unload_callback
 };
 
 /* ================================================================ */
+
+extern int functions_support_register(void);
+extern void functions_support_unregister(void);
+
 static void
 kedr_payload_cleanup_module(void)
 {
     kedr_payload_unregister(&payload);
-	return;
+	functions_support_unregister();
+
+    kedr_trace_pp_unregister();
 }
 
 static int __init
 kedr_payload_init_module(void)
 {
-    return kedr_payload_register(&payload);
+    int result;
+    
+    result = functions_support_register();
+    if(result) return result;
+    
+    result = kedr_payload_register(&payload);
+    if(result)
+    {
+        functions_support_unregister();
+        return result;
+    }
+
+	return 0;
 }
 
 module_init(kedr_payload_init_module);

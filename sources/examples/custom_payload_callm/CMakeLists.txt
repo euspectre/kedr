@@ -5,13 +5,14 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/payload.data.in"
 	@ONLY)
 
 
+kedr_load_install_prefixes()
 set(KEDR_INCLUDE_DIR "${KEDR_INSTALL_INCLUDE_DIR}")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Kbuild.in"
     "${CMAKE_CURRENT_BINARY_DIR}/Kbuild_installed"
     @ONLY
 )
 
-set(kedr_base_symbols "${KEDR_INSTALL_PREFIX_KSYMVERS}/kedr_base.symvers")
+set(kedr_symbols "${KEDR_INSTALL_PREFIX_KSYMVERS}/kedr.symvers")
 set(kedr_trace_symbols "${KEDR_INSTALL_PREFIX_KSYMVERS}/kedr_trace.symvers")
 set(kedr_gen_tool "${KEDR_INSTALL_PREFIX_EXEC_AUX}/kedr_gen")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/makefile.in"
@@ -19,52 +20,10 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/makefile.in"
     @ONLY
 )
 
-# Copy templates files into build dir
-set(templates_root_dir_src "${CMAKE_SOURCE_DIR}/payloads_fsim/templates")
-set(templates_root_dir_dst "${CMAKE_CURRENT_BINARY_DIR}/templates")
-
-set(templates_dirs "payload.c/block" "payload.c/document")
-
-set(templates_dirs_src)
-set(templates_dirs_dst)
-set(templates_files_glob_expr)
-
-foreach(template_dir ${templates_dirs})
-	list(APPEND templates_dirs_src "${templates_root_dir_src}/${template_dir}")
-	list(APPEND templates_dirs_dst "${templates_root_dir_dst}/${template_dir}")
-	list(APPEND templates_files_glob_expr "${templates_root_dir_src}/${template_dir}/*.tpl")
-endforeach(template_dir ${templates_dirs})
-
-file(GLOB custom_payload_templates_files RELATIVE "${templates_root_dir_src}" ${templates_files_glob_expr})
-
-set(custom_payload_templates_files_dst)
-set(custom_payload_templates_files_src)
-foreach(template_file ${custom_payload_templates_files})
-	list(APPEND custom_payload_templates_files_src "${templates_root_dir_src}/${template_file}")	
-	list(APPEND custom_payload_templates_files_dst "${templates_root_dir_dst}/${template_file}")
-endforeach(template_file ${custom_payload_templates_files})
-
-
-add_custom_target("custom_payload_callm_templates"
-        DEPENDS ${custom_payload_templates_files_dst}
-                )
-
-# Without dependencies - for simplification
-file(MAKE_DIRECTORY ${templates_dirs_dst})
-
-foreach(template_file ${custom_payload_templates_files})
-	add_custom_command(OUTPUT "${templates_root_dir_dst}/${template_file}"
-		COMMAND cp ${templates_root_dir_src}/${template_file} ${templates_root_dir_dst}/${template_file}
-		DEPENDS "${templates_root_dir_src}/${template_file}")
-endforeach(template_file ${custom_payload_templates_files})
-
 #For testing
 add_custom_target("custom_payload_callm"
         DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${module_name}.ko"
                 )
-
-# Copy template files into build directory only for test building process
-add_dependencies("custom_payload_callm" "custom_payload_callm_templates")
 
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${module_name}.ko"
         COMMAND $(MAKE) -f makefile_test
@@ -73,13 +32,14 @@ add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${module_name}.ko"
                 "${CMAKE_CURRENT_BINARY_DIR}/Kbuild"
                 )
 
+kedr_load_test_prefixes()
 set(KEDR_INCLUDE_DIR "${KEDR_TEST_INCLUDE_DIR}")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Kbuild.in"
     "${CMAKE_CURRENT_BINARY_DIR}/Kbuild"
     @ONLY
 )
 
-set(kedr_base_symbols "${CMAKE_BINARY_DIR}/base/Module.symvers")
+set(kedr_symbols "${CMAKE_BINARY_DIR}/core/Module.symvers")
 set(kedr_trace_symbols "${CMAKE_BINARY_DIR}/trace/Module.symvers")
 set(kedr_gen_tool "${KEDR_GEN_INSTALL_PREFIX}/kedr_gen")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/makefile.in"
@@ -101,8 +61,4 @@ install(FILES   "${CMAKE_CURRENT_BINARY_DIR}/makefile_installed"
 install(FILES   "${CMAKE_CURRENT_BINARY_DIR}/Kbuild_installed"
         DESTINATION "${KEDR_EXAMPLE_PATH}/custom_payload_callm"
         RENAME Kbuild
-)
-
-install(DIRECTORY  "${templates_root_dir_src}"
-        DESTINATION "${KEDR_EXAMPLE_PATH}/custom_payload_callm"
 )

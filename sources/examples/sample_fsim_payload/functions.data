@@ -1,0 +1,21 @@
+## This file will be used for generate support for functions
+## we want to intercept.
+
+## Header(s), where functions, interested us, are defined.
+header =>>
+#include <linux/slab.h>
+<<
+
+[group]
+## Describe signature of function __kmalloc
+
+    function.name = __kmalloc
+    returnType = void*
+
+    arg.type = size_t
+    arg.name = size
+    
+    arg.type = gfp_t
+    arg.name = flags
+
+## End of __kmalloc function description

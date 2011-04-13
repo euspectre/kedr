@@ -7,11 +7,9 @@
 	arg.name = p
 	
 	# The body of the replacement function
-	handler.body =>>
+	handler.pre =>>
 	if (!ZERO_OR_NULL_PTR(p) && !klc_find_and_remove_alloc(p)) 
 		klc_add_bad_free(p, stack_depth);
-	
-	kzfree(p);
 	<<
 
 # End of the group of definitions for kzfree().

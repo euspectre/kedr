@@ -23,7 +23,7 @@
 
 #include <linux/slab.h>     /* __kmalloc() */
 
-#include <kedr/base/common.h>
+#include <kedr/core/kedr.h>
 
 /*********************************************************************/
 MODULE_AUTHOR("Eugene");
@@ -42,7 +42,8 @@ module_param(target_in_init, ulong, S_IRUGO);
  * Replacement functions
  *********************************************************************/
 static void*
-repl___kmalloc(size_t size, gfp_t flags)
+repl___kmalloc(size_t size, gfp_t flags,
+	struct kedr_function_call_info* call_info)
 {
 	void* returnValue;
     target_in_init = (kedr_target_module_in_init() ? 1 : 0);
@@ -51,39 +52,49 @@ repl___kmalloc(size_t size, gfp_t flags)
 }
 /*********************************************************************/
 
-/* Names and addresses of the functions of interest */
-static void* orig_addrs[] = {
-	(void*)&__kmalloc
-};
-
-/* Addresses of the replacement functions */
-static void* repl_addrs[] = {
-	(void*)&repl___kmalloc
+static struct kedr_replace_pair replace_pairs[] =
+{
+	{
+		.orig = (void*)&__kmalloc,
+		.replace = (void*)&repl___kmalloc
+	},
+	{
+		.orig = NULL
+	}
 };
 
 static struct kedr_payload payload = {
-	.mod                    = THIS_MODULE,
-	.repl_table.orig_addrs  = &orig_addrs[0],
-	.repl_table.repl_addrs  = &repl_addrs[0],
-	.repl_table.num_addrs   = ARRAY_SIZE(orig_addrs),
-    .target_load_callback   = NULL,
-    .target_unload_callback = NULL
+	.mod            = THIS_MODULE,
+
+	.replace_pairs	= replace_pairs
 };
 /*********************************************************************/
+
+extern int functions_support_register(void);
+extern void functions_support_unregister(void);
 
 static void
 kedr_test_cleanup_module(void)
 {
 	kedr_payload_unregister(&payload);
+	functions_support_unregister();
 	return;
 }
 
 static int __init
 kedr_test_init_module(void)
 {
-	BUG_ON(	ARRAY_SIZE(orig_addrs) != 
-		ARRAY_SIZE(repl_addrs));
-	return kedr_payload_register(&payload);
+	int result = functions_support_register();
+	if(result) return result;
+	
+	result = kedr_payload_register(&payload);
+	if(result)
+	{
+		functions_support_unregister();
+		return result;
+	}
+	
+	return 0;
 }
 
 module_init(kedr_test_init_module);

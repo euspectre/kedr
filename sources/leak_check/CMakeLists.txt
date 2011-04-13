@@ -4,8 +4,8 @@ set(kmodule_name "kedr_leak_check")
 
 set(KEDR_GEN_LC_TEMPLATES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/templates/") 
 
-kbuild_use_symbols("${CMAKE_BINARY_DIR}/base/Module.symvers")
-kbuild_add_dependencies("kedr_base")
+kbuild_use_symbols("${CMAKE_BINARY_DIR}/core/Module.symvers")
+kbuild_add_dependencies("kedr")
 
 # Name of the data file to be created
 set(payload_data_file "payload.data")
@@ -34,10 +34,15 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/${leak_check_conf_file}.in"
 # it in the current directory.
 function(rules_generate_payload)
 	set(payload_c_file "${CMAKE_CURRENT_BINARY_DIR}/payload.c")
+	set(functions_support_file "${CMAKE_CURRENT_BINARY_DIR}/functions_support.c")
 	to_abs_path(payload_data_file_abs ${payload_data_file})
 	add_custom_command(OUTPUT ${payload_c_file}
 		COMMAND ${KEDR_GEN_TOOL} ${KEDR_GEN_LC_TEMPLATES_DIR}/payload.c/ ${payload_data_file_abs} > ${payload_c_file}
 		DEPENDS ${payload_data_file_abs})
+	add_custom_command(OUTPUT ${functions_support_file}
+		COMMAND ${KEDR_GEN_TOOL} ${KEDR_GEN_TEMPLATES_DIR}/functions_support.c/ ${payload_data_file_abs} > ${functions_support_file}
+		DEPENDS ${payload_data_file_abs})
+
 endfunction(rules_generate_payload)
 
 # Commands to generate ${payload_data_file} from ${header_data_file} 
@@ -112,6 +117,8 @@ list(APPEND functions ${functions_node})
 kbuild_include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
 kbuild_add_module(${kmodule_name}
 	"payload.c"
+	"functions_support.c"
+	
 	"klc_output.c"
 	"mbi_ops.c"
 	"stack_trace.c"

@@ -11,14 +11,9 @@
 	arg.name = flags
 	
 	# The body of the replacement function
-	handler.body =>>
-	char *ret_val;
-	ret_val = kstrdup(s, flags);
-	
-	if (ret_val != NULL)
-		klc_add_alloc((void *)ret_val, strlen(s) + 1, stack_depth);
-	
-	return ret_val;
+	handler.post =>>
+	if (returnValue != NULL)
+		klc_add_alloc((void *)returnValue, strlen(s) + 1, stack_depth);
 	<<
 
 # End of the group of definitions for kstrdup().

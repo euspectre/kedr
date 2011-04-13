@@ -10,7 +10,7 @@
 	arg.name = order
 
 	# The body of the replacement function
-	handler.body =>>
+	handler.pre =>>
 	if (page != NULL) {
 		/* If the page is not mapped to the virtual memory (highmem?)
 		 * (highmem?), page_address(page) returns NULL.
@@ -19,9 +19,6 @@
 		if (p != NULL && !klc_find_and_remove_alloc(p)) 
 			klc_add_bad_free(p, stack_depth);
 	}
-	
-	__free_pages(page, order);
-	return;
 	<<
 
 # End of the group of definitions for __free_pages().

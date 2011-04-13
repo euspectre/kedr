@@ -24,18 +24,10 @@ if(enable_full_spinlock)
 endif(enable_full_spinlock)
 
 
-kbuild_include_directories ("${CMAKE_CURRENT_BINARY_DIR}")
-kbuild_add_module(${kmodule_name}
-	"payload.c")
+create_payload_callm(${kmodule_name} ${functions})
 
-rules_generate_payload()
-
-rules_build_datafile(${functions})
-
-kedr_test_add_ci_include()
 kedr_test_add_ci_test(${functions})
 
 kedr_install_kmodule(${kmodule_name})
 
 kedr_conf_callm_add_payload(${kmodule_name})
-kedr_conf_fsim_add_payload(${kmodule_name})

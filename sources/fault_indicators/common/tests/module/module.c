@@ -29,15 +29,15 @@ struct dentry* module_dir;
 struct dentry* simulate_file;
 struct kedr_simulation_point* point;
 
-static int simulate(void)
+static int simulate(void* caller_address)
 {
-    return kedr_fsim_point_simulate(point, NULL);
+    return kedr_fsim_point_simulate(point, &caller_address);
 }
 
 ///////////////////////////File operations///////////////////////
 ssize_t simulate_file_write(struct file* filp, const char __user *buf, size_t count, loff_t* f_pos)
 {
-    return simulate() ? -EINVAL : count;
+    return simulate((void*)0x12345) ? -EINVAL : count;
 }
 
 static struct file_operations simulate_file_operations = {
@@ -49,7 +49,7 @@ static struct file_operations simulate_file_operations = {
 static int __init
 this_module_init(void)
 {
-    point = kedr_fsim_point_register("common", "");
+    point = kedr_fsim_point_register("common", "void*");
     if(point == NULL)
     {
         pr_err("Cannot register simulation point.");

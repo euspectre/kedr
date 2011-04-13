@@ -14,25 +14,21 @@
 	arg.name = flags
 	
 	# The body of the replacement function
-	handler.body =>>
-	void *ret_val;
-	ret_val = __krealloc(p, size, flags);
-	
+	handler.post =>>
 	if (size == 0) /* do nothing */
-		return ret_val;
+		return;
 	
 	if (p == NULL) { 
 		/* same as kmalloc */
-		if (ret_val != NULL)
-			klc_add_alloc(ret_val, size, stack_depth);
+		if (returnValue != NULL)
+			klc_add_alloc(returnValue, size, stack_depth);
 	} else {
 		/* this part is more tricky as __krealloc may or may not call
 		 * kmalloc and, in addition, it does not free 'p'.
 		 */
-		if (ret_val != NULL && ret_val != p) /* allocation has been done */
-			klc_add_alloc(ret_val, size, stack_depth);
+		if (returnValue != NULL && returnValue != p) /* allocation has been done */
+			klc_add_alloc(returnValue, size, stack_depth);
 	}
-	return ret_val;
 	<<
 
 # End of the group of definitions for __krealloc().

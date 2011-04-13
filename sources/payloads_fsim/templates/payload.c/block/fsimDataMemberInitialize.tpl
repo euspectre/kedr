@@ -1,1 +1,0 @@
-    fsim_point_data.<$fpoint.param.name$> = (<$fpoint.param.type$>) <$fpoint.param.name$>;

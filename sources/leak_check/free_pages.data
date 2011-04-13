@@ -10,12 +10,10 @@
 	arg.name = order
 
 	# The body of the replacement function
-	handler.body =>>
+	handler.pre =>>
 	void *p = (void *)addr;
 	if (!ZERO_OR_NULL_PTR(p) && !klc_find_and_remove_alloc(p)) 
 		klc_add_bad_free(p, stack_depth);
-	
-	free_pages(addr, order);
 	<<
 
 # End of the group of definitions for free_pages().

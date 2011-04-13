@@ -152,25 +152,6 @@ option(KEDR_LEAK_CHECK
 )
 #######################################################################
 
-# caller_address
-option(KEDR_ENABLE_CALLER_ADDRESS 
-"Enable support for caller_address variable in fault simulation expressions"
-	ON
-)
-
-if (KEDR_ENABLE_CALLER_ADDRESS AND (NOT STACK_TRACE_RELIABLE))
-	message(WARNING 
-"To be able to use 'caller_address' variable in fault simulation "
-"expressions, reliable call stack traces are needed. "
-"It seems, however, that neither frame pointers nor stack unwind info are "
-"used on this system, so stack traces are likely to be unreliable.\n" 
-"Disabling support for 'caller_address' variable."
-	)
-	set(KEDR_ENABLE_CALLER_ADDRESS OFF)
-endif ()
-
-
-#######################################################################
 # kedr_gen (this time - for building KEDR itself)
 if (KEDR_GEN)
 # If cross-compiling for a different architecture, kedr_gen tool 
@@ -322,25 +303,35 @@ else (KEDR_GEN)
 # ${KEDR_GEN_TOOL} is the path to "kedr_gen". The path can be used to call
 # "kedr_gen" tool during the build of payload modules, etc.
 	set (KEDR_GEN_TOOL ${KEDR_GEN_INSTALL_PREFIX}/kedr_gen)
-	message (STATUS "Creating \"kedr_gen\" - done")
 endif (KEDR_GEN)
+
+# Top directory with kedr_gen templates for different purposes.
+set(KEDR_GEN_TEMPLATES_DIR "${CMAKE_SOURCE_DIR}/templates/") 
+	message (STATUS "Creating \"kedr_gen\" - done")
 #######################################################################
 
 prepare_function_lookup()
 
 #######################################################################
 
-add_subdirectory(base)
-
 # The following files will be used to check whether controller really 
 # intercepts the calls to the particular functions.
-set(function_triggers_file "${CMAKE_BINARY_DIR}/controller/tests/call_interception/function_triggers.data")
+set(function_triggers_file "${CMAKE_BINARY_DIR}/core/tests/call_interception/function_triggers.data")
 file(WRITE "${function_triggers_file}" "")
-set(function_intercepts_file "${CMAKE_BINARY_DIR}/controller/tests/call_interception/function_intercepts.data")
+set(function_intercepts_file "${CMAKE_BINARY_DIR}/core/tests/call_interception/function_intercepts.data")
 file(WRITE "${function_intercepts_file}" "")
 
-add_subdirectory(controller)
+add_subdirectory(core)
 
+if(CMAKE_CROSSCOMPILING)
+    function(kedr_test_add_ci_test functions)
+        # Do nothing
+    endfunction(kedr_test_add_ci_test functions)
+    function(kedr_test_add_ci_test_uaccess functions)
+        # Do nothing
+    endfunction(kedr_test_add_ci_test_uaccess functions)
+endif(CMAKE_CROSSCOMPILING)
+add_subdirectory(templates)
 # For tests only
 add_subdirectory(wobject)
 add_subdirectory(control_file)
@@ -353,34 +344,32 @@ add_subdirectory(include)
 
 add_subdirectory(trace)
 
-# Because some call monitor payloads will be used in the configuration file for fault simulation,
-# Creating data file for fault simulation should be preceed to the processing call monitor payloads.
+if(KEDR_STANDARD_CALLM_PAYLOADS)
+	# This file is used for create configuration file for call monitor payloads
+	set(kedr_conf_file_data_callm "${CMAKE_BINARY_DIR}/tools/control/kedr_callm.conf.data")
+	# Same but for test variant
+	set(kedr_test_conf_file_data_callm "${CMAKE_BINARY_DIR}/tools/control/kedr_test_callm.conf.data")
+endif(KEDR_STANDARD_CALLM_PAYLOADS)
 if(KEDR_STANDARD_FSIM_PAYLOADS)
-    # This file is used for create configuration file for fault simulation payloads
-    set(kedr_conf_file_data_fsim "${CMAKE_BINARY_DIR}/tools/control/kedr_fsim.conf.data")
-    file(WRITE "${kedr_conf_file_data_fsim}" "")
+	# This file is used for create configuration file for fault simulation payloads
+	set(kedr_conf_file_data_fsim "${CMAKE_BINARY_DIR}/tools/control/kedr_fsim.conf.data")
+endif(KEDR_STANDARD_FSIM_PAYLOADS)
 
+add_subdirectory(tools)
+
+if(KEDR_STANDARD_FSIM_PAYLOADS)
     add_subdirectory(payloads_fsim)
     add_subdirectory(fault_indicators)
 endif(KEDR_STANDARD_FSIM_PAYLOADS)
 
 
 if(KEDR_STANDARD_CALLM_PAYLOADS)
-    # This file is used for create configuration file for call monitor payloads
-    set(kedr_conf_file_data_callm "${CMAKE_BINARY_DIR}/tools/control/kedr_callm.conf.data")
-    file(WRITE "${kedr_conf_file_data_callm}" "")
-    # Same but for test variant
-    set(kedr_test_conf_file_data_callm "${CMAKE_BINARY_DIR}/tools/control/kedr_test_callm.conf.data")
-    file(WRITE "${kedr_test_conf_file_data_callm}" "")
-
     add_subdirectory(payloads_callm)
 endif(KEDR_STANDARD_CALLM_PAYLOADS)
 
 if(KEDR_LEAK_CHECK)
 	add_subdirectory(leak_check)
 endif(KEDR_LEAK_CHECK)
-
-add_subdirectory(tools)
 
 if (NOT CMAKE_CROSSCOMPILING)
 	# Examples

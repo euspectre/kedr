@@ -1,4 +1,4 @@
-kbuild_use_symbols("${CMAKE_BINARY_DIR}/base/Module.symvers")
+kbuild_use_symbols("${CMAKE_BINARY_DIR}/core/Module.symvers")
 kbuild_use_symbols("${CMAKE_BINARY_DIR}/fault_simulation/Module.symvers")
 
 # Common name of data file
@@ -10,7 +10,7 @@ function(rules_generate_internal_indicator)
 	set(indicator_c_file "${CMAKE_CURRENT_BINARY_DIR}/indicator.c")
 	to_abs_path(indicator_data_file_abs ${indicator_data_file})
 	add_custom_command(OUTPUT ${indicator_c_file}
-				COMMAND ${KEDR_GEN_TOOL} ${KEDR_GEN_TEMPLATES_DIR}/indicator.c/ ${indicator_data_file_abs} > ${indicator_c_file}
+				COMMAND ${KEDR_GEN_TOOL} ${KEDR_GEN_TEMPLATES_DIR}/fault_indicator.c/ ${indicator_data_file_abs} > ${indicator_c_file}
 				DEPENDS ${indicator_data_file_abs})
 endfunction(rules_generate_internal_indicator)
 

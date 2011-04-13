@@ -1,7 +1,6 @@
 #! /bin/sh
 control_script="sh @CMAKE_BINARY_DIR@/tools/control/kedr_test"
-base_name="kedr_base"
-controller_name="kedr_controller"
+kedr_name="kedr"
 # Name of any payload (empty if shouldn't be tested)
 payload_name="@NAME_OF_PAYLOAD_LOADED@"
 #Whether module is currently loading
@@ -18,14 +17,8 @@ if test $? -ne 0; then
     exit 1
 fi
 
-if ! is_module_loading ${base_name}; then
-    printf "Base module is not loaded after 'start' command\n"
-    exit 1
-fi
-
-if ! is_module_loading ${controller_name}; then
-    printf "Controller module is not loaded after 'start' command\n"
-	${control_script} stop
+if ! is_module_loading ${kedr_name}; then
+    printf "KEDR core module is not loaded after 'start' command\n"
     exit 1
 fi
 
@@ -44,23 +37,16 @@ if test $? -ne 0; then
     exit 1
 fi
 
-grep "Base is running" ${output_file}
+grep "KEDR is running" ${output_file}
 if test $? -ne 0; then
-    printf "'status' command does not output '%s' string but it should\n" "Base is running"
-	${control_script} stop
-    exit 1
-fi
-
-grep "Controller is running" ${output_file}
-if test $? -ne 0; then
-    printf "'status' command does not output '%s' string but it should\n" "Controller is running"
+    printf "'status' command does not output '%s' string but it should\n" "KEDR is running"
 	${control_script} stop
     exit 1
 fi
 
 grep "target1" ${output_file}
 if test $? -ne 0; then
-    printf "'status' command does not output name of target for controller ('%s') but it should\n" "target1"
+    printf "'status' command does not output name of target for KEDR ('%s') but it should\n" "target1"
 	${control_script} stop
     exit 1
 fi
@@ -84,9 +70,9 @@ if test $? -ne 0; then
     exit 1
 fi
 
-grep "Base is running" ${output_file}
+grep "KEDR is running" ${output_file}
 if test $? -eq 0; then
-    printf "'status' command outputs '%s' string but it shouldn't\n" "Base is running"
+    printf "'status' command outputs '%s' string but it shouldn't\n" "KEDR is running"
     exit 1
 fi
 
@@ -102,14 +88,8 @@ if test $? -ne 0; then
     exit 1
 fi
 
-if ! is_module_loading ${base_name}; then
-    printf "Base module is not loaded after 'restart' command\n"
-    exit 1
-fi
-
-if ! is_module_loading ${controller_name}; then
-    printf "Controller module is not loaded after 'restart' command\n"
-	${control_script} stop
+if ! is_module_loading ${kedr_name}; then
+    printf "KEDR module is not loaded after 'restart' command\n"
     exit 1
 fi
 
@@ -127,13 +107,8 @@ if test $? -ne 0; then
     exit 1
 fi
 
-if is_module_loading ${base_name}; then
-    printf "Base module is loaded after 'stop' command\n"
-    exit 1
-fi
-
-if is_module_loading ${controller_name}; then
-    printf "Controller module is loaded after 'stop' command\n"
+if is_module_loading ${kedr_name}; then
+    printf "KEDR core module is loaded after 'stop' command\n"
     exit 1
 fi
 

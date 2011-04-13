@@ -17,9 +17,9 @@
 # Scripts useful for tests
 add_subdirectory(scripts)
 
-# Path to the controller module and its name.
-set (CONTROLLER_DIR "${CMAKE_BINARY_DIR}/controller")
-set (CONTROLLER_NAME "kedr_controller")
+# Path to the KEDR core module and its name.
+set (KEDR_DIR "${CMAKE_BINARY_DIR}/core")
+set (KEDR_NAME "kedr")
 
 # '@ONLY' is essential when doing substitutions in the shell scripts. 
 # Without it, CMake would replace "${...}" too, which is usually not what 

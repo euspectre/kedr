@@ -11,14 +11,9 @@
 	arg.name = gfp_mask
 	
 	# The body of the replacement function
-	handler.body =>>
-	void *ret_val;
-	ret_val = alloc_pages_exact(size, gfp_mask);
-	
-	if (!ZERO_OR_NULL_PTR(ret_val))
-		klc_add_alloc(ret_val, size, stack_depth);
-
-	return ret_val;
+	handler.post =>>
+	if (!ZERO_OR_NULL_PTR(returnValue))
+		klc_add_alloc(returnValue, size, stack_depth);
 	<<
 
 # End of the group of definitions for alloc_pages_exact().

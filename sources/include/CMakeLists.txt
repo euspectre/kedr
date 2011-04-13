@@ -4,7 +4,7 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/kedr/defs.h.in"
 # List of include files that do not need configuring and
 # should be copied to the binary tree as is.
 set(KEDR_INCLUDE_FILES_SRC
-	base/common.h
+	core/kedr.h
 	calculator/calculator.h
 	control_file/control_file.h
     fault_simulation/fault_simulation.h
@@ -16,7 +16,7 @@ set(KEDR_INCLUDE_FILES_SRC
 
 # List of include files to be installed.
 set(KEDR_INCLUDE_FILES_INSTALL
-	base/common.h
+	core/kedr.h
 	calculator/calculator.h
 	control_file/control_file.h
 	defs.h

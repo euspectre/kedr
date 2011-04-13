@@ -1,7 +1,7 @@
 [group]
 	# Name and return type of the target function
 	function.name = alloc_pages_current
-	returnType = struct page *
+	returnType = struct page*
 
 	# Names and types of the arguments of the target function
 	arg.type = gfp_t
@@ -10,18 +10,15 @@
 	arg.type = unsigned int 
 	arg.name = order
 
-	# The body of the replacement function
-	handler.body =>>
-	struct page *page;
-	page = alloc_pages_current(gfp, order);
+	# The body of the handler
+	handler.post =>>
+	struct page *page = returnValue;
 	
 	if (page != NULL) {
 		const void *p = (const void *)page_address(page);
 		if (p != NULL) 
 			klc_add_alloc(p, (size_t)(PAGE_SIZE << order), stack_depth);
 	}
-	
-	return page;
 	<<
 
 # End of the group of definitions for alloc_pages_current().

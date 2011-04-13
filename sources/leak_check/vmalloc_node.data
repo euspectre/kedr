@@ -11,14 +11,9 @@
 	arg.name = node
 
 	# The body of the replacement function
-	handler.body =>>
-	void *ret_val;
-	ret_val = vmalloc_node(size, node);
-
-	if (ret_val != NULL)
-		klc_add_alloc(ret_val, size, stack_depth);
-
-	return ret_val;
+	handler.post =>>
+	if (returnValue != NULL)
+		klc_add_alloc(returnValue, size, stack_depth);
 	<<
 
 # End of the group of definitions for vmalloc_node().

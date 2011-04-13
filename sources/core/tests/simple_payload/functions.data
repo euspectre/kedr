@@ -1,0 +1,20 @@
+header =>>
+#include <linux/slab.h>
+<<
+
+[group]
+    function.name = __kmalloc
+    returnType = void*
+
+    arg.type = size_t
+    arg.name = size
+    
+    arg.type = gfp_t
+    arg.name = flags
+
+[group]
+    function.name = kfree
+    
+    arg.type = void*
+    arg.name = p
+

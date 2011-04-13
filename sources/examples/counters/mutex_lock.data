@@ -1,0 +1,5 @@
+[group]
+    function.name = mutex_lock
+    
+    arg.type = struct mutex*
+    arg.name = lock

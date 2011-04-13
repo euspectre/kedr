@@ -28,8 +28,8 @@
 ########################################################################
 checkPrereqs()
 {
-    if test ! -f "${BASE_MODULE}"; then
-        printf "Base module is missing: ${BASE_MODULE}\n"
+    if test ! -f "${KEDR_MODULE}"; then
+        printf "KEDR core module is missing: ${KEDR_MODULE}\n"
         exit 1
     fi
     
@@ -51,9 +51,9 @@ cleanupAll()
         /sbin/rmmod "${PAYLOAD_NAME}"
     fi
     
-    lsmod | grep "@BASE_NAME@" > /dev/null 2>&1
+    lsmod | grep "@KEDR_NAME@" > /dev/null 2>&1
     if test $? -eq 0; then
-        /sbin/rmmod "@BASE_NAME@"
+        /sbin/rmmod "@KEDR_NAME@"
     fi
 }
 
@@ -62,7 +62,7 @@ cleanupAll()
 ########################################################################
 doTest()
 {
-    /sbin/insmod "${BASE_MODULE}" || exit 1
+    /sbin/insmod "${KEDR_MODULE}" || exit 1
 
     /sbin/insmod "${PAYLOAD_MODULE}" scenario_number=${SCEN_NO}
     if test $? -ne 0; then
@@ -88,7 +88,7 @@ doTest()
         exit 1
     fi
 
-    /sbin/rmmod "@BASE_NAME@" || exit 1
+    /sbin/rmmod "@KEDR_NAME@" || exit 1
     
     # Check the saved result
     printf "Test result (1 - passed, other value - failed): ${TEST_PASSED}\n"
@@ -110,14 +110,14 @@ fi
 SCEN_NO=$1
 printf "Scenario number is ${SCEN_NO}\n"
 
-BASE_MODULE="@BASE_DIR@/@BASE_NAME@.ko"
+KEDR_MODULE="@KEDR_DIR@/@KEDR_NAME@.ko"
 
 PAYLOAD_NAME="test_reg_payload"
 PAYLOAD_MODULE="payload/${PAYLOAD_NAME}.ko"
 
 checkPrereqs
 
-printf "Base module: ${BASE_MODULE}\n"
+printf "Kedr core module: ${KEDR_MODULE}\n"
 printf "Payload module: ${PAYLOAD_MODULE}\n"
 
 doTest

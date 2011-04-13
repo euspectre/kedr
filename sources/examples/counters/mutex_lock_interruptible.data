@@ -1,0 +1,6 @@
+[group]
+    function.name = mutex_lock_interruptible
+    returnType = int
+    
+    arg.type = struct mutex*
+    arg.name = lock

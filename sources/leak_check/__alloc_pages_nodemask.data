@@ -17,17 +17,13 @@
 	arg.name = nodemask
 
 	# The body of the replacement function
-	handler.body =>>
-	struct page *page;
-	page = __alloc_pages_nodemask(gfp_mask, order, zonelist, nodemask);
-	
+	handler.post =>>
+	struct page *page = returnValue;
 	if (page != NULL) {
 		const void *p = (const void *)page_address(page);
 		if (p != NULL)
 			klc_add_alloc(p, (size_t)(PAGE_SIZE << order), stack_depth);
 	}
-	
-	return page;
 	<<
 # End of the group of definitions for __alloc_pages_nodemask().
 

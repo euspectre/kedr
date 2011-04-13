@@ -3,13 +3,10 @@ module_name := @module_name@
 
 payload_data_file := payload.data
 
-payload_c_file := payload.c
-
-kedr_gen_templates_dir := ./templates
+kedr_gen_templates_dir := @KEDR_PREFIX_TEMPLATES@
 kedr_gen_tool := @kedr_gen_tool@
 
-kedr_base_symbols := @kedr_base_symbols@
-kedr_trace_symbols := @kedr_trace_symbols@
+kedr_symbols := @kedr_symbols@
 fault_simulation_symbols := @fault_simulation_symbols@
 
 KBUILD_DIR=@KBUILD_BUILD_DIR@
@@ -17,14 +14,19 @@ PWD=`pwd`
 
 all: $(module_name).ko
 
-$(module_name).ko: $(payload_c_file) $(kedr_base_symbols) $(kedr_trace_symbols) $(fault_simulation_symbols)
-	cat "$(kedr_base_symbols)" "$(kedr_trace_symbols)" "$(fault_simulation_symbols)" > ./Module.symvers
+$(module_name).ko: payload.c functions_support.c $(kedr_symbols) $(fault_simulation_symbols)
+	cat "$(kedr_symbols)" "$(fault_simulation_symbols)" > ./Module.symvers
 	$(MAKE) -C $(KBUILD_DIR) M=$(PWD) modules
 
-$(payload_c_file): $(payload_data_file)
-	$(kedr_gen_tool) $(kedr_gen_templates_dir)/payload.c/ $^ > $@
+payload.c: $(payload_data_file)
+	$(kedr_gen_tool) $(kedr_gen_templates_dir)/payload_fsim.c/ $^ > $@
+
+functions_support.c: $(payload_data_file)
+	$(kedr_gen_tool) $(kedr_gen_templates_dir)/functions_support.c/ $^ > $@
+
 clean:
 	$(MAKE) -C $(KBUILD_DIR) M=$(PWD) clean
-	rm -f $(payload_c_file)
+	rm -f payload.c
+	rm -f functions_support.c
 
 .PHONY: all clean

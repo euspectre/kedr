@@ -75,4 +75,17 @@ kedr_save_stack_trace_impl(unsigned long *entries, unsigned int max_entries,
         nr_entries_, \
         (unsigned long)__builtin_return_address(0))
 
+/*
+ * Temporary variant of previous macro, becouse need same functionality
+ * but without __builtin_return_address(0).
+ */
+static inline void
+__kedr_save_stack_trace(unsigned long *entries, unsigned int max_entries,
+    unsigned int *nr_entries,
+    void* caller_address)
+{
+    kedr_save_stack_trace_impl(entries, max_entries, nr_entries,
+        (unsigned long)caller_address);
+}
+
 #endif /* KEDR_STACK_TRACE_H_1637_INCLUDED */

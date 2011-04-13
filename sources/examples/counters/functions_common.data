@@ -1,0 +1,50 @@
+header=>>
+#include <linux/slab.h>
+#include <linux/mutex.h>
+<<
+
+[group]
+    function.name = __kmalloc
+    returnType = void*
+    
+    arg.type = size_t
+    arg.name = size
+    
+    arg.type = gfp_t
+    arg.name = flags
+
+[group]
+    function.name = krealloc
+    returnType = void*
+    
+    arg.type = void*
+    arg.name = p
+    
+    arg.type = size_t
+    arg.name = size
+    
+    arg.type = gfp_t
+    arg.name = flags
+
+[group]
+    function.name = kmem_cache_alloc
+    returnType = void*
+    
+    arg.type = struct kmem_cache*
+    arg.name = mc
+    
+    arg.type = gfp_t
+    arg.name = flags
+
+[group]
+    function.name = mutex_trylock
+    returnType = int
+    
+    arg.type = struct mutex*
+    arg.name = lock
+
+[group]
+    function.name = mutex_unlock
+    
+    arg.type = struct mutex*
+    arg.name = lock

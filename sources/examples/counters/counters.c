@@ -21,7 +21,7 @@
 #include <linux/uaccess.h>
 #include <linux/debugfs.h>
 
-#include <kedr/base/common.h>
+#include <kedr/core/kedr.h>
 
 #include "counters.h"
 
@@ -178,15 +178,12 @@ fail:
 }
 
 /* ================================================================ */
-/* Replacement functions */
-static void*
-repl___kmalloc(size_t size, gfp_t flags)
+/* Interception functions */
+static void
+post___kmalloc(size_t size, gfp_t flags, void* returnValue,
+    struct kedr_function_call_info* call_info)
 {
     unsigned long irq_flags;
-    void* returnValue;
-    
-    /* Call the target function */
-    returnValue = __kmalloc(size, flags);
     
     spin_lock_irqsave(&spinlock_alloc_total, irq_flags);
     ++cnt_alloc_total;
@@ -199,18 +196,14 @@ repl___kmalloc(size_t size, gfp_t flags)
     spin_lock_irqsave(&spinlock_alloc_max_size, irq_flags);
     if (size > cnt_alloc_max_size) cnt_alloc_max_size = size;
     spin_unlock_irqrestore(&spinlock_alloc_max_size, irq_flags);
-
-    return returnValue;
 }
 
-static void*
-repl_krealloc(const void* p, size_t size, gfp_t flags)
+static void
+post_krealloc(const void* p, size_t size, gfp_t flags,
+    void* returnValue,
+    struct kedr_function_call_info* call_info)
 {
     unsigned long irq_flags;
-    void* returnValue;
-
-    /* Call the target function */
-    returnValue = krealloc(p, size, flags);
     
     spin_lock_irqsave(&spinlock_alloc_total, irq_flags);
     /* For now, we don't care about the case when size <= ksize(p) */
@@ -224,25 +217,21 @@ repl_krealloc(const void* p, size_t size, gfp_t flags)
     spin_lock_irqsave(&spinlock_alloc_max_size, irq_flags);
     if (size > cnt_alloc_max_size) cnt_alloc_max_size = size;
     spin_unlock_irqrestore(&spinlock_alloc_max_size, irq_flags);
-
-    return returnValue;
 }
 
-static void*
-repl_kmem_cache_alloc(struct kmem_cache* mc, gfp_t flags)
+static void
+post_kmem_cache_alloc(struct kmem_cache* mc, gfp_t flags,
+    void* returnValue,
+    struct kedr_function_call_info* call_info)
 {
     unsigned long irq_flags;
     size_t size;
-    void* returnValue;
     
     /* 'size' may be somewhat larger than the actual size of the requested
      * memory block but this is not critical for now.
      */
     size = (size_t)kmem_cache_size(mc);
 
-    /* Call the target function */
-    returnValue = kmem_cache_alloc(mc, flags);
-    
     spin_lock_irqsave(&spinlock_alloc_total, irq_flags);
     ++cnt_alloc_total;
     spin_unlock_irqrestore(&spinlock_alloc_total, irq_flags);
@@ -254,18 +243,13 @@ repl_kmem_cache_alloc(struct kmem_cache* mc, gfp_t flags)
     spin_lock_irqsave(&spinlock_alloc_max_size, irq_flags);
     if (size > cnt_alloc_max_size) cnt_alloc_max_size = size;
     spin_unlock_irqrestore(&spinlock_alloc_max_size, irq_flags);
-    
-    return returnValue;
 }
 
 #ifndef CONFIG_DEBUG_LOCK_ALLOC
 static void
-repl_mutex_lock(struct mutex* lock)
+post_mutex_lock(struct mutex* lock, struct kedr_function_call_info* call_info)
 {
     unsigned long irq_flags;
-    
-    /* Call the target function */
-    mutex_lock(lock);
     
     spin_lock_irqsave(&spinlock_mutex_locks, irq_flags);
     ++cnt_mutex_locks;
@@ -274,18 +258,28 @@ repl_mutex_lock(struct mutex* lock)
     spin_lock_irqsave(&spinlock_mutex_balance, irq_flags);
     ++cnt_mutex_balance;
     spin_unlock_irqrestore(&spinlock_mutex_balance, irq_flags);
-    
-    return;
 }
 
-static int
-repl_mutex_lock_interruptible(struct mutex* lock)
+static void
+post_mutex_lock_interruptible(struct mutex* lock, int returnValue,
+    struct kedr_function_call_info* call_info)
 {
     unsigned long irq_flags;
-    int returnValue;
+   
+    spin_lock_irqsave(&spinlock_mutex_locks, irq_flags);
+    if (returnValue == 0) ++cnt_mutex_locks;
+    spin_unlock_irqrestore(&spinlock_mutex_locks, irq_flags);
     
-    /* Call the target function */
-    returnValue = mutex_lock_interruptible(lock);
+    spin_lock_irqsave(&spinlock_mutex_balance, irq_flags);
+    if (returnValue == 0) ++cnt_mutex_balance;
+    spin_unlock_irqrestore(&spinlock_mutex_balance, irq_flags);
+}
+
+static void
+post_mutex_lock_killable(struct mutex* lock, int returnValue,
+    struct kedr_function_call_info* call_info)
+{
+    unsigned long irq_flags;
     
     spin_lock_irqsave(&spinlock_mutex_locks, irq_flags);
     if (returnValue == 0) ++cnt_mutex_locks;
@@ -294,39 +288,14 @@ repl_mutex_lock_interruptible(struct mutex* lock)
     spin_lock_irqsave(&spinlock_mutex_balance, irq_flags);
     if (returnValue == 0) ++cnt_mutex_balance;
     spin_unlock_irqrestore(&spinlock_mutex_balance, irq_flags);
-    
-    return returnValue;
-}
-
-static int
-repl_mutex_lock_killable(struct mutex* lock)
-{
-    unsigned long irq_flags;
-    int returnValue;
-    
-    /* Call the target function */
-    returnValue = mutex_lock_killable(lock);
-    
-    spin_lock_irqsave(&spinlock_mutex_locks, irq_flags);
-    if (returnValue == 0) ++cnt_mutex_locks;
-    spin_unlock_irqrestore(&spinlock_mutex_locks, irq_flags);
-    
-    spin_lock_irqsave(&spinlock_mutex_balance, irq_flags);
-    if (returnValue == 0) ++cnt_mutex_balance;
-    spin_unlock_irqrestore(&spinlock_mutex_balance, irq_flags);
-
-    return returnValue;
 }
 #endif /* CONFIG_DEBUG_LOCK_ALLOC */
 
-static int
-repl_mutex_trylock(struct mutex* lock)
+static void
+post_mutex_trylock(struct mutex* lock, int returnValue,
+    struct kedr_function_call_info* call_info)
 {
     unsigned long irq_flags;
-    int returnValue;
-    
-    /* Call the target function */
-    returnValue = mutex_trylock(lock);
     
     spin_lock_irqsave(&spinlock_mutex_locks, irq_flags);
     if (returnValue == 1) ++cnt_mutex_locks;
@@ -335,23 +304,17 @@ repl_mutex_trylock(struct mutex* lock)
     spin_lock_irqsave(&spinlock_mutex_balance, irq_flags);
     if (returnValue == 1) ++cnt_mutex_balance;
     spin_unlock_irqrestore(&spinlock_mutex_balance, irq_flags);
-    
-    return returnValue;
 }
 
 static void
-repl_mutex_unlock(struct mutex* lock)
+pre_mutex_unlock(struct mutex* lock,
+    struct kedr_function_call_info* call_info)
 {
     unsigned long irq_flags;
-    
-    /* Call the target function */
-    mutex_unlock(lock);
     
     spin_lock_irqsave(&spinlock_mutex_balance, irq_flags);
     --cnt_mutex_balance;
     spin_unlock_irqrestore(&spinlock_mutex_balance, irq_flags);
-
-    return;
 }
 /* ================================================================ */
 
@@ -362,49 +325,71 @@ repl_mutex_unlock(struct mutex* lock)
  */
 
 /* Names and addresses of the functions of interest */
-static void* orig_addrs[] = {
-    (void*)&__kmalloc,
-    (void*)&krealloc,
-    (void*)&kmem_cache_alloc,
 
+static struct kedr_post_pair post_pairs[] =
+{
+    {
+        .orig = (void*)&__kmalloc,
+        .post  = (void*)&post___kmalloc
+    },
+    {
+        .orig = (void*)&krealloc,
+        .post  = (void*)&post_krealloc
+    },
+    {
+        .orig = (void*)&kmem_cache_alloc,
+        .post  = (void*)&post_kmem_cache_alloc
+    },
 #ifndef CONFIG_DEBUG_LOCK_ALLOC
-    (void*)&mutex_lock,
-    (void*)&mutex_lock_interruptible,
-    (void*)&mutex_lock_killable,
+    {
+        .orig = (void*)&mutex_lock,
+        .post  = (void*)&post_mutex_lock
+    },
+    {
+        .orig = (void*)&mutex_lock_interruptible,
+        .post  = (void*)&post_mutex_lock_interruptible
+    },
+    {
+        .orig = (void*)&mutex_lock_killable,
+        .post  = (void*)&post_mutex_lock_killable
+    },
 #endif /* CONFIG_DEBUG_LOCK_ALLOC */
-
-    (void*)&mutex_trylock,
-    (void*)&mutex_unlock
+    {
+        .orig = (void*)&mutex_trylock,
+        .post  = (void*)&post_mutex_trylock
+    },
+    {
+        .orig = NULL
+    }
 };
 
-/* Addresses of the replacement functions - must go in the same order 
- * as for the original functions.
- */
-static void* repl_addrs[] = {
-    (void*)&repl___kmalloc,
-    (void*)&repl_krealloc,
-    (void*)&repl_kmem_cache_alloc,
-
-#ifndef CONFIG_DEBUG_LOCK_ALLOC
-    (void*)&repl_mutex_lock,
-    (void*)&repl_mutex_lock_interruptible,
-    (void*)&repl_mutex_lock_killable,
-#endif /* CONFIG_DEBUG_LOCK_ALLOC */
-
-    (void*)&repl_mutex_trylock,
-    (void*)&repl_mutex_unlock
+static struct kedr_pre_pair pre_pairs[] =
+{
+    {
+        .orig = (void*)&mutex_unlock,
+        .pre  = (void*)&pre_mutex_unlock
+    },
+    {
+        .orig = NULL
+    }
 };
+
 
 static struct kedr_payload counters_payload = {
     .mod                    = THIS_MODULE,
-    .repl_table.orig_addrs  = &orig_addrs[0],
-    .repl_table.repl_addrs  = &repl_addrs[0],
-    .repl_table.num_addrs   = ARRAY_SIZE(orig_addrs),
+
+    .pre_pairs = pre_pairs,
+    .post_pairs = post_pairs,
+    
     .target_load_callback   = NULL,
     .target_unload_callback = NULL
 };
 
 /* ================================================================ */
+
+extern int functions_support_register(void);
+extern void functions_support_unregister(void);
+
 static int __init
 counters_init(void)
 {
@@ -428,10 +413,20 @@ counters_init(void)
         return ret;
     }
     
+    ret = functions_support_register();
+    if(ret)
+    {
+        printk(KERN_ERR "[counters] failed to register functions support for payload.\n");
+        remove_debugfs_files();
+        debugfs_remove(dir_counters);
+        return ret;
+    }
+    
     ret = kedr_payload_register(&counters_payload);
     if (ret < 0)
     {
         printk(KERN_ERR "[counters] failed to register payload module.\n");
+        functions_support_unregister();
         remove_debugfs_files();
         debugfs_remove(dir_counters);
         return ret;
@@ -443,6 +438,7 @@ static void
 counters_exit(void)
 {
     kedr_payload_unregister(&counters_payload);
+    functions_support_unregister();
     
     remove_debugfs_files();
     debugfs_remove(dir_counters);

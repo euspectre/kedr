@@ -11,16 +11,6 @@
 size_t size = (size_t)PAGE_SIZE;
 <<
 
-	# The parameters to be output to the trace. 
-	trace.param.type = unsigned int
-	trace.param.name = flags
-
-	trace.param.type = void*
-	trace.param.name = returnValue
-
-	# The format string to be used for trace output.
-	trace.formatString = "arguments: (%x), result: %p"
-
 	# Fault Simulation
 	fpoint.reuse_point = __kmalloc
 

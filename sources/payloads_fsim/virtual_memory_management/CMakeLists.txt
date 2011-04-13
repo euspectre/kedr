@@ -13,16 +13,9 @@ kmodule_configure_kernel_functions(functions REQUIRED
 	"vmalloc_node"
 	"vmalloc_32"
 	"vmalloc_32_user"
-	"vfree"
 )
 
-kbuild_include_directories ("${CMAKE_CURRENT_BINARY_DIR}")
-kbuild_add_module(${kmodule_name}
-	"payload.c")
-
-rules_generate_payload()
-
-rules_build_datafile(${functions})
+create_payload_fsim(${kmodule_name} ${functions})
 
 kedr_install_kmodule(${kmodule_name})
 

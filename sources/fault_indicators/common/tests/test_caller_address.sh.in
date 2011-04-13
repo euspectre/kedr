@@ -1,6 +1,7 @@
 #!/bin/sh
 
 fault_simulation_module="@CMAKE_BINARY_DIR@/fault_simulation/kedr_fault_simulation.ko"
+
 kedr_trace_module="@CMAKE_BINARY_DIR@/trace/kedr_trace.ko"
 
 indicator_module="@CMAKE_CURRENT_BINARY_DIR@/../kedr_fsim_indicator_common.ko"
@@ -8,6 +9,8 @@ indicator_name="common"
 
 payload_module="@CMAKE_BINARY_DIR@/payloads_fsim/common_memory_management/kedr_fsim_cmm.ko"
 point_name="__kmalloc"
+
+call_monitor_payload="@CMAKE_BINARY_DIR@/payloads_callm/common_memory_management/kedr_cm_cmm.ko"
 
 target_name="target_caller_address"
 target_module="@CMAKE_CURRENT_BINARY_DIR@/target_caller_address/target_caller_address.ko"
@@ -38,6 +41,7 @@ cat > "$kedr_config_file" << eof
 module "${kedr_trace_module}"
 module "${fault_simulation_module}"
 payload "${payload_module}"
+payload "${call_monitor_payload}"
 module "${indicator_module}"
 
 on_load mkdir -p "${debugfs}"

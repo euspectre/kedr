@@ -2,4 +2,4 @@ module_name=@module_name@
 
 ccflags-y :=  -I$(src) -I@KEDR_INCLUDE_DIR@
 obj-m := ${module_name}.o
-${module_name}-y := counters.o
+${module_name}-y := counters.o functions_support.o

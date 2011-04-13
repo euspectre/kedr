@@ -10,7 +10,7 @@
 #include <linux/kernel.h>
 #include <linux/errno.h>
 
-#include <kedr/base/common.h>
+#include <kedr/core/kedr.h>
 #include <kedr/util/stack_trace.h>
 
 #include "memblock_info.h"
@@ -75,29 +75,43 @@ target_unload_callback(struct module *target_module)
 /*********************************************************************/
 
 /* Names and addresses of the functions of interest */
-static void* orig_addrs[] = {
-<$targetFunctionAddress : join(,\n)$>
+static struct kedr_pre_pair pre_pairs[] =
+{
+<$prePair: join()$>
+    {
+        .orig = NULL
+    }
 };
 
-/* Addresses of the replacement functions */
-static void* repl_addrs[] = {
-<$replFunctionAddress : join(,\n)$>
+static struct kedr_post_pair post_pairs[] =
+{
+<$postPair: join()$>
+    {
+        .orig = NULL
+    }
 };
+
+
 
 static struct kedr_payload payload = {
     .mod                    = THIS_MODULE,
-    .repl_table.orig_addrs  = &orig_addrs[0],
-    .repl_table.repl_addrs  = &repl_addrs[0],
-    .repl_table.num_addrs   = ARRAY_SIZE(orig_addrs),
+
+    .pre_pairs              = pre_pairs,
+    .post_pairs             = post_pairs,
+
     .target_load_callback   = target_load_callback,
     .target_unload_callback = target_unload_callback
 };
 /*********************************************************************/
 
+extern int functions_support_register(void);
+extern void functions_support_unregister(void);
+
 static void
 <$module.name$>_cleanup_module(void)
 {
     kedr_payload_unregister(&payload);
+    functions_support_unregister();
     klc_output_fini();
 
     KEDR_MSG("[<$module.name$>] Cleanup complete\n");
@@ -108,9 +122,6 @@ static int __init
 {
     int ret = 0;
     
-    BUILD_BUG_ON(ARRAY_SIZE(orig_addrs) != 
-        ARRAY_SIZE(repl_addrs));
-
     KEDR_MSG("[<$module.name$>] Initializing\n");
     
     if (stack_depth == 0 || stack_depth > KEDR_MAX_FRAMES) {
@@ -129,6 +140,10 @@ static int __init
     if (ret != 0)
         return ret;
     
+    ret = functions_support_register();
+    if(ret != 0)
+        goto fail_supp;
+
     ret = kedr_payload_register(&payload);
     if (ret != 0) 
         goto fail_reg;
@@ -136,6 +151,8 @@ static int __init
     return 0;
 
 fail_reg:
+    functions_support_unregister();
+fail_supp:
     klc_output_fini();
     return ret;
 }

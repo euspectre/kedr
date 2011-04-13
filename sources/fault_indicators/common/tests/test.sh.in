@@ -1,6 +1,6 @@
 #!/bin/sh
 
-kedr_base_module="@CMAKE_BINARY_DIR@/base/kedr_base.ko"
+kedr_module="@CMAKE_BINARY_DIR@/core/kedr.ko"
 fault_simulation_module="@CMAKE_BINARY_DIR@/fault_simulation/kedr_fault_simulation.ko"
 
 indicator_module="@CMAKE_CURRENT_BINARY_DIR@/../kedr_fsim_indicator_common.ko"
@@ -25,8 +25,8 @@ commands_file="@CMAKE_CURRENT_BINARY_DIR@/commands.txt"
 
 cat > "$commands_file" << eof
 
-on_load insmod "${kedr_base_module}" || ! printf "Cannot load kedr base module into kernel.\n"
-on_unload rmmod "${kedr_base_module}" || ! printf "Cannot unload kedr base module.\n"
+on_load insmod "${kedr_module}" || ! printf "Cannot load kedr core module into kernel.\n"
+on_unload rmmod "${kedr_module}" || ! printf "Cannot unload kedr core module.\n"
 on_load insmod "${fault_simulation_module}" || ! printf "Cannot load fault simulation module into kernel.\n"
 on_unload rmmod "${fault_simulation_module}" || ! printf "Cannot unload fault simulation module.\n"
 on_load insmod "${simulation_module}" || ! printf "Cannot load module with simulation point into kernel.\n"

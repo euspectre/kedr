@@ -11,14 +11,9 @@
 	arg.name = len
 
 	# The body of the replacement function
-	handler.body =>>
-	void *ret_val;
-	ret_val = memdup_user(src, len);
-	
-	if (!IS_ERR(ret_val))
-		klc_add_alloc(ret_val, len, stack_depth);
-	
-	return ret_val;
+	handler.post =>>
+	if (!IS_ERR(returnValue))
+		klc_add_alloc(returnValue, len, stack_depth);
 	<<
 
 # End of the group of definitions for memdup_user().

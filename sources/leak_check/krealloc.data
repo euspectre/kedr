@@ -14,9 +14,7 @@
 	arg.name = flags
 	
 	# The body of the replacement function
-	handler.body =>>
-	void *ret_val;
-	
+	handler.pre =>>
 	if (size == 0 || !ZERO_OR_NULL_PTR(p)) {
 		/* kfree */
 		if (!ZERO_OR_NULL_PTR(p) && !klc_find_and_remove_alloc(p)) 
@@ -26,17 +24,16 @@
  * is not actually freed by krealloc() in this case.
  */
 	}
-	
-	ret_val = krealloc(p, size, flags);
-
+	<<
+	handler.post =>>
 	if (size != 0) {
 		if (p == NULL) { 
 			/* kmalloc */
-			if (ret_val != NULL)
-				klc_add_alloc(ret_val, size, stack_depth);
+			if (returnValue != NULL)
+				klc_add_alloc(returnValue, size, stack_depth);
 		} else {
 			/* kfree + kmalloc if everything succeeds */
-			klc_add_alloc(((ret_val != NULL) ? ret_val : p), 
+			klc_add_alloc(((returnValue != NULL) ? returnValue : p), 
 							size, stack_depth);
 			/* If the allocation failed, we return information about 'p'
 			 * to the storage. A minor issue is that stack trace will 
@@ -45,7 +42,6 @@
 			 */
 		}
 	}
-	return ret_val;
 	<<
 
 # End of the group of definitions for krealloc().

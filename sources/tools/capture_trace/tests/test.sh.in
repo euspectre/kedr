@@ -24,10 +24,8 @@ tmpdir="@KEDR_TEST_PREFIX_TEMP_SESSION@/capture_trace"
 trace_file="${tmpdir}/trace"
 debugfs_mount_point="${tmpdir}/debugfs"
 
-base_module_name=kedr_base
-base_module="@CMAKE_BINARY_DIR@/base/${base_module_name}.ko"
-controller_module_name=kedr_controller
-controller_module="@CMAKE_BINARY_DIR@/controller/${controller_module_name}.ko"
+kedr_module_name=kedr
+kedr_module="@CMAKE_BINARY_DIR@/core/${kedr_module_name}.ko"
 kedr_trace_module_name=kedr_trace
 kedr_trace_module="@CMAKE_BINARY_DIR@/trace/${kedr_trace_module_name}.ko"
 payload_module_name=kedr_payload
@@ -70,16 +68,15 @@ clean_all()
     if test $? -eq 0; then
         umount "${debugfs_mount_point}"
     fi
-    unload_module "${controller_module_name}"
     unload_module "${payload_module_name}"
     unload_module "${kedr_trace_module_name}"
-    unload_module "${base_module_name}"
+    unload_module "${kedr_module_name}"
 }
 
-# Load base, payload and controller modules
-/sbin/insmod "${base_module}"
+# Load KEDR core and payload modules
+/sbin/insmod "${kedr_module}" "target_name=${target_module_name}"
 if test $? -ne 0; then
-	printf "Failed to load KEDR base module for tests\n"
+	printf "Failed to load KEDR core module for tests\n"
 	exit 1
 fi
 
@@ -94,13 +91,6 @@ fi
 /sbin/insmod "${payload_module}"
 if test $? -ne 0; then
 	printf "Failed to load payload module for tests\n"
-    clean_all
-	exit 1
-fi
-
-/sbin/insmod "${controller_module}" "target_name=${target_module_name}"
-if test $? -ne 0; then
-	printf "Failed to load KEDR controller module for tests\n"
     clean_all
 	exit 1
 fi
@@ -151,11 +141,10 @@ wait "$capture_pid"
 
 umount "${debugfs_mount_point}"
 
-#Unload KEDR base, payload and controller modules
-/sbin/rmmod "${controller_module}"
+#Unload payload and KEDR core and other modules
 /sbin/rmmod "${payload_module}"
 /sbin/rmmod "${kedr_trace_module_name}"
-/sbin/rmmod "${base_module}"
+/sbin/rmmod "${kedr_module}"
 
 #Verify trace existance
 if ! test -f "${trace_file}"; then

@@ -237,31 +237,26 @@ rollback()
 }
 
 
-base_name=`get_module_name @KEDR_FILE_BASE@`
-controller_name=`get_module_name @KEDR_FILE_CONTROLLER@`
+kedr_name=`get_module_name @KEDR_FILE@`
 target_name=
 command=$1
 shift
 #
-base_is_running=0
-controller_is_running=0
+kedr_is_running=0
 target_is_running=0
 
 # Collect status information of KEDR
-if is_module_running ${base_name}; then
-    base_is_running=1
-    if is_module_running ${controller_name}; then
-        controller_is_running=1
-        target_name=`cat /sys/module/${controller_name}/parameters/target_name`
-        if is_module_running ${target_name}; then
-            target_is_running=1
-        fi
+if is_module_running ${kedr_name}; then
+    kedr_is_running=1
+    target_name=`cat /sys/module/${kedr_name}/parameters/target_name`
+    if is_module_running ${target_name}; then
+        target_is_running=1
     fi
 fi
 
 case ${command} in
 start)
-    if test ${base_is_running} -ne 0; then
+    if is_module_running ${kedr_name}; then
         printf "%s\n" "Service already running. To stop it, execute '$0 stop'"
         exit 1
     fi
@@ -279,8 +274,8 @@ start)
     #collect all parts of the configuration to the ${start_conf_file}
     mkdir -p ${tmp_dir} || (printf "Cannot create directory for temporary files\n" && exit 1)
 	# Create config file for processing
-    #Add loading of kedr base module to the config file
-    printf "module %s\n" "@KEDR_FILE_BASE@" > "${start_conf_file}"
+    #Add loading of kedr module to the config file
+    printf "module %s target_name=%s\n" "@KEDR_FILE@" "$target_name"> "${start_conf_file}"
     if test $? -ne 0; then
         printf "Cannot write to temporary file\n"
         exit 1
@@ -323,8 +318,6 @@ start)
         cat "${default_config_file}" >> "${start_conf_file}"
         printf "\n" >> "${start_conf_file}"
     fi
-    #Append loading of controller module to the config file
-    printf "module %s target_name=%s\n" "@KEDR_FILE_CONTROLLER@" "${target_name}" >> "${start_conf_file}"
 
     execute_conf_on_load "${start_conf_file}"
     if test $? -ne 0; then
@@ -335,17 +328,18 @@ start)
     printf "KEDR started.\n"
     ;;
 stop)
-    if test ${base_is_running} -eq 0; then
+    if ! is_module_running ${kedr_name}; then
         printf "Service is not running. To start it, execute '%s start'\n" "$0"
         exit 1
     fi
-    if test ${target_is_running} -ne 0; then
+    target_name=`cat /sys/module/${kedr_name}/parameters/target_name`
+    if is_module_running ${target_name}; then
         printf "KEDR cannot be stopped because the target module is still loaded. Please unload the target module first.\n"
         exit 1
     fi
     printf "Stopping KEDR...\n"
     execute_conf_on_unload "${start_conf_file}";
-	if is_module_running $base_name; then
+	if is_module_running ${kedr_name}; then
     	printf "Failed to unload KEDR.\n"
 		printf "Please fix errors occured while unloading and retry.\n"
 		exit 1
@@ -354,35 +348,37 @@ stop)
 	printf "KEDR stopped.\n"
     ;;
 status)
-    if test ${base_is_running} -ne 0; then
-        printf "Base is running, payloads:\n"
+    if is_module_running ${kedr_name}; then
+        printf "KEDR is running, payloads:\n"
         list_loaded_payloads "${start_conf_file}"
-        if test ${controller_is_running} -ne 0; then
-            printf "%s\n" "Controller is running, target is '${target_name}'"
-            if test ${target_is_running} -ne 0; then
+        target_name=`cat /sys/module/${kedr_name}/parameters/target_name`
+        if test "${target_name}" != "none"; then
+            printf "Target name is '%s'\n" "${target_name}"
+            if is_module_running ${target_name}; then
                 printf "Target is running\n"
             else
                 printf "Target is not running\n"
             fi;
         else
-            printf "Controller is not running\n"
+            printf "Target is not set\n"
         fi;
     else
-        printf "Base is not running\n"
+        printf "KDER is not running\n"
     fi;
     ;;
 restart)
-    if test ${base_is_running} -eq 0; then
+    if ! is_module_running ${kedr_name}; then
         printf "%s\n" "Service is not running. To start it, execute '$0 start'"
         exit 1
     fi
-    if test ${target_is_running} -ne 0; then
+    target_name=`cat /sys/module/${kedr_name}/parameters/target_name`
+    if is_module_running ${target_name}; then
         printf "KEDR cannot be stopped because the target module is still loaded. Please unload the target module first.\n"
         exit 1
     fi
     printf "Stopping KEDR...\n"
     execute_conf_on_unload "${start_conf_file}"
-    if is_module_running "${base_name}"; then
+    if is_module_running "${kedr_name}"; then
         printf "Failed to stop KEDR\n"
         exit 1
     fi

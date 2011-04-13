@@ -10,22 +10,9 @@
 	arg.type = int
 	arg.name = node
 
-	# The parameters to be output to the trace. 
-	trace.param.type = size_t
-	trace.param.name = size
-
-	trace.param.type = int
-	trace.param.name = node
-
-	trace.param.type = void*
-	trace.param.name = returnValue
-
-	# The format string to be used for trace output.
-	trace.formatString = "arguments: (%zu, %d), result: %p"
-
 	# Fault Simulation
 	fpoint.reuse_point = vmalloc
 	fpoint.fault_code =	returnValue = NULL;
-# End of the group of definitions for vmalloc_node().
 
+# End of the group of definitions for vmalloc_node().
 #######################################################################

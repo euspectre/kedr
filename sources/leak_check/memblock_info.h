@@ -3,6 +3,12 @@
  * or freed memory block: the pointer to that block, stack trace, etc.
  *
  * Helper macros to deal with such structures are also defined here.
+ * 
+ * 07.04.11:
+ * Macro 'klc_memblock_info_create' indirectly accept
+ * 'caller_address' parameter instead of using
+ * __builting_return_address(0).
+ * In the future the macro may be rewritten into function.
  */
 
 #ifndef MEMBLOCK_INFO_H_1734_INCLUDED
@@ -60,9 +66,10 @@ struct klc_memblock_info
     if (ptr != NULL) {                                              \
         ptr->block = (block_);                                      \
         ptr->size  = (size_);                                       \
-        kedr_save_stack_trace(&(ptr->stack_entries[0]),             \
+        __kedr_save_stack_trace(&(ptr->stack_entries[0]),           \
             (max_stack_depth_),                                     \
-            &ptr->num_entries);                                     \
+            &ptr->num_entries,                                      \
+            caller_address);                                        \
         INIT_HLIST_NODE(&ptr->hlist);                               \
     }                                                               \
     ptr;                                                            \

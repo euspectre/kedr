@@ -10,20 +10,14 @@ kmodule_configure_kernel_functions(functions REQUIRED
 	"__kmalloc"
 	"krealloc"
 	"__krealloc"
-	"kfree"
-	"kzfree"
 	"kmem_cache_alloc"
 	OPTIONAL "kmem_cache_alloc_notrace"
 	"kmem_cache_alloc_trace" 
-	REQUIRED "kmem_cache_free"
 	"__get_free_pages"
 	"get_zeroed_page"
-	"free_pages"
 	OPTIONAL "__alloc_pages_nodemask"
 	"alloc_pages_current"
-	"__free_pages"
 	"alloc_pages_exact"
-	"free_pages_exact"
 )
 
 # This is to work around the fact that on some systems, *node*-functions
@@ -49,13 +43,7 @@ if(NOT kmem_cache_alloc_notrace_index EQUAL -1)
 		"${CMAKE_CURRENT_BINARY_DIR}/kmem_cache_alloc_notrace.data")
 endif(NOT kmem_cache_alloc_notrace_index EQUAL -1)
 
-kbuild_include_directories ("${CMAKE_CURRENT_BINARY_DIR}")
-kbuild_add_module(${kmodule_name}
-	"payload.c")
-
-rules_generate_payload()
-
-rules_build_datafile(${functions})
+create_payload_fsim(${kmodule_name} ${functions})
 
 kedr_install_kmodule(${kmodule_name})
 

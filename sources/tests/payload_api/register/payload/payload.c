@@ -20,7 +20,7 @@
 #include <linux/slab.h> /* __kmalloc */
 #include <linux/errno.h>
 
-#include <kedr/base/common.h>
+#include <kedr/core/kedr.h>
 
 /*********************************************************************/
 MODULE_AUTHOR("Eugene");
@@ -47,39 +47,55 @@ module_param(test_passed, int, S_IRUGO);
  * Replacement functions (only for the replacement table not to be empty)
  *********************************************************************/
 static void*
-repl___kmalloc(size_t size, gfp_t flags)
+repl___kmalloc(size_t size, gfp_t flags,
+    struct kedr_function_call_info* call_info)
 {
     /* Do nothing special, just call the target function */
 	return __kmalloc(size, flags);
 }
+
+static void
+pre___kmalloc(size_t size, gfp_t flags,
+    struct kedr_function_call_info* call_info)
+{
+    /* Do nothing */
+}
+
 /*********************************************************************/
 
-/* Names and addresses of the functions of interest */
-static void* orig_addrs[] = {
-	(void*)&__kmalloc
-};
-
-/* Addresses of the replacement functions */
-static void* repl_addrs[] = {
-	(void*)&repl___kmalloc
+static struct kedr_replace_pair replace_pairs[] =
+{
+	{
+		.orig = (void*)&__kmalloc,
+		.replace = (void*)&repl___kmalloc
+	},
+	{
+		.orig = NULL
+	}
 };
 
 static struct kedr_payload payload = {
-	.mod                    = THIS_MODULE,
-	.repl_table.orig_addrs  = &orig_addrs[0],
-	.repl_table.repl_addrs  = &repl_addrs[0],
-	.repl_table.num_addrs   = ARRAY_SIZE(orig_addrs),
-    .target_load_callback   = NULL,
-    .target_unload_callback = NULL
+	.mod            = THIS_MODULE,
+
+	.replace_pairs	= replace_pairs
+};
+
+
+static struct kedr_pre_pair pre_pairs[] =
+{
+	{
+		.orig = (void*)&__kmalloc,
+		.pre = (void*)&pre___kmalloc
+	},
+	{
+		.orig = NULL
+	}
 };
 
 static struct kedr_payload payload_other = {
-	.mod                    = THIS_MODULE,
-	.repl_table.orig_addrs  = &orig_addrs[0],
-	.repl_table.repl_addrs  = &repl_addrs[0],
-	.repl_table.num_addrs   = ARRAY_SIZE(orig_addrs),
-    .target_load_callback   = NULL,
-    .target_unload_callback = NULL
+	.mod        = THIS_MODULE,
+
+	.pre_pairs	= pre_pairs
 };
 /*********************************************************************/
 static void
@@ -203,6 +219,9 @@ doTestRegister(void)
     return result;
 }
 
+extern int functions_support_register(void);
+extern void functions_support_unregister(void);
+
 static void
 kedr_test_cleanup_module(void)
 {
@@ -214,11 +233,13 @@ kedr_test_init_module(void)
 {
     int result;
     
-	BUG_ON(	ARRAY_SIZE(orig_addrs) != 
-		ARRAY_SIZE(repl_addrs));
+    result = functions_support_register();
+    if(result) return result;
 	
     result = doTestRegister();
     
+    functions_support_unregister();
+
     /* Whether the test passes of fails, initialization of the module 
      * should succeed except if an invalid value has been passed for 
      * "scenario_number" parameter.

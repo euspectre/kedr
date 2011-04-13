@@ -16,18 +16,10 @@ kmodule_configure_kernel_functions(functions REQUIRED
 	REQUIRED "mutex_unlock"
 )
 
-kbuild_include_directories ("${CMAKE_CURRENT_BINARY_DIR}")
-kbuild_add_module(${kmodule_name}
-	"payload.c")
+create_payload_callm(${kmodule_name} ${functions})
 
-rules_generate_payload()
-
-kedr_test_add_ci_include()
 kedr_test_add_ci_test(${functions})
-
-rules_build_datafile(${functions})
 
 kedr_install_kmodule(${kmodule_name})
 
 kedr_conf_callm_add_payload(${kmodule_name})
-kedr_conf_fsim_add_payload(${kmodule_name})
