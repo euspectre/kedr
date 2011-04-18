@@ -18,8 +18,8 @@ kmodule_configure_kernel_functions(functions REQUIRED
 
 create_payload_callm(${kmodule_name} ${functions})
 
-kedr_test_add_ci_test(${functions})
-
 kedr_install_kmodule(${kmodule_name})
 
 kedr_conf_callm_add_payload(${kmodule_name})
+
+kedr_test_add_subdirectory(tests)

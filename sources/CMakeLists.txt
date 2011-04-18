@@ -310,27 +310,8 @@ set(KEDR_GEN_TEMPLATES_DIR "${CMAKE_SOURCE_DIR}/templates/")
 	message (STATUS "Creating \"kedr_gen\" - done")
 #######################################################################
 
-prepare_function_lookup()
-
-#######################################################################
-
-# The following files will be used to check whether controller really 
-# intercepts the calls to the particular functions.
-set(function_triggers_file "${CMAKE_BINARY_DIR}/core/tests/call_interception/function_triggers.data")
-file(WRITE "${function_triggers_file}" "")
-set(function_intercepts_file "${CMAKE_BINARY_DIR}/core/tests/call_interception/function_intercepts.data")
-file(WRITE "${function_intercepts_file}" "")
-
 add_subdirectory(core)
 
-if(CMAKE_CROSSCOMPILING)
-    function(kedr_test_add_ci_test functions)
-        # Do nothing
-    endfunction(kedr_test_add_ci_test functions)
-    function(kedr_test_add_ci_test_uaccess functions)
-        # Do nothing
-    endfunction(kedr_test_add_ci_test_uaccess functions)
-endif(CMAKE_CROSSCOMPILING)
 add_subdirectory(templates)
 # For tests only
 add_subdirectory(wobject)

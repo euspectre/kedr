@@ -1,0 +1,3 @@
+header =>>
+#include <linux/vmalloc.h>   /* vmalloc concerned functions */
+<<

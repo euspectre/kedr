@@ -64,4 +64,4 @@ kedr_test_add_script (core.basics.03
 add_subdirectory (simple_payload)
 
 # More tests
-add_subdirectory (call_interception)
+#add_subdirectory (call_interception)

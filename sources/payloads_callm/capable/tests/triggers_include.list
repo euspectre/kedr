@@ -1,0 +1,3 @@
+header =>>
+#include <linux/capability.h>   /* capable */
+<<

@@ -78,8 +78,12 @@ kmodule_configure_kernel_functions(functions
 	"__get_free_pages"
 	"get_zeroed_page"
 	"free_pages"
-	OPTIONAL "kmem_cache_alloc_notrace" 
-	"kmem_cache_alloc_trace" 
+	OPTIONAL "kmem_cache_alloc_notrace"
+	"kmem_cache_alloc_trace"
+	"__kmalloc_node"
+	"kmem_cache_alloc_node"
+	"kmem_cache_alloc_node_notrace"
+	"kmem_cache_alloc_node_trace"
 	"__alloc_pages_nodemask"
 	"alloc_pages_current"
 	"__free_pages"
@@ -101,18 +105,6 @@ kmodule_configure_kernel_functions(functions
 	"vmalloc_32_user"
 	"vfree"
 )
-
-# This is to work around the fact that on some systems, *node*-functions
-# are exported but still not available in the headers. A slower but more
-# reliable way to detect if the functions can actually be used is employed
-# here.
-kmodule_configure_kernel_functions_hard(functions_node OPTIONAL 
-	"__kmalloc_node"
-	"kmem_cache_alloc_node"
-	"kmem_cache_alloc_node_notrace"
-	"kmem_cache_alloc_node_trace"
-)
-list(APPEND functions ${functions_node})
 
 kbuild_include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
 kbuild_add_module(${kmodule_name}

@@ -25,8 +25,8 @@ list(APPEND functions ${cond_resched_lock_FUNCTION})
 
 create_payload_callm(${kmodule_name} ${functions})
 
-kedr_test_add_ci_test(${functions})
-
 kedr_install_kmodule(${kmodule_name})
 
 kedr_conf_callm_add_payload(${kmodule_name})
+
+kedr_test_add_subdirectory(tests)

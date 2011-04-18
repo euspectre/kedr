@@ -1,0 +1,5 @@
+This directory contains source-files like ${f}.c.
+Every such file is used in try-compile procedure to determine, whether function 'f' exist in the kernel.
+Usually such file contain usage(direct or indirect) of the function.
+
+List of such files is hardcordcoded in the cmake module as 'unreliable_functions_list'.

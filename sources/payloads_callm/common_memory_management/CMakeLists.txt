@@ -5,7 +5,6 @@ set(kmodule_name "kedr_cm_cmm")
 configure_file("beginning.data.in"
 	"${CMAKE_CURRENT_BINARY_DIR}/beginning.data")
 
-# free()-like functions are only monitored (they cannot fail anyway)
 kmodule_configure_kernel_functions(functions REQUIRED
 	"__kmalloc"
 	"krealloc"
@@ -15,6 +14,10 @@ kmodule_configure_kernel_functions(functions REQUIRED
 	"kmem_cache_alloc"
 	OPTIONAL "kmem_cache_alloc_notrace" 
 	"kmem_cache_alloc_trace" 
+	"__kmalloc_node"
+	"kmem_cache_alloc_node"
+	"kmem_cache_alloc_node_notrace"
+	"kmem_cache_alloc_node_trace"
 	REQUIRED "kmem_cache_free"
 	"__get_free_pages"
 	"get_zeroed_page"
@@ -25,18 +28,6 @@ kmodule_configure_kernel_functions(functions REQUIRED
 	"alloc_pages_exact"
 	"free_pages_exact"
 )
-
-# This is to work around the fact that on some systems, *node*-functions
-# are exported but still not available in the headers. A slower but more
-# reliable way to detect if the functions can actually be used is employed
-# here.
-kmodule_configure_kernel_functions_hard(functions_node OPTIONAL 
-	"__kmalloc_node"
-	"kmem_cache_alloc_node"
-	"kmem_cache_alloc_node_notrace"
-	"kmem_cache_alloc_node_trace"
-)
-list(APPEND functions ${functions_node})
 
 set(kmem_cache_alloc_FUNCTION "kmem_cache_alloc")
 configure_file("kmem_cache_alloc.data.in"
@@ -51,8 +42,8 @@ endif(NOT kmem_cache_alloc_notrace_index EQUAL -1)
 
 create_payload_callm(${kmodule_name} ${functions})
 
-kedr_test_add_ci_test(${functions})
-
 kedr_install_kmodule(${kmodule_name})
 
 kedr_conf_callm_add_payload(${kmodule_name})
+
+kedr_test_add_subdirectory(tests)

@@ -1,1 +1,0 @@
-capable(CAP_SYS_ADMIN);

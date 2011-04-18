@@ -43,6 +43,9 @@ function(create_payload_callm module_name functions)
 						DEPENDS ${source_files_abs})
 endfunction(create_payload_callm module_name functions)
 
+#'tests' subdirectory define function which is used by payloads,
+# so this directory should be first
+kedr_test_add_subdirectory(tests)
 
 add_subdirectory(common_memory_management)
 add_subdirectory(mutexes)
@@ -53,6 +56,3 @@ add_subdirectory(waitqueue)
 add_subdirectory(capable)
 add_subdirectory(virtual_memory_management)
 add_subdirectory(memory_utilities)
-
-kedr_test_add_subdirectory(tests)
-

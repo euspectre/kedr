@@ -35,12 +35,8 @@ set(functions
 
 create_payload_callm(${kmodule_name} ${functions})
 
-kedr_test_add_ci_test_uaccess(${functions})
-
-configure_file("${CMAKE_SOURCE_DIR}/core/tests/call_interception/test_user_space_access.sh.in"
-	"${CMAKE_BINARY_DIR}/core/tests/call_interception/test_user_space_access.sh"
-	@ONLY)
-
 kedr_install_kmodule(${kmodule_name})
 
 kedr_conf_callm_add_payload(${kmodule_name})
+
+kedr_test_add_subdirectory(tests)

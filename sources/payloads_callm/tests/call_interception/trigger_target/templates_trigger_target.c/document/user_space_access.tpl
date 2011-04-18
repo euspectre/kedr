@@ -1,0 +1,1 @@
+<$if concat(trigger.copy_from_user)$>1<$else$><$if concat(trigger.copy_to_user)$>1<$endif$><$endif$>

@@ -1,0 +1,3 @@
+trigger_name = @trigger_name@
+cmake_binary_dir = @CMAKE_BINARY_DIR@
+cmake_current_binary_dir = @CMAKE_CURRENT_BINARY_DIR@
