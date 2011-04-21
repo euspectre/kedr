@@ -54,12 +54,14 @@ kbuild_include_directories(
 kbuild_add_module(${kmodule_name}
 	"kedr_module.c"
     "kedr_base.c"
+    "kedr_instrumentor.c"
+    "kedr_functions_support.c"
     "kedr_target_detector.c"
-    "kedr_controller.c"
 
 	"kedr_base_internal.h"
+	"kedr_instrumentor_internal.h"
+	"kedr_functions_support_internal.h"
 	"kedr_target_detector_internal.h"
-	"kedr_controller_internal.h"
 
     "${arch_dir}/lib/inat.c"
     "${arch_dir}/lib/insn.c"

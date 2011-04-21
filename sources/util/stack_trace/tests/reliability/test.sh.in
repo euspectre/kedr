@@ -14,8 +14,8 @@
 ########################################################################
 checkPrereqs()
 {
-    if test ! -f "${TEST_MODULE}.ko"; then
-        printf "Base module is missing: ${WORK_DIR}/${TEST_MODULE}.ko\n"
+    if test ! -f "${WORK_DIR}/${TEST_MODULE}.ko"; then
+        printf "Stack trace module is missing: ${WORK_DIR}/${TEST_MODULE}.ko\n"
         exit 1
     fi
 }
@@ -33,9 +33,9 @@ cleanupAll()
 ########################################################################
 doTest()
 {
-    /sbin/insmod "${TEST_MODULE}.ko"
+    /sbin/insmod "${WORK_DIR}/${TEST_MODULE}.ko"
     if test $? -ne 0; then
-        printf "Failed to load ${TEST_MODULE}.ko\n"
+        printf "Failed to load ${TEST_MODULE}\n"
         cleanupAll
         exit 1
     fi
@@ -69,14 +69,14 @@ doTest()
 ########################################################################
 # main
 ########################################################################
-WORK_DIR=${PWD}
+WORK_DIR=@CMAKE_CURRENT_BINARY_DIR@
 
 if test $# -ne 0; then
     printf "Usage: sh test.sh\n"
     exit 1
 fi
 
-TEST_MODULE="test_stack_trace"
+TEST_MODULE=@KMODULE_NAME@
 
 checkPrereqs
 doTest

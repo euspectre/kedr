@@ -16,11 +16,6 @@
  * by the Free Software Foundation.
  ======================================================================== */
 
-/*
- * Based on the controller/controller.c from KEDR package at 21.03.11.
- * (notification part)
- */
-
 #include <linux/module.h> /* 'struct module' definition */
 
 #include <linux/kernel.h>

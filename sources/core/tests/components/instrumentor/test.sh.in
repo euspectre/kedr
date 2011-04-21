@@ -1,0 +1,36 @@
+#!/bin/sh
+
+instrumentor_module_name=@instrumentor_module_name@
+instrumentor_module="@CMAKE_CURRENT_BINARY_DIR@/${instrumentor_module_name}.ko"
+test_module_name=@test_module_name@
+test_module="@CMAKE_CURRENT_BINARY_DIR@/test_module/${test_module_name}.ko"
+
+test_value_file="/sys/module/${instrumentor_module_name}/parameters/test_value"
+
+if ! insmod "${instrumentor_module}"; then
+    printf "Failed to insert instrumentor module.\n"
+    exit 1
+fi
+
+if ! insmod "${test_module}"; then
+    printf "Failed to insert test module.\n"
+    rmmod "${instrumentor_module}"
+    exit 1
+fi
+
+if ! rmmod "${test_module}"; then
+    printf "Failed to unload test module.\n"
+    exit 1
+fi
+
+test_value=`cat "${test_value_file}"`
+
+if ! rmmod "${instrumentor_module}"; then
+    printf "Failed to unload instrumentor module.\n"
+    exit 1
+fi
+
+if test "${test_value}" != "5"; then
+    printf "Expected that test value will be 5, but it is ${test_value}.\n"
+    exit 1
+fi

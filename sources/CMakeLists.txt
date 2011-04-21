@@ -114,7 +114,7 @@ endif ()
 message (STATUS "Build type is \"${CMAKE_BUILD_TYPE}\"")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    kbuild_add_cflags(
+    kbuild_add_definitions(
         "-DKEDR_DEBUG"
     )
 endif()
@@ -317,6 +317,7 @@ add_subdirectory(templates)
 add_subdirectory(wobject)
 add_subdirectory(control_file)
 add_subdirectory(calculator)
+add_subdirectory(util)
 # For tests only - end
 
 add_subdirectory(fault_simulation)

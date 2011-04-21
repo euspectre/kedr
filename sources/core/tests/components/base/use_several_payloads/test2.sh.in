@@ -1,0 +1,59 @@
+#!/bin/sh
+
+base_module_name=@base_module_name@
+base_module="${base_module_name}.ko"
+payload_module1_name=@payload_module1_name@
+payload_module1="payload1/${payload_module1_name}.ko"
+payload_module3_name=@payload_module3_name@
+payload_module3="payload3/${payload_module3_name}.ko"
+verificator_module_name=@verificator_module_name@
+verificator_module="interception_info_verificator/${verificator_module_name}.ko"
+
+if ! /sbin/insmod "$base_module"; then
+    printf "Failed to load base module.\n"
+    exit 1
+fi
+
+if ! /sbin/insmod "$payload_module1"; then
+    printf "Failed to load payload module 1.\n"
+    /sbin/rmmod "$base_module"
+    exit 1
+fi
+
+if ! /sbin/insmod "$payload_module3"; then
+    printf "Failed to load payload module 3.\n"
+    /sbin/rmmod "$payload_module1"
+    /sbin/rmmod "$base_module"
+    exit 1
+fi
+
+if ! /sbin/insmod "$verificator_module" "situation=2"; then
+    printf "Verification failed.\n"
+    /sbin/rmmod "$payload_module3"
+    /sbin/rmmod "$payload_module1"
+    /sbin/rmmod "$base_module"
+    exit 1
+fi
+
+if ! /sbin/rmmod "$verificator_module"; then
+    printf "Failed to unload verificator module."
+    /sbin/rmmod "$payload_module3"
+    /sbin/rmmod "$payload_module1"
+    /sbin/rmmod "$base_module"
+    exit 1
+fi
+
+if ! /sbin/rmmod "$payload_module1"; then
+    printf "Failed to unload payload module 1.\n"
+    exit 1
+fi
+
+if ! /sbin/rmmod "$payload_module3"; then
+    printf "Failed to unload payload module 3.\n"
+    exit 1
+fi
+
+if ! /sbin/rmmod "$base_module"; then
+    printf "Failed to unload base module."
+    exit 1
+fi

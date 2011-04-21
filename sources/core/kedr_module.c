@@ -15,9 +15,11 @@
  ======================================================================== */
 
 #include <kedr/core/kedr.h>
+#include <kedr/core/kedr_functions_support.h>
 
 #include "kedr_base_internal.h"
-#include "kedr_controller_internal.h"
+#include "kedr_instrumentor_internal.h"
+#include "kedr_functions_support_internal.h"
 #include "kedr_target_detector_internal.h"
 
 #include <linux/version.h>
@@ -198,21 +200,28 @@ on_target_load(struct kedr_target_module_notifier* notifier,
     struct module* m)
 {
     int result;
-    struct kedr_replace_real_pair* replace_pairs =
+    
+    const struct kedr_instrumentor_replace_pair* replace_pairs;
+    const struct kedr_base_interception_info* interception_info =
         kedr_base_target_load_callback(m);
     
-    // For the future
+    if(IS_ERR(interception_info))
+    {
+        return PTR_ERR(interception_info);
+    }
+    
+    replace_pairs = kedr_functions_support_prepare(interception_info);
+    
     if(IS_ERR(replace_pairs))
     {
+        kedr_base_target_unload_callback(m);
         return PTR_ERR(replace_pairs);
     }
-    if(replace_pairs == NULL)
-    {
-        return -EINVAL;
-    }
-    result = kedr_controller_replace_functions(m, replace_pairs);
+    
+    result = kedr_instrumentor_replace_functions(m, replace_pairs);
     if(result)
     {
+        kedr_functions_support_release();
         kedr_base_target_unload_callback(m);
         return result;
     }
@@ -224,11 +233,12 @@ static void
 on_target_unload(struct kedr_target_module_notifier* notifier,
         struct module* m)
 {
-    kedr_controller_replace_clean(m);
+    kedr_instrumentor_replace_clean(m);
+    kedr_functions_support_release();
     kedr_base_target_unload_callback(m);
 }
 
-struct kedr_target_module_notifier notifier =
+static struct kedr_target_module_notifier notifier =
 {
     .mod = THIS_MODULE,
 
@@ -236,15 +246,34 @@ struct kedr_target_module_notifier notifier =
     .on_target_unload = on_target_unload
 };
 
+static int function_use(struct kedr_base_operations* ops, void* function)
+{
+    return kedr_functions_support_function_use(function);
+}
+
+static int function_unuse(struct kedr_base_operations* ops, void* function)
+{
+    return kedr_functions_support_function_unuse(function);
+}
+
+static struct kedr_base_operations base_operations =
+{
+    .function_use = function_use,
+    .function_unuse = function_unuse,
+};
+
 static int __init
 kedr_module_init(void)
 {
     int result;
 
-    result = kedr_controller_init();
-    if(result) goto controller_err;
+    result = kedr_functions_support_init();
+    if(result) goto functions_support_err;
     
-    result = kedr_base_init();
+    result = kedr_instrumentor_init();
+    if(result) goto instrumentor_err;
+    
+    result = kedr_base_init(&base_operations);
     if(result) goto base_err;
     
     result = kedr_target_detector_init(&notifier);
@@ -268,9 +297,10 @@ set_target_name_err:
 target_detector_err:
     kedr_base_destroy();
 base_err:
-    kedr_controller_destroy();
-controller_err:
-
+    kedr_instrumentor_destroy();
+instrumentor_err:
+    kedr_functions_support_destroy();
+functions_support_err:
     return result;
 }
 
@@ -289,7 +319,8 @@ kedr_module_exit(void)
     
     kedr_target_detector_destroy();
     kedr_base_destroy();
-    kedr_controller_destroy();
+    kedr_instrumentor_destroy();
+    kedr_functions_support_destroy();
 }
 
 module_init(kedr_module_init);

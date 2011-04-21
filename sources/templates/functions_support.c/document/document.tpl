@@ -2,7 +2,8 @@
  * Implementation of intermediate functions for concrete functions set.
  */
 
-#include <kedr/core/kedr.h>
+#include <kedr/core/kedr_functions_support.h>
+#include <kedr/core/kedr.h> /* only for types definition */
 
 <$if concat(header)$><$header: join(\n)$><$endif$>
 

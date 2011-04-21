@@ -256,11 +256,11 @@ macro(kbuild_add_dependencies)
 endmacro(kbuild_add_dependencies)
 
 
-# kbuild_add_cflags (flag1 ... flagN)
+# kbuild_add_definitions (flag1 ... flagN)
 # Specify additional compiler flags for the module.
-macro(kbuild_add_cflags)
+macro(kbuild_add_definitions)
 	list(APPEND kbuild_cflags ${ARGN})
-endmacro(kbuild_add_cflags)
+endmacro(kbuild_add_definitions)
 
 # Internal functions
 # List common files, created by kbuild

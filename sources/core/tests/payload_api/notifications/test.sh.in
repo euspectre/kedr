@@ -53,9 +53,9 @@ cleanupAll()
         /sbin/rmmod "${PAYLOAD_NAME}"
     fi
     
-    lsmod | grep "@KEDR_NAME@" > /dev/null 2>&1
+    lsmod | grep "@CORE_NAME@" > /dev/null 2>&1
     if test $? -eq 0; then
-        /sbin/rmmod "@KEDR_NAME@"
+        /sbin/rmmod "@CORE_NAME@"
     fi
 }
 
@@ -195,7 +195,7 @@ SET_LOAD_FN=$2
 SET_UNLOAD_FN=$3
 printf "Mode: set_load_fn=${SET_LOAD_FN}, set_unload_fn=${SET_UNLOAD_FN}\n"
 
-KEDR_MODULE="@KEDR_DIR@/@KEDR_NAME@.ko"
+KEDR_MODULE="@CORE_DIR@/@CORE_NAME@.ko"
 
 TARGET_NAME="test_${TARGET_DIR}"
 TARGET_MODULE="${TARGET_DIR}/${TARGET_NAME}.ko"

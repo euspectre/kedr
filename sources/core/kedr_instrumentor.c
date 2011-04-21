@@ -1,5 +1,5 @@
 /*
- * The "controller" component of KEDR system. 
+ * The "instrumentor" component of KEDR system. 
  * Its main responsibility is to instrument the target module
  * to allow call interception.
  */
@@ -28,7 +28,7 @@
 
 #include <asm/insn.h>       /* instruction decoder machinery */
 
-#include "kedr_controller_internal.h"
+#include "kedr_instrumentor_internal.h"
 
 #include <linux/hash.h> /* hash_ptr definition */
 
@@ -37,7 +37,7 @@
 /* This string will be used in debug output to specify the name of 
  * the current component of KEDR
  */
-#define COMPONENT_STRING "kedr_controller: "
+#define COMPONENT_STRING "kedr_instrumentor: "
 
 /* ================================================================ */
 //MODULE_AUTHOR("Eugene A. Shatokhin");
@@ -76,7 +76,7 @@ struct repl_hash_table
 };
 
 static int repl_hash_table_init_from_array(struct repl_hash_table* table,
-    struct kedr_replace_real_pair* array)
+    const struct kedr_instrumentor_replace_pair* array)
 {
     int result;
     
@@ -85,7 +85,7 @@ static int repl_hash_table_init_from_array(struct repl_hash_table* table,
     struct hlist_head *heads;
     
     size_t array_size = 0;
-    struct kedr_replace_real_pair* repl_pair;
+    const struct kedr_instrumentor_replace_pair* repl_pair;
     for(repl_pair = array; repl_pair->orig != NULL; repl_pair++)
     {
         array_size++;
@@ -476,10 +476,10 @@ replace_calls_in_module(struct module* mod,
  * on_module_load() should do real work when the target module is loaded:
  * instrument it, etc.
  *
- * Note that this function is called with controller_mutex locked.
+ * Note that this function is called with instrumentor_mutex locked.
  */
-int kedr_controller_replace_functions(struct module* m,
-    struct kedr_replace_real_pair* replace_pairs)
+int kedr_instrumentor_replace_functions(struct module* m,
+    const struct kedr_instrumentor_replace_pair* replace_pairs)
 {
     int result;
     unsigned long flags;
@@ -498,8 +498,6 @@ int kedr_controller_replace_functions(struct module* m,
     target_module = m;
     spin_unlock_irqrestore(&target_in_init_lock, flags);
 
-    
-    
     replace_calls_in_module(m, &repl_hash_table);
     
     repl_hash_table_destroy(&repl_hash_table);
@@ -507,7 +505,7 @@ int kedr_controller_replace_functions(struct module* m,
     return 0;
 }
 
-void kedr_controller_replace_clean(struct module* m)
+void kedr_instrumentor_replace_clean(struct module* m)
 {
     unsigned long flags;
    
@@ -573,12 +571,12 @@ kedr_target_module_in_init(void)
 
 /* ================================================================ */
 int
-kedr_controller_init(void)
+kedr_instrumentor_init(void)
 {
     return 0;
 }
 void
-kedr_controller_destroy(void)
+kedr_instrumentor_destroy(void)
 {
 }
 

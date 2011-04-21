@@ -6,7 +6,7 @@
 #   <namespace>[.group].<numeric_id>
 # For global tests, <namespace> is the name of the package ("kedr").
 # For local tests, <namespace> is the name of the respective component of
-#   KEDR (like "controller", etc.).
+#   KEDR (like "core", etc.).
 # The numeric ID should contain at least two digits. It is not required for
 # the IDs to go in any particular order.
 # 
@@ -17,25 +17,3 @@
 # Scripts useful for tests
 add_subdirectory(scripts)
 
-# Path to the KEDR core module and its name.
-set (KEDR_DIR "${CMAKE_BINARY_DIR}/core")
-set (KEDR_NAME "kedr")
-
-# '@ONLY' is essential when doing substitutions in the shell scripts. 
-# Without it, CMake would replace "${...}" too, which is usually not what 
-# you want.
-configure_file (
-  "${CMAKE_CURRENT_SOURCE_DIR}/sample.sh.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/sample.sh"
-  @ONLY
-)
-
-kedr_test_add_script (kedr.sample.01 sample.sh)
-
-# The tests for API provided by the KEDR core to the payload modules.
-add_subdirectory (payload_api)
-
-if (STACK_TRACE_RELIABLE)
-	# The tests for stack trace-related utilities provided by KEDR.
-	add_subdirectory (stack_trace)
-endif()
