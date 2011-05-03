@@ -445,6 +445,7 @@ klc_print_u64(enum klc_output_type output_type, u64 data, const char *fmt)
         printk(KERN_ERR "[kedr_leak_check] klc_print_u64: "
             "not enough memory to prepare a message of size %d\n",
             len);
+        return;
     }
     snprintf(buf, len + 1, fmt, data);
     klc_print_string(output_type, buf);
