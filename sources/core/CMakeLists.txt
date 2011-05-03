@@ -7,7 +7,7 @@ set(arch_dir "arch/${arch}")
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${arch_dir}/lib)
 
-set(checking_message "Checking way for create module param with callbacks")
+set(checking_message "Checking the ways to create module parameters with callbacks")
 message(STATUS "${checking_message}")
 if((DEFINED MODULE_PARAM_CREATE_USE_OPS_STRUCT) OR (DEFINED MODULE_PARAM_CREATE_USE_OPS))
 	set(checking_message "${checking_message} [cached] - done")
@@ -20,7 +20,7 @@ else((DEFINED MODULE_PARAM_CREATE_USE_OPS_STRUCT) OR (DEFINED MODULE_PARAM_CREAT
 	if(is_module_param_create_use_ops_struct)
 		set(checking_message "${checking_message} - done")
 		set(MODULE_PARAM_CREATE_USE_OPS_STRUCT "TRUE" CACHE INTERNAL
-			"For create module param with callbacks need to use ops struct")
+			"To create module parameters with callbacks, one needs to use struct ops")
 	else(is_module_param_create_use_ops_struct)
 		kmodule_try_compile(is_module_param_create_use_ops # RESULT_VAR
 			"${CMAKE_CURRENT_BINARY_DIR}/module_param_create_use_ops" # bindir
@@ -29,7 +29,7 @@ else((DEFINED MODULE_PARAM_CREATE_USE_OPS_STRUCT) OR (DEFINED MODULE_PARAM_CREAT
 		if(is_module_param_create_use_ops)
 			set(checking_message "${checking_message} - done")
 			set(MODULE_PARAM_CREATE_USE_OPS "TRUE" CACHE INTERNAL
-			"For create module param with callbacks need to use ops struct")
+			"To create module parameters with callbacks, one needs to use ops")
 		else(is_module_param_create_use_ops)
 			set(checking_message "${checking_message} - error")
 			message("${checking_message}")

@@ -408,10 +408,7 @@ do_process_area(void* kbeg, void* kend,
  * for example, for one flavour of 'add'), skip to the first nonzero byte
  * after it. 
  * This is to avoid problems if there are two or more sections in the area
- * being analysed. Such situation is very unlikely - still have to find 
- * the example. Note that ctors and dtors seem to be placed to the same 
- * '.text' section as the ordinary functions ('.ctors' and '.dtors' sections
- * probably contain just the lists of their addresses or something similar).
+ * being analyzed. 
  * 
  * As we are not interested in instrumenting 'add' or the like, we can skip 
  * to the next instruction that does not begin with 0 byte. If we are 
