@@ -323,4 +323,58 @@ macro(check_stack_trace)
 	endif (DEFINED STACK_TRACE_RELIABLE)
 	message(STATUS "${check_stack_trace_message}")
 endmacro(check_stack_trace)
+
+# Check which memory allocator is used by the kernel.
+# Set KERNEL_MEMORY_ALLOCATOR to 'slab', 'slub', 'slob' or 'other'.
+#
+# Some functions in that allocators may have same names, but different signatures.
+function(check_allocator)
+	set(check_allocator_message 
+		"Checking which memory allocator is used by the kernel"
+	)
+		message(STATUS "${check_allocator_message}")
+	if (DEFINED KERNEL_MEMORY_ALLOCATOR)
+		set(check_allocator_message 
+"${check_allocator_message} [cached] - ${KERNEL_MEMORY_ALLOCATOR}"
+		)
+	else (DEFINED KERNEL_MEMORY_ALLOCATOR)
+		kmodule_try_compile(is_allocator_slab 
+			"${CMAKE_BINARY_DIR}/check_allocator_slab"
+			"${kmodule_test_sources_dir}/check_allocator/module.c"
+			COMPILE_DEFINITIONS "-DIS_ALLOCATOR_SLAB"
+		)
+		if (is_allocator_slab)
+			set(allocator "slab")
+		else (is_allocator_slab)
+			kmodule_try_compile(is_allocator_slub 
+				"${CMAKE_BINARY_DIR}/check_allocator_slub"
+				"${kmodule_test_sources_dir}/check_allocator/module.c"
+				COMPILE_DEFINITIONS "-DIS_ALLOCATOR_SLUB"
+			)
+			if (is_allocator_slub)
+				set(allocator "slub")
+			else (is_allocator_slub)
+				kmodule_try_compile(is_allocator_slob 
+					"${CMAKE_BINARY_DIR}/check_allocator_slob"
+					"${kmodule_test_sources_dir}/check_allocator/module.c"
+					COMPILE_DEFINITIONS "-DIS_ALLOCATOR_SLOB"
+				)
+				if (is_allocator_slob)
+					set(allocator "slob")
+				else (is_allocator_slub)
+					set(allocator "other")
+				endif (is_allocator_slob)
+			endif (is_allocator_slub)
+		endif (is_allocator_slab)
+		set(KERNEL_MEMORY_ALLOCATOR "${allocator}" CACHE INTERNAL
+			"Memory allocator which is used by the kernel"
+		)
+				
+		set(check_allocator_message 
+"${check_allocator_message} - ${KERNEL_MEMORY_ALLOCATOR}"
+		)
+	endif (DEFINED KERNEL_MEMORY_ALLOCATOR)
+	message(STATUS "${check_allocator_message}")
+
+endfunction(check_allocator)
 ############################################################################

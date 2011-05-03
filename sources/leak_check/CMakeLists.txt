@@ -118,6 +118,12 @@ kbuild_add_module(${kmodule_name}
 
 rules_generate_payload()
 rules_build_datafile(${functions})
+
+check_allocator()
+rule_copy_file("${CMAKE_CURRENT_BINARY_DIR}/kmem_cache_alloc_trace.data"
+	"${CMAKE_CURRENT_SOURCE_DIR}/kmem_cache_alloc_trace.data.${KERNEL_MEMORY_ALLOCATOR}")
+rule_copy_file("${CMAKE_CURRENT_BINARY_DIR}/kmem_cache_alloc_node_trace.data"
+	"${CMAKE_CURRENT_SOURCE_DIR}/kmem_cache_alloc_node_trace.data.${KERNEL_MEMORY_ALLOCATOR}")
 ########################################################################
 
 kedr_install_kmodule(${kmodule_name})

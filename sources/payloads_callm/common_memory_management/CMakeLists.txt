@@ -40,6 +40,12 @@ if(NOT kmem_cache_alloc_notrace_index EQUAL -1)
 		"${CMAKE_CURRENT_BINARY_DIR}/kmem_cache_alloc_notrace.data")
 endif(NOT kmem_cache_alloc_notrace_index EQUAL -1)
 
+check_allocator()
+rule_copy_file("${CMAKE_CURRENT_BINARY_DIR}/kmem_cache_alloc_trace.data"
+	"${CMAKE_CURRENT_SOURCE_DIR}/kmem_cache_alloc_trace.data.${KERNEL_MEMORY_ALLOCATOR}")
+rule_copy_file("${CMAKE_CURRENT_BINARY_DIR}/kmem_cache_alloc_node_trace.data"
+	"${CMAKE_CURRENT_SOURCE_DIR}/kmem_cache_alloc_node_trace.data.${KERNEL_MEMORY_ALLOCATOR}")
+
 create_payload_callm(${kmodule_name} ${functions})
 
 kedr_install_kmodule(${kmodule_name})

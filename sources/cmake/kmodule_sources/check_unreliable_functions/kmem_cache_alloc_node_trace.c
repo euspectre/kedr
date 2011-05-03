@@ -33,7 +33,13 @@ do_something(void)
 
 	if(mem_cache != NULL)
 	{
+#if defined(CONFIG_SLAB)
 		p = kmem_cache_alloc_node_trace(32, mem_cache, GFP_KERNEL, numa_node_id());
+#elif defined(CONFIG_SLUB)
+		p = kmem_cache_alloc_node_trace(mem_cache, GFP_KERNEL, numa_node_id(), 32);
+#else
+#error "kmem_cache_alloc_node_trace() should not be defined"
+#endif
 		if(p != NULL)
 		{
 			kmem_cache_free(mem_cache, p);

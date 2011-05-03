@@ -6,7 +6,13 @@ trigger.code =>>
 
 	if(mem_cache != NULL)
 	{
+#if defined(CONFIG_SLAB)
 		p = kmem_cache_alloc_trace(32, mem_cache, GFP_KERNEL);
+#elif defined(CONFIG_SLUB)
+		p = kmem_cache_alloc_trace(mem_cache, GFP_KERNEL, 32);
+#else
+#error "kmem_cache_alloc_trace() should not be defined"
+#endif
 		if(p != NULL)
 		{
 			kmem_cache_free(mem_cache, p);
