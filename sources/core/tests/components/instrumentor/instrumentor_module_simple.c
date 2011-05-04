@@ -1,6 +1,6 @@
 /*
  * Simple module envelope around kedr_instrumentor,
- * which export 'instrument' function and test function, which it replace
+ * which detect loading of target and instrument it, replacing test function
  * with another one.
  */
 
@@ -27,10 +27,19 @@
 MODULE_AUTHOR("Tsyvarev Andrey");
 MODULE_LICENSE("GPL");
 
+/* name of the module to instrument when it will be loaded. */
+char* target_name = NULL;
+module_param(target_name, charp, S_IRUGO);
 
+/* stored pointer to the instrumented module*/
+struct module* target_module = NULL;
+
+/* value which is set by replacement function*/
 static int test_value = 0;
 module_param(test_value, int, S_IRUGO);
 
+
+/* Function which is called by the instrumented module...*/
 void test_function(int value)
 {
     /*do nothing*/
@@ -38,6 +47,7 @@ void test_function(int value)
 EXPORT_SYMBOL(test_function);
 
 
+/* ... and one which should be called really. */
 static void test_function_repl(int value)
 {
     test_value = value;
@@ -54,17 +64,54 @@ static struct kedr_instrumentor_replace_pair replace_pairs[] =
     }
 };
 
-int instrument_module(struct module* m)
-{
-    return kedr_instrumentor_replace_functions(m, replace_pairs);
-}
-EXPORT_SYMBOL(instrument_module);
 
-void instrument_module_clean(struct module* m)
+/* ================================================================== */
+/* A callback function to catch loading and unloading of module. 
+ * When detect module interested us, instrument it. */
+static int 
+detector_notifier_call(struct notifier_block *nb,
+    unsigned long mod_state, void *vmod)
 {
-    kedr_instrumentor_replace_clean(m);
+    struct module* mod = (struct module *)vmod;
+    BUG_ON(mod == NULL);
+    
+    /* handle module state change */
+    switch(mod_state)
+    {
+    case MODULE_STATE_COMING: /* the module has just loaded */
+        if(strcmp(target_name, module_name(mod)) == 0)
+        {
+            BUG_ON(target_module != NULL);
+            if(!kedr_instrumentor_replace_functions(mod, replace_pairs))
+            {
+                target_module = mod;
+            }
+            else
+            {
+                pr_err("Fail to instrument module.");
+            }
+        }
+    break;
+    
+    case MODULE_STATE_GOING: /* the module is going to unload */
+        if(mod == target_module)
+        {
+            kedr_instrumentor_replace_clean(mod);
+            target_module = NULL;
+        }
+    break;
+    }
+
+    return 0;
 }
-EXPORT_SYMBOL(instrument_module_clean);
+
+/* ================================================================ */
+/* A struct for watching for loading/unloading of modules.*/
+static struct notifier_block detector_nb = {
+    .notifier_call = detector_notifier_call,
+    .next = NULL,
+    .priority = 3, /*Some number*/
+};
 
 
 static int __init
@@ -74,6 +121,13 @@ kedr_module_init(void)
     
     result = kedr_instrumentor_init();
     if(result) return result;
+    
+    result = register_module_notifier(&detector_nb);
+    if(result)
+    {
+        kedr_instrumentor_destroy();
+        return result;
+    }
 
     return 0;
 }
@@ -81,6 +135,7 @@ kedr_module_init(void)
 static void __exit
 kedr_module_exit(void)
 {
+    unregister_module_notifier(&detector_nb);
     kedr_instrumentor_destroy();
 }
 

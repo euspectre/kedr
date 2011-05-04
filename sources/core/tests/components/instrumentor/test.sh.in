@@ -7,13 +7,13 @@ test_module="@CMAKE_CURRENT_BINARY_DIR@/test_module/${test_module_name}.ko"
 
 test_value_file="/sys/module/${instrumentor_module_name}/parameters/test_value"
 
-if ! insmod "${instrumentor_module}"; then
-    printf "Failed to insert instrumentor module.\n"
+if ! insmod "${instrumentor_module}" "target_name=${test_module_name}"; then
+    printf "Failed to insert instrumentor module into kernel.\n"
     exit 1
 fi
 
 if ! insmod "${test_module}"; then
-    printf "Failed to insert test module.\n"
+    printf "Failed to insert test module into kernel.\n"
     rmmod "${instrumentor_module}"
     exit 1
 fi
