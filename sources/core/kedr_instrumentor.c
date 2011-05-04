@@ -329,16 +329,6 @@ do_process_insn(struct insn* c_insn, void* kaddr, void* end_kaddr,
     if (repl_addr != NULL)
     {
         /* Change the address of the function to be called */
-        KEDR_MSG(COMPONENT_STRING 
-"at 0x%p: changing address 0x%p to 0x%p (displ: 0x%x to 0x%x)\n",
-            kaddr,
-            addr, 
-            repl_addr,
-            (unsigned int)(*offset),
-            (unsigned int)CALL_OFFSET_FROM_ADDR(
-                kaddr, c_insn->length, to_funcs[i])
-        );
-        
         *offset = CALL_OFFSET_FROM_ADDR(
             kaddr, 
             c_insn->length,
