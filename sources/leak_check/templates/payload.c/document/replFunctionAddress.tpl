@@ -1,1 +1,0 @@
-	(void*)&repl_<$function.name$>
