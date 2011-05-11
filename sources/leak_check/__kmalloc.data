@@ -13,7 +13,8 @@
 	# The body of the replacement function
 	handler.post =>>
 	if (!ZERO_OR_NULL_PTR(returnValue))
-		klc_add_alloc(returnValue, size, stack_depth);
+		klc_handle_alloc(returnValue, size, stack_depth, 
+                        caller_address);
 
 	<<
 

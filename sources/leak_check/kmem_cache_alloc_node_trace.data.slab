@@ -19,7 +19,8 @@
 	# The body of the replacement function
 	handler.post =>>
 	if (returnValue != NULL)
-		klc_add_alloc(returnValue, (size_t)kmem_cache_size(mc), stack_depth);
+		klc_handle_alloc(returnValue, (size_t)kmem_cache_size(mc), 
+                        stack_depth, caller_address);
 	<<
 
 # End of the group of definitions for kmem_cache_alloc_node_trace().

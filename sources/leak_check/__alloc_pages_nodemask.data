@@ -22,7 +22,8 @@
 	if (page != NULL) {
 		const void *p = (const void *)page_address(page);
 		if (p != NULL)
-			klc_add_alloc(p, (size_t)(PAGE_SIZE << order), stack_depth);
+			klc_handle_alloc(p, (size_t)(PAGE_SIZE << order), 
+                                stack_depth, caller_address);
 	}
 	<<
 # End of the group of definitions for __alloc_pages_nodemask().

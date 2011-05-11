@@ -3,114 +3,62 @@
  * addition to and removal from the storage, searching, etc.
  * 
  * The goal is for the analysis system to use the interface to this storage
- * that does not heavily depend on the underlying data structures.
- */
+ * that does not heavily depend on the underlying data structures. */
 
 #ifndef MBI_OPS_H_1723_INCLUDED
 #define MBI_OPS_H_1723_INCLUDED
-
-#include "memblock_info.h"
 
 /* Initializes the storage for klc_memblock_info structures corresponding
  * to memory allocation and deallocation events.
  * 
  * This function should better be called once during the initialization of 
- * the module.
- */
+ * the module. */
 void 
 klc_init_mbi_storage(void);
 
-/* Adds the structure pointed to by 'alloc_info' to the list of 
- * "allocation events".
- *
- * Use klc_add_alloc() macro rather than this function in the replacement
- * functions.
- */
-void
-klc_add_alloc_impl(struct klc_memblock_info *alloc_info);
-
-/* Adds the structure pointed to by 'dealloc_info' to the list of 
- * "suspicious deallocation events".
- *
- * Use klc_add_bad_free() macro rather than this function in the replacement
- * functions.
- */
-void
-klc_add_bad_free_impl(struct klc_memblock_info *dealloc_info);
-
-/* Helpers to create klc_memblock_info structures and add them to 
- * the storage in one step.
+/* Helpers to create klc_memblock_info structures and request them to 
+ * be processed (that is, these helpers implement the "top half", the 
+ * ideas are similar to those used in interrupt handling).
+ * 
  * Note that in case of low memory, only a message will be output to
- * the system log, the error will not be reported in any other way.
- */
-#define klc_add_alloc(block_, size_, max_stack_depth_)              \
-{                                                                   \
-    struct klc_memblock_info *mbi;                                  \
-    mbi = klc_alloc_info_create((block_), (size_),                  \
-        (max_stack_depth_));                                        \
-    if (mbi == NULL) {                                              \
-        printk(KERN_ERR "[kedr_leak_check] klc_add_alloc: "         \
-        "not enough memory to create 'struct klc_memblock_info'\n");\
-    } else {                                                        \
-        klc_add_alloc_impl(mbi);                                    \
-    }                                                               \
-}
+ * the system log, the error will not be reported in any other way. 
+ * 
+ * 'caller_address' is the address of the instruction immediately 
+ * following the call to the allocation/deallocation function. That is,
+ * it is the return address of the latter. 
+ * This parameter is provided by the pre- and post- handlers in the payload
+ * modules. */
+void
+klc_handle_alloc(const void *block, size_t size, 
+	unsigned int max_stack_depth,
+	const void *caller_address);
+void
+klc_handle_free(const void *block, unsigned int max_stack_depth,
+	const void *caller_address);
 
-#define klc_add_bad_free(block_, max_stack_depth_)                  \
-{                                                                   \
-    struct klc_memblock_info *mbi;                                  \
-    mbi = klc_dealloc_info_create((block_), (max_stack_depth_));    \
-    if (mbi == NULL) {                                              \
-        printk(KERN_ERR "[kedr_leak_check] klc_add_bad_free: "      \
-        "not enough memory to create 'struct klc_memblock_info'\n");\
-    } else {                                                        \
-        klc_add_bad_free_impl(mbi);                                 \
-    }                                                               \
-}
+/* Performs initialization tasks deferred until the target has been loaded:
+ * creates the workqueue, etc. If it fails to initialize some facility, the
+ * latter will be disabled and a message will be output in the system log.
+ * The execution should continue (naturally, without collecting and 
+ * processing some of the data, etc.).
+ * 
+ * The function should be called from on_target_load(). */
+void
+klc_handle_target_load(struct module *target_module);
 
-/* This function is usually called from deallocation handlers.
- * It looks for the item in the storage corresponding to the allocation
- * event with 'block' field equal to 'block'.
- * If it is found, i.e. if a matching allocation event is found, 
- * the function removes the item from the storage, deletes the item itself 
- * (no need to store it any longer) and returns nonzero.
- * Otherwise, the function returns 0 and leaves the storage unchanged.
+/* The function waits until all pending operations processing allocation
+ * and deallocation events are complete. Then it outputs the information 
+ * about the allocation events currently present in the storage, deletes 
+ * the corresponding entries from the storage and then destroys them.
+ * The storage should be empty as a result. After that, the function does
+ * the same for the storage of spurious deallocation events.
+ * 
+ * Finally, it outputs and then resets allocation statistics collected so 
+ * up to the moment: total number of allocations, possible leaks, etc. 
  *
- * 'block' must not be NULL.
- */
-int
-klc_find_and_remove_alloc(const void *block);
-
-/* Outputs the information about the allocation events currently present 
- * in the storage, detetes the corresponding entries from the storage and
- * then destroys them.
- * The storage should be empty as a result.
- * 
- * As the output routines this function uses cannot be called in atomic 
- * context, this function cannot be called in atomic context either.
- * The caller must also ensure it is not called when other operations
- * with the storage may happen.
- * 
- * This is normally not a problem because this function is intended to
- * be called from on_target_unload() handler. It is guaranteed that 
- * the replacement functions have already done their work by then, so no
- * other operation with the storage can be active at the moment.
- */
+ * Should be called from on_target_unload() handler (it is guaranteed that 
+ * the replacement functions have already done their work by then). */
 void
-klc_flush_allocs(void);
-
-/* This function does the same as klc_flush_allocs() but for the storage
- * of spurious deallocation events.
- */
-void
-klc_flush_deallocs(void);
-
-/* Outputs and then resets allocation statistics collected so far: 
- * total number of allocations, possible leaks, etc. 
- * 
- * Should be called from on_target_unload() handler.
- */
-void
-klc_flush_stats(void);
+klc_handle_target_unload(struct module *);
 
 #endif /* MBI_OPS_H_1723_INCLUDED */

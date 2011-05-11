@@ -13,7 +13,8 @@
 	# The body of the replacement function
 	handler.post =>>
 	if (!IS_ERR(returnValue))
-		klc_add_alloc(returnValue, len, stack_depth);
+		klc_handle_alloc(returnValue, len, stack_depth, 
+                        caller_address);
 	<<
 
 # End of the group of definitions for memdup_user().

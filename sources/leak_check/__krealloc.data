@@ -21,13 +21,14 @@
 	if (p == NULL) { 
 		/* same as kmalloc */
 		if (returnValue != NULL)
-			klc_add_alloc(returnValue, size, stack_depth);
+			klc_handle_alloc(returnValue, size, stack_depth, 
+                                caller_address);
 	} else {
 		/* this part is more tricky as __krealloc may or may not call
-		 * kmalloc and, in addition, it does not free 'p'.
-		 */
+		 * kmalloc and, in addition, it does not free 'p'. */
 		if (returnValue != NULL && returnValue != p) /* allocation has been done */
-			klc_add_alloc(returnValue, size, stack_depth);
+			klc_handle_alloc(returnValue, size, stack_depth, 
+                                caller_address);
 	}
 	<<
 

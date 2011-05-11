@@ -13,7 +13,6 @@
 #include <kedr/core/kedr.h>
 #include <kedr/util/stack_trace.h>
 
-#include "memblock_info.h"
 #include "klc_output.h"
 #include "mbi_ops.h"
 
@@ -32,31 +31,6 @@ MODULE_LICENSE("GPL");
  */
 unsigned int stack_depth = KEDR_STACK_DEPTH_DEFAULT;
 module_param(stack_depth, uint, S_IRUGO);
-
-/*********************************************************************
- * The callbacks to be called after the target module has just been
- * loaded and, respectively, when it is about to unload.
- *********************************************************************/
-static void
-target_load_callback(struct module *target_module)
-{
-    BUG_ON(target_module == NULL);
-    
-    klc_output_clear();
-    klc_print_target_module_info(target_module);
-    return;
-}
-
-static void
-target_unload_callback(struct module *target_module)
-{
-    BUG_ON(target_module == NULL);
-    
-    klc_flush_allocs();
-    klc_flush_deallocs();
-    klc_flush_stats();
-    return;
-}
 
 /*********************************************************************
  * Replacement functions
@@ -78,83 +52,83 @@ target_unload_callback(struct module *target_module)
 static struct kedr_pre_pair pre_pairs[] =
 {
 <$prePair: join()$>
-    {
-        .orig = NULL
-    }
+	{
+		.orig = NULL
+	}
 };
 
 static struct kedr_post_pair post_pairs[] =
 {
 <$postPair: join()$>
-    {
-        .orig = NULL
-    }
+	{
+		.orig = NULL
+	}
 };
 
 
 
 static struct kedr_payload payload = {
-    .mod                    = THIS_MODULE,
+	.mod                    = THIS_MODULE,
 
-    .pre_pairs              = pre_pairs,
-    .post_pairs             = post_pairs,
+	.pre_pairs              = pre_pairs,
+	.post_pairs             = post_pairs,
 
-    .target_load_callback   = target_load_callback,
-    .target_unload_callback = target_unload_callback
+	.target_load_callback   = klc_handle_target_load,
+	.target_unload_callback = klc_handle_target_unload
 };
 /*********************************************************************/
 
 extern int functions_support_register(void);
 extern void functions_support_unregister(void);
 
-static void
+static void __exit
 <$module.name$>_cleanup_module(void)
 {
-    kedr_payload_unregister(&payload);
-    functions_support_unregister();
-    klc_output_fini();
+	kedr_payload_unregister(&payload);
+	functions_support_unregister();
+	klc_output_fini();
 
-    KEDR_MSG("[<$module.name$>] Cleanup complete\n");
+	KEDR_MSG("[<$module.name$>] Cleanup complete\n");
 }
 
 static int __init
 <$module.name$>_init_module(void)
 {
-    int ret = 0;
-    
-    KEDR_MSG("[<$module.name$>] Initializing\n");
-    
-    if (stack_depth == 0 || stack_depth > KEDR_MAX_FRAMES) {
-        printk(KERN_ERR "[<$module.name$>] "
-            "Invalid value of 'stack_depth': %u (should be a positive "
-            "integer not greater than %u)\n",
-            stack_depth,
-            KEDR_MAX_FRAMES
-        );
-        return -EINVAL;
-    }
-    
-    klc_init_mbi_storage();
-    
-    ret = klc_output_init();
-    if (ret != 0)
-        return ret;
-    
-    ret = functions_support_register();
-    if(ret != 0)
-        goto fail_supp;
+	int ret = 0;
+	
+	KEDR_MSG("[<$module.name$>] Initializing\n");
+	
+	if (stack_depth == 0 || stack_depth > KEDR_MAX_FRAMES) {
+		printk(KERN_ERR "[<$module.name$>] "
+			"Invalid value of 'stack_depth': %u (should be a positive "
+			"integer not greater than %u)\n",
+			stack_depth,
+			KEDR_MAX_FRAMES
+		);
+		return -EINVAL;
+	}
+	
+	klc_init_mbi_storage();
+	
+	ret = klc_output_init();
+	if (ret != 0)
+		return ret;
+	
+	ret = functions_support_register();
+	if(ret != 0)
+		goto fail_supp;
 
-    ret = kedr_payload_register(&payload);
-    if (ret != 0) 
-        goto fail_reg;
+	ret = kedr_payload_register(&payload);
+	if (ret != 0) 
+		goto fail_reg;
   
-    return 0;
+	return 0;
 
 fail_reg:
-    functions_support_unregister();
+	functions_support_unregister();
 fail_supp:
-    klc_output_fini();
-    return ret;
+	klc_output_fini();
+	return ret;
 }
 
 module_init(<$module.name$>_init_module);

@@ -12,8 +12,8 @@
 	# The body of the replacement function
 	handler.pre =>>
 	void *p = (void *)addr;
-	if (!ZERO_OR_NULL_PTR(p) && !klc_find_and_remove_alloc(p)) 
-		klc_add_bad_free(p, stack_depth);
+	if (!ZERO_OR_NULL_PTR(p)) 
+		klc_handle_free(p, stack_depth, caller_address);
 	<<
 
 # End of the group of definitions for free_pages().

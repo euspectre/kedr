@@ -12,12 +12,12 @@
 	# The body of the replacement function
 	handler.pre =>>
 	if (page != NULL) {
-		/* If the page is not mapped to the virtual memory (highmem?)
+		/* If the page is not mapped to the virtual memory 
 		 * (highmem?), page_address(page) returns NULL.
 		 */
 		const void *p = (const void *)page_address(page);
-		if (p != NULL && !klc_find_and_remove_alloc(p)) 
-			klc_add_bad_free(p, stack_depth);
+		if (p != NULL) 
+			klc_handle_free(p, stack_depth, caller_address);
 	}
 	<<
 

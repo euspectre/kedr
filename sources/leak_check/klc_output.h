@@ -50,14 +50,14 @@ klc_output_fini(void);
  * places or distinguished in some other way.
  */
 enum klc_output_type {
-    /* possible leaks */
-    KLC_UNFREED_ALLOC,
-    
-    /* bad frees */
-    KLC_UNALLOCATED_FREE,
-    
-    /* other info: parameters of the target module, totals, ... */
-    KLC_OTHER
+	/* possible leaks */
+	KLC_UNFREED_ALLOC,
+	
+	/* bad frees */
+	KLC_UNALLOCATED_FREE,
+	
+	/* other info: parameters of the target module, totals, ... */
+	KLC_OTHER
 };
 
 /* Outputs a string pointed to by 's' taking type of this information into.
@@ -81,7 +81,7 @@ klc_print_string(enum klc_output_type output_type, const char *s);
  */
 void
 klc_print_stack_trace(enum klc_output_type output_type, 
-    unsigned long *stack_entries, unsigned int num_entries);
+	unsigned long *stack_entries, unsigned int num_entries);
 
 /* Output information about the target module.
  *
@@ -97,11 +97,11 @@ klc_print_target_module_info(struct module *target_module);
  */
 void 
 klc_print_alloc_info(struct klc_memblock_info *alloc_info,
-    u64 similar_allocs);
+	u64 similar_allocs);
 
 void 
 klc_print_dealloc_info(struct klc_memblock_info *dealloc_info,
-    u64 similar_deallocs);
+	u64 similar_deallocs);
 
 /* Output statistics about the analysis session of the target module:
  * total number of memory allocations, potential memory leaks and 

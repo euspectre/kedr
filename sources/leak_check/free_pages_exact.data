@@ -11,8 +11,8 @@
 	
 	# The body of the replacement function
 	handler.pre =>>
-	if (!ZERO_OR_NULL_PTR(virt) && !klc_find_and_remove_alloc(virt)) 
-		klc_add_bad_free(virt, stack_depth);
+	if (!ZERO_OR_NULL_PTR(virt)) 
+		klc_handle_free(virt, stack_depth, caller_address);
 	<<
 
 # End of the group of definitions for free_pages_exact().

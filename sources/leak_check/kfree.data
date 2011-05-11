@@ -11,11 +11,10 @@
 	/* This is done before actually calling kfree(), because once the 
 	 * memory block pointed to by 'p' is freed, some other CPU might 
 	 * call an allocation function, get this address as a result and
-	 * add it to the storage before klc_find_and_remove_alloc() is called
-	 * below, which would make a mess.
-	 */
-	if (!ZERO_OR_NULL_PTR(p) && !klc_find_and_remove_alloc(p)) 
-		klc_add_bad_free(p, stack_depth);
+	 * add it to the storage before klc_handle_free() is called
+	 * below, which would make a mess. */
+	if (!ZERO_OR_NULL_PTR(p)) 
+		klc_handle_free(p, stack_depth, caller_address);
 	<<
 
 # End of the group of definitions for kfree().
