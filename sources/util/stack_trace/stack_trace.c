@@ -1,6 +1,5 @@
 /* stack_trace.c
- * Stack trace helpers for payload modules in KEDR.
- */
+ * Stack trace helpers for payload modules in KEDR. */
 
 /* ========================================================================
  * Copyright (C) 2010-2011, Institute for System Programming 
@@ -20,52 +19,50 @@
 #include <kedr/util/stack_trace.h>
 
 void
-kedr_save_stack_trace_impl(unsigned long *entries, unsigned int max_entries,
-    unsigned int *nr_entries,
-    unsigned long first_entry)
+kedr_save_stack_trace(unsigned long *entries, unsigned int max_entries,
+	unsigned int *nr_entries,
+	unsigned long first_entry)
 {
-    unsigned int i = 0;
-    int found = 0;
-    unsigned long stack_entries[KEDR_NUM_FRAMES_INTERNAL];
-    struct stack_trace trace = {
+	unsigned int i = 0;
+	int found = 0;
+	unsigned long stack_entries[KEDR_NUM_FRAMES_INTERNAL];
+	struct stack_trace trace = {
 		.nr_entries = 0,
 		.entries = &stack_entries[0],
-        
-        /* Request as many entries as we can. */
+		
+		/* Request as many entries as we can. */
 		.max_entries = KEDR_NUM_FRAMES_INTERNAL,
-            
-        /* We need all frames, we'll do filtering ourselves. */
+			
+		/* We need all frames, we'll do filtering ourselves. */
 		.skip = 0
 	}; 
-    
-    BUG_ON(entries == NULL);
-    BUG_ON(nr_entries == NULL);
-    BUG_ON(max_entries > KEDR_MAX_FRAMES);
-    
-    if (max_entries == 0) {
-        *nr_entries = 0;
-        return;
-    }
-    
-    save_stack_trace(&trace);
-    
-    /* At least one entry will be stored. */
-    *nr_entries = 1;
-    entries[0] = first_entry;
-    
-    for (i = 0; i < trace.nr_entries; ++i)
-    {
-        if (*nr_entries >= max_entries) break;
+	
+	BUG_ON(entries == NULL);
+	BUG_ON(nr_entries == NULL);
+	BUG_ON(max_entries > KEDR_MAX_FRAMES);
+	
+	if (max_entries == 0) {
+		*nr_entries = 0;
+		return;
+	}
+	
+	save_stack_trace(&trace);
+	
+	/* At least one entry will be stored. */
+	*nr_entries = 1;
+	entries[0] = first_entry;
+	
+	for (i = 0; i < trace.nr_entries; ++i)
+	{
+		if (*nr_entries >= max_entries) break;
 
-        if (found) {
-            entries[*nr_entries] = stack_entries[i];
-            ++(*nr_entries);
-        } else if (stack_entries[i] == first_entry) 
-        {
-            found = 1;
-        }
-    }
-    
-    return;    
+		if (found) {
+			entries[*nr_entries] = stack_entries[i];
+			++(*nr_entries);
+		} else if (stack_entries[i] == first_entry) 
+		{
+			found = 1;
+		}
+	}
 }
-/* ================================================================ */
+/* ====================================================================== */

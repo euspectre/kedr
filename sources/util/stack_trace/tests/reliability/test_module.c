@@ -52,7 +52,8 @@ kedr_test_foo(void)
     
     addr_foo = (unsigned long)(&kedr_test_foo);
 
-    kedr_save_stack_trace(&entries[0], max_entries, &nr_entries);
+    kedr_save_stack_trace(&entries[0], max_entries, &nr_entries,
+    	(unsigned long)__builtin_return_address(0));
     stack_frames = (unsigned long)nr_entries;
     return;
 }
