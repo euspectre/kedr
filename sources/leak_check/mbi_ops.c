@@ -64,6 +64,11 @@ struct klc_work {
 	struct klc_memblock_info *mbi;
 };
 
+/* A spinlock that protects top half of alloc/free handling. Note that the
+ * work queue takes care of the bottom half, so it is not necessary to 
+ * additionally protect that. */
+DEFINE_SPINLOCK(handler_spinlock);
+
 /* Statistics: total number of memory allocations, possible leaks and
  * unallocated frees. */
 u64 total_allocs = 0;
@@ -376,6 +381,10 @@ work_func_free(struct work_struct *work)
 	kfree(klc_work);
 }
 
+/* Must be called with handler_spinlock held: it appears that the 
+ * implementation of save_stack_trace() is not guaranteed to be thread-safe
+ * (and therefore, so are kedr_save_stack_trace() and 
+ * klc_memblock_info_create()). */
 static void 
 klc_handle_event(const void *block, size_t size, 
 	unsigned int max_stack_depth,
@@ -416,15 +425,21 @@ klc_handle_alloc(const void *block, size_t size,
 	unsigned int max_stack_depth,
 	const void *caller_address)
 {
+	unsigned long irq_flags;
+	spin_lock_irqsave(&handler_spinlock, irq_flags);
 	klc_handle_event(block, size, max_stack_depth, 
 		caller_address, work_func_alloc);
+	spin_unlock_irqrestore(&handler_spinlock, irq_flags);
 }
 
 void
 klc_handle_free(const void *block, unsigned int max_stack_depth,
 	const void *caller_address)
 {
+	unsigned long irq_flags;
+	spin_lock_irqsave(&handler_spinlock, irq_flags);
 	klc_handle_event(block, (size_t)(-1), max_stack_depth, 
 		caller_address, work_func_free);
+	spin_unlock_irqrestore(&handler_spinlock, irq_flags);
 }
 /* ====================================================================== */
