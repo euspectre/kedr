@@ -84,6 +84,7 @@ kmodule_configure_kernel_functions(functions
 	"kmem_cache_alloc_node"
 	"kmem_cache_alloc_node_notrace"
 	"kmem_cache_alloc_node_trace"
+	"kmalloc_order_trace"
 	"__alloc_pages_nodemask"
 	"alloc_pages_current"
 	"__free_pages"

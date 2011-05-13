@@ -1,0 +1,34 @@
+[group]
+	# Name and return type of the target function
+	function.name = kmalloc_order_trace
+	returnType = void *
+
+	# Names and types of the arguments of the target function
+	arg.type = size_t
+	arg.name = size
+
+	arg.type = gfp_t
+	arg.name = flags
+
+	arg.type = unsigned int
+	arg.name = order
+	
+	# The parameters to be output to the trace. 
+	trace.param.type = size_t
+	trace.param.name = size
+
+	trace.param.type = unsigned int
+	trace.param.name = flags
+
+	trace.param.type = unsigned int
+	trace.param.name = order
+
+	trace.param.type = void *
+	trace.param.name = returnValue
+
+	# The format string to be used for trace output.
+	trace.formatString = "arguments: (%zu, %x, %u), result: %p"
+
+# End of the group of definitions for kmalloc_order_trace().
+
+#######################################################################

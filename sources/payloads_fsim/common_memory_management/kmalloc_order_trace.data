@@ -1,0 +1,32 @@
+[group]
+	# Name and return type of the target function
+	function.name = kmalloc_order_trace
+	returnType = void *
+
+	# Names and types of the arguments of the target function
+	arg.type = size_t
+	arg.name = orig_size
+
+	arg.type = gfp_t
+	arg.name = flags
+
+	arg.type = unsigned int
+	arg.name = order
+
+	prologue =>>
+size_t size = (size_t)(PAGE_SIZE << order);
+<<
+	# Fault Simulation
+	fpoint.reuse_point = __kmalloc
+
+	fpoint.param.type = size_t
+	fpoint.param.name = size
+
+	fpoint.param.type = gfp_t
+	fpoint.param.name = flags
+
+	fpoint.fault_code =	returnValue = NULL;
+
+# End of the group of definitions for kmalloc_order_trace().
+
+#######################################################################

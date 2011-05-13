@@ -18,6 +18,7 @@ kmodule_configure_kernel_functions(functions REQUIRED
 	"kmem_cache_alloc_node"
 	"kmem_cache_alloc_node_notrace"
 	"kmem_cache_alloc_node_trace"
+	"kmalloc_order_trace"
 	REQUIRED "kmem_cache_free"
 	"__get_free_pages"
 	"get_zeroed_page"

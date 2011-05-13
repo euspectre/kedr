@@ -1,0 +1,27 @@
+[group]
+	# Name and return type of the target function
+	function.name = kmalloc_order_trace
+	returnType = void *
+
+	# Names and types of the arguments of the target function
+	arg.type = size_t
+	arg.name = size
+
+	arg.type = gfp_t
+	arg.name = flags
+
+	arg.type = unsigned int
+	arg.name = order
+
+	# The body of the replacement function
+	handler.post =>>
+	if (!ZERO_OR_NULL_PTR(returnValue)) {
+		klc_handle_alloc(returnValue, 
+			(size_t)(PAGE_SIZE << order), stack_depth, 
+			caller_address);
+	}
+	<<
+
+# End of the group of definitions for kmalloc_order_trace().
+
+#######################################################################

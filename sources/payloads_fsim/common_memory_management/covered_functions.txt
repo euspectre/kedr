@@ -13,4 +13,4 @@ kmem_cache_alloc_node_trace
 __alloc_pages_nodemask
 alloc_pages_current
 alloc_pages_exact
-
+kmalloc_order_trace
