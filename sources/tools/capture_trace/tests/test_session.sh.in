@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# Test kedr_capture_trace functionality(no block, no session modes).
+# Test kedr_capture_trace functionality in the session mode.
 
 kedr_module_name="@CORE_MODULE_NAME@"
 kedr_module="@CORE_MODULE@"
@@ -12,7 +12,7 @@ target_module_name=kedr_target
 target_module="@CMAKE_CURRENT_BINARY_DIR@/target/${target_module_name}.ko"
 
 
-tmpdir="@KEDR_TEST_PREFIX_TEMP_SESSION@/capture_trace"
+tmpdir="@KEDR_TEST_PREFIX_TEMP_SESSION@/capture_trace_session"
 
 trace_file1="${tmpdir}/trace1"
 trace_file2="${tmpdir}/trace2"
@@ -46,41 +46,41 @@ if test $? -ne 0; then
 	exit 1
 fi
 
-# Load target module
-/sbin/insmod "${target_module}"
+#Load and unload target module 2 times
+for i in 1 2; do
+    # Load target module
+    /sbin/insmod "${target_module}"
 
-if test $? -ne 0; then
-    printf "Failed to load target module\n"
-    kill $capture_pid
-    umount "${debugfs_mount_point}"
-    /sbin/rmmod "${payload_module_name}"
-    /sbin/rmmod "${kedr_trace_module_name}"
-    /sbin/rmmod "${kedr_module_name}"
-    exit 1
-fi
+    if test $? -ne 0; then
+        printf "Failed to load target module\n"
+        kill $capture_pid
+        umount "${debugfs_mount_point}"
+        /sbin/rmmod "${payload_module_name}"
+        /sbin/rmmod "${kedr_trace_module_name}"
+        /sbin/rmmod "${kedr_module_name}"
+        exit 1
+    fi
+
+    # Unload target module
+    /sbin/rmmod "${target_module}"
+done
+
 
 mkdir -p "${debugfs_mount_point}"
 mount debugfs -t debugfs "${debugfs_mount_point}"
 if test $? -ne 0; then
     printf "Cannot mount debugfs.\n"
-    /sbin/rmmod "${target_module}"
     /sbin/rmmod "${payload_module_name}"
     /sbin/rmmod "${kedr_trace_module_name}"
     /sbin/rmmod "${kedr_module_name}"
     exit 1
 fi
 
-# Capture trace for module loading
-rm -f "${trace_file1}"
-${capture_trace_program} -d "${debugfs_mount_point}" -f "${trace_file1}"
-
-# Unload target module
-/sbin/rmmod "${target_module}"
-
-# Capture trace for module unloading
-rm -f "${trace_file2}"
-${capture_trace_program} -d "${debugfs_mount_point}" -f "${trace_file2}"
-
+# Capture trace from two target sessions into different files
+for trace_file in ${trace_file1} ${trace_file2}; do
+    rm -f "${trace_file}"
+    ${capture_trace_program} -s -d "${debugfs_mount_point}" -f "${trace_file}"
+done
 
 umount "${debugfs_mount_point}"
 
@@ -89,31 +89,29 @@ umount "${debugfs_mount_point}"
 /sbin/rmmod "${kedr_trace_module_name}"
 /sbin/rmmod "${kedr_module}"
 
-#Verify existance of both trace files
-for trace_file in "${trace_file1}" "${trace_file2}"; do
+for trace_file in ${trace_file1} ${trace_file2}; do
+    #Verify trace existance
     if ! test -f "${trace_file}"; then
         printf "Trace file %s wasn't created, but it should\n" "${trace_file}"
         exit 1
     fi
-done
-#Verify that both trace files contain some strings output by the payload
-for trace_file in "${trace_file1}" "${trace_file2}"; do
+    #Verify that the trace contains some strings output by the payload
     if ! grep "Capture me payload 2" "${trace_file}" > /dev/null; then
         printf "Module output a line to the trace but that line was not captured in file %s\n" "${trace_file}"
         exit 1
     fi
+
+    # Implementation specific!
+    #Verify, that trace contain message about load of the target
+    if ! grep "target_session_begins" "${trace_file}" > /dev/null; then
+        printf "Beginning mark wasn't captured in file %s\n" "${trace_file}"
+        exit 1
+    fi
+
+    #Verify, that trace contain message about unload of the target
+    if ! grep "target_session_ends" "${trace_file}" > /dev/null; then
+        printf "Ending mark wasn't captured in file %s\n" "${trace_file}"
+        exit 1
+    fi
 done
-# Implementation specific!
-#Verify, that first trace contain message about load of the target
-if ! grep "target_session_begins" "${trace_file1}" > /dev/null; then
-    printf "Beginning mark wasn't captured in file %s\n" "${trace_file1}"
-    exit 1
-fi
-
-#Verify, that trace contain message about unload of the target
-if ! grep "target_session_ends" "${trace_file2}" > /dev/null; then
-    printf "Ending mark wasn't captured in file %s\n" "${trace_file2}"
-    exit 1
-fi
-
 exit 0

@@ -72,11 +72,7 @@ if simulate; then
 	exit 1
 fi
 
-${capture_trace_script} -d "${debugfs}" -f "${trace_file}" &
-capture_pid=$!
-
-sleep 0.5
-kill -2 $capture_pid
+${capture_trace_script} -d "${debugfs}" -f "${trace_file}"
 
 if ! grep "__kmalloc" ${trace_file} > /dev/null; then
 	printf "The trace contains no records for __kmalloc() calls.\n"
