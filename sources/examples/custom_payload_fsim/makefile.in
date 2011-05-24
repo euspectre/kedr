@@ -1,5 +1,7 @@
-# Name of the output call monitor payload module
+# Name of the output fault simulation payload module
 module_name := @module_name@
+
+@SET_KEDR_ENABLE_CALLER_ADDRESS@
 
 payload_data_file := payload.data
 
@@ -18,9 +20,18 @@ $(module_name).ko: payload.c functions_support.c $(kedr_symbols) $(fault_simulat
 	cat "$(kedr_symbols)" "$(fault_simulation_symbols)" > ./Module.symvers
 	$(MAKE) -C $(KBUILD_DIR) M=$(PWD) modules
 
+ifeq ($(KEDR_ENABLE_CALLER_ADDRESS),)
 payload.c: $(payload_data_file)
 	$(kedr_gen_tool) $(kedr_gen_templates_dir)/payload_fsim.c/ $^ > $@
+else
+payload_data_file_with_caller_address := payload_with_caller_address.data
 
+payload.c: $(payload_data_file_with_caller_address)
+	$(kedr_gen_tool) $(kedr_gen_templates_dir)/payload_fsim.c/ $^ > $@
+
+$(payload_data_file_with_caller_address): $(payload_data_file)
+	$(kedr_gen_tool) $(kedr_gen_templates_dir)/payload_fsim_add_caller_address.data/ $^ > $@
+endif
 functions_support.c: $(payload_data_file)
 	$(kedr_gen_tool) $(kedr_gen_templates_dir)/functions_support.c/ $^ > $@
 

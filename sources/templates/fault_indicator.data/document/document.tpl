@@ -1,11 +1,9 @@
-# indicator_internal.data - intermediate representation of the indicator data
+# fault_indicator.data - intermediate representation of the indicator data
 
 module.author = <$module.author$>
 module.license = <$module.license$>
 indicator.name = <$indicator.name$>
 
-indicator.parameter.type = void*
-indicator.parameter.name = caller_address
 <$if concat(indicator.parameter.type)$><$indicatorParameters: join(\n)$><$endif$>
 
 <$if concat(global)$><$globalSection: join(\n)$><$endif$>
@@ -22,15 +20,23 @@ global =>>
 #include <kedr/core/kedr.h> /* in_init */
 #include <linux/random.h> /* random32() */
 
-// Constants in the expression
-<$expressionConstDeclarations$>
+<$if expressionHasConstants$>// Constants in the expression
+static struct kedr_calc_const constants[] = {
+<$if concat(expression.constant.c_name)$>    <$expressionConstCDeclaration : join(,\n    )$>,
+<$endif$><$if concat(expression.constant.name)$>    <$expressionConstGDeclaration : join(,\n    )$>,
+<$endif$>};
 
-// Variables in the expression
+static struct kedr_calc_const_vec all_constants[] =
+{
+	{ .n_elems = ARRAY_SIZE(constants), .elems = constants}
+};
+
+<$endif$>// Variables in the expression
 static const char* var_names[]= {
     "times",//local variable of indicator state
-    "caller_address",//address of the caller of the replacement function
-<$expressionVarNames$>
-};
+<$if concat(expression.variable.name)$>    "<$expression.variable.name : join(",\n    ")$>",
+<$endif$><$if concat(expression.variable.pname)$>    "<$expression.variable.pname : join(",\n    ")$>",
+<$endif$>};
 // Runtime variables in the expression
 static kedr_calc_int_t in_init_weak_var_compute(void)
 {
@@ -51,8 +57,8 @@ static const struct kedr_calc_weak_var weak_vars[] = {
     { .name = "in_init", .compute = in_init_weak_var_compute },
     { .name = "rnd100", .compute = rnd100_weak_var_compute },
     { .name = "rnd10000", .compute = rnd10000_weak_var_compute },
-<$expressionRvarDeclarations$>
-};
+<$if concat(expression.rvariable.name)$>    <$expressionRvarDeclaration : join(,\n    )$>,
+<$endif$>};
 <<
 
 indicator.state.name = calc
@@ -71,12 +77,15 @@ indicator.simulate.code =>>
 	int result;
     int *kcalc;
 	kedr_calc_int_t vars[ARRAY_SIZE(var_names)];
+    kedr_calc_int_t* var_next = vars;
 
-    vars[0] = atomic_inc_return(&state(times));
-    vars[1] = (kedr_calc_int_t)caller_address;
-<$expressionVarsSet$>
+    *var_next++ = atomic_inc_return(&state(times));
 
-    rcu_read_lock();
+<$if concat(expression.variable.name)$>    <$expressionVarGSet : join(\n    )$>
+
+<$endif$>    <$if concat(expression.variable.pname)$><$expressionVarPSet : join(\n    )$>
+    
+<$endif$>    rcu_read_lock();
     kcalc = (int *)(state(calc));
     result = kedr_calc_evaluate((kedr_calc_t *)(rcu_dereference(kcalc)), vars);
     rcu_read_unlock();
@@ -92,7 +101,7 @@ indicator.init.code =>>
     atomic_set(&state(times), 0);
     
     state(calc) = kedr_calc_parse(expression,
-        <$expressionConstParams$>,
+        <$if expressionHasConstants$>ARRAY_SIZE(all_constants), all_constants<$else$>0, NULL<$endif$>,
         ARRAY_SIZE(var_names), var_names,
         ARRAY_SIZE(weak_vars), weak_vars);
     if(state(calc) == NULL)
@@ -132,7 +141,7 @@ indicator.file.set =>>
     kedr_calc_t *new_calc;
     
     new_calc = kedr_calc_parse(str,
-        <$expressionConstParams$>,
+        <$if expressionHasConstants$>ARRAY_SIZE(all_constants), all_constants<$else$>0, NULL<$endif$>,
         ARRAY_SIZE(var_names), var_names,
         ARRAY_SIZE(weak_vars), weak_vars);
     if(new_calc == NULL)

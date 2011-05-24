@@ -1,2 +1,2 @@
-    error = indicator_init_<$indicator.init.name$>(<$indicatorStateName$>);
+    error = indicator_init_<$indicator.init.name$>(<$if concat(indicator.state.name)$><$indicatorStateName$><$endif$>);
     if(error) <$if isFailInInit$>goto fail<$else$>return error<$endif$>;

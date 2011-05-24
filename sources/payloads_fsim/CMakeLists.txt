@@ -25,9 +25,24 @@ function(create_payload_fsim module_name functions)
 		"functions_support.c")
 	# How to get payload and functions_support sources
 	to_abs_path(payload_data_file_abs ${payload_data_file})
-	add_custom_command(OUTPUT "${payload_c_file}"
-				COMMAND ${KEDR_GEN_TOOL} ${KEDR_GEN_TEMPLATES_DIR}/payload_fsim.c/ ${payload_data_file_abs} > ${payload_c_file}
-				DEPENDS ${payload_data_file_abs})
+	if(KEDR_ENABLE_CALLER_ADDRESS)
+		set(payload_data_file_with_caller_address "${CMAKE_CURRENT_BINARY_DIR}/payload_with_caller_address.data")
+		
+		add_custom_command(OUTPUT "${payload_c_file}"
+					COMMAND ${KEDR_GEN_TOOL} ${KEDR_GEN_TEMPLATES_DIR}/payload_fsim.c/ ${payload_data_file_with_caller_address} > ${payload_c_file}
+					DEPENDS ${payload_data_file_with_caller_address})
+
+		add_custom_command(OUTPUT "${payload_data_file_with_caller_address}"
+					COMMAND ${KEDR_GEN_TOOL} ${KEDR_GEN_TEMPLATES_DIR}/payload_fsim_add_caller_address.data/ ${payload_data_file_abs} > ${payload_data_file_with_caller_address}
+					DEPENDS ${payload_data_file_abs})
+
+	else(KEDR_ENABLE_CALLER_ADDRESS)
+		add_custom_command(OUTPUT "${payload_c_file}"
+					COMMAND ${KEDR_GEN_TOOL} ${KEDR_GEN_TEMPLATES_DIR}/payload_fsim.c/ ${payload_data_file_abs} > ${payload_c_file}
+					DEPENDS ${payload_data_file_abs})
+
+	endif(KEDR_ENABLE_CALLER_ADDRESS)
+
 	add_custom_command(OUTPUT "${functions_support_file}"
 				COMMAND ${KEDR_GEN_TOOL} ${KEDR_GEN_TEMPLATES_DIR}/functions_support.c/ ${payload_data_file_abs} > ${functions_support_file}
 				DEPENDS ${payload_data_file_abs})
@@ -37,7 +52,7 @@ function(create_payload_fsim module_name functions)
 		list(APPEND functions_data "${func}.data")
 	endforeach(func ${functions} ${ARGN})
 	to_abs_path(source_files_abs ${begin_data_file} ${functions_data})
-	set(payload_data_file_abs "${CMAKE_CURRENT_BINARY_DIR}/${payload_data_file}")
+
 	add_custom_command(OUTPUT ${payload_data_file_abs}
 						COMMAND cat ${source_files_abs} > ${payload_data_file_abs}
 						DEPENDS ${source_files_abs})

@@ -1,6 +1,8 @@
 # Name of the output indicator module
 module_name := @module_name@
 
+@SET_KEDR_ENABLE_CALLER_ADDRESS@
+
 indicator_data_file := indicator.data
 
 indicator_c_file := indicator.c
@@ -26,8 +28,19 @@ $(module_name).ko: $(indicator_c_file) $(additional_sources) $(kedr_symbols) $(f
 $(indicator_c_file): $(indicator_internal_data_file)
 	$(kedr_gen_tool) $(kedr_gen_templates_dir)/fault_indicator.c/ $^ > $@
 
+ifeq ($(KEDR_ENABLE_CALLER_ADDRESS),)
 $(indicator_internal_data_file): $(indicator_data_file)
 		$(kedr_gen_tool) $(kedr_gen_templates_dir)/fault_indicator.data/ $^ > $@
+else
+indicator_data_file_with_caller_address := indicator_with_caller_address.data
+
+$(indicator_internal_data_file): $(indicator_data_file_with_caller_address)
+		$(kedr_gen_tool) $(kedr_gen_templates_dir)/fault_indicator.data/ $^ > $@
+
+$(indicator_data_file_with_caller_address): $(indicator_data_file)
+		$(kedr_gen_tool) $(kedr_gen_templates_dir)/fault_indicator_add_caller_address.data/ $^ > $@
+
+endif
 
 clean:
 	$(MAKE) -C $(KBUILD_DIR) M=$(PWD) clean

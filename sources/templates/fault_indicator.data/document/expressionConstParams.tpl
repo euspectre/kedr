@@ -1,1 +1,0 @@
-<$if expressionConstDeclarations$>ARRAY_SIZE(all_constants), all_constants<$else$>0, NULL<$endif$>

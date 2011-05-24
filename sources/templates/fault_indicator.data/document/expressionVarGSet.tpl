@@ -1,1 +1,1 @@
-vars[++current_var_index] = <$expression.variable.value$>;
+*var_next++ = <$expression.variable.value$>;

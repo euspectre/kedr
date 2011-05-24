@@ -1,5 +1,5 @@
 <$if indicator.file.get$>static char*
-indicator_file_<$indicator.file.name$>_get_str_real(<$indicatorStateDeclaration$>)
+indicator_file_<$indicator.file.name$>_get_str_real(<$if concat(indicator.state.name)$><$indicatorStateDeclaration$><$else$>void<$endif$>)
 {
 <$indicatorVarsUse$><$indicator.file.get$>
 <$indicatorVarsUnuse$>}
@@ -17,7 +17,7 @@ indicator_file_<$indicator.file.name$>_get_str(struct inode* inode)
     <$indicatorStateName$> = inode->i_private;
     if(<$indicatorStateName$>)
     {
-        str = indicator_file_<$indicator.file.name$>_get_str_real(<$indicatorStateName$>);
+        str = indicator_file_<$indicator.file.name$>_get_str_real(<$if concat(indicator.state.name)$><$indicatorStateName$><$endif$>);
     }
     else
     {
@@ -29,7 +29,7 @@ indicator_file_<$indicator.file.name$>_get_str(struct inode* inode)
 }<$endif$>
 
 <$if indicator.file.set$>static int
-indicator_file_<$indicator.file.name$>_set_str_real(const char* str, <$indicatorStateDeclaration$>)
+indicator_file_<$indicator.file.name$>_set_str_real(const char* str, <$if concat(indicator.state.name)$><$indicatorStateDeclaration$><$else$>void<$endif$>)
 {
 <$indicatorVarsUse$><$indicator.file.set$>
 <$indicatorVarsUnuse$>}
@@ -49,7 +49,7 @@ indicator_file_<$indicator.file.name$>_set_str(const char* str, struct inode* in
     <$indicatorStateName$> = inode->i_private;
     if(<$indicatorStateName$>)
     {
-        error = indicator_file_<$indicator.file.name$>_set_str_real(str, <$indicatorStateName$>);
+        error = indicator_file_<$indicator.file.name$>_set_str_real(str, <$if concat(indicator.state.name)$><$indicatorStateName$><$endif$>);
     }
     else
     {

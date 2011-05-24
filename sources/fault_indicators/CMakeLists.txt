@@ -26,10 +26,22 @@ function(create_indicator module_name)
 	add_custom_command(OUTPUT ${indicator_c_file}
 		COMMAND ${KEDR_GEN_TOOL} ${KEDR_GEN_TEMPLATES_DIR}/fault_indicator.c/ ${indicator_data_file_internal} > ${indicator_c_file}
 		DEPENDS ${indicator_data_file_internal})
-	add_custom_command(OUTPUT ${indicator_data_file_internal}
-		COMMAND ${KEDR_GEN_TOOL} ${KEDR_GEN_TEMPLATES_DIR}/fault_indicator.data/ ${indicator_data_file_abs} > ${indicator_data_file_internal}
-		DEPENDS ${indicator_data_file_abs})
-	
+	if(KEDR_ENABLE_CALLER_ADDRESS)
+		set(indicator_data_file_with_caller_address "${CMAKE_CURRENT_BINARY_DIR}/indicator_with_caller_address.data")
+		add_custom_command(OUTPUT ${indicator_data_file_with_caller_address}
+			COMMAND ${KEDR_GEN_TOOL} ${KEDR_GEN_TEMPLATES_DIR}/fault_indicator_add_caller_address.data/ ${indicator_data_file_abs} > ${indicator_data_file_with_caller_address}
+			DEPENDS ${indicator_data_file_abs})
+
+		add_custom_command(OUTPUT ${indicator_data_file_internal}
+			COMMAND ${KEDR_GEN_TOOL} ${KEDR_GEN_TEMPLATES_DIR}/fault_indicator.data/ ${indicator_data_file_with_caller_address} > ${indicator_data_file_internal}
+			DEPENDS ${indicator_data_file_with_caller_address})
+
+	else(KEDR_ENABLE_CALLER_ADDRESS)
+		add_custom_command(OUTPUT ${indicator_data_file_internal}
+			COMMAND ${KEDR_GEN_TOOL} ${KEDR_GEN_TEMPLATES_DIR}/fault_indicator.data/ ${indicator_data_file_abs} > ${indicator_data_file_internal}
+			DEPENDS ${indicator_data_file_abs})
+
+	endif(KEDR_ENABLE_CALLER_ADDRESS)
 endfunction(create_indicator module_name)
 
 add_subdirectory(common_memory_management)

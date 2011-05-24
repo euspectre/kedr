@@ -1,1 +1,1 @@
-<$if isPointData$><$pointDataType$> <$pointDataName$><$endif$>
+<$pointDataType$> <$pointDataName$>

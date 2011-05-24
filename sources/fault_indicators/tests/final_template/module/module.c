@@ -31,6 +31,9 @@ static struct kedr_simulation_point* point;
 
 struct point_params
 {
+#ifdef KEDR_ENABLE_CALLER_ADDRESS
+    void* caller_address;
+#endif
     size_t size;
 };
 static struct dentry* simulate_file_with_params;
@@ -51,7 +54,11 @@ static struct file_operations simulate_file_operations = {
 
 static ssize_t simulate_file_with_params_write(struct file* filp, const char __user *buf, size_t count, loff_t* f_pos)
 {
+#ifdef KEDR_ENABLE_CALLER_ADDRESS
+    struct point_params params = {.caller_address = __builtin_return_address(0), .size = count};
+#else
     struct point_params params = {.size = count};
+#endif
     return kedr_fsim_point_simulate(point_with_params, &params) ? -EINVAL : count;
 }
 

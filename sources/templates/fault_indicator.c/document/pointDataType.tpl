@@ -1,1 +1,1 @@
-<$if isPointData$>struct point_data*<$endif$>
+struct point_data*

@@ -27,34 +27,46 @@ MODULE_LICENSE("<$module.license$>");
 
 <$global: join(\n)$>
 
-<$pointDataTypeDefinition$>
+<$if concat(indicator.parameter.type)$>// Indicator parameters
+struct point_data
+{
+    <$pointDataField : join(\n    )$>
+};
 
-<$indicatorStateTypeDefinition$>
-//Protect from concurrent access in getters and setter of files
+<$endif$><$if isIndicatorState$>// Indicator variables
+struct indicator_real_state
+{
+<$if concat(indicator.state.name)$>    <$stateVariableDeclaration: join(\n    )$>
+<$endif$><$if concat(indicator.file.name)$>    <$controlFileDeclaration: join(\n    )$>
+<$endif$>};
+
+<$endif$>//Protect from concurrent access in getters and setter of files
 DEFINE_MUTEX(indicator_mutex);
 
 ////////////////Auxiliary functions///////////////////////////
 
-<$if concat(indicator.init.name)$><$indicatorInitDefinition : join(\n)$><$endif$>
-<$if concat(indicator.destroy.name)$><$indicatorDestroyDefinition : join(\n)$><$endif$>
-<$if concat(indicator.simulate.name)$><$indicatorSimulateDefinition : join(\n)$><$endif$>
-<$if concat(indicator.file.name)$><$controlFileFunctions : join(\n)$><$endif$>
-//////////////Indicator's functions////////////////////////////
+<$if concat(indicator.init.name)$><$indicatorInitDefinition : join()$>
+
+<$endif$><$if concat(indicator.destroy.name)$><$indicatorDestroyDefinition : join()$>
+
+<$endif$><$if concat(indicator.simulate.name)$><$indicatorSimulateDefinition : join()$>
+
+<$endif$><$if concat(indicator.file.name)$><$controlFileFunctions : join()$>
+
+<$endif$>//////////////Indicator's functions////////////////////////////
 static int
 indicator_simulate(void* state, void* user_data)
 {
 <$if concat(indicator.simulate.name)$>
     int result = 0;
 <$if concat(indicator.simulate.first)$>    int never = 0;
-<$endif$><$if isIndicatorState$>    <$indicatorStateDeclaration$> =
+<$endif$><$if concat(indicator.state.name)$>    <$indicatorStateDeclaration$> =
         (<$indicatorStateType$>)state;
-<$endif$><$if isPointData$>    <$pointDataDeclaration$> =
-        (<$pointDataType$>)user_data;
-<$endif$><$indicatorSimulateCallFirst: join(\n)$>
-<$indicatorSimulateCall: join(\n)$>
-
-    return result;
-<$else$>return 0;<$endif$>
+<$endif$><$if concat(indicator.parameter.type)$>    struct point_data* point_data =
+        (struct point_data*)user_data;
+<$endif$><$indicatorSimulateCallFirst: join()$>
+<$indicatorSimulateCall: join()$>
+    return result;<$else$>return 0;<$endif$>
 }
 
 <$if isIndicatorDestroy$>static void
@@ -110,7 +122,8 @@ static int __init
 indicator_init(void)
 {
     indicator = kedr_fsim_indicator_register("<$indicator.name$>",
-        indicator_simulate, "<$indicatorFormatString$>",
+        indicator_simulate,
+        <$if concat(indicator.parameter.type)$>"<$indicator.parameter.type : join(,)$>"<$else$>""<$endif$>,
         <$if isIndicatorInit$>indicator_instance_init<$else$>NULL<$endif$>,
         <$if isIndicatorDestroy$>indicator_instance_destroy<$else$>NULL<$endif$>);
     if(indicator == NULL)

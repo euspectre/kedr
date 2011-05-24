@@ -1,1 +1,1 @@
-<$if isPointData$>point_data<$endif$>
+point_data

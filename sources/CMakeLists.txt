@@ -151,6 +151,12 @@ option(KEDR_LEAK_CHECK
 	ON
 )
 #######################################################################
+# Whether fault simulation facility use caller_address
+option(KEDR_ENABLE_CALLER_ADDRESS
+	"Enable support of 'caller_address' variable in fault simulation indicators."
+	ON)
+
+#######################################################################
 
 # kedr_gen (this time - for building KEDR itself)
 if (KEDR_GEN)
