@@ -1,0 +1,119 @@
+<section id="standard_callm_payloads">
+<title>Standard call monitor payloads</title>
+<para>
+This section describe set of standard call monitor payloads.
+</para>
+<section id="standard_callm_payloads.functions">
+<title>Functions detected by standard call monitor payloads</title>
+    <para>
+Here is a full list of the payload modules that currently may be used for call monitoring, and the lists of the functions detected by each module. A function name in square brackets means that this function is detected only if it is exported by the kernel (it may or may not be exported in each particular system). Only one of the functions separated by a slash is detected depending on which one of them is actually exported by the kernel.
+    </para>
+    <para>
+<itemizedlist mark='opencircle'>
+<listitem><phrase role="emphasized">kedr_cm_cmm.ko:</phrase>
+    <simplelist type='vert'>
+    <member>__kmalloc</member>
+    <member>krealloc</member>
+    <member>__krealloc</member>
+    <member>kfree</member>
+    <member>kzfree</member>
+    <member>kmem_cache_alloc</member>
+    <member>[kmem_cache_alloc_notrace]</member>
+    <member>[kmem_cache_alloc_trace]</member>
+    <member>kmem_cache_free</member>
+    <member>__get_free_pages</member>
+    <member>get_zeroed_page</member>
+    <member>free_pages</member>
+	<member>[__kmalloc_node]</member>
+	<member>[kmem_cache_alloc_node]</member>
+	<member>[kmem_cache_alloc_node_notrace]</member>
+	<member>[kmem_cache_alloc_node_trace]</member>
+	<member>[__alloc_pages_nodemask]</member>
+	<member>[alloc_pages_current]</member>
+	<member>[__free_pages]</member>
+	<member>[alloc_pages_exact]</member>
+	<member>[free_pages_exact]</member>
+    </simplelist>
+</listitem>
+<listitem><phrase role="emphasized">kedr_cm_user_space_access.ko:</phrase>
+    <simplelist type='vert'>
+    <member>copy_to_user/_copy_to_user</member>
+    <member>copy_from_user/_copy_from_user</member>
+    <member>strndup_user</member>
+    <member>memdup_user</member>
+    </simplelist>
+</listitem>
+<listitem><phrase role="emphasized">kedr_cm_mutexes.ko:</phrase>
+    <simplelist type='vert'>
+    <member>__mutex_init</member>
+    <member>[mutex_lock]</member>
+    <member>[mutex_lock_interruptible]</member>
+    <member>[mutex_lock_killable]</member>
+    <member>mutex_trylock</member>
+    <member>mutex_unlock</member>
+    </simplelist>
+</listitem>
+<listitem><phrase role="emphasized">kedr_cm_spinlocks.ko:</phrase>
+    <simplelist type='vert'>
+    <member>_spin_lock_irqsave/_raw_spin_lock_irqsave</member>
+    <member>_spin_unlock_irqrestore/_raw_spin_unlock_irqrestore</member>
+    </simplelist>
+    additionally, if KEDR was configured with <quote>enable_full_spinlock</quote> option set,
+    <simplelist type='vert'>
+    <member>_spin_lock/_raw_spin_lock</member>
+    <member>_spin_lock_irq/_raw_spin_lock_irq</member>
+    <member>_spin_unlock/_raw_spin_unlock</member>
+    <member>_spin_unlock_irq/_raw_spin_unlock_irq</member>
+    </simplelist>
+</listitem>
+<listitem><phrase role="emphasized">kedr_cm_waitqueue.ko:</phrase>
+    <simplelist type='vert'>
+    <member>__wake_up</member>
+    <member>init_waitqueue_head/__init_waitqueue_head</member>
+    <member>prepare_to_wait</member>
+    <member>finish_wait</member>
+    <member>remove_wait_queue</member>
+    <member>add_wait_queue</member>
+    <member>add_wait_queue_exclusive</member>
+    </simplelist>
+</listitem>
+<listitem><phrase role="emphasized">kedr_cm_capable.ko:</phrase>
+    <simplelist type='vert'>
+    <member>capable</member>
+    </simplelist>
+</listitem>
+<listitem><phrase role="emphasized">kedr_cm_vmm.ko:</phrase>
+    <simplelist type='vert'>
+    <member>vmalloc</member>
+    <member>__vmalloc</member>
+    <member>vmalloc_user</member>
+    <member>vmalloc_node</member>
+    <member>vmalloc_32</member>
+    <member>vmalloc_32_user</member>
+    <member>vfree</member>
+    </simplelist>
+</listitem>
+<listitem><phrase role="emphasized">kedr_cm_schedule.ko:</phrase>
+    <simplelist type='vert'>
+    <member>schedule</member>
+    <member>[preempt_schedule]</member>
+    <member>_cond_resched</member>
+    <member>schedule_timeout</member>
+    <member>schedule_timeout_uninterruptible</member>
+    <member>schedule_timeout_interruptible</member>
+    <member>io_schedule</member>
+    <member>cond_resched_lock/__cond_resched_lock</member>
+    </simplelist>
+</listitem>
+<listitem><phrase role="emphasized">kedr_cm_mem_util.ko:</phrase>
+    <simplelist type='vert'>
+    <member>kstrdup</member>
+    <member>kstrndup</member>
+    <member>kmemdup</member>
+    </simplelist>
+</listitem>
+</itemizedlist>
+    </para>
+
+</section>
+</section>

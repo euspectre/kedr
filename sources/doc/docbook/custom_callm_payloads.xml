@@ -14,7 +14,7 @@ support call monitoring for the functions for which it is not supported by KEDR 
 </para></listitem>
 
 <listitem><para>
-change the set of parameters output to the trace, in case you need something other than the arguments and the return value of the replacement function to be output.
+change the set of parameters output to the trace, in case you need something other than the arguments and the return value of the target function to be output.
 </para></listitem>
 </itemizedlist>
     
@@ -29,9 +29,6 @@ The whole infrastructure necessary for building the payload module from the <quo
     </varlistentry>
     <varlistentry><term><filename>Kbuild</filename></term>
         <listitem>file for building kernel module from C sources</listitem>
-    </varlistentry>
-    <varlistentry><term><filename class='directory'>templates</filename></term>
-        <listitem>directory containing the templates used for generating sources from the 'definition' file</listitem>
     </varlistentry>
 </variablelist>
 To use all this in development of your payload module, copy the contents of that directory to a directory of your choice.
@@ -55,7 +52,7 @@ At the global level (i.e. before the first group begins), this file should conta
 In addition, the following parameters may be defined at the global level:
 <variablelist>
     <varlistentry><term>header</term>
-        <listitem>the code (may be multiline) to be inserted before the definition of replacement functions. This code usually contains &apos;#include&apos; directives for header files which define target functions and types of its parameters.</listitem>
+        <listitem>the code (may be multiline) to be inserted before the definition of target functions. This code usually contains &apos;#include&apos; directives for header files which define target functions and types of its parameters.</listitem>
     </varlistentry>
 </variablelist>
 Example of global section of the <filename>payload.data</filename> file:
@@ -72,7 +69,7 @@ header =&gt;&gt;
 </programlisting>
     </para>
     <para>
-For each <link linkend="target_function">target function</link> the calls to which should be processed, a group should be prepared in the definition file.
+For each <link linkend="target_function">target function</link> information about which should be output to the trace, a group should be prepared in the definition file.
 Each group should contain definitions for the following parameters:
 <variablelist>
     <varlistentry><term>function.name</term>
@@ -85,16 +82,16 @@ Each group should contain definitions for the following parameters:
         <listitem>(multi-valued) types of the parameters of the target function, starting with the first one. If the function has no parameters, shouldn't be assigned at all.</listitem>
     </varlistentry>
     <varlistentry><term>arg.name</term>
-        <listitem>(multi-valued) names of the parameters of the target function, starting with the first one. If the function has no parameters, shouldn't be assigned at all. Parameters of the replacement function will be accessible via these names in the code.</listitem>
+        <listitem>(multi-valued) names of the parameters of the target function, starting with the first one. If the function has no parameters, shouldn't be assigned at all. Parameters of the target function will be accessible via these names in the code.</listitem>
     </varlistentry>
     <varlistentry><term>trace.param.name</term>
-        <listitem>(multi-valued) variable names, which values will be output to the trace. This variables should be accessible in replacement function (see below).</listitem>
+        <listitem>(multi-valued) variable names, which values will be output to the trace. This variables should be accessible when parameters will be output to the trace.</listitem>
     </varlistentry>
     <varlistentry><term>trace.param.type</term>
         <listitem>(multi-valued) types of the values, which will be output into the trace. This types will be used for casting the values of the corresponding variables before they will be output (so, these types may differ from the real types of variables).</listitem>
     </varlistentry>
     <varlistentry><term>trace.formatString</term>
-        <listitem>format string which is used for printf-like output of values from replacement function (see parameters <quote>trace.param.name</quote> and <quote>trace.param.type</quote>)</listitem>
+        <listitem>format string which is used for printf-like output of values from target function (see parameters <quote>trace.param.name</quote> and <quote>trace.param.type</quote>)</listitem>
     </varlistentry>
 </variablelist>
 
@@ -105,31 +102,14 @@ Output to the trace is currently supported only for the variables of simple type
 Additionally, the following parameters can be defined at group level:
 <variablelist>
     <varlistentry><term>prologue</term>
-        <listitem>code (may be multiline) which will be inserted at the start of replacement function (before the call to target function). Usually, this code declares variables which will be used in output and the following code sections (see below).</listitem>
-    </varlistentry>
-    <varlistentry><term>middleCode</term>
-        <listitem>code (may be multiline) which will be inserted after call to the target function and before the output of values to the trace. Variables can not be declared there. Usually, this code calculates the values of the variables if it is necessary before the output to the trace is done.</listitem>
+        <listitem>code (may be multiline) which will be executed before output values to the trace. Usually, this code declares variables which will be used in output.</listitem>
     </varlistentry>
     <varlistentry><term>epilogue</term>
-        <listitem>code (may be multiline) which will be inserted at the end of the replacement function (after the values are output to the trace). If <code>prologue</code> or <code>middleCode</code> request some resources from the kernel, this code can be used to release these resources.</listitem>
+        <listitem>code (may be multiline) which will be executed after output values to the trace. If <code>prologue</code> request some resources from the kernel, this is a place where these resources may be released.</listitem>
     </varlistentry>
 </variablelist>
 
-Visibility of variables in different parts of code of the replacement function can be described in pseudocode as follows:
-<programlisting>
-<symbol>returnType</symbol> replacement_function(<symbol>arg.name</symbol>...)
-{
-    <symbol>prologue</symbol>
-    {
-        <symbol>returnType</symbol> <varname>returnValue</varname> = target_function(<symbol>arg.name</symbol>...);
-        <symbol>middleCode</symbol>
-        output(<symbol>trace.formatString</symbol>, <symbol>trace.param.name</symbol>...);
-    }
-    <symbol>epilogue</symbol>
-}
-
-</programlisting>
-If the target function does not return void, variable <varname>returnValue</varname> refers to the returning value of the function. It may be used as the name of variable to output (<symbol>arg.name</symbol>) and in the <symbol>middleCode</symbol>.
+If the target function does not return void, variable <varname>returnValue</varname> refers to the returning value of the function. It may be used as the name of variable to output (<symbol>arg.name</symbol>) and in the <symbol>prologue</symbol> and <symbol>epilogue</symbol> sections.
     </para>
     <para>
 Example of the group section for module_put() target function:
@@ -214,7 +194,7 @@ size_t size = kmem_cache_size(mc);
 </programlisting>
     </para>
     <para>
-As you can see, kmem_cache_alloc() function does not have <code>size</code> argument. If we still want to output the size of the requested memory block to the trace, we need to determine it within the replacement function. This is exactly what is done in the prologue code above.
+As you can see, kmem_cache_alloc() function does not have <code>size</code> argument. If we still want to output the size of the requested memory block to the trace, we need to determine it for for use in output to the trace. This is exactly what is done in the prologue code above.
     </para>
     <para>
 After writing <filename>payload.data</filename> file, you can change the value of module_name variable in the <filename>makefile</filename> and <filename>Kbuild</filename> according to the one you use as value of <quote>module.name</quote> parameter. In the future, this step may be implemented in the <filename>makefile</filename> itself.

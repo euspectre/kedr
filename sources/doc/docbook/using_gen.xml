@@ -11,7 +11,7 @@ Apart from usage within KEDR, this mechanism can also be used for creating custo
     </para>
 
 <itemizedlist>
-<listitem><para><emphasis>fast development</emphasis> - the implementation of a new payload payload module for call monitoring requires, for example, about 10 lines in the <quote>definition</quote> file for the <quote>header</quote> part (it contains the name of the module, the author and the license, etc.), and about 10 lines per replacement function (description of the arguments and the return value, etc.).</para></listitem>
+<listitem><para><emphasis>fast development</emphasis> - the implementation of a new payload payload module for call monitoring requires, for example, about 10 lines in the <quote>definition</quote> file for the <quote>header</quote> part (it contains the name of the module, the author and the license, etc.), and about 10 lines per target function (description of the arguments and the return value, etc.) which call intended to be traced.</para></listitem>
 
 <listitem><para><emphasis>clear and readable definition files</emphasis> - all features of your module are described in one place, the so called <firstterm>definition file</firstterm> rather than scattered over different files or over one long file. Every line in a <quote>definition</quote> file is self-explanatory.</para></listitem>
 
@@ -127,7 +127,7 @@ a = 5
 means <code>a={'10','5'}</code>. 
     </para>
     <para>
-Depending on the meaning of the parameter, the difference in the order of its values may be important (e.g. the order of the function parameters is critical), or it may be not (e.g. the order of the replacement functions in the file).
+Depending on the meaning of the parameter, the difference in the order of its values may be important (e.g. the order of the function parameters is critical), or it may be not (e.g. the order of the target functions descriptions in the file).
     </para>
     <para>
 As a rule, the order of values of two multi-valued parameters is only significant if these parameters describe one-value attributes of same object:
@@ -214,7 +214,7 @@ There are 3 groups in this file. The first one defines <code>array.name='array1'
     </para>
     
     <para>
-As far as payload modules are concerned, <quote>document</quote> templates define the overall layout of the generated source and header files while <quote>block</quote> templates define the parts of the code related to a replacement function. That is, a <code>[group]</code> block corresponds to a replacement function in this case.
+As far as payload modules are concerned, <quote>document</quote> templates define the overall layout of the generated source and header files while <quote>block</quote> templates define the parts of the code related to a target function. That is, a <code>[group]</code> block corresponds to a target function in this case.
     </para>
     
     <para>

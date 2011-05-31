@@ -14,10 +14,6 @@ support fault simulation for the functions for which it is not supported by KEDR
 </para></listitem>
 
 <listitem><para>
-change the set of parameters output to the trace, in case you need something other than the arguments and the return value of the replacement function to be output;
-</para></listitem>
-
-<listitem><para>
 provide a different set of variables to be passed to fault simulation indicator (see below) - this can be necessary if you would like to implement <link linkend="custom_fsim_scenarios">custom fault simulation scenarios</link>.
 </para></listitem>
 </itemizedlist>
@@ -37,9 +33,6 @@ The files necessary to build the payload module from the <quote>definition file<
     </varlistentry>
     <varlistentry><term><filename>Kbuild</filename></term>
         <listitem>file for building kernel module from C sources</listitem>
-    </varlistentry>
-    <varlistentry><term><filename class='directory'>templates</filename></term>
-        <listitem>directory containing the templates used for generating sources from the 'definition' file</listitem>
     </varlistentry>
 </variablelist>
 To use all this in development of your payload module, copy the contents of that directory to a directory of your choice.
@@ -80,7 +73,7 @@ header =&gt;&gt;
 </programlisting>
     </para>
     <para>
-For each <link linkend="target_function">target function</link> the calls to which should be processed, a group should be prepared in the definition file.
+For each <link linkend="target_function">target function</link> which fault is intended to simulate, a group should be prepared in the definition file.
 Each group should contain definitions for the following parameters:
 <variablelist>
     <varlistentry><term>function.name</term>
@@ -93,29 +86,8 @@ Each group should contain definitions for the following parameters:
         <listitem>(multi-valued) types of the parameters of the target function, starting with the first one. If the function has no parameters, shouldn't be assigned at all.</listitem>
     </varlistentry>
     <varlistentry><term>arg.name</term>
-        <listitem>(multi-valued) names of the parameters of the target function, starting with the first one. If the function has no parameters, shouldn't be assigned at all. Parameters of the replacement function will be accessible via these names in the code.</listitem>
+        <listitem>(multi-valued) names of the parameters of the target function, starting with the first one. If the function has no parameters, shouldn't be assigned at all. Parameters of the target function will be accessible via these names in the code.</listitem>
     </varlistentry>
-    <varlistentry><term>trace.param.name</term>
-        <listitem>(multi-valued) variable names, which values will be output to the trace. This variables should be accessible in replacement function (see below).</listitem>
-    </varlistentry>
-    <varlistentry><term>trace.param.type</term>
-        <listitem>(multi-valued) types of the values, which will be output into the trace. This types will be used for casting the values of the corresponding variables before they will be output (so, these types may differ from the real types of variables).</listitem>
-    </varlistentry>
-    <varlistentry><term>trace.formatString</term>
-        <listitem>format string which is used for printf-like output values from replacement function (see parameters <quote>trace.param.name</quote> and <quote>trace.param.type</quote>)</listitem>
-    </varlistentry>
-</variablelist>
-    </para>
-
-<important><para>
-Output to the trace is currently supported only for the variables of simple types (i.e. no strings, arrays, structures, etc.). Pointers can be output (e.g., using <code><quote>%p</quote></code> or a similar format) but not the data they point to. This is due to the limitations of <command>kedr_gen</command>. In the future versions, these limitations may be removed or at least relaxed.
-</para></important>
-
-    <para>
-Until this moment, only parameters which are also used for the payload modules for call monitoring have been described (see <xref linkend="custom_callm_payloads"/>). These parameters have almost the same meaning for the payload modules for fault simulation (these modules extend the functionality of call monitoring payloads). Listed below are the parameters that are meaningful only for fault simulation:
-    </para>
-    <para>
-<variablelist>
     <varlistentry><term>fpoint.fault_code</term>
         <listitem>code (may be multiline) which should be executed instead the call to the target function to simulate failure of the latter. Usually, this code simply sets <varname>returnValue</varname> variable which will be returned to the caller to indicate that a failure has occured.</listitem>
     </varlistentry>
@@ -126,43 +98,19 @@ Until this moment, only parameters which are also used for the payload modules f
         <listitem>(multi-valued) types of the values that will be passed to the indicator function. These types will be used to properly cast the values before passing to the indicator (so these types may differ from the real types of the variables).</listitem>
     </varlistentry>
 </variablelist>
-
     </para>
     <para>
-Additionally, the following parameters can be defined at the group level. They are similar to the ones used in the payload modules for call monitoring. The differences concerning fault simulation are also described below.
+Additionally, the following parameters can be defined at the group level. They are similar to the ones used in the payload modules for call monitoring.
 <variablelist>
     <varlistentry><term>prologue</term>
-        <listitem>code (may be multiline) which will be inserted at the start of replacement function (before the call to the indicator function which should decide whether need to simulate a failure or not). Usually, this code declares variables that will be used in the output, will be passed to the indicator function or used by the following code sections (see below).</listitem>
-    </varlistentry>
-    <varlistentry><term>middleCode</term>
-        <listitem>code (may be multiline) which may calculate data for output. Variables can not be declared there. Note, that this code is placed after the call to the indicator function and after the possible call to the target function (or the error-path). Therefore, <code>middleCode</code> cannot affect the behaviour of these parts of the replacement function. Its intended usage it to prepare the data to the output to the trace: calculate the necessary values, etc.</listitem>
+        <listitem>code (may be multiline) which will be inserted at the start of replacement function (before the call to the indicator function which should decide whether need to simulate a failure or not). Usually, this code declares variables that will be passed to the indicator function.</listitem>
     </varlistentry>
     <varlistentry><term>epilogue</term>
-        <listitem>code (may be multiline) which will be inserted at the end of the replacement function (after the values are output to the trace). If <code>prologue</code> or <code>middleCode</code> request some resources from the kernel, this code can be used to release these resources.</listitem>
+        <listitem>code (may be multiline) which will be inserted at the end of the replacement function (after  executing target function or simulating its fault). If <code>prologue</code> request some resources from the kernel, this is a place to release these resources.</listitem>
     </varlistentry>
 </variablelist>
-Visibility of variables in different parts of code of the replacement function may be described in pseudocode as follows:
-<programlisting>
-<symbol>returnType</symbol> replacement_function(<symbol>arg.name</symbol>...)
-{
-    <symbol>prologue</symbol>
-    {
-        <symbol>returnType</symbol> <varname>returnValue</varname>;
-        if(indicator_function(<symbol>fpoint.param.name</symbol>...) == 0)
-        {
-            <varname>returnValue</varname> = target_function(<symbol>arg.name</symbol>...);
-        }
-        else
-        {
-            <symbol>fpoint.fault_code</symbol>;
-        }
-        <symbol>middleCode</symbol>
-        output(<symbol>trace.formatString</symbol>, <symbol>trace.param.name</symbol>...);
-    }
-    <symbol>epilogue</symbol>
-}
-</programlisting>
-If the target function does not return void, variable <varname>returnValue</varname> can be used as name of variable to output (<symbol>arg.name</symbol>) and in the <symbol>middleCode</symbol>. Also, this variable should be assigned in the <symbol>fpoint.fault_code</symbol> (otherwise it will not be initialized if the failure of the target function is simulated).
+
+If the target function does not return void, variable <varname>returnValue</varname> should be set in <symbol>fpoint.fault_code</symbol> as return value of the function in case of simulating fault.
     </para>
     <para>
 Here is an example of the group section for __kmalloc target function. Note the definition of <code>fpoint.fault_code</code> parameter. Its value is <quote><code>returnValue = NULL;</code></quote> because '=' characters after the leftmost one have no special meaning and are treated as the part of the value.
@@ -181,19 +129,6 @@ Here is an example of the group section for __kmalloc target function. Note the 
     arg.type = gfp_t
     arg.name = flags
     
-    # The parameters to be output to the trace. 
-    trace.param.type = size_t
-    trace.param.name = size
-
-    trace.param.type = unsigned int
-    trace.param.name = flags
-
-    trace.param.type = void*
-    trace.param.name = returnValue
-
-    # The format string to be used for trace output.
-    trace.formatString = "arguments: (%zu, %x), result: %p"
-
     # Fault Simulation
     fpoint.param.type = size_t
     fpoint.param.name = size
@@ -223,19 +158,6 @@ Example of the group section for kstrdup() target function:
 
     # Calculate length of the string
     prologue = size_t len = strlen(str);
-
-    # The parameters to be output to the trace.
-    trace.param.type = size_t
-    trace.param.name = len
-
-    trace.param.type = unsigned int
-    trace.param.name = flags
-
-    trace.param.type = void*
-    trace.param.name = returnValue
-
-    # The format string to be used for trace output.
-    trace.formatString = "arguments: (strlen=%zu, flags=%x), result: %p"
 
     # Fault Simulation
     fpoint.param.type = size_t
@@ -274,8 +196,6 @@ If, say, function <function>g</function> should share the fault simulation scena
     arg.type = gfp_t
     arg.name = flags
     
-    ...
-    
     # Fault Simulation
     fpoint.param.type = size_t
     fpoint.param.name = size
@@ -302,8 +222,6 @@ If, say, function <function>g</function> should share the fault simulation scena
     arg.type = gfp_t
     arg.name = flags
     
-    ... 
-
     # Fault Simulation
     <emphasis>fpoint.reuse_point = __kmalloc</emphasis>
 

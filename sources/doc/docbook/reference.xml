@@ -4,6 +4,22 @@
 <!-- API for Payload Modules -->
 &kedr_payload_api;
 
+<!-- Creation of trampolines for target functions -->
+&kedr_functions_support;
+
+<!-- Description of standard call monitor payloads set -->
+&kedr_standard_callm_payloads;
+
+<!-- Description of standard fault simulation payloads set -->
+&kedr_standard_fsim_payloads;
+
+<!-- Description of standard fault simulation indicators -->
+&kedr_standard_fsim_indicators;
+
+<!-- API for fault simulation -->
+&kedr_fault_simulation_api;
+
+
 <!-- 
 TODO: Precise information about components
 -->

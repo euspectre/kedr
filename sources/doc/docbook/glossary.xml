@@ -41,18 +41,96 @@ By choosing appropriate <link linkend="payload_module">payload modules</link>, t
 </glossdef>
 </glossentry>
 
+<glossentry id="trampoline">
+<glossterm><emphasis>Trampoline</emphasis></glossterm>
+
+<glossdef>
+    <para>
+KEDR system instruments the <link linkend="target_module">target module</link> so that the calls to the <link linkend="target_function">target functions</link> are replaced in it with the calls to special <firstterm>trampoline functions</firstterm>. 
+    </para>
+    <para>
+A trampoline function has the same signature as the corresponding target function. When the trampoiline function is called, it receives the same argument values as the target function would. The trampoline function calls <link linkend="pre_handler">pre handlers</link>, <link linkend="replacement_function">replacement function</link> and <link linkend="post_handler">post handlers</link>, which can be provided by the user (via custom <link linkend="payload_module">payload modules</link>). If replacement function is not provided, target function will be called instead.
+    </para>
+</glossdef>
+</glossentry>
+
+
 <glossentry id="replacement_function">
 <glossterm><emphasis>Replacement function</emphasis></glossterm>
 
 <glossdef>
     <para>
-KEDR system instruments <link linkend="target_module">the target module</link> so that the calls to <link linkend="target_function">the target functions</link> are replaced in it with the calls to special <firstterm>replacement functions</firstterm>. 
+A replacement function is a user-provided function which is called <emphasis>instead</emphasis> of the corresponding <link linkend="target_function">target function</link>.
     </para>
     <para>
-A replacement function has the same signature as the corresponding target function. When the replacement function is called, it receives the same argument values as the target function would. The replacement functions can be provided by the user (via custom <link linkend="payload_module">payload modules</link>). A replacement function may, for example, simply call the target function to let it do its work and then just output its arguments and the return value to a trace. Or it may collect some other data or even simulate a failure of the target functon (without actually calling it). 
+When the replacement function is called, it receives the same argument values as the target function would and additional argument of type <type linkend="payload_api.function_call_info">struct kedr_function_call_info*</type>. Return value of the replacement function is interpreted as a value returned by the target function.
     </para>
     <para>
-Apart from having the same signature as the corresponding target functions, KEDR system imposes no additional restrictions on the replacement functions. 
+Last argument of the replacement function currently contains only <varname>return_address</varname> field, which is set to the address of the instruction to which target function would return. This field should be used instead of expression like <code>__builtin_return_address(0)</code> because replacement function is called by the trampoline, which changes the stack of function calls.
+    </para>
+    <para>
+A replacement function may, for example, do some actions instead of calling target function. The outer effect of these actions may be the same as effect of target function call, but also may differ from it. Another usage of replacement function is to call the target function or to perform other actions conditionally. This conditional call is a key point of the fault simulation payloads. 
+    </para>
+    <para>
+If replacement function should call (unconditionally) target function along with perfoming other actions, it is better to use <link linkend="pre_handler">pre handler</link> or <link linkend="post_handler">post handler</link> instead of replacement function. The thing is that several payloads, which intercept one target function, may work together only if no more than one of them replace this function with another one, while using pre and post handlers are not limited.
+    </para>
+    <para>
+Precise signature of the replacement function is described in <xref linkend="payload_api.replace_pair"/>. Apart from having the correct signature, KEDR system imposes no additional restrictions on the replacement functions. 
+    </para>
+</glossdef>
+</glossentry>
+
+<glossentry id="pre_handler">
+<glossterm><emphasis>Pre handler</emphasis></glossterm>
+
+<glossdef>
+    <para>
+A pre handler is a user-provided function which is called <emphasis>before</emphasis> corresponding <link linkend="target_function">target function</link>.
+    </para>
+    <para>
+When the pre handler is called, it receives the same argument values as the target function will recieve later and additional argument of type <type linkend="payload_api.function_call_info">struct kedr_function_call_info*</type>.    
+    </para>
+    <para>
+Last argument of the pre handler currently contains only <varname>return_address</varname> field, which is set to the address of the instruction to which target function would return. This field should be used instead of expression like <code>__builtin_return_address(0)</code> because pre handler is called by the trampoline, which changes the stack of function calls.
+    </para>
+    <para>
+A pre handler may, for example, output function arguments to the trace. Even post handler is seems more suitable for this purpose, because it may also output return value of the function, in some case pre handler is more preferable (see, for example, <xref linkend="happens_before_parameter"/>).
+    </para>
+    <para>
+Another possible usage of pre handler is to change function arguments. It cannot change argument's value, because this change will be lost when handler return, but it can change argument's content in case when the argument it pointer to some data.
+    </para>
+    <note>
+        <para>
+Simultaneous using of payload with pre handler, which change some target function arguments, and other payloads with pre handlers for same function should be done with care. Even KEDR itself do not forbid such using, the order of call of pre handlers is unspecified, so it is undefined whether one pre handler will see initial parameters or ones' changed by another payload.
+        </para>
+        <para>
+In the future, pre handlers and post handlers, registered with different payloads, may be ordered in some way.
+        </para>
+    </note>
+    <para>
+Precise signature of the pre handler is described in <xref linkend="payload_api.pre_pair"/>. Apart from having the correct signature, KEDR system imposes no additional restrictions on the pre handlers. 
+    </para>
+</glossdef>
+</glossentry>
+
+<glossentry id="post_handler">
+<glossterm><emphasis>Post handler</emphasis></glossterm>
+
+<glossdef>
+    <para>
+A post handler is a user-provided function which is called <emphasis>after</emphasis> corresponding <link linkend="target_function">target function</link>.
+    </para>
+    <para>
+When the post handler is called, it receives the same argument values as the target function has recieved before, return value of the target function (if target function return any value) and additional argument of type <type linkend="payload_api.function_call_info">struct kedr_function_call_info*</type>.    
+    </para>
+    <para>
+Last argument of the post handler currently contains only <varname>return_address</varname> field, which is set to the address of the instruction to which target function would return. This field should be used instead of expression like <code>__builtin_return_address(0)</code> because post handler is called by the trampoline, which changes the stack of function calls.
+    </para>
+    <para>
+A post handler may, for example, collect function arguments and return value and write them to the trace. 
+    </para>
+    <para>
+Precise signature of the post handler is described in <xref linkend="payload_api.post_pair"/>. Apart from having the correct signature, KEDR system imposes no additional restrictions on the post handlers. 
     </para>
 </glossdef>
 </glossentry>
@@ -62,13 +140,16 @@ Apart from having the same signature as the corresponding target functions, KEDR
 
 <glossdef>
     <para>
-A payload module is a kernel module that actually contains <link linkend="replacement_function">replacement functions</link> for a particular group of target functions. The core components of KEDR use this data when instrumenting the target module. Each payload module specifies the calls to which functions should be replaced with the calls to which functions.
+A payload module is a kernel module that actually contains <link linkend="pre_handler">pre handlers</link>, <link linkend="post_handler">post handlers</link> and <link linkend="replacement_function">replacement functions</link> for a particular group of target functions. The core components of KEDR use this data when instrumenting the target module.
     </para>
     <para>
 It is payload modules rather than KEDR core that define which data should be collected about the target module, how the execution of the latter should be altered (if it should be at all), etc. Different sets of payload modules may allow to perform different kinds of analysis of the target module.
     </para>
     <para>
 Currently, KEDR provides payload modules for several types of data collection and analysis operations. Custom payload modules can be provided by the user. As long as the payload modules rely on the API defined by KEDR, KEDR makes no difference between the payloads provided with it and the ones supplied by the user.
+    </para>
+    <para>
+Different payload modules may be used simultaneously as long as them do not provide different replacement functions for one target function.
     </para>
 </glossdef>
 </glossentry>
@@ -78,7 +159,7 @@ Currently, KEDR provides payload modules for several types of data collection an
 
 <glossdef>
     <para>
-Fault simulation is one of the many ways to check reliability of a target kernel module. It can be used, among other things, to see if the target module behaves correctly when the operating system fails to complete its requests. For example, you may want to find out if the target module crashes the system when there is not enough memory for its operations or if there is no contiguous memory block of a size greater than N, etc. 
+Fault simulation is one of the many ways to check reliability of a target kernel module. It can be used, among other things, to see if the target module behaves correctly when the operating system fails to complete some of its requests. For example, you may want to find out if the target module crashes the system when there is not enough memory for its operations or if there is no contiguous memory block of a size greater than N, etc. 
     </para>
     <para>
 KEDR allows to perform fault simulation on the target module. The scenarios (what function calls to make fail and in what conditions) can be provided and configured by the user as well. A number of common scenarios is already supported by KEDR by default.

@@ -33,7 +33,7 @@ KEDR core (<firstterm><quote>Loading Detector</quote></firstterm> and <firstterm
 </para>
 
 <para>
-When the target has been loaded but before it begins its initialization, KEDR core takes control and instruments it, that is, it changes the memory image of that module in a special way. In particular, the calls to the functions that should be intercepted are now replaced with the calls to the functions with the same signatures provided by <link linkend="payload_module">payload modules</link>. A payload module should register itself with KEDR core for this to work.
+When the target has been loaded but before it begins its initialization, KEDR core takes control and instruments it, that is, it changes the memory image of that module in a special way. In particular, the calls to the functions that should be intercepted(<link linkend="target_function">target functions</link>) are replaced with the calls to the special <link linkend="trampoline">trampolines</link> with the same signatures. These trampolines call <link linkend="pre_handler">pre handlers</link>, <link linkend="replacement_function">replacement functions</link> and <link linkend="post_handler">post handlers</link> provided by <link linkend="payload_module">payload modules</link>. A payload module should register itself with KEDR core for this to work.
 </para>
 
 <para>
@@ -46,14 +46,10 @@ The actual analysis of the target kernel module is performed by
 </para>
 
 <para>
-If the target module tries to call a function which one of the payload 
-modules is interested in (<link linkend="target_function"><firstterm>target 
-function</firstterm></link>), that payload module takes control and executes
-the corresponding <link linkend="replacement_function"><firstterm>replacement
-function</firstterm></link> instead. This way, the payload
+If the target module tries to call a function which one of the payload modules is interested in (<link linkend="target_function"><firstterm>target function</firstterm></link>), that payload module takes control before and after it while executing the corresponding <link linkend="pre_handler"><firstterm>pre handler(s)</firstterm></link> and/or <link linkend="post_handler"><firstterm>post handler(s)</firstterm></link>. This way, the payload
 module can get access to the arguments of the target function. In addition,
 the payload module can change the behaviour of the target module, for 
-example make it look like the target function has failed, etc.
+example making it look like the target function has failed, by registering <link linkend="replacement_function"><firstterm>replacement function</firstterm></link>.
 </para>
 
 <itemizedlist>
@@ -95,8 +91,7 @@ uses virtual memory facilities in a right way, etc.
 </itemizedlist>
 
 <para>
-When loaded, payload modules register themselves with the KEDR core 
-(<filename>kedr-base</filename> module, actually) - see 
+When loaded, payload modules register themselves with the KEDR core - see 
 <xref linkend="payload_api"/>.
 </para>
 
@@ -119,20 +114,14 @@ linkend="kedr_control"/>):
 </para>
 
 <listitem><para>
-Loads the <filename>kedr-base</filename> module responsible to keep track 
-of payload modules and to provide API to them.
+Loads the <filename>KEDR core</filename> responsible to keep track of payload modules and to provide API to them. The name of the target module passed to <filename>KEDR core</filename> a parameter (<quote>target_name</quote>).
 </para></listitem>
 
 <listitem><para>
 Loads the payload modules listed in the configuration file. Each payload 
 module should register itself with the KEDR core by calling <function>kedr_payload_register</function> (see <xref 
-linkend="payload_api"/>), this is usually done in its init function.
-</para></listitem>
-
-<listitem><para>
-Loads the <filename>kedr-controller</filename> module passing it the name 
-of the target module as a parameter (<quote>target_name</quote>). From 
-this moment, the KEDR core begins watching for the specified target module 
+linkend="payload_api"/>), this is usually done in its init function. From 
+this moment, KEDR begins watching for the specified target module 
 to load (see also <xref linkend="getting_started"/>).
 </para></listitem>
 </orderedlist>

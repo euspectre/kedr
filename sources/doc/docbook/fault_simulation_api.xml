@@ -1,0 +1,360 @@
+﻿<section id="fault_simulation_api">
+<title>API for fault simulation</title>
+
+<para>
+This section describes the interface provided for creating and using <link linkend="fault_simulation_point">fault simulation points</link> as code branching points and <link>fault simulation indicators</link> as scenarios for that branching.
+</para>
+
+<note><para>
+Though this API is used by KEDR for implement fault simulation payloads, one may use this API without KEDR core and payloads.
+</para></note>
+
+<section id="fault_simulation_api.header">
+<title>Header file</title>
+
+<para>
+The API is declared in the header file that a module which implement fault simulation points or indicators should #include:
+</para>
+
+<programlisting><![CDATA[
+#include <kedr/fault_simulation/fault_simulation.h>
+]]></programlisting>
+
+</section> <!-- "fault_simulation_api.header" -->
+<!-- ================================================================ -->
+
+<section id="fault_simulation_api.fault_simulation_point">
+<title>Fault simulation point</title>
+
+<para>
+Registered <link linkend="fault_simulation_point">fault simulation point</link> is represented by <code>struct kedr_simulation_point</code>.
+</para>
+
+<programlisting><![CDATA[
+struct kedr_simulation_point;
+]]></programlisting>
+
+<para>
+Each fault simulation point has unique name, which identifies it while one manages fault simulation scenarios.  For every point there is a subdirectory in <filename class="directory">kedr_fault_simulation/points</filename> at debugfs filesystem. Name of this subdirectory is the same as the name of the point itself. Files in that subdirectory may be used for control scenarios for this point.
+</para>
+
+<para>
+When need to decide which branch of code should be executed, one should call function <function linkend="fault_simulation_api.kedr_fsim_point_simulate">kedr_fsim_point_simulate</function>. This function will return integer value according to scenario, which is set for this point, and this value may be used for branching.
+</para>
+
+</section> <!-- "fault_simulation_api.fault_simulation_point" -->
+
+<section id="fault_simulation_api.format_string">
+<title>Format of the data, passed from fault simulation point to the scenario</title>
+<para>
+When call <function linkend="fault_simulation_api.kedr_fsim_point_simulate">kedr_fsim_point_simulate</function>, one should also pass parameters for simulation scenario. Expected, that this format is a struct containing fields of different types, and it may be encoded with the string of comma-separated ordered list of these types. E.g. string <quote>int*,long</quote> encodes parameters of type
+<programlisting><![CDATA[
+struct 
+{
+    int* val1;
+    long val2;
+};
+]]></programlisting>
+Absence of parameters for scenario is encoded by empty string (<quote/>).
+</para>
+
+</section> <!-- "fault_simulation_api.format_string" -->
+
+<section id="fault_simulation_api.kedr_fsim_point_register">
+<title>kedr_fsim_point_register()</title>
+
+<para>
+Register fault simulation point, making it available for code branching inside the kernel and for manage its scenarious from kernel and user spaces.
+</para>
+
+<programlisting><![CDATA[
+struct kedr_simulation_point* 
+kedr_fsim_point_register(const char* point_name,
+	const char* format_string);
+]]></programlisting>
+
+    
+<para>
+<varname>point_name</varname> - name of fault simulation point.
+</para>
+
+<para>
+<varname>format_string</varname> - string which encodes parameters which are passed to scenario for that point. <constant>NULL</constant> is effiently same as <quote/> and means that no parameters are passed to the scenarios. It is caller of <function linkend="fault_simulation_api.kedr_fsim_point_simulate">kedr_fsim_point_simulate</function> who is responsible for passing parameters of the correct format.
+</para>
+
+<para>
+Returns descriptor of registered fault simulation point. On error returns <constant>NULL</constant>.
+</para>
+
+</section> <!-- "fault_simulation_api.kedr_fsim_point_register" -->
+
+<section id="fault_simulation_api.kedr_fsim_point_unregister">
+<title>kedr_fsim_point_unregister()</title>
+
+<para>
+Unregister fault simulation point, making its name free for use.
+</para>
+
+<programlisting><![CDATA[
+void kedr_fsim_point_unregister(struct kedr_simulation_point* point);
+]]></programlisting>
+
+    
+<para>
+<varname>point</varname> - registered fault simulation point.
+</para>
+
+</section> <!-- "fault_simulation_api.kedr_fsim_point_unregister" -->
+
+<section id="fault_simulation_api.kedr_fsim_point_simulate">
+<title>kedr_fsim_point_simulate()</title>
+
+<para>
+Get value according to the scenario, which is set for the point.
+</para>
+
+<programlisting><![CDATA[
+int kedr_fsim_point_simulate(struct kedr_simulation_point* point,
+    void *user_data);
+]]></programlisting>
+
+    
+<para>
+<varname>point</varname> - registered fault simulation point.
+</para>
+
+<para>
+<varname>user_data</varname> - parameters for scenario. Format of these parameters should coincide with content of <varname>format_string</varname> which is used in point registration.
+</para>
+
+<para>
+Return integer value according to the scenario, which is set for the point. If no scenario is set, return <constant>0</constant>.
+</para>
+
+</section> <!-- "fault_simulation_api.kedr_fsim_point_simulate" -->
+
+<section id="fault_simulation_api.fault_simulation_indicator">
+<title>Fault simulation indicator</title>
+
+<para>
+Registered <link linkend="fault_simulation_indicator">fault simulation indicator</link> is represented by <code>struct kedr_simulation_indicator</code>.
+</para>
+
+<programlisting><![CDATA[
+struct kedr_simulation_indicator;
+]]></programlisting>
+
+<para>
+Each fault simulation indicator has unique name, which identifies it while one manages fault simulation scenarios.  For every indicator there is a subdirectory in <filename class="directory">kedr_fault_simulation/indicators</filename> at debugfs filesystem. Name of this subdirectory is the same as the name of the indicator itself. Files in that subdirectory may be used for control the indicator.
+</para>
+
+<para>
+Really, each fault simulation indicator is a generator of the scenarios. When one set scenario for particular fault simulation point (via <function linkend="fault_simulation_api.kedr_fsim_point_set_indicator">kedr_fsim_point_set_indicator</function> function or via writing to the <filename linkend="fault_simulation_api.current_indicator_file">current_indicator</filename> file), corresponded indicator is used for instansiate a scenario, which then is set for the point. After that moment, the scenario become independent from the other scenarios, which may be set using this indicator.
+</para>
+
+<para>
+For make this feature of the fault simulation indicators more clear, let's consider simple scenario <quote>simulate fault every second call</quote>. When this scenario is set for a particular point, one would expect that <function>kedr_fsim_point_simulate</function> will return not <constant>0</constant> when called second time, forth time and so on. Imagine then, that after third call of <function>kedr_fsim_point_simulate</function> this scenario is additionally set for another point. So, first call of <function>kedr_fsim_point_simulate</function> for second point will return not <constant>0</constant>, that is not the case when scenario is used only for one point.
+</para>
+
+<para>
+Now, instead of setting scenario for the point directly, we will use fault simulation indicator. For the first point this indicator will create scenario <quote>simulate fault every second call</quote>. When applied for another point, indicator will create <emphasis>another</emphasis> scenario, with its own local calls counter. So according to this scenario, <function>kedr_fsim_point_simulate</function> will return not <constant>0</constant> when called second time, forth time and so on <emphasis>independently</emphasis> from the first point and its scenario.
+</para>
+
+<para>
+Another feature of the fault simulation indicators is that one indicator may create different scenarios according to some parameters. These parameters are passed to the scenario generator function of the indicator, when the indicator is applied to the point. E.g., indicator may generate scenarios <quote>simulate fault every <varname>n</varname>th call</quote>, where <varname>n</varname> is a parameter of the generator function.
+</para>
+
+</section> <!-- "fault_simulation_api.fault_simulation_indicator" -->
+
+<section id="fault_simulation_api.kedr_fsim_indicator_register">
+<title>kedr_fsim_indicator_register()</title>
+
+<para>
+Register fault simulation indicator, making it available for generate scenarios for fault simulation points.
+</para>
+
+<programlisting><![CDATA[
+struct kedr_simulation_indicator* 
+kedr_fsim_indicator_register(const char* indicator_name,
+	int (*simulate)(void* indicator_state, void* user_data),
+    const char* format_string,
+    int (*create_instance)(void** indicator_state, const char* params, struct dentry* control_directory),
+    void (*destroy_instance)(void* indicator_state)
+);
+]]></programlisting>
+
+<para>
+<varname>indicator_name</varname> - name of the indicator.
+</para>
+
+<para>
+<varname>simulate</varname> - callback function, which implements scenario of the indicator.
+<varname>indicator_state</varname> parameter of this function is set to object which is created by <varname>create_instance</varname> callback. <varname>user_data</varname> - data from fault simulation point passed to scenario. Function should return integer value which is correspond to this scenario.
+</para>
+
+<para>
+<varname>format_string</varname> - string encoded format of the data, expected from fault simulation point by the scenario (see <xref linkend="fault_simulation_api.format_string"/>). <constant>NULL</constant> is efficiently <quote/> and means that scenario expects no parameters. The more parameters scenario use the more complex scenario may be but the fewer points may use this scenario.
+</para>
+
+<para>
+<varname>create_instance</varname> - callback function for generate new scenario. This function may set <varname>indicator_state</varname> pointer and this pointer will be passed to <function>simulate</function> and <function>destroy_instance</function> callbacks. If not set, this pointer expected to be <constant>NULL</constant>. <varname>params</varname> is a null-terminated string, which represent parameters of the created scenario, or <constant>NULL</constant>. Interpretation of this parameter may be any. <varname>control_directory</varname> is a directory of the fault simulation point (in debugfs filesystem), for which scenario is created. Function may create some files in this directory for control scenario. Note, that this directory already contains files <filename linkend="fault_simulation_api.current_indicator_file">current_indicator</filename> and <filename linkend="fault_simulation_api.format_string_file">format_string</filename>. Function should return 0 if scenario is created successfully or negative error code in case of error.
+</para>
+
+<para>
+<varname>destroy_instance</varname> - callback function for destroy scenario, created by <varname>create_instance</varname>. <varname>indicator_state</varname> parameter is the same as one set by <varname>create_instance</varname>.
+</para>
+
+<para>
+Function return identificator of newly created fault simulation indicator or <constant>NULL</constant> in case of error.
+</para>
+
+</section> <!-- "fault_simulation_api.kedr_fsim_indicator_register" -->
+
+<section id="fault_simulation_api.kedr_fsim_indicator_unregister">
+<title>kedr_fsim_indicator_unregister()</title>
+
+<para>
+Unregister indicator, making its name free for use. Also, delete all existent scenarios created with this indicator.
+</para>
+
+<programlisting><![CDATA[
+void kedr_fsim_indicator_unregister(struct kedr_simulation_indicator* indicator);
+]]></programlisting>
+
+<para>
+<varname>indicator</varname> - identificator of the fault simulation indicator, previousely created with <function>kedr_fsim_indicator_register</function>.
+</para>
+
+</section> <!-- "fault_simulation_api.kedr_fsim_indicator_unregister" -->
+
+<section id="fault_simulation_api.kedr_fsim_point_set_indicator">
+<title>kedr_fsim_point_set_indicator()</title>
+<para>
+Create new scenario, using given fault simulation indicator, and set this scenario for the given fault simulation point.
+</para>
+
+<programlisting><![CDATA[
+int kedr_fsim_point_set_indicator(const char* point_name,
+    const char* indicator_name, const char* params);
+]]></programlisting>
+
+
+<para>
+<varname>point_name</varname> - name of the point, for which scenario is created.
+</para>
+
+<para>
+<varname>indicator_name</varname> - name of the indicator, which is used for create scenario.
+</para>
+
+<para>
+<varname>params</varname> - parameters of new scenario (will be passed to the indicator's <function>create_instance</function> function).
+</para>
+
+<para>
+Function returns 0 if new scenario has successfully created and set. On error, negative error code is returned.
+</para>
+
+<para>
+Function return error in case when point fault simulation point provide not all parameters which are needed for scenario or provide them in incorrect order. Simply speaking, function return error if <varname>format_string</varname> of the indicator is not a substring of the <varname>format_string</varname> of the point.
+</para>
+<para>
+If other scenario has been set for the point before this function is called, that scenario is unset and destroyed before new scenario is created (so, there is no collision for files in point's control directory).
+</para>
+
+</section> <!-- "fault_simulation_api.kedr_fsim_point_set_indicator" -->
+
+<section id="fault_simulation_api.kedr_fsim_point_clear_indicator">
+<title>kedr_fsim_point_clear_indicator()</title>
+<para>
+Unset and destroy scenario, which is set for the fault simulation point. If no scenario is set for the point, do nothing.
+</para>
+
+<programlisting><![CDATA[
+int kedr_fsim_point_clear_indicator(const char* point_name);
+]]></programlisting>
+
+
+<para>
+<varname>point_name</varname> - name of the fault simulation point, for which scenario should be cleared.
+</para>
+
+<para>
+Function returns <constant>0</constant> on success and negative error code on fail.
+</para>
+
+<para>
+This function is called indirectly when fault simulation point is unregistered or when fault simulation indicator, which has created this scenario, is unregistered.
+</para>
+
+</section> <!-- "fault_simulation_api.kedr_fsim_point_clear_indicator" -->
+
+<section id="fault_simulation_api.format_string_file">
+<title>Control file <filename>format_string</filename></title>
+
+<para>
+For each registered point there is a file in the point's control directory, which reflect format of the data, which this point is pass to the scenario.
+</para>
+
+<programlisting>
+<filename>&lt;debugfs-mount-point&gt;/kedr_fault_simulation/&lt;point-name&gt;/format_string</filename>
+</programlisting>
+
+<para>
+Reading from this file returns string encoded format of the data, which this point is pass to the scenario.
+</para>
+
+</section> <!-- "fault_simulation_api.format_string_file" -->
+
+<section id="fault_simulation_api.current_indicator_file">
+<title>Control file <filename>current_indicator</filename></title>
+
+<para>
+For each registered point there is a file in the point's control directory, which reflect information about current scenario for the point and allow to set another scenario.
+</para>
+
+<programlisting>
+<filename>&lt;debugfs-mount-point&gt;/kedr_fault_simulation/&lt;point-name&gt;/current_indicator</filename>
+</programlisting>
+
+<para>
+Reading from this file returns the name of the scenario (more precisely, name of the indicator, which is used for create this scenario) which is currently set for the point. If scenario is not set for the point, <quote>none</quote> is returned.
+</para>
+
+<para>
+Writing to this file set new scenario for the point. Everything before the first space in the written sequence is treated as a name of the indicator, which is used for create new scenario. Everything after the first space is treated as a parameter string for the new scenario. If there is no spaces in the written sequence, then all sequence is treated as name of the indicator, and no parameters are passed for the new scenario. Writing special name <quote>none</quote> forces clearing the scenario.
+</para>
+
+<para>
+<programlisting><![CDATA[
+.../points# echo indicator1 param1 param2 > point1/current_indicator
+]]></programlisting>
+is efficiently same as
+<programlisting><![CDATA[
+kedr_fsim_point_set_indicator("point1", "indicator1", "param1 param2");
+]]></programlisting>
+</para>
+
+<para>
+<programlisting><![CDATA[
+.../points# echo indicator2 > point2/current_indicator
+]]></programlisting>
+is efficiently same as
+<programlisting><![CDATA[
+kedr_fsim_point_set_indicator("point2", "indicator2", NULL);
+]]></programlisting>
+</para>
+
+<para>
+<programlisting><![CDATA[
+.../points# echo none > point3/current_indicator
+]]></programlisting>
+is efficiently the same as
+<programlisting><![CDATA[
+kedr_fsim_point_clear_indicator("point3");
+]]></programlisting>
+</para>
+
+</section> <!-- "fault_simulation_api.current_indicator_file" -->
+
+</section>

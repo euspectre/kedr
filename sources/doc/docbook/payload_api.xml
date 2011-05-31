@@ -2,9 +2,8 @@
 <title>API for Payload Modules</title>
 
 <para>
-This section describes the interface that the KEDR core provides for <link 
-linkend="payload_module">payload modules</link>. Technically, the API is 
-provided by <filename>kedr-base</filename> module.
+This section describes the interface that the KEDR core module provides for <link 
+linkend="payload_module">payload modules</link>.
 </para>
 
 <important><para>
@@ -22,88 +21,252 @@ The API is declared in the header file that a payload module should #include:
 </para>
 
 <programlisting><![CDATA[
-#include <kedr/base/common.h>
+#include <kedr/core/kedr.h>
 ]]></programlisting>
 
 </section> <!-- "payload_api.header" -->
 <!-- ================================================================ -->
 
-<section id="payload_api.rtable">
-<title>struct kedr_repl_table</title>
+<section id="payload_api.function_call_info">
+<title>struct kedr_function_call_info</title>
 
 <para>
-<code>struct kedr_repl_table</code> represents a <firstterm>replacement 
-table</firstterm> that defines which <link 
-linkend="replacement_function">replacement function</link> should be 
-called instead of each particular <link 
-linkend="target_function">target function</link> in the module under 
-analysis.
+Represents information about particular function call, which is passed to <link linkend="pre_handler">pre handlers</link>, <link linkend="replacement_function">replacement function</link> and <link linkend="post_handler">post handlers</link> aside from parameters of the target function.
 </para>
 
 <programlisting><![CDATA[
-struct kedr_repl_table
+struct kedr_function_call_info
 {
-    void** orig_addrs; 
-    void** repl_addrs; 
-    unsigned int num_addrs;
+    void* return_address; 
 };
 ]]></programlisting>
 
 <para>
-<code>orig_addrs</code> - an array of the addresses of target functions 
-(<quote>what to replace</quote>).
+Currently this struct contain only one field, <code>return_address</code>. It contain address of the next instruction after target function call. This value should be used instead of __builtin_return_address(0) in the <link linkend="pre_handler">pre handlers</link>, <link linkend="replacement_function">replacement functions</link> and <link linkend="post_handler">post handlers</link>, because these functions are called by trampoline, which changes functions call stack.
+</para>
+
+</section> <!-- "payload_api.function_call_info" -->
+
+<section id="payload_api.pre_pair">
+<title>struct kedr_pre_pair</title>
+
+<para>
+Define <link linkend="pre_handler">pre handler</link>.
+</para>
+
+<programlisting><![CDATA[
+struct kedr_pre_pair
+{
+    void* orig; 
+    void* pre; 
+};
+]]></programlisting>
+
+    
+<para>
+<varname>orig</varname> - address of the <link linkend="target_function">target function</link>, which call is intended to intercept.
 </para>
 
 <para>
-<code>repl_addrs</code> - an array of addresses of replacement functions 
-(<quote>with what to replace</quote>).
+<varname>pre</varname> - address of the <link linkend="pre_handler">pre handler</link> which should be called before target function. Pre handler should take same parameters as target function plus additional parameter of <type linkend="payload_api.function_call_info">struct kedr_function_call_info*</type>. Pre handler shouldn't return value.
 </para>
 
 <para>
-<code>num_addrs</code> - number of elements to process in each of the two 
-arrays above.
+Example:
+</para>
+
+<programlisting><![CDATA[
+/*
+ * Function foo() has signature
+ *
+ *  long foo(int a, void* p);
+ */
+
+void pre_foo(int a, void* p, struct kedr_function_call_info* call_info)
+{
+    /* ... */
+};
+
+struct kedr_pre_pair pre_foo_pair = {
+    (void*)&foo,
+    (void*)&pre_foo
+};
+]]></programlisting>
+
+</section> <!-- "payload_api.pre_pair" -->
+
+<section id="payload_api.post_pair">
+<title>struct kedr_post_pair</title>
+
+<para>
+Define <link linkend="post_handler">post handler</link>.
+</para>
+
+<programlisting><![CDATA[
+struct kedr_post_pair
+{
+    void* orig; 
+    void* post; 
+};
+]]></programlisting>
+
+    
+<para>
+<varname>orig</varname> - address of the <link linkend="target_function">target function</link>, which call is intended to intercept.
 </para>
 
 <para>
-Each payload module has usually a single global instance of this structure 
-(see the example in <xref linkend="payload_api.payload"/>).
+<varname>post</varname> - address of the <link linkend="post_handler">post handler</link> which should be called after target function. Post handler should take same parameters as target function plus parameter of the same type as target function's return value(if it is non-void) plus additional parameter of <type linkend="payload_api.function_call_info">struct kedr_function_call_info*</type>. Post handler shouldn't return value.
 </para>
 
-<note><para>
-There are no additional restrictions on the names of replacement 
-functions. The KEDR core will use their addresses rather than the names.
-</para></note>
+<para>
+Examples:
+</para>
 
-</section> <!-- "payload_api.rtable" -->
+<programlisting><![CDATA[
+/*
+ * Function foo() has signature
+ *
+ *  long foo(int a, void* p);
+ */
+
+void post_foo(int a, void* p, long returnValue, struct kedr_function_call_info* call_info)
+{
+    /* ... */
+};
+
+struct kedr_post_pair post_foo_pair = {
+    (void*)&foo,
+    (void*)&post_foo
+};
+]]></programlisting>
+
+<programlisting><![CDATA[
+/*
+ * Function bar() has signature
+ *
+ *  void bar(int a, void* p);
+ */
+
+void post_bar(int a, void* p, struct kedr_function_call_info* call_info)
+{
+    /* ... */
+};
+
+struct kedr_post_pair post_bar_pair = {
+    (void*)&bar,
+    (void*)&post_bar
+};
+]]></programlisting>
+
+
+</section> <!-- "payload_api.post_pair" -->
+
+<section id="payload_api.replace_pair">
+<title>struct kedr_replace_pair</title>
+
+<para>
+Define <link linkend="replacement_function">replacement function</link>.
+</para>
+
+<programlisting><![CDATA[
+struct kedr_replace_pair
+{
+    void* orig; 
+    void* replace; 
+};
+]]></programlisting>
+
+    
+<para>
+<varname>orig</varname> - address of the <link linkend="target_function">target function</link>, which call is intended to intercept.
+</para>
+
+<para>
+<varname>replace</varname> - address of the <link linkend="replacement_function">replacement function</link> which should be called instead of the target function. Replacement function should take same parameters as target function plus additional parameter of <type linkend="payload_api.function_call_info">struct kedr_function_call_info*</type>. Replacement function should return value of the same type as target function.
+</para>
+
+<para>
+Examples:
+</para>
+
+<programlisting><![CDATA[
+/*
+ * Function foo() has signature
+ *
+ *  long foo(int a, void* p);
+ */
+
+long replace_foo(int a, void* p, struct kedr_function_call_info* call_info)
+{
+    /* ... */
+};
+
+struct kedr_replace_pair replace_foo_pair = {
+    (void*)&foo,
+    (void*)&replace_foo
+};
+]]></programlisting>
+
+<programlisting><![CDATA[
+/*
+ * Function bar() has signature
+ *
+ *  void bar(int a, void* p);
+ */
+
+void replace_bar(int a, void* p, struct kedr_function_call_info* call_info)
+{
+    /* ... */
+};
+
+struct kedr_replace_pair replace_bar_pair = {
+    (void*)&bar,
+    (void*)&replace_bar
+};
+]]></programlisting>
+
+
+</section> <!-- "payload_api.replace_pair" -->
+
 <!-- ================================================================ -->
 
 <section id="payload_api.payload">
 <title>struct kedr_payload</title>
 
 <para>
-<code>struct kedr_payload</code> represents a payload module from the 
-point of view of the KEDR core. 
+Represents a payload module from the point of view of the KEDR core. 
 </para>
 
 <programlisting><![CDATA[
 struct kedr_payload
 {
     struct module* mod;
-    struct kedr_repl_table repl_table;
+    struct kedr_replace_pair* replace_pairs;
+    struct kedr_pre_pair* pre_pairs;
+    struct kedr_post_pair* post_pairs;
     void (*target_load_callback)(struct module*);
     void (*target_unload_callback)(struct module*);
 };
 ]]></programlisting>
 
 <para>
-<code>mod</code> - the payload module itself. This field is usually 
+<varname>mod</varname> - the payload module itself. This field is usually 
 initialized with <code>THIS_MODULE</code> value.
 </para>
 
 <para>
-<code>repl_table</code> - <link linkend="payload_api.rtable">the 
-replacement table</link>.
+<varname>replace_pairs</varname> - array of <link linkend="payload_api.replace_pair">replacement functions definitions</link>. This array should be terminated by element with <varname>orig</varname> field set to NULL. NULL value of <varname>replace_pairs</varname> is equivalent to empty array.
 </para>
+
+<para>
+<varname>pre_pairs</varname> - array of <link linkend="payload_api.pre_pair">pre handlers definitions</link>. This array should be terminated by element with <varname>orig</varname> field set to NULL. NULL value of <varname>pre_pairs</varname> is equivalent to empty array.
+</para>
+
+<para>
+<varname>post_pairs</varname> - array of <link linkend="payload_api.post_pair">post handlers definitions</link>. This array should be terminated by element with <varname>orig</varname> field set to NULL. NULL value of <varname>post_pairs</varname> is equivalent to empty array.
+</para>
+
 
 <para>
 <code>target_load_callback</code> and <code>target_unload_callback</code>. If 
@@ -129,23 +292,31 @@ Example:
 </para>
 
 <programlisting><![CDATA[
-/* Addresses of the functions of interest (target functions) */
-static void* orig_addrs[] = {
-    (void*)&_copy_to_user,
-    (void*)&_copy_from_user
+/* Pre handlers and corresponded target functions */
+static struct kedr_pre_pair pre_pairs[] = {
+    { (void*)&_copy_to_user, (void*)&pre__copy_to_user},
+    { (void*)&_copy_from_user, (void*)&post__copy_from_user},
+    { NULL,}
 };
 
-/* Addresses of the replacement functions */
-static void* repl_addrs[] = {
-    (void*)&repl__copy_to_user,
-    (void*)&repl__copy_from_user
+/* Post handlers and corresponded target functions */
+static struct kedr_post_pair post_pairs[] = {
+    { NULL, }
 };
+
+
+/* Replacement functions and corresponded target functions */
+static struct kedr_replace_pair replace_pairs[] = {
+    { (void*)&capable, (void*)repl_capable},
+    { NULL,}
+};
+
 
 static struct kedr_payload payload = {
     .mod                    = THIS_MODULE,
-    .repl_table.orig_addrs  = &orig_addrs[0],
-    .repl_table.repl_addrs  = &repl_addrs[0],
-    .repl_table.num_addrs   = ARRAY_SIZE(orig_addrs),
+    .pre_pairs              = pre_pairs,
+    .post_pairs             = post_pairs,
+    .replace_pairs          = replace_pairs,
     .target_load_callback   = NULL,
     .target_unload_callback = NULL
 };
@@ -215,6 +386,8 @@ module.
 <!-- "payload_api.unregister" -->
 <!-- ================================================================ -->
 
+
+
 <section id="payload_api.in_init">
 <title>kedr_target_module_in_init()</title>
 
@@ -260,6 +433,59 @@ It is allowed to call this function from atomic context.
 <!-- "payload_api.in_init" -->
 <!-- ================================================================ -->
 
+<section id="payload_api.functions_support_register()">
+<title>functions_support_register()</title>
+
+<programlisting><![CDATA[
+int 
+functions_support_register(void);
+]]></programlisting>
+
+<para>
+This function loads trampolines for target functions, which are intercepted by payload. It should be called before the first call of <function>kedr_payload_register</function>.
+</para>
+
+<para>
+This function is defined in additional source file, rather than in KEDR core module itself. Because of this, using of this function should be prepended by its importing.
+</para>
+
+<para>
+The function returns 0 if successful, an error code otherwise (the general 
+rules of the kernel functions apply here too).
+</para>
+
+<para>
+The function is usually called in the init function of the payload module.
+</para>
+
+</section>
+
+<!-- "payload_api.functions_support_register" -->
+
+<section id="payload_api.functions_support_unregister()">
+<title>functions_support_unregister()</title>
+
+<programlisting><![CDATA[
+void 
+functions_support_unregister(void);
+]]></programlisting>
+
+<para>
+This function unloads trampolines which has loaded by <function>functions_support_register</function>. It should be called after the last call of <function>kedr_payload_unregister</function>.
+</para>
+
+<para>
+This function is defined in additional source file, rather than in KEDR core module itself. Because of this, using of this function should be prepended by its importing.
+</para>
+
+<para>
+The function is usually called in the cleanup(exit) function of the payload module.
+</para>
+
+</section>
+
+<!-- "payload_api.functions_support_unregister" -->
+<!-- ================================================================ -->
 <section id="payload_api.stub">
 <title>A Stub of a Payload Module</title>
 
@@ -292,24 +518,13 @@ MODULE_LICENSE("<Some license here>");
 /* #include other necessary header files here */
 
 /*********************************************************************
- * Replacement functions
+ * Interception handlers
  *********************************************************************/
-static unsigned long
-repl_kfoo(void *arg)
+static void
+post_kfoo(void *arg, unsigned long returnValue)
 {
-    unsigned long returnValue;
-    
-    /* Call the target function (optional)*/
-    returnValue = kfoo(arg);
-    
-    /* Process the results if necessary, dump data to a trace, etc. */
-    /* ... */
-
-    /* What the replacement function should return is also up to the provider
-     * of the function. Here, it is the return value of the target function 
-     * but, generally, it is not mandatory.
-     */
-    return returnValue;
+    /* Process the result of function, dump data to a trace, etc. */
+    trace_function_call(arg, returnValue);
 }
 
 static void*
@@ -334,43 +549,65 @@ repl_kbaz(void)
 
 /*********************************************************************/
 
-/* Addresses of the functions of interest (target functions) */
-static void* orig_addrs[] = {
-    (void*)&kfoo,
-    (void*)&kbar,    
-    (void*)&kbaz
+/* Replacement functions and corresponded target functions */
+static kedr_replace_pair replace_pairs[] = {
+    { (void*)&kbar, (void*)&repl_kbar},
+    { (void*)&kbaz, (void*)&repl_kbaz},
+    {NULL,} // array terminating element
 };
 
-/* Addresses of the replacement functions */
-static void* repl_addrs[] = {
-    (void*)&repl_kfoo,
-    (void*)&repl_kbar,    
-    (void*)&repl_kbaz
+/* Post handlers and corresponded target functions */
+static kedr_post_pair post_pairs[] = {
+    { (void*)&kfoo, (void*)&post_kfoo},
+    {NULL,} // array terminating element
 };
+
+/* Pre handlers are absent for this payload */
+
+/* Payload definition */
 
 static struct kedr_payload payload = {
     .mod                    = THIS_MODULE,
-    .repl_table.orig_addrs  = &orig_addrs[0],
-    .repl_table.repl_addrs  = &repl_addrs[0],
-    .repl_table.num_addrs   = ARRAY_SIZE(orig_addrs),
+    .replace_pairs          = replace_pairs,
+    .post_pairs             = post_pairs,
+    .pre_pairs              = NULL,
     .target_load_callback   = NULL,
     .target_unload_callback = NULL
 };
 /*********************************************************************/
 
+/* Import functions which load and unload trampolines */
+extern int functions_support_register(void);
+extern void functions_support_unregister(void);
+
 static void
 stub_payload_cleanup_module(void)
 {
     kedr_payload_unregister(&payload);
+
+    functions_support_unregister();
+
     /* do other cleanup work */
-    return;
 }
 
 static int __init
 stub_payload_init_module(void)
 {
+    int result;
+
     /* initialize other necessary facilities */
-    return kedr_payload_register(&payload);
+
+    result = functions_support_register();
+    if(result) return result;
+    
+    result = kedr_payload_register(&payload);
+    if(result)
+    {
+        functions_support_unregister();
+        return result;
+    }
+    
+    return 0;
 }
 
 module_init(kedr_cm_user_space_access_init_module);

@@ -17,6 +17,12 @@
         <!ENTITY kedr_using SYSTEM "using_kedr.xml">
         
         <!ENTITY kedr_payload_api SYSTEM "payload_api.xml">
+        <!ENTITY kedr_functions_support SYSTEM "functions_support.xml">
+        <!ENTITY kedr_standard_callm_payloads SYSTEM "standard_callm_payloads.xml">
+        <!ENTITY kedr_standard_fsim_payloads SYSTEM "standard_fsim_payloads.xml">
+        <!ENTITY kedr_standard_fsim_indicators SYSTEM "standard_fsim_indicators.xml">
+        <!ENTITY kedr_fault_simulation_api SYSTEM "fault_simulation_api.xml">
+
         <!ENTITY kedr_using_gen SYSTEM "using_gen.xml">        
         <!ENTITY kedr_custom_callm_payloads SYSTEM "custom_callm_payloads.xml">
         <!ENTITY kedr_custom_fsim_payloads SYSTEM "custom_fsim_payloads.xml">

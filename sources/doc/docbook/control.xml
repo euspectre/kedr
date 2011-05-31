@@ -89,26 +89,26 @@ If no <replaceable>conf_string</replaceable> and <replaceable>conf_file</replace
     <section id="kedr_control.description.start">
     <title>&kedr-service; start</title>
         <para>
-<command>&kedr-service; start</command> loads <filename>kedr_base</filename> module first (it is a part of KEDR core). Then it processes the  configuration file in the <quote>on_load</quote> mode and executes all resulting strings. The configuration file is the default one or the one prepared based on the options of the command (see <xref linkend="kedr_control.options"></xref>). Finally, <filename>kedr_controller</filename> module is loaded (also part of the KEDR core) with <quote>target_name</quote> parameter equal to <replaceable>target_name</replaceable>. That is, the KEDR core is now configured to operate on the module named <replaceable>target_name</replaceable>.
+<command>&kedr-service; start</command> first loads <filename>KEDR core</filename> with <quote>target_name</quote> parameter equal to <replaceable>target_name</replaceable>. Then it processes the  configuration file in the <quote>on_load</quote> mode and executes all resulting strings. The configuration file is the default one or the one prepared based on the options of the command (see <xref linkend="kedr_control.options"></xref>). That is, KEDR is now configured to operate on the module named <replaceable>target_name</replaceable>.
         </para>
         <para>
-If <filename>kedr_base</filename> module is already loaded, <command>&kedr-service; start</command> does nothing and returns 1.
+If <filename>KEDR core</filename> is already loaded, <command>&kedr-service; start</command> does nothing and returns 1.
         </para>
         <para>
 If the module with name <replaceable>target_name</replaceable> is currently loaded, <command>&kedr-service; start</command> does nothing and returns 1.
         </para>
         <para>
-If starting <filename>kedr_base</filename> or <filename>kedr_controller</filename> modules or processing some of the lines in the configuration file fails (the corresponding operation returns nonzero), a rollback is performed. That is, all lines in the configuration file, up to the failed line, are processed in <quote>on_unload</quote> mode, and <filename>kedr_base</filename> module is unloaded (if it has been started successfully before). Then 1 is returned.
+If loading <filename>KEDR core</filename> or processing some of the lines in the configuration file fails (the corresponding operation returns nonzero), a rollback is performed. That is, all lines in the configuration file, up to the failed line, are processed in <quote>on_unload</quote> mode, and <filename>KEDR core</filename> is unloaded (if it has been started successfully before). Then 1 is returned.
         </para>
     </section>
 
     <section id="kedr_control.description.stop">
     <title>&kedr-service; stop</title>
         <para>
-<command>&kedr-service; stop</command> unloads <filename>kedr_controller</filename> module first. Then processes the configuration file (the same file as was used at the last start) in <quote>on_unload</quote> mode and executes resulting strings. Finally, <filename>kedr_base</filename> module is unloaded.
+<command>&kedr-service; stop</command> processes the configuration file (the same file as was used at the last start) in <quote>on_unload</quote> mode and executes resulting strings. Then <filename>KEDR core</filename> is unloaded.
         </para>
         <para>
-If <filename>kedr_base</filename> module did not start, <command>&kedr-service; stop</command> does nothing and returns 1.
+If <filename>KEDR core</filename> did not load, <command>&kedr-service; stop</command> does nothing and returns 1.
         </para>
         <para>
 If module with name <replaceable>target_name</replaceable> is currently running, <command>&kedr-service; stop</command> does nothing and returns 1.
@@ -119,7 +119,7 @@ If module with name <replaceable>target_name</replaceable> is currently running,
     <title>&kedr-service; status</title>
         <para>
 <command>&kedr-service; status</command> outputs information about the current status of KEDR.
-That is, whether <filename>kedr_base</filename> and <filename>kedr_controller</filename> modules are loaded, which payload modules are currently loaded, whether the target module (the module under analysis) is currently loaded.
+That is, whether <filename>KEDR core</filename> is loaded, which payload modules are currently loaded, what is the name of the target module (the module under analysis) and whether this module is currently loaded.
         </para>
     </section>
 
@@ -133,13 +133,13 @@ That is, whether <filename>kedr_base</filename> and <filename>kedr_controller</f
 with <replaceable>target_name</replaceable> being the name of the current target and <replaceable>conf_file</replaceable> - the effective configuration file (default or the one constructed from options) with which KEDR was started last time.
         </para>
         <para>
-If <filename>kedr_base</filename> module is not currently loaded, <command>&kedr-service; restart</command> does nothing and returns 1.
+If <filename>KEDR core</filename> is not currently loaded, <command>&kedr-service; restart</command> does nothing and returns 1.
         </para>
         <para>
 If module with name <replaceable>target_name</replaceable> is currently loaded, <command>&kedr-service; restart</command> does nothing and returns 1.
         </para>
         <para>
-If <filename>kedr_base</filename> module is still loaded after <quote>stop</quote> operation has been executed, <quote>start</quote> operation will not run and <command>&kedr-service; restart</command> will return 1.
+If <filename>KEDR core</filename> is still loaded after <quote>stop</quote> operation has been executed, <quote>start</quote> operation will not run and <command>&kedr-service; restart</command> will return 1.
         </para>
     </section>
 </section>
@@ -232,6 +232,7 @@ kedr start module1 -c 'payload payload1 arg1 arg2' -c 'payload payload2'
     <para>
 Same as above, but instead of loading the default payloads, it will load payload modules <literal>payload1</literal> (with arguments <literal>arg1</literal> <literal>arg2</literal>) and <literal>payload2</literal>.
     </para>
+
     <para>
 If the payload module <literal>payload1</literal> uses symbols from another module, say <literal>module_aux</literal>, then the configuration file should contain the following lines (the order is important!)
     </para>
@@ -242,6 +243,14 @@ module module_aux
 payload payload1
 ...
 </programlisting>
+
+<programlisting><![CDATA[
+kedr start module1 -f callm.conf -f fsim.conf
+]]></programlisting>
+
+    <para>
+This command will start KEDR which is prepared for call monitoring and fault simulation for module named <literal>module1</literal>.
+    </para>
 
 </section>
 </section>

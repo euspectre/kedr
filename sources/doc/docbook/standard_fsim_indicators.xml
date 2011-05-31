@@ -1,0 +1,59 @@
+<section id="standard_fsim_indicators">
+<title>Standard fault simulation scenarios</title>
+
+<section id="standard_fsim_indicators.common">
+<title>Common fault simulation scenario</title>
+    <para>
+Scenario with name <quote>common</quote> may be set for any fault simulation point. Abilities of this scenario are fully described in <xref linkend="fault_sim"></xref>. This scenario is implemented by module <filename>kedr_fsim_indicator_common.ko</filename>.
+    </para>
+</section>
+<section id="standard_fsim_indicators.kmalloc">
+<title>Fault simulation scenario for kernel memory allocation functions</title>
+    <para>
+Scenario with name <quote>kmalloc</quote> is intended to use for functions which allocate kernel memory. It accept two parameters: <type>size_t</type> <varname>size</varname> and <type>gfp_t</type> <varname>flags</varname>. One can assume them as size of requested memory for allocation and allocation flags, but scenario itself does not have such assumptions.
+    </para>
+    <para>
+This scenario derives functionality from common scenario and has next features:
+<itemizedlist>
+    <listitem>
+variables <varname>size</varname> and <varname>flags</varname> may be used in the expression; they refer to the corresponding scenario parameters.
+    </listitem>
+    <listitem>
+several constants corresponded to allocation flags may be used in the expression:
+        <simplelist type="inline">
+            <member><constant>GFP_NOWAIT</constant></member>
+            <member><constant>GFP_KERNEL</constant></member>
+            <member><constant>GFP_USER</constant></member>
+            <member><constant>GFP_ATOMIC</constant></member>
+        </simplelist>. Values of this constants are the same as values of sonamed macros in the kernel code.
+    </listitem>
+</itemizedlist>
+    </para>
+    <para>
+This scenario is implemented by module <filename>kedr_fsim_indicator_kmalloc.ko</filename>.
+    </para>
+</section>
+
+<section id="standard_fsim_indicators.capable">
+<title>Fault simulation scenario for capable function</title>
+    <para>
+Scenario with name <quote>capable</quote> is intended to use for <function>capable</function>function. It accept one parameter <type>int</type> <varname>cap</varname>. One can assume it is a parameter of <function>capable</function> function, but scenario itself does not have such assumption.
+    </para>
+    <para>
+This scenario derives functionality from common scenario and has next features:
+<itemizedlist>
+    <listitem>
+variable <varname>cap</varname> may be used in the expression; it refer to the scenario parameter.
+    </listitem>
+    <listitem>
+several constants corresponded to capabilities, such as <constant>CAP_SYS_ADMIN</constant>, may be used in the expression. Values of this constants are the same as values of sonamed macros in the kernel code.
+    </listitem>
+</itemizedlist>
+    </para>
+    <para>
+This scenario is implemented by module <filename>kedr_fsim_indicator_capable.ko</filename>.
+    </para>
+
+</section>
+
+</section>

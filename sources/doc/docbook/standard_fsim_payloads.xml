@@ -1,0 +1,75 @@
+<section id="standard_fsim_payloads">
+<title>Standard fault simulation payloads</title>
+
+<section id="standard_fsim_payloads.functions">
+<title>Functions detected by standard fault simulation payloads</title>
+    <para>
+Here is a full list of the payload modules that currently may be used for fault simulation, and the lists of the functions for which fault simulation is implemented by each module. For each function parameters, which may be used in the simulation scenario, are described.
+    </para>
+    <para>
+For each functions is A function name in square brackets means that this function is detected only if it is exported by the kernel (it may or may not be exported in each particular system). Only one of the functions separated by a slash is detected depending on which one of them is actually exported by the kernel.
+    </para>
+    
+<itemizedlist mark='opencircle'>
+<listitem><phrase role="emphasized">kedr_fsim_capable.ko</phrase>
+    <simplelist type='vert'>
+    <member><function>capable</function></member>
+    </simplelist>
+    Fault simulation point for this function provides the parameter 'cap' of type <type>int</type>for fault simulation scenario.
+</listitem>
+<listitem><phrase role="emphasized">kedr_fsim_user_space_access.ko</phrase>
+    <simplelist type='vert'>
+    <member>
+    <function>copy_to_user</function>/<function>_copy_to_user</function>
+    </member>
+    <member>
+    <function>copy_from_user</function>/<function>_copy_from_user</function>
+    </member>
+    <member><function>strndup_user</function></member>
+    <member><function>memdup_user</function></member>
+    </simplelist>
+    Fault simulation points for this functions do not provide additional parameter for fault simulation scenario.
+</listitem>
+<listitem><phrase role="emphasized">kedr_fsim_cmm.ko</phrase>
+    <simplelist type='vert'>
+    <member><function>__kmalloc</function></member>
+    <member><function>krealloc</function></member>
+    <member><function>__krealloc</function></member>
+    <member><function>kmem_cache_alloc</function></member>
+    <member>[<function>kmem_cache_alloc_notrace</function>]</member>
+    <member>[<function>kmem_cache_alloc_trace</function>]</member>
+    <member><function>__get_free_pages</function></member>
+    <member><function>get_zeroed_page</function></member>
+    <member>[<function>__kmalloc_node</function>]</member>
+    <member>[<function>kmem_cache_alloc_node</function>]</member>
+    <member>[<function>kmem_cache_alloc_node_notrace</function>]</member>
+    <member>[<function>kmem_cache_alloc_node_trace</function>]</member>
+    <member>[<function>__alloc_pages_nodemask</function>]</member>
+    <member>[<function>alloc_pages_current</function>]</member>
+    <member>[<function>alloc_pages_exact</function>]</member>
+    </simplelist>
+    All these functions use shared fault simulation point with name <filename>__kmalloc</filename>, which provides parameters size (of type <type>size_t</type>) and flags (of type <type>gfp_t</type>) for fault simulation scenario.
+</listitem>
+<listitem><phrase role="emphasized">kedr_fsim_mem_util.ko</phrase>
+    <simplelist type='vert'>
+    <member><function>kstrdup</function></member>
+    <member><function>kstrndup</function></member>
+    <member><function>kmemdup</function></member>
+    </simplelist>
+    Fault simulation points for this functions do not provide additional parameter for fault simulation scenario.
+</listitem>
+<listitem><phrase role="emphasized">kedr_fsim_vmm.ko</phrase>
+    <simplelist type='vert'>
+    <member><function>vmalloc</function></member>
+    <member><function>__vmalloc</function></member>
+    <member><function>vmalloc_user</function></member>
+    <member><function>vmalloc_node</function></member>
+    <member><function>vmalloc_32</function></member>
+    <member><function>vmalloc_32_user</function></member>
+    </simplelist>
+    All these functions use shared fault simulation point with name <filename>vmalloc</filename>, which provides no additional parameters for fault simulation scenario.
+</listitem>
+</itemizedlist>
+
+</section>
+</section>

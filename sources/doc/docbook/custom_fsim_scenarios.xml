@@ -15,9 +15,6 @@ The whole infrastructure needed to build the module based on the definition file
     <varlistentry><term><filename>Kbuild</filename></term>
         <listitem>file for building kernel module from C sources</listitem>
     </varlistentry>
-    <varlistentry><term><filename class='directory'>templates</filename></term>
-        <listitem>directory containing the templates used for generating sources from the 'definition' file</listitem>
-    </varlistentry>
     <varlistentry><term><filename>calculator.c</filename>, <filename>calculator.h</filename>, <filename>control_file.c</filename>, <filename>control_file.h</filename></term>
         <listitem>additional source and header files that implement some of the indicator's functionality. These files are used for building the module.</listitem>
     </varlistentry>
@@ -28,7 +25,7 @@ To use all this in development of your module, copy the contents of that directo
 The first and the main step is to rewrite file <filename>indicator.data</filename> to reflect the definitions of your indicator module.
     </para>
     <para>
-Unlike a payload module for <link linkend="custom_callm_payloads">call monitoring</link> or <link linkend="custom_fsim_payloads">fault simulation</link> that can implement replacement functions for several target functions in a single module, each fault simulation indicator should be implemented in a separate module. So, groups are not used in the definition file for the indicator module. Only the global set of parameters is taken into account.
+Unlike a payload module for <link linkend="custom_callm_payloads">call monitoring</link> or <link linkend="custom_fsim_payloads">fault simulation</link> that can process several target functions in a single module, each fault simulation indicator should be implemented in a separate module. So, groups are not used in the definition file for the indicator module. Only the global set of parameters is taken into account.
     </para>
     <para>
 Indicator module should contain definitions of the following parameters:

@@ -24,21 +24,15 @@ It is possible to restrict fault simulation even more, to handling of only those
     </para></note>
     
     <para>
-During fault simulation, each replacement function serves as a <link linkend="fault_simulation_point">fault simulation point</link> among other things. That is, it calls a special <link linkend="fault_simulation_indicator">indicator function</link> and decides based on its return value whether to call the corresponding <link linkend="target_function">target function</link> normally or simulate its failure. In the latter case the target is often not called at all, just the appropriate value is returned (as if it was returned by the target function).
-    </para>
-    <para>
-Like in <link linkend="call_mon">call monitoring</link>, a trace of the calls to the target functions is recorded by the payload modules used for fault simulation. This allows user-space applications to analyze the behaviour of the target module further, for example, to find out whether it has released all the resources correctly even in case of failure, etc. The format of trace records is the same as for call monitoring (see <xref linkend="call_mon"/>), so are the tools and techniques for working with the trace. 
+During fault simulation, <link linkend="replacement_function">replacement functions</link> are registered for some set of <link linkend="target_function">target functions</link>. Each replacement function serves as a <link linkend="fault_simulation_point">fault simulation point</link>. That is, it calls a special <link linkend="fault_simulation_indicator">indicator function</link> and decides based on its return value whether to call the corresponding target function normally or simulate its failure. In the latter case the target is often not called at all, just the appropriate value is returned (as if it was returned by the target function).
     </para>
     
-    <para>
-Note that unlike call monitoring, the return values stored in the trace are the return values of the replacement functions rather than those of the target functions. This is because it is these very values that will be actually returned to the caller function in the target module. As for the calls for which no failure was simulated, the return value is the the same for both the target anf the corresponding replacement functions.
-    </para>
     <para>
 In KEDR, the replacement functions and fault simulation scenarios are  independent on one another. A replacement function may even be developed by a different author than a scenario. The person who needs to use some fault simulation scenario for a function, can simply assign the scenario to the replacement function in runtime.
     </para>
 
     <para>
-The default fault simulation scenario is <phrase role="pcite"><quote>never simulate failures</quote></phrase>. So all the payload modules work as if they were doing just call monitoring by default. To manage scenarios, each payload exports one or more directories in debugfs like <filename class='directory'>/sys/kernel/debug/kedr_fault_simulation/points/&lt;function-name&gt;</filename>, where <code>&lt;function-name&gt;</code> is a name of target kernel function (it is assumed here that debugfs filesystem is mounted to <filename class='directory'>/sys/kernel/debug</filename>). That is, fault simulation can be controlled separately for each target function.
+The default fault simulation scenario is <phrase role="pcite"><quote>never simulate failures</quote></phrase>. So all the fault simulation <link linkend="payload_module">payload modules</link> do not change behaviour of original functions. To manage scenarios, each payload exports one or more directories in debugfs like <filename class='directory'>/sys/kernel/debug/kedr_fault_simulation/points/&lt;function-name&gt;</filename>, where <code>&lt;function-name&gt;</code> is a name of target kernel function (it is assumed here that debugfs filesystem is mounted to <filename class='directory'>/sys/kernel/debug</filename>). That is, fault simulation can be controlled separately for each target function.
     </para>
 
     <para>
@@ -150,11 +144,6 @@ The indicator with name <quote>common</quote> is the common indicator that can b
     </variablelist>
 </listitem>
 </itemizedlist>
-
-<note><para>
-If the kernel is configured to support reliable stack trace information (<code>CONFIG_STACKTRACE</code> is set and <code>CONFIG_FRAME_POINTER</code> or <code>CONFIG_STACK_UNWIND</code> are set), support for <code>caller_address</code> variable is enabled by default. Otherwise, it is disabled. If you would like to disable it manually, set CMake variable <code>KEDR_ENABLE_CALLER_ADDRESS</code> to <code>OFF</code> when executing CMake before building KEDR.
-</para></note>
-
     <para>
 <filename>times</filename> file corresponds to the counter of target function calls(see description of <varname>times</varname> times variable, which may be used in the expression for the indicator). This counter is incremented every time when target function is called (while this fault simulation indicator is set fo this function). Reading from the file returns current value of counter, any writing to this file resets value of the counter to 0.
     </para>
@@ -287,104 +276,9 @@ This will set the scenario for <function>capable</function> function to <phrase 
     </para>
     
     <para>
-Here is the list of KEDR modules that provide fault simulation indicators:
-    </para>
-    
-<variablelist>
-<varlistentry>
-    <term><filename>kedr_fsim_indicator_common.ko</filename></term>
-    <listitem>implements <quote>common</quote> indicator</listitem>
-</varlistentry>
-<varlistentry>
-    <term><filename>kedr_fsim_indicator_kmalloc.ko</filename></term>
-    <listitem>implements <quote>kmalloc</quote> indicator</listitem>
-</varlistentry>
-<varlistentry>
-    <term><filename>kedr_fsim_indicator_capable.ko</filename></term>
-    <listitem>implements <quote>capable</quote> indicator</listitem>
-</varlistentry>
-</variablelist>
-
-    <para>
-If you would like to extend <quote>common</quote> indicator to support more types of functions, see <xref linkend="custom_fsim_scenarios"/>.
+Full list of standard fault simulation scenarios is provided in <xref linkend="standard_fsim_indicators"/>. If you would like to extend <quote>common</quote> indicator to support more types of functions, see <xref linkend="custom_fsim_scenarios"/>.
     </para>
     <para>
-Here is the list of payload modules for fault simulation provided with KEDR:
+List of all functions available for fault simulation by standard set of fault simulation payloads is provided in <xref linkend="standard_fsim_payloads.functions"/>. If you would like to create a payload module to perform fault simulation for other functions, see <xref linkend="custom_fsim_payloads"/>.
     </para>
-    
-<variablelist>
-<varlistentry>
-    <term><filename>kedr_fsim_capable.ko</filename></term>
-    <listitem>implements fault simulation for function <function>capable</function>
-    </listitem>
-</varlistentry>
-<varlistentry>
-    <term><filename>kedr_fsim_user_space_access.ko</filename></term>
-    <listitem>implements fault simulation for functions
-        <simplelist type='inline'>
-        <member>
-        <function>copy_to_user</function>/<function>_copy_to_user</function>
-        </member>
-        <member>
-        <function>copy_from_user</function>/<function>_copy_from_user</function>
-        </member>
-        <member><function>strndup_user</function></member>
-        <member><function>memdup_user</function></member>
-        </simplelist>
-    </listitem>
-</varlistentry>
-<varlistentry>
-    <term><filename>kedr_fsim_cmm.ko</filename></term>
-    <listitem>implements fault simulation for functions
-        <simplelist type='inline'>
-        <member><function>__kmalloc</function></member>
-        <member><function>krealloc</function></member>
-        <member><function>__krealloc</function></member>
-        <member><function>kmem_cache_alloc</function></member>
-        <member>[<function>kmem_cache_alloc_notrace</function>]</member>
-        <member>[<function>kmem_cache_alloc_trace</function>]</member>
-        <member><function>__get_free_pages</function></member>
-        <member><function>get_zeroed_page</function></member>
-    	<member>[<function>__kmalloc_node</function>]</member>
-    	<member>[<function>kmem_cache_alloc_node</function>]</member>
-    	<member>[<function>kmem_cache_alloc_node_notrace</function>]</member>
-    	<member>[<function>kmem_cache_alloc_node_trace</function>]</member>
-    	<member>[<function>__alloc_pages_nodemask</function>]</member>
-    	<member>[<function>alloc_pages_current</function>]</member>
-    	<member>[<function>alloc_pages_exact</function>]</member>
-        </simplelist>
-    </listitem>
-</varlistentry>
-<varlistentry>
-    <term><filename>kedr_fsim_mem_util.ko</filename></term>
-    <listitem>implements fault simulation for functions
-        <simplelist type='inline'>
-        <member><function>kstrdup</function></member>
-        <member><function>kstrndup</function></member>
-        <member><function>kmemdup</function></member>
-        </simplelist>
-    </listitem>
-</varlistentry>
-<varlistentry>
-    <term><filename>kedr_fsim_vmm.ko</filename></term>
-    <listitem>implements fault simulation for functions
-        <simplelist type='inline'>
-        <member><function>vmalloc</function></member>
-        <member><function>__vmalloc</function></member>
-        <member><function>vmalloc_user</function></member>
-        <member><function>vmalloc_node</function></member>
-        <member><function>vmalloc_32</function></member>
-        <member><function>vmalloc_32_user</function></member>
-        </simplelist>
-    </listitem>
-</varlistentry>
-</variablelist>
-
-<note><para>
-Although KEDR module <filename>kedr_fsim_cmm.ko</filename> currently provides fault simulation facilities for several functions, it exports only one directory (<filename class='directory'>__kmalloc</filename>) to manage fault simulation scenarios. All those supported functions use the same scenario that is set for <function>__kmalloc</function> function. Same for <filename>kedr_fsim_vmm.ko</filename> module where the scenario for <function>vmalloc</function> function is used for all other functions too.
-</para></note>
-    
-<para>
-If you would like to create a payload module to perform fault simulation for other functions, see <xref linkend="custom_fsim_payloads"/>.
-</para>
 </section>
