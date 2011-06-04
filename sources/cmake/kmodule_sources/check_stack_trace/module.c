@@ -5,9 +5,10 @@
 
 MODULE_LICENSE("GPL");
 
-#if !defined(CONFIG_STACKTRACE)
-#error Stack trace support is not available.
-#endif
+/* Note that support for obtaining reliable stack traces has nothing to do
+ * with availability of save_stack_trace() mechanism (controlled by
+ * CONFIG_STACKTRACE). If stack traces are reliable but save_stack_trace()
+ * cannot be used, there are alternatives but this is another story. */
 
 #if !defined(CONFIG_FRAME_POINTER) && !defined(CONFIG_UNWIND_INFO) && \
     !defined(CONFIG_STACK_UNWIND)
