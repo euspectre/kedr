@@ -12,8 +12,8 @@ kmodule_configure_kernel_functions(functions REQUIRED
 	OPTIONAL "mutex_lock"
 	"mutex_lock_interruptible"
 	"mutex_lock_killable"
-	"mutex_trylock"
-	REQUIRED "mutex_unlock"
+	REQUIRED "mutex_trylock"
+	"mutex_unlock"
 )
 
 create_payload_callm(${kmodule_name} ${functions})
