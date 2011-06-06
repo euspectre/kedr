@@ -34,13 +34,13 @@ struct kedr_simulation_point;
  * 
  * Initially (before calling kedr_fsim_set_indicator)
  * point use no fault indicator, and
- * kedr_fsim_simulate for it return always 0.
+ * kedr_fsim_point_simulate for it return always 0.
  * 
  * Returning value may be used in kedr_fsim_simulate
  *  and kedr_fsim_point_unregister.
  * 
  * format_string should describe real format of user_data,
- * which may be passed to the kedr_fsim_simulate().
+ * which may be passed to the kedr_fsim_point_simulate().
  * This format string is used to verify, whether particular indicator
  * fits for this simulation point.
  *

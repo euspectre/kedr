@@ -645,7 +645,7 @@ void payload_elem_unload_callback_all(struct list_head *elems, struct module* m)
 int
 payload_functions_use(struct kedr_payload* payload)
 {
-	int result;
+	int result = 0;
 
 	if(kedr_base_ops == NULL) return 0;
 	if(kedr_base_ops->function_use == NULL)	return 0;
@@ -744,6 +744,7 @@ err_post:
 		}
 	}
 err_pre:
+	BUG_ON(result == 0);
 	return result;
 }
 void
