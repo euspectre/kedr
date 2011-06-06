@@ -1,9 +1,11 @@
 #!/bin/sh
 
 ########################################################################
-# This test checks if kedr_save_stack_trace() allows to obtain more than
-# one reliable stack frame and, consequently, if kernel function 
-# save_stack_trace() is reliable.
+# This test checks if kedr_save_stack_trace() allows to obtain at least
+# one reliable stack frame. Actually, it just allows to see if the 
+# underlying mechanism crashes or not. 'addr_foo' parameter and the like 
+# are currently not used.
+# 
 # Usage: 
 #   sh test.sh
 ########################################################################
@@ -57,11 +59,14 @@ doTest()
         exit 1
     fi
 
-    if test ${stack_frames} -eq 1; then
-        printf "Only one stack frame has been obtained. "
-        printf "save_stack_trace() failed to provide reliable stack trace.\n"
-        exit 1
-    fi
+#    if test ${stack_frames} -eq 1; then
+#        printf "Only one stack frame has been obtained. "
+#        printf "save_stack_trace() failed to provide reliable stack trace.\n"
+#        exit 1
+#    fi
+# Even if the system dies not support obtaining reliable stack traces, 
+# kedr_save_stack_trace() must provide at least one reliable frame. 
+# This is enough in many cases.
 
     printf "Number of reliable stack frames obtained: ${stack_frames}\n"
 }

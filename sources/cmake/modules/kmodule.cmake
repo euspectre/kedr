@@ -322,6 +322,16 @@ macro(check_stack_trace)
 		)
 	endif (DEFINED STACK_TRACE_RELIABLE)
 	message(STATUS "${check_stack_trace_message}")
+
+	if (NOT STACK_TRACE_RELIABLE)
+		message ("\n[WARNING]\n"
+		"It looks like reliable stack traces cannot be obtained on this system.\n"
+		"The output of KEDR-based tools like LeakCheck will be less detailed\n"
+		"(each stack trace shown will contain only one frame).\n"
+		"If this is not acceptable, you could rebuild the kernel with\n"
+		"CONFIG_FRAME_POINTER or CONFIG_STACK_UNWIND (if available) set to \"y\"\n"
+		"and then reconfigure and rebuild KEDR.\n")
+	endif (NOT STACK_TRACE_RELIABLE)
 endmacro(check_stack_trace)
 
 # Check which memory allocator is used by the kernel.
