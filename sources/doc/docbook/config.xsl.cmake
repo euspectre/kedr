@@ -16,4 +16,14 @@ appendix  toc
     </xsl:param>
     <xsl:param name="generate.section.toc.level" select="1"/>
     <xsl:param name="toc.section.depth" select="3"/>
+
+    <xsl:template match="*" mode="html.title.attribute"/>
+<!-- 
+The above rule disables generation of "title" attributes, and hence, those
+annoying tooltips will no longer be shown when the mouse pointer is hovering
+over the text.
+
+For details, see 
+@DOCBOOK_XSL_PATH@/html/sections.xsl
+-->
 </xsl:stylesheet>
