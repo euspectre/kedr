@@ -364,6 +364,14 @@ static int process_options(int argc, char* const argv[],
     const char*** program_names
 );
 
+/* Helper for main */
+static size_t snprintf_trace_filename(char* dest, size_t size,
+    const char* debugfs_mount_point)
+{
+    return snprintf(dest, size,
+        "%s/%s", debugfs_mount_point, REL_TRACEFILE);
+}
+
 /*
  * Main.
  */
@@ -386,8 +394,8 @@ int main(int argc, char* const argv[], char* const envp[])
     if(result)
         return result;
 
-    size_t trace_file_name_len = snprintf(NULL, 0,
-        "%s/%s", debugfs_mount_point, REL_TRACEFILE);
+    size_t trace_file_name_len = snprintf_trace_filename(NULL, 0,
+        debugfs_mount_point);
     char* trace_file_name = malloc(trace_file_name_len + 1);
     if(trace_file_name == NULL)
     {
@@ -395,8 +403,8 @@ int main(int argc, char* const argv[], char* const envp[])
         free(program_names);
         free(file_names);
     }
-    snprintf(trace_file_name, trace_file_name_len + 1,
-        "%s/%s", debugfs_mount_point, REL_TRACEFILE);
+    snprintf_trace_filename(trace_file_name, trace_file_name_len + 1,
+        debugfs_mount_point);
     
     fd_trace = open(trace_file_name, O_RDONLY);
     if(fd_trace == -1)
@@ -589,26 +597,32 @@ int change_fl_flags(int fd, long mask, long value)
     return 0;
 }
 
+static ssize_t
+trace_read_nonblock(int fd_trace, void* buf, size_t count)
+{
+    /* Simple non-blocking read of the trace */
+    ssize_t result;
+    /* Repeat reading while it is interrupted*/
+    do
+    {
+        result = read(fd_trace, buf, count);
+    }while((result == -1) && (errno == EINTR));
+
+    if((result == -1) && (errno == EAGAIN))
+    {
+        /* "Reading would block" = EOF in non-blocking mode */
+        result = 0;
+    }
+
+    return result;
+}
+
 ssize_t trace_read_common(int fd_trace, void* buf, size_t count)
 {
     int blocking_mode_fd = blocking_mode_get_fd();
     if(blocking_mode_fd == -1)
     {
-        /* Simple non-blocking read of the trace */
-        ssize_t result;
-        /* Repeat reading while it is interrupted*/
-        do
-        {
-            result = read(fd_trace, buf, count);
-        }while((result == -1) && (errno == EINTR));
-
-        if((result == -1) && (errno == EAGAIN))
-        {
-            /* "Reading would block" = EOF in non-blocking mode */
-            result = 0;
-        }
-
-        return result;
+        return trace_read_nonblock(fd_trace, buf, count);
     }
     else
     {
@@ -652,8 +666,8 @@ ssize_t trace_read_common(int fd_trace, void* buf, size_t count)
                 /* Signal which should set non-blocking mode has arrived */
                 blocking_mode_update();
                 assert(blocking_mode_get_fd() == -1);
-                /* Now mode should be non-blocking - simply call function again*/
-                return trace_read_common(fd_trace, buf, count);
+                /* Now mode should be non-blocking. */
+                return trace_read_nonblock(fd_trace, buf, count);
             }
             /* new data become available in the trace */
             result = read(fd_trace, buf, count);
@@ -809,7 +823,7 @@ trace_consumer_create_process(const char* command_line)
 }
 
 /*
- * Create descriptor, wia which one can write into the file
+ * Create descriptor, via which one can write into the file
  * 
  * On error return NULL.
  * 
@@ -842,7 +856,7 @@ trace_consumer_create_file(const char* filename)
         {
             print_error("Cannot open file \"%s\" for collecting trace: %s.",
                 filename, strerror(errno));
-            trace_consumer_free(consumer);
+            free(consumer);
             return NULL;
         }
     }
@@ -853,7 +867,7 @@ trace_consumer_create_file(const char* filename)
         {
             print_error("Cannot duplicate STDOUT: %s.",
                 strerror(errno));
-            trace_consumer_free(consumer);
+            free(consumer);
             return NULL;
         }
 
@@ -863,7 +877,7 @@ trace_consumer_create_file(const char* filename)
     {
         print_error0("Cannot set O_NONBLOCK flag for file for collecting trace.");
         close(fd);
-        trace_consumer_free(consumer);
+        free(consumer);
         return NULL;
     }
 
@@ -872,7 +886,7 @@ trace_consumer_create_file(const char* filename)
     {
         print_error0("Cannot set FD_CLOEXEC flag for file for collecting trace.");
         close(fd);
-        trace_consumer_free(consumer);
+        free(consumer);
         return NULL;
     }
     
@@ -1116,16 +1130,7 @@ int
 trace_consumers_process_data(struct trace_consumers *trace_consumers,
     const void* buf, size_t count)
 {
-    int should_stop = 0;
     struct trace_consumer *consumer;
-    struct trace_barrier* barrier = trace_consumers->barrier;
-    if(barrier != NULL)
-    {
-        if(barrier->func(buf, count, barrier))
-        {
-            should_stop = 1;
-        }
-    }
 
     trace_consumers_for_each(trace_consumers, consumer)
     {
@@ -1145,9 +1150,94 @@ trace_consumers_process_data(struct trace_consumers *trace_consumers,
             trace_consumer_stop_write(consumer);
         }
     }
-out:
-    return should_stop ? 1 : 0;
+   
+    struct trace_barrier* barrier = trace_consumers->barrier;
+    if(barrier != NULL)
+    {
+        if(barrier->func(buf, count, barrier))
+        {
+            // Need to stop reading(barrier or error)
+            return 1;
+        }
+    }
+    
+    return 0;
+
 }
+
+/* 
+ * Collect full trace line for barrier(helper).
+ *
+ * Accoring to current state of barrier and content of str and str_size
+ * (readed data from the trace)
+ * return 1 and set line to full line, or return 0 and update barrier state.
+ * On error, return -1.
+ */
+
+static int
+collect_trace_line(struct target_session_barrier* barrier,
+    const char* str, size_t str_size,
+    const char** line, size_t* line_size)
+{
+    if(barrier->current_line != NULL)
+    {
+        /*
+         * Trace data are continuation of the previously collected line.
+         * So, concat data.
+         */
+        char* current_line = realloc(barrier->current_line,
+            barrier->current_line_size + str_size);
+        if(current_line == NULL)
+        {
+            print_error0("Failed to extend buffer for trace line.");
+            return -1;
+        }
+        memcpy(current_line + barrier->current_line_size,
+            str, str_size);
+        
+        barrier->current_line = current_line;
+        barrier->current_line_size += str_size;
+
+        if(barrier->current_line[barrier->current_line_size - 1] != '\n')
+        {
+            //printf("Collect another line(size is %zu) ...\n", str_size);
+            return 0;//full trace line has not collect yet
+        }
+        *line = barrier->current_line;
+        *line_size = barrier->current_line_size;
+        
+        return 1;
+    }
+    else if(str[str_size - 1] != '\n')
+    {
+        /*
+         * Trace data represent only beginning of the trace line.
+         * Store them and return.
+         */
+        barrier->current_line = malloc(str_size);
+        if(barrier->current_line == NULL)
+        {
+            print_error0("Failed to allocate buffer for trace line.");
+            return -1;
+        }
+        
+        memcpy(barrier->current_line, str, str_size);
+        barrier->current_line_size = str_size;
+        printf("Collect first line(size is %zu) ...\n", str_size);
+        return 0;
+    }
+    else
+    {
+        /*
+         * Trace data represent full trace line.
+         */
+        *line = str;
+        *line_size = str_size;
+        
+        return 1;
+    }
+}
+
 
 /* Callback for target session barrier */
 static int
@@ -1156,61 +1246,21 @@ target_session_barrier_func(const void* trace_data,
 {
     struct target_session_barrier* barrier_real =
         container_of(barrier, struct target_session_barrier, barrier);
-    const char* trace_data_char = trace_data;
-    
+
     // Full line of the trace
     const char* trace_line;
     size_t trace_line_size;
 
-    if(barrier_real->current_line != NULL)
-    {
-        /*
-         * Trace data are continuation of the previously collected line.
-         * So, concat data.
-         */
-        char* current_line = realloc(barrier_real->current_line,
-            barrier_real->current_line_size + trace_data_size);
-        if(current_line == NULL)
-        {
-            print_error0("Failed to extend buffer for trace line.");
-            return -1;
-        }
-        memcpy(current_line + barrier_real->current_line_size,
-            trace_line, trace_line_size);
+    int result = collect_trace_line(barrier_real,
+        trace_data, trace_data_size,
+        &trace_line, &trace_line_size);
         
-        barrier_real->current_line = current_line;
-        barrier_real->current_line_size += trace_line_size;
+    if(result != 1) return result;
 
-        if(barrier_real->current_line[barrier_real->current_line_size - 1] != '\n')
-            return 0;//full trace line has not collect yet
+    assert(trace_line != NULL);
+    assert(trace_line_size != 0);
 
-        trace_line = barrier_real->current_line;
-        trace_line_size = barrier_real->current_line_size;
-    }
-    else if(trace_data_char[trace_data_size - 1] != '\n')
-    {
-        /*
-         * Trace data represent only beginning of the trace line.
-         * Store them and return.
-         */
-        barrier_real->current_line = malloc(trace_data_size);
-        if(barrier_real->current_line == NULL)
-        {
-            print_error0("Failed to allocate buffer for trace line.");
-            return -1;
-        }
-    }
-    else
-    {
-        /*
-         * Trace data represent full trace line.
-         */
-        trace_line = trace_data;
-        trace_line_size = trace_data_size;
-    }
     // Process full trace line
-    int result;
-    
     static char start_marker[] = "target_session_begins:";
     static char end_marker[] = "target_session_ends:";
 
