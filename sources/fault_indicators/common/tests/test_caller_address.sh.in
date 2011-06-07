@@ -2,15 +2,14 @@
 
 fault_simulation_module="@CMAKE_BINARY_DIR@/fault_simulation/kedr_fault_simulation.ko"
 
-kedr_trace_module="@CMAKE_BINARY_DIR@/trace/kedr_trace.ko"
-
 indicator_module="@CMAKE_CURRENT_BINARY_DIR@/../kedr_fsim_indicator_common.ko"
 indicator_name="common"
 
 payload_module="@CMAKE_BINARY_DIR@/payloads_fsim/common_memory_management/kedr_fsim_cmm.ko"
 point_name="__kmalloc"
 
-call_monitor_payload="@CMAKE_BINARY_DIR@/payloads_callm/common_memory_management/kedr_cm_cmm.ko"
+get_caller_address_payload_name="get_caller_address"
+get_caller_address_payload="@CMAKE_CURRENT_BINARY_DIR@/get_caller_address/get_caller_address.ko"
 
 target_name="target_caller_address"
 target_module="@CMAKE_CURRENT_BINARY_DIR@/target_caller_address/target_caller_address.ko"
@@ -21,10 +20,7 @@ debugfs="${tmpdir}/debugfs"
 
 point_dir="${debugfs}/kedr_fault_simulation/points/${point_name}"
 
-trace_file="${tmpdir}/trace.txt"
-
 kedr_control_script="sh @CMAKE_BINARY_DIR@/tools/control/tests/kedr"
-capture_trace_script="@CMAKE_BINARY_DIR@/tools/capture_trace/kedr_capture_trace"
 
 simulate()
 {
@@ -38,10 +34,9 @@ kedr_config_file="${tmpdir}/kedr_test_caller_address.conf"
 mkdir -p "${tmpdir}"
 cat > "$kedr_config_file" << eof
 
-module "${kedr_trace_module}"
 module "${fault_simulation_module}"
 payload "${payload_module}"
-payload "${call_monitor_payload}"
+payload "${get_caller_address_payload}"
 module "${indicator_module}"
 
 on_load mkdir -p "${debugfs}"
@@ -72,29 +67,17 @@ if simulate; then
 	exit 1
 fi
 
-${capture_trace_script} -d "${debugfs}" -f "${trace_file}"
+caller_address=`cat /sys/module/${get_caller_address_payload_name}/parameters/__kmalloc`
 
-if ! grep "__kmalloc" ${trace_file} > /dev/null; then
-	printf "The trace contains no records for __kmalloc() calls.\n"
-
+if test caller_address == "0"; then
+	printf "Fail to determine caller address of the __kmalloc()."
 	/sbin/rmmod "${target_module}"
 	$kedr_control_script stop
+	
 	exit 1
 fi
-##
 
-caller_address=`sed -n '/called___kmalloc/ ! d; s/^.\{1,\}(\[<//; s/>\].\{1,\}$//; p; q' ${trace_file}`
-
-
-if ! echo "$caller_address" | grep '^[[:xdigit:]]\{1,\}$' > /dev/null; then
-	printf "Failed to extract caller address from the trace (got value \"%s\").\n" "$caller_address"
-
-	/sbin/rmmod "${target_module}"
-	$kedr_control_script stop
-	exit 2
-fi
-
-expression="caller_address != 0x${caller_address}"
+expression="caller_address != ${caller_address}"
 if ! echo "$expression" > "$point_dir/expression"; then
 	printf "Cannot set expression \"%s\" for fault simulation indicator.\n" "$expression"
 	/sbin/rmmod "${target_module}"

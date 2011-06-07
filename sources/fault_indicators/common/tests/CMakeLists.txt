@@ -16,4 +16,5 @@ if(KEDR_ENABLE_CALLER_ADDRESS)
 		"test_caller_address.sh")
 
 	add_subdirectory(target_caller_address)
+	add_subdirectory(get_caller_address)
 endif(KEDR_ENABLE_CALLER_ADDRESS)

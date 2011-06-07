@@ -142,6 +142,18 @@ option(KEDR_STANDARD_CALLM_PAYLOADS
 	ON
 )
 
+check_ring_buffer()
+
+set(KEDR_TRACE ${RING_BUFFER_IMPLEMENTED} CACHE INTERNAL "Whether KEDR trace mechanism is builded")
+set(KEDR_CALLM_PAYLOADS ${RING_BUFFER_IMPLEMENTED} CACHE INTERNAL "Whether call monitor payloads is supported")
+
+if(KEDR_STANDARD_CALLM_PAYLOADS AND NOT RING_BUFFER_IMPLEMENTED)
+	message("\n[WARNING]\n"
+		"Tracing is not supported, so standard call monitoring functionality will be disabled too.\n"
+		"(KEDR_STANDARD_CALLM_PAYLOADS set to OFF)"\n)
+	set(KEDR_STANDARD_CALLM_PAYLOADS OFF)
+endif(KEDR_STANDARD_CALLM_PAYLOADS AND NOT RING_BUFFER_IMPLEMENTED)
+
 option(KEDR_STANDARD_FSIM_PAYLOADS 
 	"Enable support for fault simulation" 
 	ON
@@ -330,7 +342,9 @@ add_subdirectory(fault_simulation)
 
 add_subdirectory(include)
 
-add_subdirectory(trace)
+if(KEDR_TRACE)
+	add_subdirectory(trace)
+endif(KEDR_TRACE)
 
 if(KEDR_STANDARD_CALLM_PAYLOADS)
 	# This file is used for create configuration file for call monitor payloads
