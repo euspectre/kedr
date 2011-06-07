@@ -43,7 +43,7 @@ struct stack_trace_impl {
 	int skip; 
 };
 
-static void 
+/*static void 
 save_stack_warning_impl(void *data, char *msg)
 {
 }
@@ -51,7 +51,7 @@ save_stack_warning_impl(void *data, char *msg)
 static void
 save_stack_warning_symbol_impl(void *data, char *msg, unsigned long symbol)
 {
-}
+}*/
 
 static int 
 save_stack_stack_impl(void *data, char *name)
@@ -70,8 +70,8 @@ save_stack_address_impl(void *data, unsigned long addr, int reliable)
 }
 
 static const struct stacktrace_ops save_stack_ops = {
-	.warning	= save_stack_warning_impl,
-	.warning_symbol	= save_stack_warning_symbol_impl,
+	/*.warning	= save_stack_warning_impl,*/
+	/*.warning_symbol	= save_stack_warning_symbol_impl,*/
 	.stack		= save_stack_stack_impl,
 	.address	= save_stack_address_impl,
 	.walk_stack	= print_context_stack,
