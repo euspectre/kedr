@@ -16,4 +16,6 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/test_common.sh.in"
 add_subdirectory(test_no_fpoint_params)
 add_subdirectory(test_fpoint_with_params)
 add_subdirectory(test_several_functions)
-add_subdirectory(test_reuse_point)
+add_subdirectory(test_reuse_fpoint)
+add_subdirectory(test_rename_fpoint)
+add_subdirectory(test_reuse_renamed_fpoint)

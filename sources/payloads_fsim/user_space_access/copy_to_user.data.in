@@ -13,6 +13,9 @@
 	arg.type = unsigned long
 	arg.name = n
 
+	# Rename
+	fpoint.rename = copy_to_user
+
 	# Fault Simulation
 	fpoint.fault_code =	returnValue = n;
 

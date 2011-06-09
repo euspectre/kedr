@@ -25,4 +25,6 @@ prologue = void* caller_address = call_info->return_address;
 
 <$endif$><$if fpoint.reuse_point$>fpoint.reuse_point = <$fpoint.reuse_point$>
 
+<$endif$><$if fpoint.rename$>fpoint.rename = <$fpoint.rename$>
+
 <$endif$>
