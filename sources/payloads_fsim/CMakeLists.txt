@@ -63,3 +63,5 @@ add_subdirectory(user_space_access)
 add_subdirectory(capable)
 add_subdirectory(memory_utilities)
 add_subdirectory(virtual_memory_management)
+
+kedr_test_add_subdirectory(tests)
