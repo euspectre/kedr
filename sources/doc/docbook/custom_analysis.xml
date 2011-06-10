@@ -22,13 +22,13 @@ In general, a custom analysis system based on KEDR can be created in the followi
 
 <listitem><para>Determine the calls to which functions your system needs to intercept to collect the necessary data or alter the behaviour of the target module in a required way. Note that it is only ordinary functions that count here rather than macros or inlines.</para></listitem>
 
-<listitem><para>Prepare datafile which describe signatures of interesting target functions. This file is need for KEDR to generate <link linkend="trampoline">trampoline</link> functions. <link linkend="functions_support.stub">Skeleton of such datafile</link> described in this manual and examples we provide with KEDR can be helpful here.</para></listitem>
+<listitem><para>Prepare a data file describing the signatures of the target functions of interest. This file is needed for KEDR to generate <link linkend="trampoline">trampoline</link> functions. A <link linkend="functions_support.stub">skeleton of such data file</link> described in this manual and the examples we provide with KEDR can be helpful here.</para></listitem>
 
-<listitem><para>Generate source file with trampolines from datafile writing at the previouse step. This may be done using KEDR code generator as described in <xref linkend="functions_support.generate"></xref>.</para></listitem>
+<listitem><para>Generate the auxiliary source file containing the trampolines from the data file written at the previous step. This can be done using KEDR code generator as described in <xref linkend="functions_support.generate"></xref>.</para></listitem>
 
-<listitem><para>Prepare the source code of the payload module for KEDR that will process these intercepted functions. The examples we provide with KEDR as well as the <link linkend="payload_api.stub">skeleton of a payload module</link> described in this manual can be helpful here.</para></listitem>
+<listitem><para>Prepare the source code of the payload module for KEDR that will process the intercepted functions. The examples we provide with KEDR as well as the <link linkend="payload_api.stub">skeleton of a payload module</link> described in this manual can be used as a starting point here.</para></listitem>
 
-<listitem><para>Build the payload module, using source file with trampolines as additional source. This is done in almost the same way as for any other kernel module.</para></listitem>
+<listitem><para>Build the payload module from the source files created at the previous steps. This is done in almost the same way as for any other kernel module.</para></listitem>
 </orderedlist>
 
 <para>
@@ -74,9 +74,9 @@ There is a number of memory allocation functions available for kernel modules. A
 </para>
 
 <itemizedlist>
-<listitem><para><code>void* __kmalloc(size_t size, gfp_t flags)</code></para></listitem>
-<listitem><para><code>void* krealloc(const void* p, size_t size, gfp_t flags)</code></para></listitem>
-<listitem><para><code>void* kmem_cache_alloc(struct kmem_cache* mc, gfp_t flags)</code></para></listitem>
+<listitem><para><code>void * __kmalloc(size_t size, gfp_t flags)</code></para></listitem>
+<listitem><para><code>void * krealloc(const void *p, size_t size, gfp_t flags)</code></para></listitem>
+<listitem><para><code>void * kmem_cache_alloc(struct kmem_cache *mc, gfp_t flags)</code></para></listitem>
 </itemizedlist>
 
 <note><para>
@@ -88,11 +88,11 @@ To collect data necessary to provide the remaining two counters, our system need
 </para>
 
 <itemizedlist>
-<listitem><para><code>void mutex_lock(struct mutex* lock)</code></para></listitem>
-<listitem><para><code>int mutex_lock_interruptible(struct mutex* lock)</code></para></listitem>
-<listitem><para><code>int mutex_lock_killable(struct mutex* lock)</code></para></listitem>
-<listitem><para><code>int mutex_trylock(struct mutex* lock)</code></para></listitem>
-<listitem><para><code>void mutex_unlock(struct mutex* lock)</code></para></listitem>
+<listitem><para><code>void mutex_lock(struct mutex *lock)</code></para></listitem>
+<listitem><para><code>int mutex_lock_interruptible(struct mutex *lock)</code></para></listitem>
+<listitem><para><code>int mutex_lock_killable(struct mutex *lock)</code></para></listitem>
+<listitem><para><code>int mutex_trylock(struct mutex *lock)</code></para></listitem>
+<listitem><para><code>void mutex_unlock(struct mutex *lock)</code></para></listitem>
 </itemizedlist>
 
 <note><para>
@@ -103,10 +103,10 @@ Note that the functions may be different for different variants and versions of 
 <!-- ============================================================== -->
 
 <section id="custom_analysis.define_trampolines">
-<title>Definition of trampolines</title>
+<title>Describing the Targets</title>
 <para>
-Then we need to create datafile which is used for generate trampolines for interested target functions. It can be based on skeleton, given in <xref linkend="functions_support.stub"/>.
-Here are lines described trampolines for memory allocation functions:
+At this step, we need to create a data file that describes the target functions of interest. It will be used to generate the source code of the trampoline functions for these target functions. You don't need to worry about how the trampolines should operate, they will be generated automatically at the next step. Just describe the target functions properly in the data file and the tools provided by KEDR will do the remaining tedious work. The file can be based on the skeleton given in <xref linkend="functions_support.stub"/>.
+Here are the portions of the file corresponding to the memory allocation functions we have chosen above:
 <programlisting><![CDATA[
 header=>>
 #include <linux/slab.h>
@@ -115,7 +115,7 @@ header=>>
 
 [group]
     function.name = __kmalloc
-    returnType = void*
+    returnType = void *
     
     arg.type = size_t
     arg.name = size
@@ -125,9 +125,9 @@ header=>>
 
 [group]
     function.name = krealloc
-    returnType = void*
+    returnType = void *
     
-    arg.type = void*
+    arg.type = void *
     arg.name = p
     
     arg.type = size_t
@@ -138,9 +138,9 @@ header=>>
 
 [group]
     function.name = kmem_cache_alloc
-    returnType = void*
+    returnType = void *
     
-    arg.type = struct kmem_cache*
+    arg.type = struct kmem_cache *
     arg.name = mc
     
     arg.type = gfp_t
@@ -155,14 +155,14 @@ header=>>
 </section>
 
 <section id="custom_analysis.generate_trampolines">
-<title>Trampolines generation</title>
+<title>Generating the Trampolines</title>
 <para>
-Assuming that name of the datafile, written in the previouse section, is <filename>functions_support.data</filename>, generation of the source code with trampolines may be performed in that way:
+Assuming that the data file you have written in the previous section is named  <filename>functions_support.data</filename>, generation of the source file containing the definition of trampoline functions cay be performed as follows:
 <programlisting>
 <replaceable>&lt;kedr_install_dir&gt;</replaceable>/lib/kedr/kedr_gen <replaceable>&lt;kedr_install_dir&gt;</replaceable>/share/kedr/templates/function_support.c \
     <filename>functions_support.data</filename> &gt; <filename>functions_support.c</filename>
 </programlisting>
-This will generate file <filename>functions_support.c</filename> with needed content.
+This will generate file <filename>functions_support.c</filename> with the appropriate definitions.
 </para>
 </section>
 <!-- ============================================================== -->
@@ -170,7 +170,7 @@ This will generate file <filename>functions_support.c</filename> with needed con
 <title>Creating the Payload Module</title>
 
 <para>
-To implement our analysis system, we need to create <link linkend="payload_module">a payload module</link> for KEDR. As a starting point, we can use, for example, the skeleton of a module given in <xref linkend="payload_api.stub"/>. Because our payload doesn't need to change actions of intercepted functions, we use <link linkend="post_handler">post handlers</link> for all target functions. Only for <function>repl_mutex_unlock</function> we use <link linkend="pre_handler">pre handler</link> (see <xref linkend="happens_before_parameter"></xref>).
+To implement our analysis system, we need to create <link linkend="payload_module">a payload module</link> for KEDR. As a starting point, we can use, for example, the skeleton of a module given in <xref linkend="payload_api.stub"/>. Because our payload does not need to change the behaviour of the target functions, we use <link linkend="post_handler">post handlers</link> for all of these except <function>mutex_unlock</function>. For <function>mutex_unlock</function>, we use <link linkend="pre_handler">pre handler</link> (see <xref linkend="happens_before_parameter"></xref>).
 </para>
 
 <para>
@@ -180,18 +180,18 @@ The instance of <code>struct kedr_payload</code> could be filled as follows (thi
 <programlisting><![CDATA[
 /* Post handler pairs */
 statuc kedr_post_pair post_pairs[] = {
-    { (void*)&__kmalloc, (void*)&post_kmalloc},
-    { (void*)&krelloc, (void*)&post_krealloc},
-    { (void*)&kmem_cahche_alloc, (void*)&post_kmem_cache_alloc},
-    { (void*)&mutex_lock_interruptible, (void*)&post_mutex_lock_interruptible},
-    { (void*)&mutex_lock_killable, (void*)&post_mutex_lock_killable},
-    { (void*)&mutex_trylock, (void*)&post_mutex_trylock},
+    { (void *)&__kmalloc, (void *)&post_kmalloc},
+    { (void *)&krealloc, (void *)&post_krealloc},
+    { (void *)&kmem_cahche_alloc, (void *)&post_kmem_cache_alloc},
+    { (void *)&mutex_lock_interruptible, (void *)&post_mutex_lock_interruptible},
+    { (void *)&mutex_lock_killable, (void *)&post_mutex_lock_killable},
+    { (void *)&mutex_trylock, (void *)&post_mutex_trylock},
     { NULL,}
 };
 
 /* Pre handler pairs */
 statuc kedr_pre_pair pre_pairs[] = {
-    { (void*)&mutex_unlock, (void*)&pre_mutex_unlock},
+    { (void *)&mutex_unlock, (void *)&pre_mutex_unlock},
     { NULL,}
 };
 
@@ -213,8 +213,8 @@ The initial value of each counter is 0. Post handlers actually update the counte
 
 <programlisting><![CDATA[
 static void
-post___kmalloc(size_t size, gfp_t flags, void* returnValue,
-    struct kedr_function_call_info* call_info)
+post___kmalloc(size_t size, gfp_t flags, void *returnValue,
+    struct kedr_function_call_info *call_info)
 {
     unsigned long irq_flags;
     
@@ -268,7 +268,7 @@ You can look at <filename>Kbuild</filename> and <filename>makefile</filename> fi
 <title>Using the Payload Module</title>
 
 <para>
-Now that the payload module for our analysis system is built, we can use it to see how the values of the counters change as the target module operates. You can chose any kernel module as a target if you know how to properly load it and to make it operate.
+Now that the payload module for our analysis system is built, we can use it to see how the values of the counters change as the target module operates. You can choose any kernel module as a target if you know how to properly load it and to make it operate.
 </para>
 
 <para>
@@ -315,7 +315,7 @@ Maximum size of a memory chunk requested: 48
 ]]></programlisting>
 
 <note><para>
-Note that if you unload the target module and then load it again while the analysis system (KEDR core modules and <filename>kedr_counters.ko</filename> payload module) is loaded, the counters will not be reset. This is a known limitation of this example.
+Note that if you unload the target module and then load it again while the analysis system (KEDR core modules and <filename>kedr_counters.ko</filename> payload module) is loaded, the counters will not be reset. If you need them to reset in such situations, you can implement it yourself using target load/unload callbacks (see <xref linkend="payload_api.payload"/>).
 </para></note>
 </section>
 <!-- ============================================================== -->

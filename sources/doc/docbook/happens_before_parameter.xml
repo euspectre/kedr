@@ -1,15 +1,15 @@
 ﻿<section id="happens_before_parameter">
 <title><quote>trace.happensBefore</quote> Parameter for Call Monitoring</title>
     <para>
-There is a parameter that changes order of <link linkend="target_function">target function</link> call and output values to the trace:
+There is a parameter that changes order of <link linkend="target_function">target function</link> call and output of values to the trace:
 <variablelist>
     <varlistentry><term>trace.happensBefore</term>
-        <listitem>If this parameter is defined (its precise value does not matter), the trace will be output before the target function is called. With this parameter defined variable <varname>returnValue</varname> may not be used.</listitem>
+        <listitem>If this parameter is defined (its actual value does not matter), the trace will be output <emphasis>before</emphasis> the target function is called. With this parameter defined, variable <varname>returnValue</varname> should not be used.</listitem>
     </varlistentry>
 </variablelist>
     </para>
     <para>
-The main purpose of using <code>trace.happensBefore</code> parameter is collecting correct trace on SMP systems and the like. Suppose, two threads of execution call <function>mutex_lock</function> and <function>mutex_unlock</function> functions for the same mutex. One of the correct orders of these calls is:
+The main purpose of using <code>trace.happensBefore</code> parameter is collecting correct trace on SMP systems and the like. Suppose, two threads of execution call <function>mutex_lock</function> and <function>mutex_unlock</function> functions for the same mutex. One of the correct sequences of these calls is:
 <programlisting>
 [1]    <function>mutex_lock</function>
 [1]    <function>mutex_unlock</function>
@@ -49,7 +49,7 @@ Normally, target function is called and then its parameters are output to the tr
 </programlisting>
     </para>
     <para>
-Even though the order of calls to the target functions is correct, these instructions produce the trace that reflects impossible call order:
+Even though the order of calls to the target functions is correct, these instructions produce the trace that shows an impossible order of the calls:
 <programlisting>
 1    called_mutex_lock
 2    called_mutex_lock

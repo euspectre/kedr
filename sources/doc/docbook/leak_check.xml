@@ -13,7 +13,6 @@ LeakCheck is enabled in KEDR by default. If you would like to disable it, set CM
 cmake -DKEDR_LEAK_CHECK=OFF <other_options> <path_to_kedr_sources>
 ]]></programlisting>
 
-<note>
 <para>
 Note that LeakCheck may not detect all memory leaks in the target module. For the present, the tool monitors the usage of more than 30 kernel functions that allocate and deallocate memory (these are among the supported functions listed in <xref linkend='call_mon'/>). Still, the target module can use some other functions for this purpose and LeakCheck will not notice this. Nevertheless, it is possible to add support for more functions to LeakCheck.
 </para>
@@ -21,14 +20,12 @@ Note that LeakCheck may not detect all memory leaks in the target module. For th
 <para>
 Besides that, if the target module allocates a memory block but it is another module (or the kernel proper) that frees it, this will also be reported as a memory leak by LeakCheck. That being said, possible leaks reported by LeakCheck should be further analyzed to find out whether they are actually leaks.
 </para>
-</note>
 
+<note>
 <para>
-For the present, LeakCheck cannot be used simultaneously with 
-other kinds of payload modules provided by KEDR. In particular, you cannot 
-use LeakCheck and fault simulation for memory-related functions at 
-the same time. 
+Starting from KEDR 0.3, LeakCheck can be used simultaneously with other kinds of payload modules provided by KEDR. In particular, you can use LeakCheck and fault simulation for memory-related functions at the same time. 
 </para>
+</note>
 
 <!-- ============================================================== -->
 
@@ -159,7 +156,7 @@ To be exact, each address corresponds to the instruction following the relevant 
 <title>Analyzing the Results</title>
 
 <para>
-GDB, Objdump or some other tools of this kind can be used to locate the 
+Addr2line, GDB, Objdump or some other tools of this kind can be used to locate the 
 places in the source code corresponding to the entries in the stack traces. 
 The detailed description can be found, for example, in <xref linkend="analyze_trace"/>.
 </para>

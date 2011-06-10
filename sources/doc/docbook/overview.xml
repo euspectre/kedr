@@ -5,7 +5,7 @@
 <title>General</title>
 <para>
 KEDR is a system for the analysis of Linux <link linkend="glossary">kernel modules</link> (including 
-but not limited to device drivers) in 
+but not limited to device drivers and file system modules) in 
 runtime. The types of analysis that can be performed with KEDR vary from simply 
 collecting the statistics on the kernel functions used by a particular 
 module to revealing subtle errors in the module via fault simulation 
@@ -14,8 +14,7 @@ techniques - and may go even beyond that in the future.
 
 <para>
 KEDR framework will probably be useful mostly for the developers and 
-maintainers of kernel modules. It could also be used in the automated driver verification systems (for example, in the certification systems for Linux drivers), where, among other things, a driver is subjected to a 
-series of tests to estimate its reliability.
+maintainers of kernel modules. It could also be used in the automated verification systems for kernel-mode software (for example, in the certification systems for Linux drivers, etc.), where, among other things, a kernel module is subjected to a series of tests to estimate its reliability.
 </para>
 
 <para>
@@ -39,7 +38,7 @@ The ideas behind KEDR are really not very new. One could mention at least
 two other systems that analyze the selected kernel modules in runtime and help 
 reveal problems in these: <ulink 
 url="http://msdn.microsoft.com/en-us/library/ff545448(VS.85).aspx">Microsoft Driver Verifier for Windows</ulink>
-and <quote>Impostor</quote> (<quote>Call Swapping</quote>) facilities used 
+and <quote>Impostor</quote> (<quote>API Swapping</quote>) facilities used 
 by <ulink url="http://developer.novell.com/devnet/yes/">Novell YES Tools 
 for Linux</ulink>. Both systems seem to monitor the operation of a target 
 module including its interaction with the rest of the kernel.
@@ -82,7 +81,7 @@ utility does for user-space applications.
     </para></listitem>
     <listitem><para>
 <link linkend="fault_sim"><firstterm>Fault simulation</firstterm></link> 
-KEDR forces some of the calls made by the target module to fail. In fact,
+KEDR forces some of the calls made by the target module fail. In fact,
 KEDR simulates the failure without actually calling the respective 
 <link linkend="target_function">target function</link>. The scenarios 
 (the calls to which functions must fail in what conditions) can be 
@@ -90,11 +89,11 @@ controlled and customized by the user.
     </para></listitem>
     <listitem><para>
 <link linkend="leak_check"><firstterm>Checking for memory leaks</firstterm></link> 
-The appropriate components of KEDR keep track of memory allocation and 
+The appropriate components of KEDR keep track of various memory allocation and 
 deallocation operations made by the target module. After the target module 
 has unloaded, KEDR generates a report listing the memory blocks that have 
-been allocated but not freed by that module along with a call stack for 
-each of these blocks.
+been allocated but not freed by that module along with a call stack for each of the 
+corresponding memory allocation calls.
     </para></listitem>
 </itemizedlist>
 
@@ -208,8 +207,7 @@ the operating system.
 
 <note><para>
 Currently, KEDR framework provides no means to analyze an already loaded, 
-initialized and running target module. It is planned to implement this 
-functionality in the future versions of the system.
+initialized and running target module.
 </para></note>
 
 </section>

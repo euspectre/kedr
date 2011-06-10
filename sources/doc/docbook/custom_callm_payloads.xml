@@ -19,7 +19,7 @@ change the set of parameters output to the trace, in case you need something oth
 </itemizedlist>
     
     <para>
-The whole infrastructure necessary for building the payload module from the <quote>definition file</quote> is located in <filename class='directory'>custom_payload_callm</filename> subdirectory in the directory where the examples provided with KEDR are installed. Here are its contents:
+The whole infrastructure necessary for building the payload module from the <quote>definition file</quote> is located in <filename class='directory'>custom_payload_callm</filename> subdirectory in the directory where the examples provided with KEDR are installed (<filename class='directory'>/usr/local/share/kedr/examples/</filename> by default). Here are its contents:
 <variablelist>
     <varlistentry><term><filename>payload.data</filename></term>
         <listitem>'definition' file to create the payload module</listitem>
@@ -69,7 +69,7 @@ header =&gt;&gt;
 </programlisting>
     </para>
     <para>
-For each <link linkend="target_function">target function</link> information about which should be output to the trace, a group should be prepared in the definition file.
+For each <link linkend="target_function">target function</link> the information about which is to be output to the trace, a group should be prepared in the definition file.
 Each group should contain definitions for the following parameters:
 <variablelist>
     <varlistentry><term>function.name</term>
@@ -96,20 +96,20 @@ Each group should contain definitions for the following parameters:
 </variablelist>
 
 <important><para>
-Output to the trace is currently supported only for the variables of simple types (i.e. no strings, arrays, structures, etc.). Pointers can be output (e.g., using <code><quote>%p</quote></code> or a similar format) but not the data they point to. This is due to the limitations of <command>kedr_gen</command>. In the future versions, these limitations may be removed or at least relaxed.
+Output to the trace is currently supported only for the variables of simple types (i.e. no strings, arrays, structures, etc.). Pointers can be output using <code><quote>%p</quote></code> or a similar format. This is due to the limitations of <command>kedr_gen</command>. In the future versions, these limitations may be removed or at least relaxed.
 </para></important>
 
 Additionally, the following parameters can be defined at group level:
 <variablelist>
     <varlistentry><term>prologue</term>
-        <listitem>code (may be multiline) which will be executed before output values to the trace. Usually, this code declares variables which will be used in output.</listitem>
+        <listitem>code (may be multiline) which will be executed before the values are output to the trace. Usually, this code declares variables that will be used in the output.</listitem>
     </varlistentry>
     <varlistentry><term>epilogue</term>
-        <listitem>code (may be multiline) which will be executed after output values to the trace. If <code>prologue</code> request some resources from the kernel, this is a place where these resources may be released.</listitem>
+        <listitem>code (may be multiline) which will be executed after the values have been output to the trace. If <code>prologue</code> request some resources from the kernel, this is the place where these resources can be released.</listitem>
     </varlistentry>
 </variablelist>
 
-If the target function does not return void, variable <varname>returnValue</varname> refers to the returning value of the function. It may be used as the name of variable to output (<symbol>arg.name</symbol>) and in the <symbol>prologue</symbol> and <symbol>epilogue</symbol> sections.
+If the target function does not return void, <varname>returnValue</varname> variable refers to the return value of the function. It may be used as the name of variable to output (<symbol>arg.name</symbol>) and in the <symbol>prologue</symbol> and <symbol>epilogue</symbol> sections.
     </para>
     <para>
 Example of the group section for module_put() target function:
@@ -119,11 +119,11 @@ Example of the group section for module_put() target function:
     function.name = module_put
 
     # Names and types of the arguments of the target function
-    arg.type = struct module*
+    arg.type = struct module *
     arg.name = m
     
     # The parameters to be output to the trace. 
-    trace.param.type = void*
+    trace.param.type = void *
     trace.param.name = m
 
     # The format string to be used for trace output.
@@ -136,7 +136,7 @@ Example of the group section for __kmalloc() target function (note the usage of 
 [group]
     # Name and return type of the target function
     function.name = __kmalloc
-    returnType = void*
+    returnType = void *
 
     # Names and types of the arguments of the target function
     arg.type = size_t
@@ -152,7 +152,7 @@ Example of the group section for __kmalloc() target function (note the usage of 
     trace.param.type = unsigned int
     trace.param.name = flags
 
-    trace.param.type = void*
+    trace.param.type = void *
     trace.param.name = returnValue
 
     # The format string to be used for trace output.
@@ -165,10 +165,10 @@ Example of the group section for kmem_cache_alloc() target function (note the co
     [group]
     # Name and return type of the target function
     function.name = kmem_cache_alloc
-    returnType = void*
+    returnType = void *
 
     # Names and types of the arguments of the target function
-    arg.type = struct kmem_cache*
+    arg.type = struct kmem_cache *
     arg.name = mc
     
     arg.type = gfp_t
@@ -184,7 +184,7 @@ size_t size = kmem_cache_size(mc);
     trace.param.type = unsigned int
     trace.param.name = flags
 
-    trace.param.type = void*
+    trace.param.type = void *
     trace.param.name = returnValue
 
     # The format string to be used for trace output.

@@ -43,15 +43,15 @@ Specify the directory the debugfs filesystem is currently mounted to. This files
         <term>-f, --file <replaceable>file</replaceable></term>
         <listitem>
             <para>
-Store every trace record in the given file. If the file doesn't exist, <command>kedr_capture_trace</command> creates it at the beginning, otherwise appends new data to the file. When <replaceable>file</replaceable> is - trace records will be output to STDOUT.
+Store every trace record in the given file. If the file doesn't exist, <command>kedr_capture_trace</command> creates it at the beginning, otherwise appends new data to the file. When <replaceable>file</replaceable> is -, trace records will be output to STDOUT.
             </para>
         </listitem>
     </varlistentry>
     <varlistentry>
-        <term>-p, --program <replaceable>program</replaceable></term>
+        <term>-p, --program <replaceable>application</replaceable></term>
         <listitem>
             <para>
-On start, <command>kedr_capture_trace</command> launches <replaceable>program</replaceable>. Then it pipes every trace record to the standard input of this program. When capturing is to be stopped, <command>kedr_capture_trace</command> closes its side of pipe and waits until the program terminates.
+On start, <command>kedr_capture_trace</command> launches <replaceable>application</replaceable>. Then it pipes every trace record to the standard input of this application. When capturing is to be stopped, <command>kedr_capture_trace</command> closes its side of pipe and waits until the application terminates.
             </para>
         </listitem>
     </varlistentry>
@@ -67,10 +67,10 @@ Read only those records from the trace that were collected since the target modu
         <term>-b, --blocking</term>
         <listitem>
             <para>
-When there is no message in the trace, wait new message to appear instead of quit.
+When there are no messages in the trace, wait for the new messages to appear instead of quitting.
             </para>
             <para>
-First SIGINT signal, being sent to the process, turns off effect of this flag. That is, program again will quit when read all messages from the trace.
+The first SIGINT signal sent to <command>kedr_capture_trace</command> process (e.g., <code>Ctrl+C</code>), turns off the effect of this flag. That is, <command>kedr_capture_trace</command> will quit when it has read all messages present in the trace at that moment and will wait no longer.
             </para>
         </listitem>
     </varlistentry>
@@ -85,49 +85,56 @@ First SIGINT signal, being sent to the process, turns off effect of this flag. T
 <section id="capture_trace.examples">
 <title>Examples</title>
     <para>
-    <programlisting>
+Save all records currently present in the trace to the file <filename>trace.txt</filename>:
+    </para>
+<programlisting>
 kedr_capture_trace -f trace.txt
 </programlisting>
-store all records from the trace in the file <filename>trace.txt</filename>.
-    </para>
+
     <para>
+Listen to the trace and keep saving the records from the trace to the file <filename>trace.txt</filename> until 'Ctrl+C' is pressed:
+	</para>
 <programlisting>
 kedr_capture_trace -b -f trace.txt
 ^C
 </programlisting>
-store all records from the trace in the file <filename>trace.txt</filename> until 'Ctrl+C' is pressed.
-    </para>
+
     <para>
+Save all records from the trace corresponding to kfree() calls to the file <filename>frees.txt</filename>:
+    </para>
 <programlisting>
-kedr_capture_trace -p "grep called_kfree > frees.txt"
+kedr_capture_trace -p grep called_kfree > frees.txt"
 </programlisting>
-store all records from the trace corresponding to kfree() calls in the file <filename>frees.txt</filename>.
-    </para>
+
     <para>
+Listen to the trace and pack the trace records to <filename>trace.bz2</filename> archive on the fly:
+    </para>
 <programlisting>
-kedr_capture_trace -p bzip2 > trace.bz2"
+kedr_capture_trace -b -p bzip2 > trace.bz2
 </programlisting>
-pack the trace records to <filename>trace.bz2</filename> archive on the fly.
-    </para>
+
     <para>
+Listen to the trace, save all records from the trace to <filename>trace.txt</filename> and the records corresponding to kfree() calls and to __kmalloc() calls to <filename>frees.txt</filename> and <filename>allocs.txt</filename>, respectively:
+    </para>
 <programlisting>
-kedr_capture_trace \
+kedr_capture_trace -b \
 -p "grep called_kfree > frees.txt" \
 -p "grep called___kmalloc > allocs.txt" \
 -f trace.txt
 </programlisting>
-store all records from the trace in <filename>trace.txt</filename> and the records corresponding to kfree() calls and to __kmalloc() calls in <filename>frees.txt</filename> and <filename>allocs.txt</filename>, respectively.
-    </para>
+
     <para>
+Save all records from the trace that appeared when the particular actions were being performed (probably the actions on the target module).
+    </para>
 <programlisting><![CDATA[
 kedr_capture_trace -f /dev/null
 <do some actions>
 kedr_capture_trace -f trace.txt
 ]]></programlisting>
-Store all records from the trace, which appeared during actions (which may concerned with the target module).
-    </para>
 
     <para>
+Listen to the trace, save all records from the trace generated by <filename>moduleA</filename> to the file <filename>trace.txt</filename>.
+    </para>
 <programlisting><![CDATA[
 kedr start moduleA
 kedr_capture_trace -b -s -f trace.txt &
@@ -138,8 +145,7 @@ pid=$!
 wait $pid
 kedr stop
 ]]></programlisting>
-store all records from the trace generated by <filename>moduleA</filename> in the file <filename>trace.txt</filename>.
-    </para>
+
     <para>
 See also <xref linkend="getting_started.call_monitoring"/>.
     </para>

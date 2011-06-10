@@ -1,7 +1,7 @@
 ﻿<section id="custom_fsim_payloads">
 <title>Writing Custom Payloads for Fault Simulation</title>
     <para>
-This section describes how to write a new payload module for fault simulation using a tool provided by KEDR to generate source files from the templates. Common abilities of this tool are described in detail in <xref linkend="using_gen"/>.
+This section describes how to write a new payload module for fault simulation using <command>kedr_gen</command> tool provided by KEDR to generate source files from the templates. Common abilities of <command>kedr_gen</command> are described in detail in <xref linkend="using_gen"/>.
     </para>
 
 <para>
@@ -19,11 +19,11 @@ provide a different set of variables to be passed to fault simulation indicator 
 </itemizedlist>
 
 <note><para>
-Note that the infrastructure provided by KEDR for fault simulation (<link linkend="fault_simulation_point">points</link>, <link linkend="fault_simulation_indicator">indicators</link> and the respective control facilities) could be used for other purposes as well. What it does in general, is to alter the behaviour of a call made by the target module if the indicator returns nonzero, or allow the target function to do its work normally if the indicator returns 0. The <quote>altered behaviour</quote> is controlled by the user, see the description of <code>fpoint.fault_code</code> parameter below. So, instead of fault simulation, you could implement, say, timeout/sleep injection (i.e., delaying the return from the replacement function which might help with concurrency analysis, etc.) or whatever else you want.
+Note that the infrastructure provided by KEDR for fault simulation (<link linkend="fault_simulation_point">points</link>, <link linkend="fault_simulation_indicator">indicators</link> and the respective control facilities) could be used for other purposes as well. In general, it allows to alter the behaviour of a call made by the target module if the indicator returns nonzero, or allow the target function to do its work normally if the indicator returns 0. The <quote>altered behaviour</quote> is controlled by the user, see the description of <code>fpoint.fault_code</code> parameter below. So, instead of fault simulation, you could implement, say, timeout/sleep injection (i.e., delaying the return from the replacement function which might help with concurrency analysis, etc.) or whatever else you want.
 </para></note>
 
     <para>
-The files necessary to build the payload module from the <quote>definition file</quote> are located in <filename class='directory'>custom_payload_fsim</filename> subdirectory in the directory where the examples provided with KEDR are installed. Here are its contents:
+The files necessary to build the payload module from the <quote>definition file</quote> are located in <filename class='directory'>custom_payload_fsim</filename> subdirectory in the directory where the examples provided with KEDR are installed (<filename class='directory'>/usr/local/share/kedr/examples/</filename> by default). Here are its contents:
 <variablelist>
     <varlistentry><term><filename>payload.data</filename></term>
         <listitem>'definition' file to create the payload module</listitem>
@@ -73,8 +73,9 @@ header =&gt;&gt;
 </programlisting>
     </para>
     <para>
-For each <link linkend="target_function">target function</link> which fault is intended to simulate, a group should be prepared in the definition file.
+For each <link linkend="target_function">target function</link> to be processed, a group should be prepared in the definition file.
 Each group should contain definitions for the following parameters:
+	</para>
 <variablelist>
     <varlistentry><term>function.name</term>
         <listitem>name of the target function</listitem>
@@ -89,7 +90,7 @@ Each group should contain definitions for the following parameters:
         <listitem>(multi-valued) names of the parameters of the target function, starting with the first one. If the function has no parameters, shouldn't be assigned at all. Parameters of the target function will be accessible via these names in the code.</listitem>
     </varlistentry>
     <varlistentry><term>fpoint.fault_code</term>
-        <listitem>code (may be multiline) which should be executed instead the call to the target function to simulate failure of the latter. Usually, this code simply sets <varname>returnValue</varname> variable which will be returned to the caller to indicate that a failure has occured.</listitem>
+        <listitem>code (may be multiline) which should be executed instead the call to the target function to simulate failure of the latter. Usually, this code simply sets <varname>returnValue</varname> variable to a value indicating that a failure has occured. For the caller of the target function, if will look like the target function has returned this value.</listitem>
     </varlistentry>
     <varlistentry><term>fpoint.param.name</term>
         <listitem>(multi-valued) names of the variables which values will be passed to the indicator function and may be used to specify the scenario of fault simulation in it. The order of these variables is important, because they will be passed sequentially to the indicator function. Usually, only the parameters of the target function are passed to the indicator.</listitem>
@@ -98,19 +99,20 @@ Each group should contain definitions for the following parameters:
         <listitem>(multi-valued) types of the values that will be passed to the indicator function. These types will be used to properly cast the values before passing to the indicator (so these types may differ from the real types of the variables).</listitem>
     </varlistentry>
 </variablelist>
-    </para>
+
     <para>
 Additionally, the following parameters can be defined at the group level. They are similar to the ones used in the payload modules for call monitoring.
+    </para>
 <variablelist>
     <varlistentry><term>prologue</term>
         <listitem>code (may be multiline) which will be inserted at the start of replacement function (before the call to the indicator function which should decide whether need to simulate a failure or not). Usually, this code declares variables that will be passed to the indicator function.</listitem>
     </varlistentry>
     <varlistentry><term>epilogue</term>
-        <listitem>code (may be multiline) which will be inserted at the end of the replacement function (after  executing target function or simulating its fault). If <code>prologue</code> request some resources from the kernel, this is a place to release these resources.</listitem>
+        <listitem>code (may be multiline) which will be inserted at the end of the replacement function (after  executing target function or simulating its fault). If <code>prologue</code> request some resources from the kernel, this is the place to release these resources.</listitem>
     </varlistentry>
 </variablelist>
-
-If the target function does not return void, variable <varname>returnValue</varname> should be set in <symbol>fpoint.fault_code</symbol> as return value of the function in case of simulating fault.
+	<para>
+If the target function does not return void, <varname>returnValue</varname> variable should be set in <symbol>fpoint.fault_code</symbol> to the value that the target function would return in case of the particular failure.
     </para>
     <para>
 Here is an example of the group section for __kmalloc target function. Note the definition of <code>fpoint.fault_code</code> parameter. Its value is <quote><code>returnValue = NULL;</code></quote> because '=' characters after the leftmost one have no special meaning and are treated as the part of the value.
@@ -120,7 +122,7 @@ Here is an example of the group section for __kmalloc target function. Note the 
 [group]
     # Name and return type of the target function
     function.name = __kmalloc
-    returnType = void*
+    returnType = void *
 
     # Names and types of the arguments of the target function
     arg.type = size_t
@@ -147,10 +149,10 @@ Example of the group section for kstrdup() target function:
 [group]
     # Name and return type of the target function
     function.name = kstrdup
-    returnType = char*
+    returnType = char *
 
     # Names and types of the arguments of the target function
-    arg.type = const char*
+    arg.type = const char *
     arg.name = str
     
     arg.type = gfp_t
@@ -187,7 +189,7 @@ If, say, function <function>g</function> should share the fault simulation scena
 [group]
     # Name and return type of the target function
     function.name = __kmalloc
-    returnType = void*
+    returnType = void *
 
     # Names and types of the arguments of the target function
     arg.type = size_t
@@ -210,10 +212,10 @@ If, say, function <function>g</function> should share the fault simulation scena
 [group]
     # Name and return type of the target function
     function.name = krealloc
-    returnType = void*
+    returnType = void *
 
     # Names and types of the arguments of the target function
-    arg.type = const void*
+    arg.type = const void *
     arg.name = p
 
     arg.type = size_t

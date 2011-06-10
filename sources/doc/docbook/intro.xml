@@ -2,7 +2,7 @@
 <title>Introduction</title>
 
 <para>
-<emphasis>KEDR framework</emphasis> provides the tools to facilitate runtime analysis of kernel modules (including device drivers) in Linux. <quote><phrase role="emphasized">KEDR</phrase></quote> is an acronym for <quote><phrase role="emphasized">KE</phrase>rnel-mode <phrase role="emphasized">D</phrase>rivers in <phrase role="emphasized">R</phrase>untime</quote>. The framework is intended for the developers of kernel modules and, in particular, it may be useful for building automated driver verification systems.
+<emphasis>KEDR framework</emphasis> provides the tools to facilitate runtime analysis of kernel modules (including device drivers, file system modules, etc.) in Linux. <quote><phrase role="emphasized">KEDR</phrase></quote> is an acronym for <quote><phrase role="emphasized">KE</phrase>rnel-mode <phrase role="emphasized">D</phrase>rivers in <phrase role="emphasized">R</phrase>untime</quote>. The framework is intended for the developers of kernel modules and, in particular, it may be useful for building automated verification systems for kernel-mode software.
 </para>
 
 <para>

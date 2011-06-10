@@ -1,21 +1,23 @@
 ﻿<section id="call_mon">
 <title>Call Monitoring (Call Tracing)</title>
     <para>
-Call monitoring facilities provided by KEDR allow to collect data about the calls to the functions of interest (target functions) made by a kernel module. In this case, <link linkend="post_handler">post handlers</link> are registered for some set of kernel functions. Each post handler simply output <link linkend="target_function">target function</link>'s arguments and return value to a trace.
+Call monitoring facilities provided by KEDR allow to collect data about the calls to the functions of interest (target functions) made by a kernel module. In this case, <link linkend="post_handler">post handlers</link> are registered for some set of kernel functions. Each post handler simply outputs the arguments and return value of the <link linkend="target_function">target function</link> to a trace.
     </para>
-<note><para>
-For some functions <link linkend="post_handler">pre handlers</link> are used instead of the post handlers. This helps to produce correct trace in case of multi-threaded execution (see <xref linkend="happens_before_parameter"/>).
-</para></note>
     <para>
 This is similar to what <ulink url="http://sourceforge.net/projects/strace/">strace</ulink> 
 utility does for user-space applications.
     </para>
+
+<note><para>
+For some functions, <link linkend="post_handler">pre handlers</link> are used instead of the post handlers. This helps produce a correct trace in case of multithreaded execution (see <xref linkend="happens_before_parameter"/>).
+</para></note>
+
     <para>
-KEDR contains a set of payload modules intended to perform call monitoring. They collect information about which kernel functions were called by the target module and in what order, about the parameters passed to these functions and about the return values. This information is output to a trace and can then be used by user-space applications in runtime with the help of <link linkend="capture_trace">kedr_capture_trace</link> tool.
+KEDR provides a set of payload modules that perform call monitoring. They collect information about which kernel functions were called by the target module and in what order, about the parameters passed to these functions and about the return values. This information is output to a trace and can then be used by user-space applications in runtime with the help of <link linkend="capture_trace">kedr_capture_trace</link> tool.
     </para>
 
 <para>
-The standard payloads modules for call monitoring are built and installed with KEDR by default. If you would like to disable this, set CMake variable <code>KEDR_STANDARD_CALLM_PAYLOADS</code> to <code>OFF</code> when executing CMake before building KEDR:
+The standard payload modules for call monitoring are built and installed with KEDR by default. If you would like to disable this, set CMake variable <code>KEDR_STANDARD_CALLM_PAYLOADS</code> to <code>OFF</code> when executing CMake before building KEDR:
 </para>
 
 <programlisting><![CDATA[
@@ -70,11 +72,6 @@ called_&lt;function-name&gt;: (&lt;call_address&gt;) arguments(&lt;arguments-lis
 If you would like to find the lines in the source code of the target module corresponding to the addresses given in the trace records, see <xref linkend="analyze_trace"/> for details.
 </para>
 
-<!--
-<note><para>
-On some systems, you can see the address fields in the trace records with the contents similar to the following: <code>([&lt;(null)&gt;] not_supported+0x0)</code>. This means that KEDR was unable to obtain the address of the call. This can happen, for example, if the kernel has been built without <code>CONFIG_STACKTRACE</code> or <code>CONFIG_FRAME_POINTER</code> defined. To make debugging of kernel modules (and the kernel proper) easier, it is recommended to rebuild the kernel with these parameters set to <quote>y</quote>.
-</para></note>
--->
 <para>
 A different format is used for marker records indicating loading and unloading of the target module:
 </para>
@@ -84,6 +81,6 @@ target_session_&lt;begins|ends&gt;: target_module: "&lt;target-module-name&gt;"
 </synopsis> 
 
     <para>
-Only calls to the subset of all kernel functions are detected. This subset however can be easy extended by implementing your own modules (see <xref linkend="custom_callm_payloads"/>). Full list of the payload modules that currently may be used for call monitoring, and the lists of the functions detected by each module are provided in <xref linkend="standard_callm_payloads.functions"></xref>.
+Only calls to the subset of all kernel functions are detected. This subset however can be extended easily by implementing your own modules (see <xref linkend="custom_callm_payloads"/>). The compete list of the default payload modules that currently can currently be used for call monitoring and the lists of the functions processed by each module are provided in <xref linkend="standard_callm_payloads.functions"></xref>.
     </para>
 </section>

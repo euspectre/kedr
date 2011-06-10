@@ -1,21 +1,21 @@
 <section id="standard_fsim_payloads">
-<title>Standard fault simulation payloads</title>
+<title>Standard Fault Simulation Payloads</title>
 
 <section id="standard_fsim_payloads.functions">
-<title>Functions detected by standard fault simulation payloads</title>
+<title>Functions Processed by the Standard Payload Modules for Fault Simulation</title>
     <para>
-Here is a full list of the payload modules that currently may be used for fault simulation, and the lists of the functions for which fault simulation is implemented by each module. For each function parameters, which may be used in the simulation scenario, are described.
+Here is a full list of the payload modules that currently can be used for fault simulation, and the lists of the functions for which fault simulation is implemented by each module. For each function, the parameters that can be used in a fault simulation scenario are described.
     </para>
     <para>
-For each functions is A function name in square brackets means that this function is detected only if it is exported by the kernel (it may or may not be exported in each particular system). Only one of the functions separated by a slash is detected depending on which one of them is actually exported by the kernel.
+A function name in square brackets indicates that this function may or may not be exported on each particular system, and if it is exported, it will be processed. Only one of the functions separated by a slash is expected to be exported by the kernel, that function will be processed.
     </para>
     
-<itemizedlist mark='opencircle'>
+<itemizedlist mark='circle'>
 <listitem><phrase role="emphasized">kedr_fsim_capable.ko</phrase>
     <simplelist type='vert'>
     <member><function>capable</function></member>
     </simplelist>
-    Fault simulation point for this function provides the parameter 'cap' of type <type>int</type>for fault simulation scenario.
+    Fault simulation point for this function provides <code>cap</code> parameter of type <type>int</type> for a fault simulation scenario.
 </listitem>
 <listitem><phrase role="emphasized">kedr_fsim_user_space_access.ko</phrase>
     <simplelist type='vert'>
@@ -28,7 +28,7 @@ For each functions is A function name in square brackets means that this functio
     <member><function>strndup_user</function></member>
     <member><function>memdup_user</function></member>
     </simplelist>
-    Fault simulation points for this functions do not provide additional parameter for fault simulation scenario.
+    Fault simulation points for these functions do not provide additional parameters for a fault simulation scenario.
 </listitem>
 <listitem><phrase role="emphasized">kedr_fsim_cmm.ko</phrase>
     <simplelist type='vert'>
@@ -48,7 +48,7 @@ For each functions is A function name in square brackets means that this functio
     <member>[<function>alloc_pages_current</function>]</member>
     <member>[<function>alloc_pages_exact</function>]</member>
     </simplelist>
-    All these functions use shared fault simulation point with name <filename>__kmalloc</filename>, which provides parameters size (of type <type>size_t</type>) and flags (of type <type>gfp_t</type>) for fault simulation scenario.
+    All these functions use a shared fault simulation point named <filename>__kmalloc</filename> that provides the following parameters for a fault simulation scenario: <code>size</code> (of type <type>size_t</type>) and <code>flags</code> (of type <type>gfp_t</type>) .
 </listitem>
 <listitem><phrase role="emphasized">kedr_fsim_mem_util.ko</phrase>
     <simplelist type='vert'>
@@ -56,7 +56,7 @@ For each functions is A function name in square brackets means that this functio
     <member><function>kstrndup</function></member>
     <member><function>kmemdup</function></member>
     </simplelist>
-    Fault simulation points for this functions do not provide additional parameter for fault simulation scenario.
+    Fault simulation points for these functions do not provide additional parameters for a fault simulation scenario.
 </listitem>
 <listitem><phrase role="emphasized">kedr_fsim_vmm.ko</phrase>
     <simplelist type='vert'>
@@ -67,7 +67,7 @@ For each functions is A function name in square brackets means that this functio
     <member><function>vmalloc_32</function></member>
     <member><function>vmalloc_32_user</function></member>
     </simplelist>
-    All these functions use shared fault simulation point with name <filename>vmalloc</filename>, which provides no additional parameters for fault simulation scenario.
+    All these functions use a shared fault simulation point named <filename>vmalloc</filename> that provides no additional parameters for a fault simulation scenario.
 </listitem>
 </itemizedlist>
 

@@ -33,7 +33,7 @@ KEDR core (<firstterm><quote>Loading Detector</quote></firstterm> and <firstterm
 </para>
 
 <para>
-When the target has been loaded but before it begins its initialization, KEDR core takes control and instruments it, that is, it changes the memory image of that module in a special way. In particular, the calls to the functions that should be intercepted(<link linkend="target_function">target functions</link>) are replaced with the calls to the special <link linkend="trampoline">trampolines</link> with the same signatures. These trampolines call <link linkend="pre_handler">pre handlers</link>, <link linkend="replacement_function">replacement functions</link> and <link linkend="post_handler">post handlers</link> provided by <link linkend="payload_module">payload modules</link>. A payload module should register itself with KEDR core for this to work.
+When the target has been loaded but before it begins its initialization, KEDR core takes control and instruments it, that is, it changes the memory image of that module in a special way. In particular, the calls to the functions that should be intercepted (<link linkend="target_function">target functions</link>) are replaced with the calls to the <link linkend="trampoline">trampolines</link>. A trampoline is a special function with the same signature as the corresponding target function. These trampolines call <link linkend="pre_handler">pre handlers</link>, <link linkend="replacement_function">replacement functions</link> and <link linkend="post_handler">post handlers</link> provided by <link linkend="payload_module">payload modules</link>. A payload module should register itself with KEDR core for this to work.
 </para>
 
 <para>
@@ -47,9 +47,9 @@ The actual analysis of the target kernel module is performed by
 
 <para>
 If the target module tries to call a function which one of the payload modules is interested in (<link linkend="target_function"><firstterm>target function</firstterm></link>), that payload module takes control before and after it while executing the corresponding <link linkend="pre_handler"><firstterm>pre handler(s)</firstterm></link> and/or <link linkend="post_handler"><firstterm>post handler(s)</firstterm></link>. This way, the payload
-module can get access to the arguments of the target function. In addition,
-the payload module can change the behaviour of the target module, for 
-example making it look like the target function has failed, by registering <link linkend="replacement_function"><firstterm>replacement function</firstterm></link>.
+module can get access to the arguments and the return value of the target function. In addition,
+the payload module can register a <link linkend="replacement_function"><firstterm>replacement function</firstterm></link> that will be called instead of that target function. This allows to change the behaviour of the target module, for 
+example, to make it look like the target function has failed.
 </para>
 
 <itemizedlist>

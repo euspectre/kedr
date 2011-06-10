@@ -1,15 +1,15 @@
 <section id="standard_callm_payloads">
-<title>Standard call monitor payloads</title>
+<title>Standard Payloads for Call Monitoring</title>
 <para>
-This section describe set of standard call monitor payloads.
+This section describes the payload modules for call monitoring (call tracing) provided by KEDR.
 </para>
 <section id="standard_callm_payloads.functions">
-<title>Functions detected by standard call monitor payloads</title>
+<title>Functions Processed by the Standard Payload Modules for Call Monitoring</title>
     <para>
-Here is a full list of the payload modules that currently may be used for call monitoring, and the lists of the functions detected by each module. A function name in square brackets means that this function is detected only if it is exported by the kernel (it may or may not be exported in each particular system). Only one of the functions separated by a slash is detected depending on which one of them is actually exported by the kernel.
+Here is a full list of the payload modules that currently may be used for call monitoring, and the lists of the functions processed by each module. A function name in square brackets indicates that this function may or may not be exported on each particular system, and if it is exported, it will be processed. Only one of the functions separated by a slash is expected to be exported by the kernel, that function will be processed.
     </para>
     <para>
-<itemizedlist mark='opencircle'>
+<itemizedlist mark='circle'>
 <listitem><phrase role="emphasized">kedr_cm_cmm.ko:</phrase>
     <simplelist type='vert'>
     <member>__kmalloc</member>

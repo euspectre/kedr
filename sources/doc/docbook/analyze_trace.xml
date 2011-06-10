@@ -5,6 +5,10 @@
 This section describes a couple of techniques that can be used when analyzing the traces output by payload modules for call monitoring or fault simulation. In particular, it shows how to find out which place in the source code of the target module each particular trace record corresponds to and <link linkend="analyze_trace.stack">how to obtain call stack</link> for a call of interest.
 </para>
 
+<para>
+The techniques described here can also be used when analyzing the results of <link linkend="leak_check">memory leak detection</link>.
+</para>
+
 <note>
 <para>
 It is recommended that the kernel of your system should be built with <code>CONFIG_FRAME_POINTER</code> or <code>CONFIG_STACK_UNWIND</code> parameters set to <quote>y</quote>. This is not the case on some systems by default. If neither of these parameters are not defined, reliable stack trace information could probably be unavailable. KEDR will still work in this case but, for example, its reports concerning memory leaks may be less detailed. 
@@ -49,7 +53,7 @@ The <quote>marker records</quote> #1 and #8 denote the beginning and the end of 
 <procedure>
 <step>Determine the ELF section in the target module from which the reported call was made.</step>
 <step>Translate the offset of that call from the beginning of <quote>init</quote> or <quote>core</quote> area to the offset from the beginning of the section.</step>
-<step>Find the line corresponding to that instruction in the source code of the target module. This can be done, for example, with GDB or Objdump as described below.</step>
+<step>Find the line corresponding to that instruction in the source code of the target module. This can be done, for example, with Addr2line, GDB or Objdump as described below.</step>
 </procedure>
 
 <para>
@@ -61,7 +65,7 @@ According to how the loader of kernel modules currently works, it seems that the
 </para>
 
 <para>
-So, in many cases, the offset in <quote>init</quote> area is actually the offset in <code>.init.text</code> section and the offset in <quote>core</quote> area is the offset in <code>.text</code>. This is however not always the case. To find out which section the call in a trace record corresponds to, you can use different techniques. You can, for example, simply obtain the memory addresses of the sections of the target module while it is under analysis. They can be read from <filename>/sys/module/&lt;module_name&gt;/sections/&lt;section_name&gt;</filename>. Once you have these start addresses of the sections, you can use the absolute address of the call to find out which section it belongs to. 
+So, in many cases, the offset in <quote>init</quote> area is actually the offset in <code>.init.text</code> section and the offset in <quote>core</quote> area is the offset in <code>.text</code>. This is however not always the case. To find out which section the call in a trace record corresponds to, you can use different techniques. You can, for example, simply obtain the memory addresses of the sections of the target module while it is under analysis. They can be read from <filename>/sys/module/&lt;module_name&gt;/sections/&lt;section_name&gt;</filename> (note that reading from these files may require root privileges). Once you have these start addresses of the sections, you can use the absolute address of the call to find out which section it belongs to. 
 </para>
 
 <para>
@@ -73,16 +77,125 @@ cat /sys/module/kedr_sample_target/sections/.text
 ]]></programlisting>
 
 <para>
+To display the addresses of all the main code sections at once, the following could be helpful:
+</para>
+
+<programlisting><![CDATA[
+for sn in /sys/module/kedr_sample_target/sections/.*text*; do \
+    printf "$(basename ${sn})  $(cat ${sn})\n"; \
+done
+]]></programlisting>
+
+<para>
 Note that when the target module is unloaded and then loaded again, its sections may be located at some other addresses.
 </para>
 
 <para>
-On the other hand, you could assume that the order in which the sections are located in each of <quote>init</quote> and <quote>core</quote> areas is the same as in the object file of the module. So, taking the sizes of the sections and their alignment in memory into account, you could obtain the section layout in these memory areas. For example, Readelf (<command>readelf -S</command>) or GDB (<command>info files</command> command) can be used to list the sections for the object file.
-</para>
+Apart from the start addresses, it could also be convenient to know the size of each code section. Readelf (<command>readelf -SW</command>) or GDB (<command>info files</command> command) can be used to obtain this information. </para>
 
 <para>
 Now that you have found the section a call of interest belongs to as well as its offset in that section, you can use the debug information in the target module to find the corresponding place in its source code. The following sections show how to do this.
 </para>
+</section>
+<!-- ============================================================== -->
+
+<section id="analyze_trace.addr2line">
+<title>Locating the Calls in the Sources with Addr2line</title>
+
+<para>
+<command>addr2line</command> tool from binutils can be used to find the locations in the source code of the module corresponding to the given addresses in its binary image.
+</para>
+
+<para>
+Suppose we obtained the memory addresses and sizes of each code section when <filename>kedr_sample_target.ko</filename> was loaded:
+</para>
+
+<programlisting><![CDATA[
+for sn in /sys/module/kedr_sample_target/sections/.*text*; do \
+    printf "$(basename ${sn})  $(cat ${sn})\n"; \
+done
+
+.init.text  0xffffffffa00e7000
+.text       0xffffffffa01d6000
+.exit.text  0xffffffffa01d667c
+]]></programlisting>
+
+<para>
+It is also useful to know the size of each of these sections.
+</para>
+
+<programlisting><![CDATA[
+readelf -SW kedr_sample_target.ko
+
+[Nr] Name        Type      Address          Off    Size  
+...
+[ 2] .text       PROGBITS  0000000000000000 000030 00067c
+...
+[ 4] .init.text  PROGBITS  0000000000000000 0006bc 0001fd
+...
+[ 6] .exit.text  PROGBITS  0000000000000000 00067c 000010
+...
+]]></programlisting>
+
+<para>
+Consider the trace record #2. The address is 0xffffffffa00e70b9, this is the position right after the call to <code>__kmalloc</code>. It is in <code>.init.text</code> (this section starts at 0xffffffffa00e7000 and is 0x1fd bytes long), at the offset of 0xb9. As <code>.init.text</code> is the only section in init area of this module, the offset from the beginning of that area is the same. That is what we also see in the trace: <code>init+0xb9</code>.
+</para>
+
+<para>
+On x86 and x86-64, the length of the appropriate call instruction (<phrase role="nobreak"><quote>call near rel32</quote></phrase>) is 5 bytes, so the offset of that instruction itself from the beginning of <code>.init.text</code> is 0xb4. 
+</para>
+
+<programlisting><![CDATA[
+addr2line -e kedr_sample_target.ko -i --section=".init.text" b4
+
+/usr/src/linux/include/linux/slub_def.h:265
+/usr/src/linux/include/linux/slab.h:321
+/home/tester/work/kedr/other/sample_target/cfake.c:320
+]]></programlisting>
+
+<para>
+If you now look at that location in <filename>cfake.c</filename>, you will see something like this:
+</para>
+
+<programlisting><![CDATA[
+319   /* Allocate the array of devices */
+320   cfake_devices = (struct cfake_dev *)kzalloc(
+321      cfake_ndevices * sizeof(struct cfake_dev), 
+322      GFP_KERNEL);
+323   if (cfake_devices == NULL) {
+324      err = -ENOMEM;
+325      goto fail;
+326   }
+]]></programlisting>
+
+<para>
+The meaning of the output of <command>addr2line</command> is as follows. At <filename>cfake.c:320</filename>, <code>kzalloc()</code> is called. It is an inline function defined in <filename>linux/slab.h</filename>. At <filename>linux/slab.h:321</filename>, it calls <code>kmalloc()</code>, which is an inline function too. <code>kmalloc()</code> is defined in <filename>linux/slub_def.h</filename>. Eventually, <code>__kmalloc()</code> is called at <filename>linux/slub_def.h:265</filename>.
+</para>
+
+<para>
+Now let us consider the trace record #3. The address 0xffffffffa01d661e is in <code>.text</code> (<code>.text</code> starts at 0xffffffffa01d600 and is 0x67c bytes long). The offset from the beginning of <code>.text</code> is 0x61e. This is the location right after the call, so the offset of the call itself is 0x619.
+</para>
+
+<programlisting><![CDATA[
+addr2line -e kedr_sample_target.ko -i --section=".text" 619
+
+/usr/src/linux/include/linux/slub_def.h:265
+/usr/src/linux/include/linux/slab.h:321
+/home/eugene/work/mem_rw/sample_target/cfake.c:84
+]]></programlisting>
+
+<para>
+Take a look at the line 84 in <filename>cfake.c</filename>:
+</para>
+
+<programlisting><![CDATA[
+84  dev->data = (unsigned char*)kzalloc(dev->buffer_size, GFP_KERNEL);
+]]></programlisting>
+
+<para>
+It is this statement that triggered the call to <code>__kmalloc()</code> recorded in the trace.
+</para>
+
 </section>
 <!-- ============================================================== -->
 
@@ -205,11 +318,11 @@ The remaining records can be processed in a similar way.
 <title>Locating the Calls in the Sources with Objdump</title>
 
 <para>
-Once we know section names and the offsets in these sections for the call instructions of interest, <command>objdump</command> tool can be used instead of GDB to find the corresponding lines in the source code of target module.
+Once we know section names and the offsets in these sections for the call instructions of interest, <command>objdump</command> tool can also be used to find the corresponding source lines.
 </para>
 
 <para>
-First we need disassemble the code sections of the module:
+First we need to disassemble the code sections of the module:
 </para>
 
 <programlisting><![CDATA[
@@ -217,7 +330,7 @@ objdump -dSlr kedr_sample_target.ko > kedr_sample_target.disasm
 ]]></programlisting>
 
 <para>
-Let us locate the call mentioned in the trace record #2. Its position is right before the offset of 0x61e in <code>.text</code> section. The instructions in <filename>kedr_sample_target.disasm</filename> are marked with their offsets in the corresponding section, so we can get the following:
+Let us locate the call mentioned in the trace record #3. Its position is right before the offset of 0x61e in <code>.text</code> section. The instructions in <filename>kedr_sample_target.disasm</filename> are marked with their offsets in the corresponding section, so we can get the following:
 </para>
 
 <programlisting><![CDATA[
@@ -358,9 +471,6 @@ That is all for the payload module. Now we can build it and instruct KEDR to loa
 </para>
 
 <programlisting><![CDATA[
-# Tracing support
-module /usr/local/lib/modules/2.6.34.7-0.5-default/misc/kedr_trace.ko
-
 # Fault simulation infrastructure
 module /usr/local/lib/modules/2.6.34.7-0.5-default/misc/kedr_fault_simulation.ko
 
@@ -411,7 +521,7 @@ After that, we can load the target module by executing <command>insmod</command>
 ]]></programlisting>
 
 <para>
-Now that we have got the stack trace for that call, it will probably be easier to find out what exactly was allocated there. The ordinary trace that KEDR facilities have also prepared, could be used to check if this is the call we need to analyze.
+Now that we have got the stack trace for that call, it will probably be easier to find out what exactly was allocated there. The ordinary trace could be used here to check if this is the call we need to analyze.
 </para>
 
 <para>

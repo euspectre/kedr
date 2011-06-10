@@ -45,7 +45,7 @@
         <term>-f <replaceable>conf_file</replaceable></term>
         <listitem>
             <para>
-<replaceable>conf_file</replaceable> file provides configuration parameters that KEDR will use when loading and unloading. For the files in the default configuration directory (<filename class="directory">/var/opt/kedr/configs</filename>) or <filename class="directory">&lt;install_prefix&gt;/var/configs</filename> depending on where KEDR is installed) directory part of the path may be omitted. In the current version, the default configuration directory contains the following files:
+<replaceable>conf_file</replaceable> file provides configuration parameters that KEDR will use when loading and unloading. For the files in the default configuration directory (<filename class="directory">/var/opt/kedr/configs</filename>) or <filename class="directory">&lt;install_prefix&gt;/var/configs</filename> depending on where KEDR is installed), the directory part of the path may be omitted. In the current version, the default configuration directory contains the following files:
                 <variablelist>
                     <varlistentry>
                         <term><filename>callm.conf</filename></term>
@@ -82,14 +82,16 @@ All <replaceable>conf_string</replaceable> and <replaceable>conf_file</replaceab
             <para>
 If no <replaceable>conf_string</replaceable> and <replaceable>conf_file</replaceable> options are given, the command will use the default configuration file (<filename>/var/opt/kedr/configs/default.conf</filename> or <filename>&lt;install_prefix&gt;/var/configs/default.conf</filename>, depending on where KEDR is installed).
             </para>
-
+			<para>
+If necessary, several <code>-f</code> and <code>-c</code> options can be specified.
+			</para>
 </section>
 <section id="kedr_control.description">
 <title>Description</title>
     <section id="kedr_control.description.start">
     <title>&kedr-service; start</title>
         <para>
-<command>&kedr-service; start</command> first loads <filename>KEDR core</filename> with <quote>target_name</quote> parameter equal to <replaceable>target_name</replaceable>. Then it processes the  configuration file in the <quote>on_load</quote> mode and executes all resulting strings. The configuration file is the default one or the one prepared based on the options of the command (see <xref linkend="kedr_control.options"></xref>). That is, KEDR is now configured to operate on the module named <replaceable>target_name</replaceable>.
+<command>&kedr-service; start</command> first loads <filename>KEDR core</filename> with <quote>target_name</quote> parameter equal to <replaceable>target_name</replaceable>. Then it processes the configuration file in the <quote>on_load</quote> mode and executes all resulting strings. The configuration file is the default one or the one prepared based on the options of the command (see <xref linkend="kedr_control.options"></xref>). That is, KEDR is now configured to operate on the module named <replaceable>target_name</replaceable>.
         </para>
         <para>
 If <filename>KEDR core</filename> is already loaded, <command>&kedr-service; start</command> does nothing and returns 1.
@@ -244,13 +246,13 @@ payload payload1
 ...
 </programlisting>
 
+    <para>
+The following command will start KEDR for the module named <literal>module1</literal> with call monitoring and fault simulation turned on.
+    </para>
+
 <programlisting><![CDATA[
 kedr start module1 -f callm.conf -f fsim.conf
 ]]></programlisting>
-
-    <para>
-This command will start KEDR which is prepared for call monitoring and fault simulation for module named <literal>module1</literal>.
-    </para>
 
 </section>
 </section>

@@ -11,7 +11,7 @@ Apart from usage within KEDR, this mechanism can also be used for creating custo
     </para>
 
 <itemizedlist>
-<listitem><para><emphasis>fast development</emphasis> - the implementation of a new payload payload module for call monitoring requires, for example, about 10 lines in the <quote>definition</quote> file for the <quote>header</quote> part (it contains the name of the module, the author and the license, etc.), and about 10 lines per target function (description of the arguments and the return value, etc.) which call intended to be traced.</para></listitem>
+<listitem><para><emphasis>fast development</emphasis> - the implementation of a new payload payload module for call monitoring requires, for example, about 10 lines in the <quote>definition</quote> file for the <quote>header</quote> part (it contains the name of the module, the author and the license, etc.), and about 10 lines per target function (description of the arguments and the return value, etc.) the calls to which are to be traced.</para></listitem>
 
 <listitem><para><emphasis>clear and readable definition files</emphasis> - all features of your module are described in one place, the so called <firstterm>definition file</firstterm> rather than scattered over different files or over one long file. Every line in a <quote>definition</quote> file is self-explanatory.</para></listitem>
 

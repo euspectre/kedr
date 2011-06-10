@@ -1,7 +1,7 @@
 ﻿<section id="fault_sim">
 <title>Fault Simulation</title>
     <para>
-Fault simulation facilities provided by KEDR allow to put the target kernel module to the conditions that occur not very often during the normal operation of the module. For example, it is possible to simulate a situation when the system is short of memory or of another resource and consequently, at least some of the attempts to acquire the resource (e.g. allocate memory) fail. This allows to check if the target module handles such situations correctly.
+Fault simulation facilities provided by KEDR allow to put the target kernel module into the conditions that occur not very often during the normal operation of the module. For example, it is possible to simulate a situation when the system is short of memory or of another resource and consequently, at least some of the attempts to acquire the resource (e.g. allocate memory) fail. This allows to check if the target module handles such situations correctly.
     </para>
 
 <para>
@@ -24,7 +24,7 @@ It is possible to restrict fault simulation even more, to handling of only those
     </para></note>
     
     <para>
-During fault simulation, <link linkend="replacement_function">replacement functions</link> are registered for some set of <link linkend="target_function">target functions</link>. Each replacement function serves as a <link linkend="fault_simulation_point">fault simulation point</link>. That is, it calls a special <link linkend="fault_simulation_indicator">indicator function</link> and decides based on its return value whether to call the corresponding target function normally or simulate its failure. In the latter case the target is often not called at all, just the appropriate value is returned (as if it was returned by the target function).
+During fault simulation, <link linkend="replacement_function">replacement functions</link> are registered for some set of <link linkend="target_function">target functions</link>. Each replacement function serves as a <link linkend="fault_simulation_point">fault simulation point</link>. That is, it calls a special <link linkend="fault_simulation_indicator">indicator function</link> and decides based on its return value whether to call the corresponding target function normally or simulate its failure. In the latter case, the target is often not called at all, just the appropriate value is returned (as if it was returned by the target function).
     </para>
     
     <para>
@@ -32,7 +32,7 @@ In KEDR, the replacement functions and fault simulation scenarios are  independe
     </para>
 
     <para>
-The default fault simulation scenario is <phrase role="pcite"><quote>never simulate failures</quote></phrase>. So all the fault simulation <link linkend="payload_module">payload modules</link> do not change behaviour of original functions. To manage scenarios, each payload exports one or more directories in debugfs like <filename class='directory'>/sys/kernel/debug/kedr_fault_simulation/points/&lt;function-name&gt;</filename>, where <code>&lt;function-name&gt;</code> is a name of target kernel function (it is assumed here that debugfs filesystem is mounted to <filename class='directory'>/sys/kernel/debug</filename>). That is, fault simulation can be controlled separately for each target function.
+The default fault simulation scenario is <phrase role="pcite"><quote>never simulate failures</quote></phrase>. So all the fault simulation <link linkend="payload_module">payload modules</link> do not change behaviour of original functions. To manage scenarios, each payload module creates one or more directories in debugfs like <filename class='directory'>/sys/kernel/debug/kedr_fault_simulation/points/&lt;function-name&gt;</filename>, where <code>&lt;function-name&gt;</code> is a name of target kernel function (it is assumed here that debugfs filesystem is mounted to <filename class='directory'>/sys/kernel/debug</filename>). That is, fault simulation can be controlled separately for each target function.
     </para>
 
     <para>
@@ -46,7 +46,7 @@ cat /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/current_indicator
 ]]></programlisting>
 
 <para>
-After the payload module for fault simulation processing <function>__kmalloc</function> has just loaded, the above command will print <computeroutput>none</computeroutput>. This is because no indicator is currently set for <function>__kmalloc</function>.
+After the payload module for fault simulation processing <function>__kmalloc</function> has just loaded, the above command will print <computeroutput><quote>none</quote></computeroutput>. This is because no indicator is currently set for <function>__kmalloc</function>.
 </para>
 
 <programlisting><![CDATA[
@@ -62,7 +62,7 @@ cat /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/current_indicator
 ]]></programlisting>
 
 <para>
-<computeroutput>common</computeroutput> will be printed as a result of the command above.
+<computeroutput><quote>common</quote></computeroutput> will be printed as a result of the command above.
 </para>
 
 <para>
@@ -88,7 +88,7 @@ The indicator with name <quote>common</quote> is the common indicator that can b
 <filename>expression</filename> file corresponds to the mathematical expression. The indicator function will return the resulting value of this expression when called from a fault simulation point. Reading from this file returns the expression currently used by the indicator function. If you would like to instruct the indicator to use another expression, write the expression to this file. 
     </para>
     
-<itemizedlist mark='opencircle'>
+<itemizedlist mark='circle'>
 <para>The expression may contain the following.</para>
 
 <listitem><para>Signed or unsigned decimal integer numbers</para>
@@ -145,7 +145,7 @@ The indicator with name <quote>common</quote> is the common indicator that can b
 </listitem>
 </itemizedlist>
     <para>
-<filename>times</filename> file corresponds to the counter of target function calls(see description of <varname>times</varname> times variable, which may be used in the expression for the indicator). This counter is incremented every time when target function is called (while this fault simulation indicator is set fo this function). Reading from the file returns current value of counter, any writing to this file resets value of the counter to 0.
+<filename>times</filename> file corresponds to the counter of target function calls - see the description of <varname>times</varname> variable that can be used in the expression for the indicator. This counter is incremented each time the target function is called (while this fault simulation indicator is set for this function). Reading from the file returns the current value of the counter, writing any value to this file resets the counter to 0.
     </para>
 
     <para>
