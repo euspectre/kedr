@@ -2544,8 +2544,9 @@ mist_tg_process_dir(const char* dir,
     while (entry != NULL)
     {
         size_t len = strlen(entry->d_name);
+        int idx = (int)len - (int)tpl_ext_len;
         if (len > tpl_ext_len &&
-            !strncmp(&(entry->d_name[len - tpl_ext_len]), tpl_ext, tpl_ext_len))
+            !strncmp(&(entry->d_name[idx]), tpl_ext, tpl_ext_len))
         {
             char* pfile = mist_path_sum(dir, entry->d_name);
             if (pfile == NULL)

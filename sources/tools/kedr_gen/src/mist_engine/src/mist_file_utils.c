@@ -617,10 +617,11 @@ mist_load_config_file_from_dir(const char* base_dir, CStringMap* sm, char** err)
     }
     
     size_t len = strlen(tname);
+    int idx = (int)len - (int)suf_len;
     if (len > suf_len && 
-        !strncmp(&tname[len - suf_len], suffix, suf_len))
+        !strncmp(&tname[idx], suffix, suf_len))
     {
-        tname[len - suf_len] = '\0';  // cut off the suffix if present
+        tname[idx] = '\0';  // cut off the suffix if present
     }
 
     res = mist_load_config_file_for_name(base_dir, tname, sm, err);

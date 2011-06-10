@@ -10,4 +10,5 @@ trigger.code =>>
     char buf[1] = {'c'};
 
     result = copy_to_user(user_area, buf, sizeof(buf));
+    printk(KERN_DEBUG "[Test] copy_to_user: %d\n", result);
 <<
