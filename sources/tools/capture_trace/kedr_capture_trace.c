@@ -335,7 +335,7 @@ trace_read_common(int fd_trace, void* buf, size_t count);
  * Envelop around write() to some file.
  *
  * Whenever blocking flag of the program is set or not,
- * writing is perfromed effectivly in blocking mode.
+ * writing is perfromed effectively in a blocking mode.
  *
  * The thing is that, simple blocking writing is not correct,
  * because in that case program will be insensitive to ALL
@@ -597,84 +597,77 @@ int change_fl_flags(int fd, long mask, long value)
     return 0;
 }
 
-static ssize_t
-trace_read_nonblock(int fd_trace, void* buf, size_t count)
-{
-    /* Simple non-blocking read of the trace */
-    ssize_t result;
-    /* Repeat reading while it is interrupted*/
-    do
-    {
-        result = read(fd_trace, buf, count);
-    }while((result == -1) && (errno == EINTR));
-
-    if((result == -1) && (errno == EAGAIN))
-    {
-        /* "Reading would block" = EOF in non-blocking mode */
-        result = 0;
-    }
-
-    return result;
-}
-
 ssize_t trace_read_common(int fd_trace, void* buf, size_t count)
 {
     int blocking_mode_fd = blocking_mode_get_fd();
     if(blocking_mode_fd == -1)
     {
-        return trace_read_nonblock(fd_trace, buf, count);
-    }
-    else
-    {
-        /* Blocking mode, but also need to polling special file descriptor. */
+        /* Simple non-blocking read of the trace */
         ssize_t result;
-        struct pollfd pollfds[2] = {
-            {
-                .fd = -1,//will be fd_trace
-                .events = POLLIN,
-            },
-            {
-                .fd = -1,//will be fd of blocking_mode implementation
-                .events = POLLIN
-            }
-        };
-        pollfds[0].fd = fd_trace;
-        pollfds[1].fd = blocking_mode_fd;
-        /* Repeat poll()+read() until some data has read or error occured.*/
+        /* Repeat reading while it is interrupted*/
         do
         {
-            // Repeate poll() while interrupted with non-interesting signals
-            do
-            {
-                result = poll(pollfds, 2, -1/*forever*/);
-                //printf("poll exited.\n");
-            }while((result == -1) && (errno == EINTR));
-
-            if(result == -1)
-            {
-                print_error("poll() fail: %s.", strerror(errno));
-                return -1;
-            }
-            else if(result == 0)
-            {
-                print_error0("Unexpected return value 0 from poll() without timeout.");
-                return -1;
-            }
-            /* Successfull poll */
-            if(pollfds[1].revents & POLLIN)
-            {
-                /* Signal which should set non-blocking mode has arrived */
-                blocking_mode_update();
-                assert(blocking_mode_get_fd() == -1);
-                /* Now mode should be non-blocking. */
-                return trace_read_nonblock(fd_trace, buf, count);
-            }
-            /* new data become available in the trace */
             result = read(fd_trace, buf, count);
-        }while((result == -1) && ((errno == EAGAIN) || (errno == EINTR)));
-        
+        }while((result == -1) && (errno == EINTR));
+
+        if((result == -1) && (errno == EAGAIN))
+        {
+            /* "Reading would block" = EOF in non-blocking mode */
+            result = 0;
+        }
+
         return result;
     }
+
+    /* Blocking mode, but also need to polling special file descriptor. */
+    ssize_t result;
+    struct pollfd pollfds[2] = {
+        {
+            .fd = -1,//will be fd_trace
+            .events = POLLIN,
+        },
+        {
+            .fd = -1,//will be fd of blocking_mode implementation
+            .events = POLLIN
+        }
+    };
+    pollfds[0].fd = fd_trace;
+    pollfds[1].fd = blocking_mode_fd;
+    /* Repeat poll()+read() until some data has read or error occured.*/
+    do
+    {
+        // Repeate poll() while interrupted with non-interesting signals
+        do
+        {
+            result = poll(pollfds, 2, -1/*forever*/);
+            //printf("poll exited.\n");
+        }while((result == -1) && (errno == EINTR));
+
+        if(result == -1)
+        {
+            print_error("poll() fail: %s.", strerror(errno));
+            return -1;
+        }
+        else if(result == 0)
+        {
+            print_error0("Unexpected return value 0 from poll() without timeout.");
+            return -1;
+        }
+        /* Successfull poll */
+        if(pollfds[1].revents & POLLIN)
+        {
+            /* Signal which should set non-blocking mode has arrived */
+            blocking_mode_update();
+            assert(blocking_mode_get_fd() == -1);
+            /* Now mode should be non-blocking. */
+            return trace_read_common(fd_trace, buf, count);
+        }
+        /* new data become available in the trace */
+        result = read(fd_trace, buf, count);
+    }while((result == -1) && ((errno == EAGAIN) || (errno == EINTR)));
+    
+    return result;
+
 }
 
 ssize_t write_blocking(int fd, const void* buf, size_t count)
@@ -1075,32 +1068,36 @@ void blocking_mode_clear(void)
 
 void blocking_mode_update(void)
 {
-    if(fd_signal != -1)
+    if(fd_signal == -1)
     {
-        /*
-         *  Consume signal in the signal file descriptor.
-         *  Otherwise, it will 'alive', when be unblocked.
-         */
-
-        ssize_t result;
-        struct signalfd_siginfo siginfo;
-        /* Repeat read while interrupted */
-        do
-        {
-            result = read(fd_signal, &siginfo, sizeof(siginfo));
-        }while((result == -1) && (errno == EINTR));
-        
-        if(result > 0)
-        {
-            /* Signal was arrived. Set mode to non-block. */
-            sigset_t signal_mask;
-            sigemptyset(&signal_mask);
-            sigaddset(&signal_mask, SIGINT);
-            sigprocmask(SIG_UNBLOCK, &signal_mask, NULL);
-            close(fd_signal);
-            fd_signal = -1;
-        }
+        //nothing to update - blocking mode is already disabled
+        return;
     }
+
+    /*
+     *  Consume signal in the signal file descriptor.
+     *  Otherwise, it will 'alive', when be unblocked.
+     */
+
+    ssize_t result;
+    struct signalfd_siginfo siginfo;
+    /* Repeat read while interrupted */
+    do
+    {
+        result = read(fd_signal, &siginfo, sizeof(siginfo));
+    }while((result == -1) && (errno == EINTR));
+    
+    if(result == sizeof(siginfo))
+    {
+        /* Signal was arrived. Set mode to non-block. */
+        sigset_t signal_mask;
+        sigemptyset(&signal_mask);
+        sigaddset(&signal_mask, SIGINT);
+        sigprocmask(SIG_UNBLOCK, &signal_mask, NULL);
+        close(fd_signal);
+        fd_signal = -1;
+    }
+
 }
 
 
@@ -1223,7 +1220,7 @@ collect_trace_line(struct target_session_barrier* barrier,
         
         memcpy(barrier->current_line, str, str_size);
         barrier->current_line_size = str_size;
-        printf("Collect first line(size is %zu) ...\n", str_size);
+        //printf("Collect first line(size is %zu) ...\n", str_size);
         return 0;
     }
     else
