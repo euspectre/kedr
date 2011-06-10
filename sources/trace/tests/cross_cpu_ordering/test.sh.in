@@ -42,6 +42,7 @@ cat "${trace_file}" > "${trace_file_copy}" &
 capture_pid=$!
 sleep 0.5
 kill $capture_pid
+wait $capture_pid
 
 if ! rmmod "${module}"; then
 	printf "Cannot unload the module for testing.\n"

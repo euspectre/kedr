@@ -52,6 +52,7 @@ fi
 if test $? -ne 0; then
     printf "Failed to load target module\n"
     kill $capture_pid
+    wait $capture_pid
     umount "${debugfs_mount_point}"
     /sbin/rmmod "${payload_module_name}"
     /sbin/rmmod "${kedr_trace_module_name}"

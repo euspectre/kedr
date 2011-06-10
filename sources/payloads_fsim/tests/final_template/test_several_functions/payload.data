@@ -1,0 +1,44 @@
+# Fault simulation for __kmalloc() and krealloc().
+
+module.name = payload_fsim_several_functions
+module.author = Tsyvarev
+module.license = GPL
+
+header =>>
+#include <linux/slab.h>
+<<
+
+[group]
+    function.name = __kmalloc
+	returnType = void*
+
+	# Names and types of the arguments of the target function
+	arg.type = size_t
+	arg.name = size
+
+	arg.type = gfp_t
+	arg.name = flags
+    
+    # Parameter for fault simulation point
+	fpoint.param.type = int
+	fpoint.param.name = size
+
+	fpoint.fault_code = return NULL;
+
+[group]
+    function.name = krealloc
+	returnType = void*
+
+	# Names and types of the arguments of the target function
+	arg.type = void*
+	arg.name = p
+
+	arg.type = size_t
+	arg.name = size
+
+	arg.type = gfp_t
+	arg.name = flags
+    
+    # No parameters for fault simulation point
+
+	fpoint.fault_code = return NULL;

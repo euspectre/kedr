@@ -14,7 +14,7 @@
 size_t size = PAGE_SIZE * (((size_t)1) >> order);
 <<
 	# Fault Simulation
-	fpoint.reuse_point = __kmalloc
+	fpoint.reuse_point = kmalloc
 
 	# Duplicate parameters for kmalloc simulation point
 	fpoint.param.type = size_t

@@ -1,0 +1,29 @@
+# Fault simulation for __kmalloc() with renamed point
+
+module.name = payload_fsim_rename_fpoint
+module.author = Tsyvarev
+module.license = GPL
+
+header =>>
+#include <linux/slab.h>
+<<
+
+[group]
+    function.name = __kmalloc
+	returnType = void*
+
+	# Names and types of the arguments of the target function
+	arg.type = size_t
+	arg.name = size
+
+	arg.type = gfp_t
+	arg.name = flags
+    
+    # Parameter for fault simulation point
+	fpoint.param.type = int
+	fpoint.param.name = size
+
+	# Rename
+	fpoint.rename = kmalloc
+	
+	fpoint.fault_code = return NULL;

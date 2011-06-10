@@ -1,5 +1,6 @@
 # Add support of 'caller_address' fault simulation point parameter.
 [group]
+
 function.name = <$function.name$>
 
 <$if returnType$>returnType = <$returnType$>
@@ -21,5 +22,9 @@ prologue = void* caller_address = call_info->return_address;
 <$if concat(prologue)$><$prologueSection: join(\n)$>
 
 <$endif$><$if concat(epilogue)$><$epilogueSection: join(\n)$>
+
+<$endif$><$if fpoint.reuse_point$>fpoint.reuse_point = <$fpoint.reuse_point$>
+
+<$endif$><$if fpoint.rename$>fpoint.rename = <$fpoint.rename$>
 
 <$endif$>

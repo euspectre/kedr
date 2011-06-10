@@ -17,6 +17,9 @@
 	fpoint.param.type = gfp_t
 	fpoint.param.name = flags
 
+	# Rename point
+	fpoint.rename = kmalloc
+	
 	fpoint.fault_code =	returnValue = NULL;
 
 # End of the group of definitions for __kmalloc().

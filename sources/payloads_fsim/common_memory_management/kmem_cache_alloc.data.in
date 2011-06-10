@@ -15,7 +15,7 @@ size_t size = kmem_cache_size(mc);
 <<
 
 	# Fault Simulation
-	fpoint.reuse_point = __kmalloc
+	fpoint.reuse_point = kmalloc
 
 	# Duplicate parameters for kmalloc simulation point
 	fpoint.param.type = size_t

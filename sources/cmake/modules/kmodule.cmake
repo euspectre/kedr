@@ -334,6 +334,47 @@ macro(check_stack_trace)
 	endif (NOT STACK_TRACE_RELIABLE)
 endmacro(check_stack_trace)
 
+# Check whether ring buffer is implemented by the kernel.
+# Set cache variable RING_BUFFER_IMPLEMENTED according to this checking.
+function(check_ring_buffer)
+	set(check_ring_buffer_message 
+		"Checking if ring buffer is implemented by the kernel"
+	)
+	message(STATUS "${check_ring_buffer_message}")
+	if (DEFINED RING_BUFFER_IMPLEMENTED)
+		set(check_ring_buffer_message 
+"${check_ring_buffer_message} [cached] - ${RING_BUFFER_IMPLEMENTED}"
+		)
+	else (DEFINED RING_BUFFER_IMPLEMENTED)
+		kmodule_try_compile(ring_buffer_implemented_impl 
+			"${CMAKE_BINARY_DIR}/check_ring_buffer"
+			"${kmodule_test_sources_dir}/check_ring_buffer/module.c"
+		)
+		if (ring_buffer_implemented_impl)
+			set(RING_BUFFER_IMPLEMENTED "yes" CACHE INTERNAL
+				"Whether ring buffer is implemented by the kernel"
+			)
+		else (ring_buffer_implemented_impl)
+			set(RING_BUFFER_IMPLEMENTED "no" CACHE INTERNAL
+				"Whether ring buffer is implemented by the kernel"
+			)
+		endif (ring_buffer_implemented_impl)
+				
+		set(check_ring_buffer_message 
+"${check_ring_buffer_message} - ${RING_BUFFER_IMPLEMENTED}"
+		)
+	endif (DEFINED RING_BUFFER_IMPLEMENTED)
+	message(STATUS "${check_ring_buffer_message}")
+	
+	if (NOT RING_BUFFER_IMPLEMENTED)
+		message("\n[WARNING]\n Ring buffer is not supported by the system.\n"
+			"This make tracing in KEDR unavailable, so call monitoring will also do not work."
+			"If this is not acceptable, you could rebuild the kernel with\n"
+			"CONFIG_RING_BUFFER set to \"y\" and then reconfigure and rebuild KEDR.\n")
+	endif (NOT RING_BUFFER_IMPLEMENTED)
+
+endfunction(check_ring_buffer)
+
 # Check which memory allocator is used by the kernel.
 # Set KERNEL_MEMORY_ALLOCATOR to 'slab', 'slub', 'slob' or 'other'.
 #
