@@ -1,59 +1,172 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><title>6. KEDR Reference</title><link rel="stylesheet" href="kedr-doc.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.75.2"><link rel="home" href="index.html" title="KEDR 0.2.1 Reference Manual"><link rel="up" href="index.html" title="KEDR 0.2.1 Reference Manual"><link rel="prev" href="extend.html" title="5. Customizing and Extending KEDR"><link rel="next" href="glossary.html" title="Glossary"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">6. KEDR Reference</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="extend.html">Prev</a> </td><th width="60%" align="center"> </th><td width="20%" align="right"> <a accesskey="n" href="glossary.html">Next</a></td></tr></table><hr></div><div class="section" title="6. KEDR Reference"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="reference"></a>6. KEDR Reference</h2></div></div></div><div class="toc"><dl><dt><span class="section"><a href="reference.html#payload_api">6.1. API for Payload Modules</a></span></dt><dd><dl><dt><span class="section"><a href="reference.html#payload_api.header">6.1.1. Header file</a></span></dt><dt><span class="section"><a href="reference.html#payload_api.rtable">6.1.2. struct kedr_repl_table</a></span></dt><dt><span class="section"><a href="reference.html#payload_api.payload">6.1.3. struct kedr_payload</a></span></dt><dt><span class="section"><a href="reference.html#payload_api.register">6.1.4. kedr_payload_register()</a></span></dt><dt><span class="section"><a href="reference.html#payload_api.unregister">6.1.5. kedr_payload_unregister()</a></span></dt><dt><span class="section"><a href="reference.html#payload_api.in_init">6.1.6. kedr_target_module_in_init()</a></span></dt><dt><span class="section"><a href="reference.html#payload_api.stub">6.1.7. A Stub of a Payload Module</a></span></dt></dl></dd></dl></div><div class="section" title="6.1. API for Payload Modules"><div class="titlepage"><div><div><h3 class="title"><a name="payload_api"></a>6.1. API for Payload Modules</h3></div></div></div><p>
-This section describes the interface that the KEDR core provides for <a class="link" href="glossary.html#payload_module" title="Payload module">payload modules</a>. Technically, the API is 
-provided by <code class="filename">kedr-base</code> module.
-</p><div class="important" title="Important" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Important</h3><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><title>6. KEDR Reference</title><link rel="stylesheet" href="kedr-doc.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.75.2"><link rel="home" href="index.html" title="KEDR 0.3 Reference Manual"><link rel="up" href="index.html" title="KEDR 0.3 Reference Manual"><link rel="prev" href="extend.html" title="5. Customizing and Extending KEDR"><link rel="next" href="glossary.html" title="Glossary"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">6. KEDR Reference</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="extend.html">Prev</a> </td><th width="60%" align="center"> </th><td width="20%" align="right"> <a accesskey="n" href="glossary.html">Next</a></td></tr></table><hr></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="reference"></a>6. KEDR Reference</h2></div></div></div><div class="toc"><dl><dt><span class="section"><a href="reference.html#payload_api">6.1. API for Payload Modules</a></span></dt><dd><dl><dt><span class="section"><a href="reference.html#payload_api.header">6.1.1. Header File</a></span></dt><dt><span class="section"><a href="reference.html#payload_api.function_call_info">6.1.2. struct kedr_function_call_info</a></span></dt><dt><span class="section"><a href="reference.html#payload_api.pre_pair">6.1.3. struct kedr_pre_pair</a></span></dt><dt><span class="section"><a href="reference.html#payload_api.post_pair">6.1.4. struct kedr_post_pair</a></span></dt><dt><span class="section"><a href="reference.html#payload_api.replace_pair">6.1.5. struct kedr_replace_pair</a></span></dt><dt><span class="section"><a href="reference.html#payload_api.payload">6.1.6. struct kedr_payload</a></span></dt><dt><span class="section"><a href="reference.html#payload_api.register">6.1.7. kedr_payload_register()</a></span></dt><dt><span class="section"><a href="reference.html#payload_api.unregister">6.1.8. kedr_payload_unregister()</a></span></dt><dt><span class="section"><a href="reference.html#payload_api.in_init">6.1.9. kedr_target_module_in_init()</a></span></dt><dt><span class="section"><a href="reference.html#payload_api.functions_support_register()">6.1.10. functions_support_register()</a></span></dt><dt><span class="section"><a href="reference.html#payload_api.functions_support_unregister()">6.1.11. functions_support_unregister()</a></span></dt><dt><span class="section"><a href="reference.html#payload_api.stub">6.1.12. A Stub of a Payload Module</a></span></dt></dl></dd><dt><span class="section"><a href="reference.html#functions_support">6.2. Creating Trampolines</a></span></dt><dd><dl><dt><span class="section"><a href="reference.html#functions_support.why">6.2.1. Why Trampolines Are Needed</a></span></dt><dt><span class="section"><a href="reference.html#functions_support.define">6.2.2. How to Define Trampolines</a></span></dt><dt><span class="section"><a href="reference.html#functions_support.stub">6.2.3. A Stub of the Data File Describing the Targets</a></span></dt><dt><span class="section"><a href="reference.html#functions_support.generate">6.2.4. Generating the Source Code of the Trampolines</a></span></dt></dl></dd><dt><span class="section"><a href="reference.html#standard_callm_payloads">6.3. Standard Payloads for Call Monitoring</a></span></dt><dd><dl><dt><span class="section"><a href="reference.html#standard_callm_payloads.functions">6.3.1. Functions Processed by the Standard Payload Modules for Call Monitoring</a></span></dt></dl></dd><dt><span class="section"><a href="reference.html#standard_fsim_payloads">6.4. Standard Fault Simulation Payloads</a></span></dt><dd><dl><dt><span class="section"><a href="reference.html#standard_fsim_payloads.functions">6.4.1. Functions Processed by the Standard Payload Modules for Fault Simulation</a></span></dt></dl></dd><dt><span class="section"><a href="reference.html#standard_fsim_indicators">6.5. Standard Fault Simulation Scenarios</a></span></dt><dd><dl><dt><span class="section"><a href="reference.html#standard_fsim_indicators.common">6.5.1. Common Fault Simulation Scenario</a></span></dt><dt><span class="section"><a href="reference.html#standard_fsim_indicators.kmalloc">6.5.2. Fault Simulation Scenario for Memory Allocation Functions</a></span></dt><dt><span class="section"><a href="reference.html#standard_fsim_indicators.capable">6.5.3. Fault Simulation Scenario for capable()</a></span></dt></dl></dd><dt><span class="section"><a href="reference.html#fault_simulation_api">6.6. API for Fault Simulation</a></span></dt><dd><dl><dt><span class="section"><a href="reference.html#fault_simulation_api.header">6.6.1. Header file</a></span></dt><dt><span class="section"><a href="reference.html#fault_simulation_api.fault_simulation_point">6.6.2. Fault Simulation Point</a></span></dt><dt><span class="section"><a href="reference.html#fault_simulation_api.format_string">6.6.3. Format of the Data Passed from a Fault Simulation Point to the Scenario</a></span></dt><dt><span class="section"><a href="reference.html#fault_simulation_api.kedr_fsim_point_register">6.6.4. kedr_fsim_point_register()</a></span></dt><dt><span class="section"><a href="reference.html#fault_simulation_api.kedr_fsim_point_unregister">6.6.5. kedr_fsim_point_unregister()</a></span></dt><dt><span class="section"><a href="reference.html#fault_simulation_api.kedr_fsim_point_simulate">6.6.6. kedr_fsim_point_simulate()</a></span></dt><dt><span class="section"><a href="reference.html#fault_simulation_api.fault_simulation_indicator">6.6.7. Fault Simulation Indicator</a></span></dt><dt><span class="section"><a href="reference.html#fault_simulation_api.kedr_fsim_indicator_register">6.6.8. kedr_fsim_indicator_register()</a></span></dt><dt><span class="section"><a href="reference.html#fault_simulation_api.kedr_fsim_indicator_unregister">6.6.9. kedr_fsim_indicator_unregister()</a></span></dt><dt><span class="section"><a href="reference.html#fault_simulation_api.kedr_fsim_point_set_indicator">6.6.10. kedr_fsim_point_set_indicator()</a></span></dt><dt><span class="section"><a href="reference.html#fault_simulation_api.kedr_fsim_point_clear_indicator">6.6.11. kedr_fsim_point_clear_indicator()</a></span></dt><dt><span class="section"><a href="reference.html#fault_simulation_api.format_string_file">6.6.12. Control File <code class="filename">format_string</code></a></span></dt><dt><span class="section"><a href="reference.html#fault_simulation_api.current_indicator_file">6.6.13. Control File <code class="filename">current_indicator</code></a></span></dt></dl></dd></dl></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="payload_api"></a>6.1. API for Payload Modules</h3></div></div></div><p>
+This section describes the interface that the KEDR core provides for the <a class="link" href="glossary.html#payload_module">payload modules</a>.
+</p><div class="important" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Important</h3><p>
 When interacting with the KEDR core, the payload modules should rely only on
 the API described here. Other types, functions, macros, constants, etc., 
 that can be found in the headers and the source files of KEDR system are for
 internal use only and subject to change.
-</p></div><div class="section" title="6.1.1. Header file"><div class="titlepage"><div><div><h4 class="title"><a name="payload_api.header"></a>6.1.1. Header file</h4></div></div></div><p>
+</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="payload_api.header"></a>6.1.1. Header File</h4></div></div></div><p>
 The API is declared in the header file that a payload module should #include:
 </p><pre class="programlisting">
-#include &lt;kedr/base/common.h&gt;
-</pre></div><div class="section" title="6.1.2. struct kedr_repl_table"><div class="titlepage"><div><div><h4 class="title"><a name="payload_api.rtable"></a>6.1.2. struct kedr_repl_table</h4></div></div></div><p>
-<code class="code">struct kedr_repl_table</code> represents a <em class="firstterm">replacement 
-table</em> that defines which <a class="link" href="glossary.html#replacement_function" title="Replacement function">replacement function</a> should be 
-called instead of each particular <a class="link" href="glossary.html#target_function" title="Target function">target function</a> in the module under 
-analysis.
+#include &lt;kedr/core/kedr.h&gt;
+</pre></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="payload_api.function_call_info"></a>6.1.2. struct kedr_function_call_info</h4></div></div></div><p>
+Represents information about a particular function call which is passed to <a class="link" href="glossary.html#pre_handler">pre handlers</a>, <a class="link" href="glossary.html#replacement_function">replacement function</a> and <a class="link" href="glossary.html#post_handler">post handlers</a> in addition to the parameters of the target function.
 </p><pre class="programlisting">
-struct kedr_repl_table
+struct kedr_function_call_info
 {
-    void** orig_addrs; 
-    void** repl_addrs; 
-    unsigned int num_addrs;
+    void *return_address; 
 };
 </pre><p>
-<code class="code">orig_addrs</code> - an array of the addresses of target functions 
-(<span class="quote">“<span class="quote">what to replace</span>”</span>).
+Currently this structure has only one field, <code class="code">return_address</code>. This is the address of the location right after the call to target function (i.e. the address of the next machine instruction). This value should be used instead of __builtin_return_address(0) in the <a class="link" href="glossary.html#pre_handler">pre handlers</a>, <a class="link" href="glossary.html#replacement_function">replacement functions</a> and <a class="link" href="glossary.html#post_handler">post handlers</a>. This is because these functions are actually called by a trampoline function rather than directly from the place where the target is called. What is usually needed, however, is not the return address of a handler but rather the return address of the target function (to output call stack, etc.).
+</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="payload_api.pre_pair"></a>6.1.3. struct kedr_pre_pair</h4></div></div></div><p>
+Defines a <a class="link" href="glossary.html#pre_handler">pre handler</a>.
+</p><pre class="programlisting">
+struct kedr_pre_pair
+{
+    void *orig; 
+    void *pre; 
+};
+</pre><p>
+<code class="varname">orig</code> - address of the <a class="link" href="glossary.html#target_function">target function</a> the calls to which are to be intercepted.
 </p><p>
-<code class="code">repl_addrs</code> - an array of addresses of replacement functions 
-(<span class="quote">“<span class="quote">with what to replace</span>”</span>).
+<code class="varname">pre</code> - address of the <a class="link" href="glossary.html#pre_handler">pre handler</a> that should be called before the target function. Pre handler takes the same parameters as the target function plus an additional parameter of type <span class="type"><a class="type" href="reference.html#payload_api.function_call_info">struct kedr_function_call_info *</a></span>. Pre handler does not return value.
 </p><p>
-<code class="code">num_addrs</code> - number of elements to process in each of the two 
-arrays above.
+Example:
+</p><pre class="programlisting">
+/*
+ * Function foo() has the following signature:
+ *
+ *  long foo(int a, void *p);
+ */
+
+void 
+pre_foo(int a, void *p, struct kedr_function_call_info *call_info)
+{
+    /* ... */
+};
+
+struct kedr_pre_pair pre_foo_pair = {
+    (void *)&amp;foo,
+    (void *)&amp;pre_foo
+};
+</pre></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="payload_api.post_pair"></a>6.1.4. struct kedr_post_pair</h4></div></div></div><p>
+Defines a <a class="link" href="glossary.html#post_handler">post handler</a>.
+</p><pre class="programlisting">
+struct kedr_post_pair
+{
+    void *orig; 
+    void *post; 
+};
+</pre><p>
+<code class="varname">orig</code> - address of the <a class="link" href="glossary.html#target_function">target function</a> the calls to which are to be intercepted.
 </p><p>
-Each payload module has usually a single global instance of this structure 
-(see the example in <a class="xref" href="reference.html#payload_api.payload" title="6.1.3. struct kedr_payload">Section 6.1.3, “struct kedr_payload”</a>).
-</p><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
-There are no additional restrictions on the names of replacement 
-functions. The KEDR core will use their addresses rather than the names.
-</p></div></div><div class="section" title="6.1.3. struct kedr_payload"><div class="titlepage"><div><div><h4 class="title"><a name="payload_api.payload"></a>6.1.3. struct kedr_payload</h4></div></div></div><p>
-<code class="code">struct kedr_payload</code> represents a payload module from the 
-point of view of the KEDR core. 
+<code class="varname">post</code> - address of the <a class="link" href="glossary.html#post_handler">post handler</a> which should be called after the target function. Post handler takes the same parameters as target function plus a parameter of the same type as the return value of the target function (if it is non-void) plus an additional parameter of type <span class="type"><a class="type" href="reference.html#payload_api.function_call_info">struct kedr_function_call_info *</a></span>. Post handler does not return value.
+</p><p>
+Examples:
+</p><pre class="programlisting">
+/*
+ * Function foo() has the following signature:
+ *
+ *  long foo(int a, void *p);
+ */
+
+void 
+post_foo(int a, void *p, long returnValue, 
+    struct kedr_function_call_info *call_info)
+{
+    /* ... */
+};
+
+struct kedr_post_pair post_foo_pair = {
+    (void *)&amp;foo,
+    (void *)&amp;post_foo
+};
+</pre><pre class="programlisting">
+/*
+ * Function bar() has the following signature:
+ *
+ *  void bar(int a, void *p);
+ */
+
+void 
+post_bar(int a, void *p, struct kedr_function_call_info *call_info)
+{
+    /* ... */
+};
+
+struct kedr_post_pair post_bar_pair = {
+    (void *)&amp;bar,
+    (void *)&amp;post_bar
+};
+</pre></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="payload_api.replace_pair"></a>6.1.5. struct kedr_replace_pair</h4></div></div></div><p>
+Defines a <a class="link" href="glossary.html#replacement_function">replacement function</a>.
+</p><pre class="programlisting">
+struct kedr_replace_pair
+{
+    void *orig; 
+    void *replace; 
+};
+</pre><p>
+<code class="varname">orig</code> - address of the <a class="link" href="glossary.html#target_function">target function</a> the calls to which are to be intercepted.
+</p><p>
+<code class="varname">replace</code> - address of the <a class="link" href="glossary.html#replacement_function">replacement function</a> which should be called <span class="emphasis"><em>instead</em></span> of the target function. Replacement function takes the same parameters as the target function plus an additional parameter of type <span class="type"><a class="type" href="reference.html#payload_api.function_call_info">struct kedr_function_call_info *</a></span>. Replacement function should return value of the same type as the target function.
+</p><p>
+Examples:
+</p><pre class="programlisting">
+/*
+ * Function foo() has the following signature:
+ *
+ *  long foo(int a, void *p);
+ */
+
+long 
+replace_foo(int a, void *p, struct kedr_function_call_info *call_info)
+{
+    /* ... */
+};
+
+struct kedr_replace_pair replace_foo_pair = {
+    (void *)&amp;foo,
+    (void *)&amp;replace_foo
+};
+</pre><pre class="programlisting">
+/*
+ * Function bar() has the following signature:
+ *
+ *  void bar(int a, void *p);
+ */
+
+void 
+replace_bar(int a, void *p, struct kedr_function_call_info *call_info)
+{
+    /* ... */
+};
+
+struct kedr_replace_pair replace_bar_pair = {
+    (void *)&amp;bar,
+    (void *)&amp;replace_bar
+};
+</pre></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="payload_api.payload"></a>6.1.6. struct kedr_payload</h4></div></div></div><p>
+Represents a payload module from the point of view of the KEDR core. 
 </p><pre class="programlisting">
 struct kedr_payload
 {
-    struct module* mod;
-    struct kedr_repl_table repl_table;
-    void (*target_load_callback)(struct module*);
-    void (*target_unload_callback)(struct module*);
+    struct module *mod;
+    struct kedr_replace_pair *replace_pairs;
+    struct kedr_pre_pair *pre_pairs;
+    struct kedr_post_pair *post_pairs;
+    void (*target_load_callback)(struct module *);
+    void (*target_unload_callback)(struct module *);
 };
 </pre><p>
-<code class="code">mod</code> - the payload module itself. This field is usually 
+<code class="varname">mod</code> - the payload module itself. This field is usually 
 initialized with <code class="code">THIS_MODULE</code> value.
 </p><p>
-<code class="code">repl_table</code> - <a class="link" href="reference.html#payload_api.rtable" title="6.1.2. struct kedr_repl_table">the 
-replacement table</a>.
+<code class="varname">replace_pairs</code> - array of <a class="link" href="reference.html#payload_api.replace_pair">replacement function definitions</a>. This array should be terminated by element with <code class="varname">orig</code> field set to NULL. NULL value of <code class="varname">replace_pairs</code> is equivalent to an empty array.
+</p><p>
+<code class="varname">pre_pairs</code> - array of <a class="link" href="reference.html#payload_api.pre_pair">pre handler definitions</a>. This array should be terminated by element with <code class="varname">orig</code> field set to NULL. NULL value of <code class="varname">pre_pairs</code> is equivalent to an empty array.
+</p><p>
+<code class="varname">post_pairs</code> - array of <a class="link" href="reference.html#payload_api.post_pair">post handler definitions</a>. This array should be terminated by element with <code class="varname">orig</code> field set to NULL. NULL value of <code class="varname">post_pairs</code> is equivalent to an empty array.
 </p><p>
 <code class="code">target_load_callback</code> and <code class="code">target_unload_callback</code>. If 
 not NULL, these callbacks are called by KEDR core after the target module is loaded (but 
@@ -61,7 +174,7 @@ before it begins its initialization) and, respectively, when the target module
 has done cleaning up and is about to unload. The callbacks are passed the 
 pointer to the target module as an argument. If a callback is NULL, it is 
 ignored.
-</p><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
+</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
 Note that if the target module fails to initialize itself (and its init function returns an error as a result) and <code class="code">target_unload_callback</code> is not NULL, this callback will be called nevertheless.
 </p></div><p>
 Each payload module has usually a single global instance of <code class="code">struct kedr_payload</code> structure 
@@ -70,53 +183,61 @@ KEDR core.
 </p><p>
 Example:
 </p><pre class="programlisting">
-/* Addresses of the functions of interest (target functions) */
-static void* orig_addrs[] = {
-    (void*)&amp;_copy_to_user,
-    (void*)&amp;_copy_from_user
+/* Pre handlers and the corresponding target functions */
+static struct kedr_pre_pair pre_pairs[] = {
+    { (void *)&amp;_copy_to_user, (void *)&amp;pre__copy_to_user},
+    { (void *)&amp;_copy_from_user, (void *)&amp;post__copy_from_user},
+    { NULL,}
 };
 
-/* Addresses of the replacement functions */
-static void* repl_addrs[] = {
-    (void*)&amp;repl__copy_to_user,
-    (void*)&amp;repl__copy_from_user
+/* Post handlers and the corresponding target functions */
+static struct kedr_post_pair post_pairs[] = {
+    { NULL, }
 };
+
+
+/* Replacement functions and the corresponding target functions */
+static struct kedr_replace_pair replace_pairs[] = {
+    { (void *)&amp;capable, (void *)repl_capable},
+    { NULL,}
+};
+
 
 static struct kedr_payload payload = {
     .mod                    = THIS_MODULE,
-    .repl_table.orig_addrs  = &amp;orig_addrs[0],
-    .repl_table.repl_addrs  = &amp;repl_addrs[0],
-    .repl_table.num_addrs   = ARRAY_SIZE(orig_addrs),
+    .pre_pairs              = pre_pairs,
+    .post_pairs             = post_pairs,
+    .replace_pairs          = replace_pairs,
     .target_load_callback   = NULL,
     .target_unload_callback = NULL
 };
-</pre></div><div class="section" title="6.1.4. kedr_payload_register()"><div class="titlepage"><div><div><h4 class="title"><a name="payload_api.register"></a>6.1.4. kedr_payload_register()</h4></div></div></div><pre class="programlisting">
+</pre></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="payload_api.register"></a>6.1.7. kedr_payload_register()</h4></div></div></div><pre class="programlisting">
 int 
-kedr_payload_register(struct kedr_payload* payload);
+kedr_payload_register(struct kedr_payload *payload);
 </pre><p>
 This function registers a payload module with the KEDR core. 
 </p><p>
 <code class="code">payload</code> is the address of the <code class="code">kedr_payload</code> 
-instance identifying the payload module (see <a class="xref" href="reference.html#payload_api.payload" title="6.1.3. struct kedr_payload">Section 6.1.3, “struct kedr_payload”</a>).
+instance identifying the payload module (see <a class="xref" href="reference.html#payload_api.payload">Section 6.1.6, “struct kedr_payload”</a>).
 </p><p>
 The function returns 0 if successful, an error code otherwise (the general 
 rules of the kernel functions apply here too).
 </p><p>
 The function is usually called in the init function of the payload module.
-</p></div><div class="section" title="6.1.5. kedr_payload_unregister()"><div class="titlepage"><div><div><h4 class="title"><a name="payload_api.unregister"></a>6.1.5. kedr_payload_unregister()</h4></div></div></div><pre class="programlisting">
+</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="payload_api.unregister"></a>6.1.8. kedr_payload_unregister()</h4></div></div></div><pre class="programlisting">
 void 
-kedr_payload_unregister(struct kedr_payload* payload);
+kedr_payload_unregister(struct kedr_payload *payload);
 </pre><p>
 This function unregisters the payload module from the KEDR core. After 
-this is done, KEDR no longer uses this payload module (unless it 
+this is done, KEDR no longer uses this payload module (unless the latter 
 registers itself again).
 </p><p>
 <code class="code">payload</code> should be the same address as it was in the corresponding 
-call to <a class="link" href="reference.html#payload_api.register" title="6.1.4. kedr_payload_register()">kedr_payload_register()</a>.
+call to <a class="link" href="reference.html#payload_api.register">kedr_payload_register()</a>.
 </p><p>
 The function is usually called in the cleanup (exit) function of the payload
 module.
-</p></div><div class="section" title="6.1.6. kedr_target_module_in_init()"><div class="titlepage"><div><div><h4 class="title"><a name="payload_api.in_init"></a>6.1.6. kedr_target_module_in_init()</h4></div></div></div><pre class="programlisting">
+</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="payload_api.in_init"></a>6.1.9. kedr_target_module_in_init()</h4></div></div></div><pre class="programlisting">
 int
 kedr_target_module_in_init(void);
 </pre><p>
@@ -141,61 +262,74 @@ module to ensure that no request is made to the module until its
 initialization is properly handled.
 </p><p>
 It is allowed to call this function from atomic context.
-</p></div><div class="section" title="6.1.7. A Stub of a Payload Module"><div class="titlepage"><div><div><h4 class="title"><a name="payload_api.stub"></a>6.1.7. A Stub of a Payload Module</h4></div></div></div><p>
+</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="payload_api.functions_support_register()"></a>6.1.10. functions_support_register()</h4></div></div></div><pre class="programlisting">
+int 
+functions_support_register(void);
+</pre><p>
+This function loads the trampoline functions for the target functions processed by the payload module. It should be called before the first call to <code class="function">kedr_payload_register</code>.
+</p><p>
+This function is defined in auxiliary source file for the payload module rather than in KEDR core module itself. Because of this, it is needed to declare this function as <code class="code">extern</code> in the source file where it is used:
+</p><pre class="programlisting">
+extern int functions_support_register(void);
+</pre><p>
+The function returns 0 if successful, an error code otherwise (the general 
+rules of the kernel functions apply here too).
+</p><p>
+The function is usually called in the init function of the payload module.
+</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="payload_api.functions_support_unregister()"></a>6.1.11. functions_support_unregister()</h4></div></div></div><pre class="programlisting">
+void 
+functions_support_unregister(void);
+</pre><p>
+This function unloads trampolines which has loaded by <code class="function">functions_support_register</code>. It should be called after the last call to <code class="function">kedr_payload_unregister</code>.
+</p><p>
+This function is defined in auxiliary source file for the payload module rather than in KEDR core module itself. Because of this, it is needed to declare this function as <code class="code">extern</code> in the source file where it is used:
+</p><pre class="programlisting">
+extern void functions_support_unregister(void);
+</pre><p>
+The function is usually called in the cleanup (exit) function of the payload module.
+</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="payload_api.stub"></a>6.1.12. A Stub of a Payload Module</h4></div></div></div><p>
 Here is what a simple payload module may look like (this is a stub rather 
 than a real module, of course).
 </p><pre class="programlisting">
-/*********************************************************************
- * Module: stub_payload
+/* Module: stub_payload
  * 
  * Target kernel functions: 
  * 
  *   unsigned long kfoo(void *) 
- *   void* kbar(void *, unsigned int) 
+ *   void *kbar(void *, unsigned int) 
  *   int kbaz(void)
  *
  * The replacement functions provided by this module have the same 
- * signatures as the respective target functions but different names.
- *********************************************************************/
+ * signatures as the respective target functions, but different names. */
+/* ===================================================================== */
+
 #include &lt;linux/module.h&gt;
 #include &lt;linux/init.h&gt;
 
 MODULE_AUTHOR("&lt;Some name here&gt;");
 MODULE_LICENSE("&lt;Some license here&gt;");
-/*********************************************************************/
+/* ===================================================================== */
 
 #include &lt;kedr/base/common.h&gt;
 /* #include other necessary header files here */
+/* ===================================================================== */
 
-/*********************************************************************
- * Replacement functions
- *********************************************************************/
-static unsigned long
-repl_kfoo(void *arg)
+/* Handlers of the intercepted calls */
+static void
+post_kfoo(void *arg, unsigned long returnValue)
 {
-    unsigned long returnValue;
-    
-    /* Call the target function (optional)*/
-    returnValue = kfoo(arg);
-    
-    /* Process the results if necessary, dump data to a trace, etc. */
-    /* ... */
-
-    /* What the replacement function should return is also up to the provider
-     * of the function. Here, it is the return value of the target function 
-     * but, generally, it is not mandatory.
-     */
-    return returnValue;
+    /* Process the result of function, dump data to a trace, etc. */
+    trace_function_call(arg, returnValue);
 }
 
-static void*
+static void *
 repl_kbar(void *arg, unsigned int n)
 {
 /* The replacement function is not required to call the target function at 
  * all. It is up to the provider of the replacement function.
  */
     if (n &gt;= SOME_THRESHOLD) {
-        return NULL; /* this may simulate a failure */
+        return NULL; /* simulate a failure without actually calling kbar()*/
     } else {
         return kbar(arg, n);
     }
@@ -208,48 +342,346 @@ repl_kbaz(void)
     return 777;
 }
 
-/*********************************************************************/
+/* ===================================================================== */
 
-/* Addresses of the functions of interest (target functions) */
-static void* orig_addrs[] = {
-    (void*)&amp;kfoo,
-    (void*)&amp;kbar,    
-    (void*)&amp;kbaz
+/* Replacement functions and the corresponding target functions */
+static kedr_replace_pair replace_pairs[] = {
+    { (void *)&amp;kbar, (void *)&amp;repl_kbar},
+    { (void *)&amp;kbaz, (void *)&amp;repl_kbaz},
+    {NULL,} /* the end "marker" element */
 };
 
-/* Addresses of the replacement functions */
-static void* repl_addrs[] = {
-    (void*)&amp;repl_kfoo,
-    (void*)&amp;repl_kbar,    
-    (void*)&amp;repl_kbaz
+/* Post handlers and the corresponding target functions */
+static kedr_post_pair post_pairs[] = {
+    { (void *)&amp;kfoo, (void *)&amp;post_kfoo},
+    {NULL,} /* the end "marker" element */
 };
 
+/* Pre handlers are not used by this payload */
+
+/* Definition of struct kedr_payload */
 static struct kedr_payload payload = {
     .mod                    = THIS_MODULE,
-    .repl_table.orig_addrs  = &amp;orig_addrs[0],
-    .repl_table.repl_addrs  = &amp;repl_addrs[0],
-    .repl_table.num_addrs   = ARRAY_SIZE(orig_addrs),
+    .replace_pairs          = replace_pairs,
+    .post_pairs             = post_pairs,
+    .pre_pairs              = NULL,
     .target_load_callback   = NULL,
     .target_unload_callback = NULL
 };
-/*********************************************************************/
+/* ===================================================================== */
+
+/* Import the functions that load and unload trampolines */
+extern int functions_support_register(void);
+extern void functions_support_unregister(void);
 
 static void
 stub_payload_cleanup_module(void)
 {
     kedr_payload_unregister(&amp;payload);
+
+    functions_support_unregister();
+
     /* do other cleanup work */
-    return;
 }
 
 static int __init
 stub_payload_init_module(void)
 {
+    int result;
+
     /* initialize other necessary facilities */
-    return kedr_payload_register(&amp;payload);
+
+    result = functions_support_register();
+    if(result) return result;
+    
+    result = kedr_payload_register(&amp;payload);
+    if(result)
+    {
+        functions_support_unregister();
+        return result;
+    }
+    
+    return 0;
 }
 
 module_init(kedr_cm_user_space_access_init_module);
 module_exit(stub_payload_cleanup_module);
-/*********************************************************************/
-</pre></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="extend.html">Prev</a> </td><td width="20%" align="center"> </td><td width="40%" align="right"> <a accesskey="n" href="glossary.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">5. Customizing and Extending KEDR </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Glossary</td></tr></table></div></body></html>
+/* ===================================================================== */
+</pre></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="functions_support"></a>6.2. Creating Trampolines</h3></div></div></div><p>
+This section describes how to create <em class="firstterm"><a class="link" href="glossary.html#trampoline">trampolines</a></em> for <a class="link" href="glossary.html#target_function">target functions</a> intercepted by the payload modules.
+</p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="functions_support.why"></a>6.2.1. Why Trampolines Are Needed</h4></div></div></div><p>
+The main purpose of <a class="link" href="glossary.html#trampoline">trampolines</a> is to make it possible to use two or more payload modules simultaneuosly no matter whether some of the target functions they process are the same or not.
+</p><p>
+This allows to perform several kinds of operations on the target module at the same time. For example, while fault simulation is turned on, KEDR can also do call monitoring to obtain a trace of calls to the functions affected by fault simulation as well as any other calls of interest. In addition, KEDR can now perform memory leak detection and fault simulation simultaneously. You can also use the standard payload modules provided by KEDR in conjunction with almost any custom payload module (as long as no more than one of these modules defines a <a class="link" href="glossary.html#replacement_function">replacement function</a> for a given target function; <a class="link" href="glossary.html#pre_handler">pre handlers</a> and <a class="link" href="glossary.html#post_handler">post handlers</a> are not limited in this way though). Note that a payload module may not even know that other payload modules are working at the same time.
+</p><p>
+The ability to use payload modules processing the same target functions is provided since version 0.3 of KEDR framework. Before that, the fault simulation payloads, for example, had to duplicate the trace output functionality that naturally belonged to call monitoring payloads, LeakCheck and fault simulation could not be used at the same time, etc.
+</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="functions_support.define"></a>6.2.2. How to Define Trampolines</h4></div></div></div><p>
+The source code of the trampolines is created automatically from the special data file by <a class="link" href="extend.html#using_gen"><span class="command"><strong>kedr_gen</strong></span> tool</a>. Such data file should be written for each payload module and should contain information about the target functions processed by this payload module.
+</p><p>
+Here we describe what information the data file should provide.
+</p><p>
+At the global scope, the data file may contain only a single parameter:
+</p><div class="variablelist"><dl><dt><span class="term">header</span></dt><dd>the #include directives necessary to use the target functions of interest.</dd></dl></div><p>
+</p><p>
+For each target function, a group should be prepared. Each group should contain definitions of the following parameters:
+</p><div class="variablelist"><dl><dt><span class="term">function.name</span></dt><dd>name of the target function</dd><dt><span class="term">returnType</span></dt><dd>return type of the target function if it is not void, otherwise do not define this parameter at all</dd><dt><span class="term">arg.type</span></dt><dd>(multi-valued) types of the arguments of the target function, starting with the first one. If the function has no arguments, do not define this parameter at all.</dd><dt><span class="term">arg.name</span></dt><dd>(multi-valued) names of the arguments of the target function, starting with the first one. If the function has no arguments, do not define this parameter at all.</dd></dl></div><p>
+</p><p>
+
+</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="functions_support.stub"></a>6.2.3. A Stub of the Data File Describing the Targets</h4></div></div></div><p>
+Here is an example of a data file describing the target functions <code class="code">int foo(void *p)</code> and <code class="code">void bar(int x, int y, const char *str)</code>. The source code of the trampolines can be generated for these functions from this file. It is assumed that <code class="code">foo()</code> and <code class="code">bar()</code> are defined in <code class="filename">&lt;foo.h&gt;</code> and <code class="filename">&lt;bar.h&gt;</code> headers, respectively. 
+</p><pre class="programlisting">
+header =&gt;&gt;
+#include &lt;foo.h&gt;
+#include &lt;bar.h&gt;
+&lt;&lt;
+
+[group]
+    # Name and return type of the target function
+    function.name = foo
+    returnType = int
+
+    # Names and types of the arguments of the target function
+    arg.type = void *
+    arg.name = p
+    
+# End of the group of definitions for foo().
+
+[group]
+    # Name and return type of the target function
+    function.name = bar
+
+    # Names and types of the arguments of the target function
+    arg.type = int
+    arg.name = x
+
+    arg.type = int
+    arg.name = y
+
+    arg.type = const char *
+    arg.name = str
+
+# End of the group of definitions for bar().
+</pre></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="functions_support.generate"></a>6.2.4. Generating the Source Code of the Trampolines</h4></div></div></div><p>
+To generate the file with the source code of the trampolines from a data file, use the following command:
+</p><pre class="programlisting">
+<em class="replaceable"><code>&lt;kedr_install_dir&gt;</code></em>/lib/kedr/kedr_gen <em class="replaceable"><code>&lt;kedr_install_dir&gt;</code></em>/share/kedr/templates/function_support.c \
+    <em class="replaceable"><code>datafile</code></em> &gt; <em class="replaceable"><code>functions_support.c</code></em>
+</pre><p>
+A file named <em class="replaceable"><code>functions_support.c</code></em> will be created as a result. This file can then be used when building the payload module.
+</p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="standard_callm_payloads"></a>6.3. Standard Payloads for Call Monitoring</h3></div></div></div><p>
+This section describes the payload modules for call monitoring (call tracing) provided by KEDR.
+</p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="standard_callm_payloads.functions"></a>6.3.1. Functions Processed by the Standard Payload Modules for Call Monitoring</h4></div></div></div><p>
+Here is a full list of the payload modules that currently may be used for call monitoring, and the lists of the functions processed by each module. A function name in square brackets indicates that this function may or may not be exported on each particular system, and if it is exported, it will be processed. Only one of the functions separated by a slash is expected to be exported by the kernel, that function will be processed.
+    </p><p>
+</p><div class="itemizedlist"><ul class="itemizedlist" type="circle"><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_cmm.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>__kmalloc</td></tr><tr><td>krealloc</td></tr><tr><td>__krealloc</td></tr><tr><td>kfree</td></tr><tr><td>kzfree</td></tr><tr><td>kmem_cache_alloc</td></tr><tr><td>[kmem_cache_alloc_notrace]</td></tr><tr><td>[kmem_cache_alloc_trace]</td></tr><tr><td>kmem_cache_free</td></tr><tr><td>__get_free_pages</td></tr><tr><td>get_zeroed_page</td></tr><tr><td>free_pages</td></tr><tr><td>[__kmalloc_node]</td></tr><tr><td>[kmem_cache_alloc_node]</td></tr><tr><td>[kmem_cache_alloc_node_notrace]</td></tr><tr><td>[kmem_cache_alloc_node_trace]</td></tr><tr><td>[__alloc_pages_nodemask]</td></tr><tr><td>[alloc_pages_current]</td></tr><tr><td>[__free_pages]</td></tr><tr><td>[alloc_pages_exact]</td></tr><tr><td>[free_pages_exact]</td></tr></table></li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_user_space_access.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>copy_to_user/_copy_to_user</td></tr><tr><td>copy_from_user/_copy_from_user</td></tr><tr><td>strndup_user</td></tr><tr><td>memdup_user</td></tr></table></li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_mutexes.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>__mutex_init</td></tr><tr><td>[mutex_lock]</td></tr><tr><td>[mutex_lock_interruptible]</td></tr><tr><td>[mutex_lock_killable]</td></tr><tr><td>mutex_trylock</td></tr><tr><td>mutex_unlock</td></tr></table></li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_spinlocks.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>_spin_lock_irqsave/_raw_spin_lock_irqsave</td></tr><tr><td>_spin_unlock_irqrestore/_raw_spin_unlock_irqrestore</td></tr></table>
+    additionally, if KEDR was configured with <span class="quote">“<span class="quote">enable_full_spinlock</span>”</span> option set,
+    <table border="0" summary="Simple list" class="simplelist"><tr><td>_spin_lock/_raw_spin_lock</td></tr><tr><td>_spin_lock_irq/_raw_spin_lock_irq</td></tr><tr><td>_spin_unlock/_raw_spin_unlock</td></tr><tr><td>_spin_unlock_irq/_raw_spin_unlock_irq</td></tr></table></li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_waitqueue.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>__wake_up</td></tr><tr><td>init_waitqueue_head/__init_waitqueue_head</td></tr><tr><td>prepare_to_wait</td></tr><tr><td>finish_wait</td></tr><tr><td>remove_wait_queue</td></tr><tr><td>add_wait_queue</td></tr><tr><td>add_wait_queue_exclusive</td></tr></table></li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_capable.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>capable</td></tr></table></li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_vmm.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>vmalloc</td></tr><tr><td>__vmalloc</td></tr><tr><td>vmalloc_user</td></tr><tr><td>vmalloc_node</td></tr><tr><td>vmalloc_32</td></tr><tr><td>vmalloc_32_user</td></tr><tr><td>vfree</td></tr></table></li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_schedule.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>schedule</td></tr><tr><td>[preempt_schedule]</td></tr><tr><td>_cond_resched</td></tr><tr><td>schedule_timeout</td></tr><tr><td>schedule_timeout_uninterruptible</td></tr><tr><td>schedule_timeout_interruptible</td></tr><tr><td>io_schedule</td></tr><tr><td>cond_resched_lock/__cond_resched_lock</td></tr></table></li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_cm_mem_util.ko:</span><table border="0" summary="Simple list" class="simplelist"><tr><td>kstrdup</td></tr><tr><td>kstrndup</td></tr><tr><td>kmemdup</td></tr></table></li></ul></div><p>
+    </p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="standard_fsim_payloads"></a>6.4. Standard Fault Simulation Payloads</h3></div></div></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="standard_fsim_payloads.functions"></a>6.4.1. Functions Processed by the Standard Payload Modules for Fault Simulation</h4></div></div></div><p>
+Here is a full list of the payload modules that currently can be used for fault simulation, and the lists of the functions for which fault simulation is implemented by each module. For each function, the parameters that can be used in a fault simulation scenario are described.
+    </p><p>
+A function name in square brackets indicates that this function may or may not be exported on each particular system, and if it is exported, it will be processed. Only one of the functions separated by a slash is expected to be exported by the kernel, that function will be processed.
+    </p><p>
+Unless the opposite is stated explicitly, the name of the fault simulation point is the same as the name of the target function this point is used for.
+    </p><div class="itemizedlist"><ul class="itemizedlist" type="circle"><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_fsim_capable.ko</span><table border="0" summary="Simple list" class="simplelist"><tr><td><code class="function">capable</code></td></tr></table>
+    Fault simulation point for this function provides <code class="varname">cap</code> parameter of type <span class="type">int</span> for a fault simulation scenario.
+</li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_fsim_user_space_access.ko</span><table border="0" summary="Simple list" class="simplelist"><tr><td>
+    <code class="function">copy_to_user</code>/<code class="function">_copy_to_user</code>; no matter which of these functions is exported by the kernel, the name of the fault simulation point is <code class="filename">copy_to_user</code>
+    </td></tr><tr><td>
+    <code class="function">copy_from_user</code>/<code class="function">_copy_from_user</code>; no matter which of these functions is exported by the kernel, the name of the fault simulation point is <code class="filename">copy_from_user</code>
+    </td></tr><tr><td><code class="function">strndup_user</code></td></tr><tr><td><code class="function">memdup_user</code></td></tr></table>
+    Fault simulation points for these functions do not provide additional parameters for a fault simulation scenario.
+</li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_fsim_cmm.ko</span><table border="0" summary="Simple list" class="simplelist"><tr><td><code class="function">__kmalloc</code></td></tr><tr><td><code class="function">krealloc</code></td></tr><tr><td><code class="function">__krealloc</code></td></tr><tr><td><code class="function">kmem_cache_alloc</code></td></tr><tr><td>[<code class="function">kmem_cache_alloc_notrace</code>]</td></tr><tr><td>[<code class="function">kmem_cache_alloc_trace</code>]</td></tr><tr><td><code class="function">__get_free_pages</code></td></tr><tr><td><code class="function">get_zeroed_page</code></td></tr><tr><td>[<code class="function">__kmalloc_node</code>]</td></tr><tr><td>[<code class="function">kmem_cache_alloc_node</code>]</td></tr><tr><td>[<code class="function">kmem_cache_alloc_node_notrace</code>]</td></tr><tr><td>[<code class="function">kmem_cache_alloc_node_trace</code>]</td></tr><tr><td>[<code class="function">__alloc_pages_nodemask</code>]</td></tr><tr><td>[<code class="function">alloc_pages_current</code>]</td></tr><tr><td>[<code class="function">alloc_pages_exact</code>]</td></tr></table>
+    All these functions use a shared fault simulation point named <code class="filename">kmalloc</code> that provides the following parameters for a fault simulation scenario: <code class="varname">size</code> (of type <span class="type">size_t</span>) and <code class="varname">flags</code> (of type <span class="type">gfp_t</span>).
+</li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_fsim_mem_util.ko</span><table border="0" summary="Simple list" class="simplelist"><tr><td><code class="function">kstrdup</code></td></tr><tr><td><code class="function">kstrndup</code></td></tr><tr><td><code class="function">kmemdup</code></td></tr></table>
+    Fault simulation points for these functions do not provide additional parameters for a fault simulation scenario.
+</li><li class="listitem" style="list-style-type: circle"><span class="emphasized">kedr_fsim_vmm.ko</span><table border="0" summary="Simple list" class="simplelist"><tr><td><code class="function">vmalloc</code></td></tr><tr><td><code class="function">__vmalloc</code></td></tr><tr><td><code class="function">vmalloc_user</code></td></tr><tr><td><code class="function">vmalloc_node</code></td></tr><tr><td><code class="function">vmalloc_32</code></td></tr><tr><td><code class="function">vmalloc_32_user</code></td></tr></table>
+    All these functions use a shared fault simulation point named <code class="filename">vmalloc</code> that provides no additional parameters for a fault simulation scenario.
+</li></ul></div></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="standard_fsim_indicators"></a>6.5. Standard Fault Simulation Scenarios</h3></div></div></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="standard_fsim_indicators.common"></a>6.5.1. Common Fault Simulation Scenario</h4></div></div></div><p>
+A scenario named <span class="quote">“<span class="quote">common</span>”</span> may be set for any fault simulation point. Features of this scenario are described in <a class="xref" href="using_kedr.html#fault_sim">Section 4.5, “Fault Simulation”</a> in detail. The scenario is implemented by the module <code class="filename">kedr_fsim_indicator_common.ko</code>.
+    </p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="standard_fsim_indicators.kmalloc"></a>6.5.2. Fault Simulation Scenario for Memory Allocation Functions</h4></div></div></div><p>
+A scenario named <span class="quote">“<span class="quote">kmalloc</span>”</span> is intended to be used for the functions that allocate kernel memory. It accepts two parameters: <span class="type">size_t</span> <code class="varname">size</code> and <span class="type">gfp_t</span> <code class="varname">flags</code>. One can view them as the size of a memory block requested for allocation and the allocation flags, but the scenario itself does not make any assumptions about the meaning of these parameters.
+    </p><p>
+This scenario derives its functionality from <span class="quote">“<span class="quote">common</span>”</span> scenario described above and has also the following features:
+</p><div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
+variables <code class="varname">size</code> and <code class="varname">flags</code> can be used in the expression; they refer to the corresponding parameters of the scenario.
+    </li><li class="listitem">
+several constants corresponding to the allocation flags can be used in the expression:
+        <span class="simplelist"><code class="constant">GFP_NOWAIT</code>, <code class="constant">GFP_KERNEL</code>, <code class="constant">GFP_USER</code>, <code class="constant">GFP_ATOMIC</code></span>. The values of this constants are the same as the values of the corresponding macros in the kernel code.
+    </li></ul></div><p>
+    </p><p>
+This scenario is implemented by the module <code class="filename">kedr_fsim_indicator_kmalloc.ko</code>.
+    </p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="standard_fsim_indicators.capable"></a>6.5.3. Fault Simulation Scenario for capable()</h4></div></div></div><p>
+A scenario named <span class="quote">“<span class="quote">capable</span>”</span> is intended to be used for <code class="function">capable()</code> function. It accepts one parameter: <span class="type">int</span> <code class="varname">cap</code>. One can view it is a parameter of <code class="function">capable()</code> function, but the scenario itself does not make any assumptions about the meaning of this parameter.
+    </p><p>
+This scenario derives functionality from <span class="quote">“<span class="quote">common</span>”</span> scenario described above and has also the following features:
+</p><div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem">
+variable <code class="varname">cap</code> can be used in the expression; it refers to the corresponding parameter of the scenario.
+    </li><li class="listitem">
+several constants defining the particilar capabilities such as <code class="constant">CAP_SYS_ADMIN</code> can be used in the expression. The values of these constants are the same as the values of the corresponding macros in the kernel code.
+    </li></ul></div><p>
+    </p><p>
+This scenario is implemented by the module <code class="filename">kedr_fsim_indicator_capable.ko</code>.
+    </p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="fault_simulation_api"></a>6.6. API for Fault Simulation</h3></div></div></div><p>
+This section describes the interface provided for creating and using <a class="link" href="glossary.html#fault_simulation_point">fault simulation points</a> as the code branching points and <a class="link" href="glossary.html#fault_simulation_indicator">fault simulation indicators</a> as the scenarios for such branching.
+</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
+Although this API is used by KEDR in the payload modules for fault simulation, the API can be used without KEDR core and payloads.
+</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="fault_simulation_api.header"></a>6.6.1. Header file</h4></div></div></div><p>
+The API is declared in a header file that a module implementing fault simulation points or indicators should #include:
+</p><pre class="programlisting">
+#include &lt;kedr/fault_simulation/fault_simulation.h&gt;
+</pre></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="fault_simulation_api.fault_simulation_point"></a>6.6.2. Fault Simulation Point</h4></div></div></div><p>
+A registered <a class="link" href="glossary.html#fault_simulation_point">fault simulation point</a> is represented by <code class="code">struct kedr_simulation_point</code>.
+</p><pre class="programlisting">
+struct kedr_simulation_point;
+</pre><p>
+Each fault simulation point has a unique name. For each point, there is a subdirectory in <code class="filename">kedr_fault_simulation/points</code> in debugfs filesystem. The name of this subdirectory is the same as the name of the point itself. The files in that subdirectory can be used to control the scenarios for this point.
+</p><p>
+When it is needed to decide which branch of code should be executed, one should call <code class="function"><a class="function" href="reference.html#fault_simulation_api.kedr_fsim_point_simulate">kedr_fsim_point_simulate()</a></code>. This function will return an integer value according to the scenario set for this point, this value can then be used for branching.
+</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="fault_simulation_api.format_string"></a>6.6.3. Format of the Data Passed from a Fault Simulation Point to the Scenario</h4></div></div></div><p>
+When calling <code class="function"><a class="function" href="reference.html#fault_simulation_api.kedr_fsim_point_simulate">kedr_fsim_point_simulate</a></code>, one should also pass the parameters for the fault simulation scenario. The format is expected to be a struct containing fields of possibly different types. It can be encoded in a string with a comma-separated ordered list of these types. E.g. a string <span class="quote">“<span class="quote">int*,long</span>”</span> encodes the parameters of the corresponding types:
+</p><pre class="programlisting">
+struct 
+{
+    int *val1;
+    long val2;
+};
+</pre><p>
+The absence of parameters for scenario is encoded by an empty string (<span class="quote">“<span class="quote"></span>”</span>).
+</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="fault_simulation_api.kedr_fsim_point_register"></a>6.6.4. kedr_fsim_point_register()</h4></div></div></div><p>
+Registers the fault simulation point, making it available for code branching in the target module and for managing its scenarios from the kernel space and the user space.
+</p><pre class="programlisting">
+struct kedr_simulation_point *
+kedr_fsim_point_register(const char *point_name,
+	const char *format_string);
+</pre><p>
+<code class="varname">point_name</code> - name of the fault simulation point.
+</p><p>
+<code class="varname">format_string</code> - a string that encodes the parameters passed to a scenario for that point. <code class="constant">NULL</code> is effectively the same as an empty string. It means that no parameters are passed to the scenarios. It is the caller of <code class="function"><a class="function" href="reference.html#fault_simulation_api.kedr_fsim_point_simulate">kedr_fsim_point_simulate</a></code>, who is responsible for passing parameters in the correct format.
+</p><p>
+Returns the descriptor of the registered fault simulation point. On error, returns <code class="constant">NULL</code>.
+</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="fault_simulation_api.kedr_fsim_point_unregister"></a>6.6.5. kedr_fsim_point_unregister()</h4></div></div></div><p>
+Unregisters the fault simulation point, making its name free for use.
+</p><pre class="programlisting">
+void kedr_fsim_point_unregister(struct kedr_simulation_point *point);
+</pre><p>
+<code class="varname">point</code> - the registered fault simulation point.
+</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="fault_simulation_api.kedr_fsim_point_simulate"></a>6.6.6. kedr_fsim_point_simulate()</h4></div></div></div><p>
+Gets the value according to the scenario set for the point (nonzero - simulate a failure, 0 - do not).
+</p><pre class="programlisting">
+int kedr_fsim_point_simulate(struct kedr_simulation_point *point,
+    void *user_data);
+</pre><p>
+<code class="varname">point</code> - registered fault simulation point.
+</p><p>
+<code class="varname">user_data</code> - parameters for the scenario. The format of these parameters should match <code class="varname">format_string</code> used when the point was registered.
+</p><p>
+Returns an integer value according to the scenario set for that point. If no scenario is set, returns <code class="constant">0</code>.
+</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="fault_simulation_api.fault_simulation_indicator"></a>6.6.7. Fault Simulation Indicator</h4></div></div></div><p>
+A registered <a class="link" href="glossary.html#fault_simulation_indicator">fault simulation indicator</a> is represented by <code class="code">struct kedr_simulation_indicator</code>.
+</p><pre class="programlisting">
+struct kedr_simulation_indicator;
+</pre><p>
+Each fault simulation indicator has unique name.  For each indicator, there is a subdirectory in <code class="filename">kedr_fault_simulation/indicators</code> in debugfs filesystem. The name of this subdirectory is the same as the name of the indicator itself. The files in that subdirectory can be used to control the indicator.
+</p><p>
+Actually, each fault simulation indicator is a generator of the scenarios. When one sets a scenario for a particular fault simulation point (via <code class="function"><a class="function" href="reference.html#fault_simulation_api.kedr_fsim_point_set_indicator">kedr_fsim_point_set_indicator</a></code> function or by writing to the <code class="filename"><a class="filename" href="reference.html#fault_simulation_api.current_indicator_file">current_indicator</a></code> file), the corresponding indicator is used to <span class="quote">“<span class="quote">instantiate</span>”</span> a scenario set for that point. After that moment, the scenario becomes independent on the other scenarios that might be set using this indicator.
+</p><p>
+To make it clearer, let us consider a simple scenario <span class="pcite"><span class="quote">“<span class="quote">simulate failure every second call</span>”</span></span>. When this scenario is set for a particular point, one would expect that <code class="function">kedr_fsim_point_simulate</code> will return nonzero when called the second time, the forth time and so on. Imagine then, that after the third call to <code class="function">kedr_fsim_point_simulate</code>, this scenario is additionally set for another point. So, the first call to <code class="function">kedr_fsim_point_simulate</code> for the second point would return nonzero if the scenario is shared by the two points, which is usually not what is desirable.
+</p><p>
+Now, instead of setting the scenario for the points directly, we will use the fault simulation indicator. For the first point, this indicator will create scenario <span class="pcite"><span class="quote">“<span class="quote">simulate failure every second call</span>”</span></span>. When applied to another point, the indicator will create <span class="emphasis"><em>another</em></span> scenario, with its own local call counter. So according to this scenario, <code class="function">kedr_fsim_point_simulate</code> will return nonzero when called the second time, the forth time and so on <span class="emphasis"><em>independently</em></span> on the first point and its scenario.
+</p><p>
+Another feature of the fault simulation indicators is that one indicator may create different scenarios according to some parameters. These parameters are passed to the scenario generator function of the indicator, when the indicator is applied to the point. E.g., an indicator may generate scenarios like <span class="pcite"><span class="quote">“<span class="quote">simulate failure every <code class="varname">n</code>th call</span>”</span></span>, where <code class="varname">n</code> is a parameter of the generator function.
+</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="fault_simulation_api.kedr_fsim_indicator_register"></a>6.6.8. kedr_fsim_indicator_register()</h4></div></div></div><p>
+Registers the fault simulation indicator, making it available for generating scenarios for the fault simulation points.
+</p><pre class="programlisting">
+struct kedr_simulation_indicator *
+kedr_fsim_indicator_register(const char *indicator_name,
+	int (*simulate)(void *indicator_state, void *user_data),
+    const char *format_string,
+    int (*create_instance)(void **indicator_state, const char *params, struct dentry *control_directory),
+    void (*destroy_instance)(void *indicator_state)
+);
+</pre><p>
+<code class="varname">indicator_name</code> - name of the indicator.
+</p><p>
+<code class="varname">simulate</code> - callback function that implements the scenario of the indicator.
+<code class="varname">indicator_state</code> parameter of this function is set to the object created by <code class="varname">create_instance</code> callback. <code class="varname">user_data</code> - the data from the fault simulation point passed to scenario. The function should return integer value corresponding to this scenario.
+</p><p>
+<code class="varname">format_string</code> - string containing the encoded format of the data that will be provided by the fault simulation point to the scenario (see <a class="xref" href="reference.html#fault_simulation_api.format_string">Section 6.6.3, “Format of the Data Passed from a Fault Simulation Point to the Scenario”</a>). <code class="constant">NULL</code> is effectively the same as an empty string and means that the scenario expects no parameters. The more parameters scenario uses, the more complex the scenario can become but the fewer points will be able to use this scenario.
+</p><p>
+<code class="varname">create_instance</code> - callback function to generate a new scenario. This function may set <code class="varname">indicator_state</code> pointer and this pointer will be passed to <code class="function">simulate</code> and <code class="function">destroy_instance</code> callbacks. If not set, this pointer is expected to be <code class="constant">NULL</code>. <code class="varname">params</code> is a null-terminated string containing the parameters of the created scenario, or <code class="constant">NULL</code>. The function may interpret this parameter in an arbitrary way. <code class="varname">control_directory</code> is a directory of the fault simulation point (in debugfs filesystem) for which the scenario is created. The function may create some files in this directory as the means to control the scenario. Note that this directory already contains files <code class="filename"><a class="filename" href="reference.html#fault_simulation_api.current_indicator_file">current_indicator</a></code> and <code class="filename"><a class="filename" href="reference.html#fault_simulation_api.format_string_file">format_string</a></code>. The function should return 0 if the scenario has been created successfully or a negative error code in case of error.
+</p><p>
+<code class="varname">destroy_instance</code> - callback function for destroying the scenario, created by <code class="varname">create_instance</code>. <code class="varname">indicator_state</code> parameter is the same as the one set by <code class="varname">create_instance</code>.
+</p><p>
+The function returns an identifier of the newly created fault simulation indicator or <code class="constant">NULL</code> in case of error.
+</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="fault_simulation_api.kedr_fsim_indicator_unregister"></a>6.6.9. kedr_fsim_indicator_unregister()</h4></div></div></div><p>
+Unregisters the indicator, making its name free for use. Also deletes all existing scenarios created with this indicator.
+</p><pre class="programlisting">
+void kedr_fsim_indicator_unregister(struct kedr_simulation_indicator *indicator);
+</pre><p>
+<code class="varname">indicator</code> - identifier of the fault simulation indicator, created previously via <code class="function">kedr_fsim_indicator_register</code>.
+</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="fault_simulation_api.kedr_fsim_point_set_indicator"></a>6.6.10. kedr_fsim_point_set_indicator()</h4></div></div></div><p>
+Creates a new scenario using the given fault simulation indicator and set this scenario for the given fault simulation point.
+</p><pre class="programlisting">
+int kedr_fsim_point_set_indicator(const char *point_name,
+    const char *indicator_name, const char *params);
+</pre><p>
+<code class="varname">point_name</code> - name of the point the scenario is created for.
+</p><p>
+<code class="varname">indicator_name</code> - name of the indicator used to create the scenario.
+</p><p>
+<code class="varname">params</code> - parameters of the new scenario (will be passed to the indicator's <code class="function">create_instance</code> function).
+</p><p>
+The function returns 0 if the new scenario has been created and set successfully. On error, negative error code is returned.
+</p><p>
+The function returns error if the fault simulation point does not provide all parameters needed for the scenario or provides them in incorrect order. To put it simple, the function returns error if <code class="varname">format_string</code> of the indicator is not a substring of the <code class="varname">format_string</code> of the point.
+</p><p>
+If another scenario has been set for the point before this function is called, that scenario will be removed and destroyed before the new scenario is created (so, there is no collision for the files in point's control directory).
+</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="fault_simulation_api.kedr_fsim_point_clear_indicator"></a>6.6.11. kedr_fsim_point_clear_indicator()</h4></div></div></div><p>
+Removes (unsets) and destroys the scenario set for the fault simulation point. If no scenario is set for the point, does nothing.
+</p><pre class="programlisting">
+int kedr_fsim_point_clear_indicator(const char *point_name);
+</pre><p>
+<code class="varname">point_name</code> - name of the fault simulation point for which a scenario should be cleared.
+</p><p>
+The function returns <code class="constant">0</code> on success and negative error code on failure.
+</p><p>
+This function is called indirectly when a fault simulation point is unregistered or when the fault simulation indicator that created this scenario is unregistered.
+</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="fault_simulation_api.format_string_file"></a>6.6.12. Control File <code class="filename">format_string</code></h4></div></div></div><p>
+For each registered point, there is a file in the point's control directory that reflects the format of the data this point passes to the scenario.
+</p><pre class="programlisting">
+<code class="filename">&lt;debugfs-mount-point&gt;/kedr_fault_simulation/&lt;point-name&gt;/format_string</code>
+</pre><p>
+Reading from this file returns a string containing the encoded format of the data this point passes to the scenario.
+</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="fault_simulation_api.current_indicator_file"></a>6.6.13. Control File <code class="filename">current_indicator</code></h4></div></div></div><p>
+For each registered point, there is a file in the point's control directory that reflects information about the current scenario for the point and allows to set another scenario.
+</p><pre class="programlisting">
+<code class="filename">&lt;debugfs-mount-point&gt;/kedr_fault_simulation/&lt;point-name&gt;/current_indicator</code>
+</pre><p>
+Reading from this file returns the name of the scenario currently set for the point (more precisely, the name of the indicator used to create this scenario). If no scenario is set for the point, <span class="quote">“<span class="quote">none</span>”</span> is returned.
+</p><p>
+Writing to this file sets a new scenario for the point. Everything before the first space in the written sequence is treated as a name of the indicator, which is used for create a new scenario. Everything after the first space is treated as a parameter string for the new scenario. If there are no spaces in the written sequence, the whole sequence is treated as name of the indicator, and no parameters are passed for the new scenario. Writing a special name <span class="quote">“<span class="quote">none</span>”</span> forces clearing the scenario.
+</p><p>
+</p><pre class="programlisting">
+.../points# echo indicator1 param1 param2 &gt; point1/current_indicator
+</pre><p>
+is effectively the same as
+</p><pre class="programlisting">
+kedr_fsim_point_set_indicator("point1", "indicator1", "param1 param2");
+</pre><p>
+</p><p>
+</p><pre class="programlisting">
+.../points# echo indicator2 &gt; point2/current_indicator
+</pre><p>
+is effectively the same as
+</p><pre class="programlisting">
+kedr_fsim_point_set_indicator("point2", "indicator2", NULL);
+</pre><p>
+</p><p>
+</p><pre class="programlisting">
+.../points# echo none &gt; point3/current_indicator
+</pre><p>
+is effectively the same as
+</p><pre class="programlisting">
+kedr_fsim_point_clear_indicator("point3");
+</pre><p>
+</p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="extend.html">Prev</a> </td><td width="20%" align="center"> </td><td width="40%" align="right"> <a accesskey="n" href="glossary.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">5. Customizing and Extending KEDR </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Glossary</td></tr></table></div></body></html>
