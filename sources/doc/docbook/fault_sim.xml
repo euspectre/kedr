@@ -24,7 +24,7 @@ It is possible to restrict fault simulation even more, to handling of only those
     </para></note>
     
     <para>
-During fault simulation, <link linkend="replacement_function">replacement functions</link> are registered for some set of <link linkend="target_function">target functions</link>. Each replacement function may call target function or perform some set of actions. Former variant is referred as <quote>normal execution</quote>, the latter is referred as <quote>fault simulation</quote> and is usually interpreted by the caller of the target function as a fault in this function. Replacement function use a <link linkend="fault_simulation_point">fault simulation point</link> for choose between these variants. That is, it calls a special <link linkend="fault_simulation_indicator">indicator function</link> and decides based on its return value whether to call the corresponding target function normally or simulate its failure. In the latter case, the target function is often not called at all, just the appropriate value is returned (as if it was returned by the target function).
+During fault simulation, <link linkend="replacement_function">replacement functions</link> are registered for some set of <link linkend="target_function">target functions</link>. Each replacement function may call the target function or perform some set of actions. The former variant is referred to as <quote>normal execution</quote>, the latter is referred to as <quote>fault simulation</quote>, it usually looks like a failure in this function from the the caller's point of view. A replacement function uses a <link linkend="fault_simulation_point">fault simulation point</link> to choose among these variants. That is, it calls a special <link linkend="fault_simulation_indicator">indicator function</link> and decides based on its return value whether to call the corresponding target function normally or simulate its failure. In the latter case, the target function is often not called at all, just the appropriate value is returned (as if it was returned by the target function).
     </para>
     
     <para>
@@ -32,7 +32,7 @@ In KEDR, the replacement functions and fault simulation scenarios are  independe
     </para>
 
     <para>
-The default fault simulation scenario is <phrase role="pcite"><quote>never simulate failures</quote></phrase>. So all the fault simulation <link linkend="payload_module">payload modules</link> do not change behaviour of original functions. To manage scenarios, each payload module creates one or more directories in debugfs like <filename class='directory'>/sys/kernel/debug/kedr_fault_simulation/points/&lt;point-name&gt;</filename>, where <code>&lt;point-name&gt;</code> is a name of fault simulation point (it is assumed here that debugfs filesystem is mounted to <filename class='directory'>/sys/kernel/debug</filename>). Names of fault simulation points usually coincide with the names of corresponded target functions, but also may differ from them. That is, fault simulation can be controlled separately for each target function.
+The default fault simulation scenario is <phrase role="pcite"><quote>never simulate failures</quote></phrase>. So all the fault simulation <link linkend="payload_module">payload modules</link> do not change behaviour of original functions. To manage scenarios, each payload module creates one or more directories in debugfs like <filename class='directory'>/sys/kernel/debug/kedr_fault_simulation/points/&lt;point-name&gt;</filename>, where <code>&lt;point-name&gt;</code> is the name of the fault simulation point (it is assumed here that debugfs filesystem is mounted to <filename class='directory'>/sys/kernel/debug</filename>). The names of fault simulation points are usually the same as the names of the corresponding target functions but may also differ from those. That is, fault simulation can be controlled separately for each target function.
     </para>
 
     <para>
@@ -256,7 +256,7 @@ echo 'kmalloc (flags = GFP_ATOMIC) && (size > 100)' > \
 
     <para>
 This will set the scenario for <function>__kmalloc</function> function to <phrase role="pcite"><quote>simulate faulure of each memory allocation request with flags equal to <constant>GFP_ATOMIC</constant> and size greater than <constant>100</constant></quote></phrase>.
-    <note>In this example name of fault simulation point (<filename>kmalloc</filename>) differs from the name of the target function (<function>__kmalloc</function>). Reasons for this difference will be explained below.
+    <note>In this example, the name of the fault simulation point (<filename>kmalloc</filename>) differs from the name of the target function (<function>__kmalloc</function>). The reasons for this difference will be explained below.
     </note>
     </para>
 
@@ -278,10 +278,10 @@ This will set the scenario for <function>capable</function> function to <phrase 
     </para>
     
     <para>
-One replacement function can use only one fault simulation point, but inverse assertion is not true: one fault simulation point may be used by many replacement functions. In that case, fault simulation scenario set for the point is <emphasis>shared</emphasis> between replacement functions. Such sharing may have sence for related target functions, which use internally one mechanism, which in turn may fail.
+One replacement function may use only one fault simulation point but the reverse is not true: one fault simulation point may be used by many replacement functions. In that case, the fault simulation scenario set for the point is <emphasis>shared</emphasis> between the replacement functions. Such sharing may make sense for the groups of related target functions that use internally the same mechanism which in turn may fail.
     </para>
     <para>
- Just because of it fault simulation point <filename>kmalloc</filename> is used not only by <function>__kmalloc</function> but also by some other function which allocate kernel memory: <function>kmem_cache_alloc</function>, <function>__get_free_pages</function>, <function>krealloc</function>, etc. So, all these functions share scenario, which is set for <filename>kmalloc</filename> fault simulation point.
+For example, the fault simulation point <filename>kmalloc</filename> is used not only by <function>__kmalloc</function> but also by several other functions allocating kernel memory: <function>kmem_cache_alloc</function>, <function>__get_free_pages</function>, <function>krealloc</function>, etc. In this case, all these functions share the fault simulation scenario set for <filename>kmalloc</filename> point.
     </para>
     
     <para>

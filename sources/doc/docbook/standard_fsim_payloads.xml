@@ -10,7 +10,7 @@ Here is a full list of the payload modules that currently can be used for fault 
 A function name in square brackets indicates that this function may or may not be exported on each particular system, and if it is exported, it will be processed. Only one of the functions separated by a slash is expected to be exported by the kernel, that function will be processed.
     </para>
     <para>
-If the opposite is not stated explicitly, name of the fault simulation point is coincide with name of the target function for which this point is used.
+Unless the opposite is stated explicitly, the name of the fault simulation point is the same as the name of the target function this point is used for.
     </para>
     
 <itemizedlist mark='circle'>
@@ -23,10 +23,10 @@ If the opposite is not stated explicitly, name of the fault simulation point is 
 <listitem><phrase role="emphasized">kedr_fsim_user_space_access.ko</phrase>
     <simplelist type='vert'>
     <member>
-    <function>copy_to_user</function>/<function>_copy_to_user</function>; whatever function is exist, name of the fault simulation point is <filename>copy_to_user</filename>
+    <function>copy_to_user</function>/<function>_copy_to_user</function>; no matter which of these functions is exported by the kernel, the name of the fault simulation point is <filename>copy_to_user</filename>
     </member>
     <member>
-    <function>copy_from_user</function>/<function>_copy_from_user</function>; whatever function is exist, name of the fault simulation point is <filename>copy_from_user</filename>
+    <function>copy_from_user</function>/<function>_copy_from_user</function>; no matter which of these functions is exported by the kernel, the name of the fault simulation point is <filename>copy_from_user</filename>
     </member>
     <member><function>strndup_user</function></member>
     <member><function>memdup_user</function></member>

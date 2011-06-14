@@ -99,10 +99,10 @@ Each group should contain definitions for the following parameters:
         <listitem>(multi-valued) types of the values that will be passed to the indicator function. These types will be used to properly cast the values before passing to the indicator (so these types may differ from the real types of the variables).</listitem>
     </varlistentry>
     <varlistentry><term>fpoint.rename</term>
-        <listitem>Instead of using name of the target function as name of the fault simulation point, use the name given by this parameter. This fault simulation point is used for making decision whether to execute target function normally or simulate its fail.</listitem>
+        <listitem>Instead of using the name of the target function as a  name of the fault simulation point, use the name given by this parameter.</listitem>
     </varlistentry>
     <varlistentry><term>fpoint.reuse_point</term>
-        <listitem>Instead of creating new fault simulation point for this function, use previously defined point with the name given by this parameter.</listitem>
+        <listitem>Instead of creating a new fault simulation point for this function, use the previously defined point with the name given by this parameter.</listitem>
     </varlistentry>
 
 </variablelist>
@@ -184,7 +184,7 @@ Example of the group section for kstrdup() target function:
 Note the usage of <varname>len</varname> variable for fault simulation in the example above. This value is calculated in the prologue based on the target function parameter <varname>str</varname> and is then used as one of the parameters to be passed to the fault simulation indicator.
     </para>
     <para>
-It is possible for different replacement functions to share the same indicator function (and, therefore, share the scenario). This is more than simply using the same indicator functions, this is using a single instance of an indicator. These functions may use some data private for each indicator instance. In case of sharing, these data will also be shared.
+It is possible for different replacement functions to share the same indicator function (and, therefore, share the scenario). This is more than simply using the same indicator functions, this is using a single instance of an indicator. These functions may use some data private for each indicator instance. In case of sharing, the data will also be shared.
     </para>
     <para>
 Sharing of the indicator functions can be useful, for example, for the target functions that are known to use a common mechanism internally (e.g. memory allocator), and you want to simulate a failure of this mechanism.
@@ -247,7 +247,8 @@ If, say, function <function>g</function> should share the fault simulation scena
 Note that in the group for <function>krealloc</function> function, we use the same names and types of the variables intended to be passed to the indicator function, as for <function>__kmalloc</function>.
     </para>
     <para>
-In case of reusing fault simulation point, it may be convinient to assign name for this point different from the name of the target function which creates it:
+If a fault simulation point is reused, it may be convenient to assign a name to this point that is different from the name of the target function the point was defined for:
+	</para>
 <programlisting>
     ...
 [group]
@@ -264,7 +265,8 @@ In case of reusing fault simulation point, it may be convinient to assign name f
     ...
 # End of the group of definitions for krealloc().
 </programlisting>
-Note, that when reusing fault simulation point, which is defined with <varname>fpoint.rename</varname> parameter, this name should be used, rather than name of the target function which defines this point.
+    <para>
+Note, that when reusing a fault simulation point defined with <varname>fpoint.rename</varname> parameter, the name specified there is used (<code>kmalloc</code>) rather than the name of the target function the point was defined for (<code>__kmalloc</code>).
     </para>
     <para>
 After writing <filename>payload.data</filename> file, you can change the value of module_name variable in the <filename>makefile</filename> and <filename>Kbuild</filename> according to the one you use as value of <quote>module.name</quote> parameter. In the future, this step may be implemented in the <filename>makefile</filename> itself.
