@@ -60,7 +60,7 @@ Payload modules can do various things:
 <listitem><para>
 Collect data about which function was called when, with what arguments, and
 what it returned (<firstterm><quote>Call Monitor</quote></firstterm> 
-on the figure). The data is output to a trace 
+on the figure). The data are output to a trace 
 (via <firstterm><quote>Data Collector</quote></firstterm> facilities) 
 and can then be analyzed by user-space applications.
 </para></listitem>

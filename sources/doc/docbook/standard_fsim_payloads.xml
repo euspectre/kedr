@@ -9,21 +9,24 @@ Here is a full list of the payload modules that currently can be used for fault 
     <para>
 A function name in square brackets indicates that this function may or may not be exported on each particular system, and if it is exported, it will be processed. Only one of the functions separated by a slash is expected to be exported by the kernel, that function will be processed.
     </para>
+    <para>
+If the opposite is not stated explicitly, name of the fault simulation point is coincide with name of the target function for which this point is used.
+    </para>
     
 <itemizedlist mark='circle'>
 <listitem><phrase role="emphasized">kedr_fsim_capable.ko</phrase>
     <simplelist type='vert'>
     <member><function>capable</function></member>
     </simplelist>
-    Fault simulation point for this function provides <code>cap</code> parameter of type <type>int</type> for a fault simulation scenario.
+    Fault simulation point for this function provides <varname>cap</varname> parameter of type <type>int</type> for a fault simulation scenario.
 </listitem>
 <listitem><phrase role="emphasized">kedr_fsim_user_space_access.ko</phrase>
     <simplelist type='vert'>
     <member>
-    <function>copy_to_user</function>/<function>_copy_to_user</function>
+    <function>copy_to_user</function>/<function>_copy_to_user</function>; whatever function is exist, name of the fault simulation point is <filename>copy_to_user</filename>
     </member>
     <member>
-    <function>copy_from_user</function>/<function>_copy_from_user</function>
+    <function>copy_from_user</function>/<function>_copy_from_user</function>; whatever function is exist, name of the fault simulation point is <filename>copy_from_user</filename>
     </member>
     <member><function>strndup_user</function></member>
     <member><function>memdup_user</function></member>
@@ -48,7 +51,7 @@ A function name in square brackets indicates that this function may or may not b
     <member>[<function>alloc_pages_current</function>]</member>
     <member>[<function>alloc_pages_exact</function>]</member>
     </simplelist>
-    All these functions use a shared fault simulation point named <filename>__kmalloc</filename> that provides the following parameters for a fault simulation scenario: <code>size</code> (of type <type>size_t</type>) and <code>flags</code> (of type <type>gfp_t</type>) .
+    All these functions use a shared fault simulation point named <filename>kmalloc</filename> that provides the following parameters for a fault simulation scenario: <varname>size</varname> (of type <type>size_t</type>) and <varname>flags</varname> (of type <type>gfp_t</type>).
 </listitem>
 <listitem><phrase role="emphasized">kedr_fsim_mem_util.ko</phrase>
     <simplelist type='vert'>

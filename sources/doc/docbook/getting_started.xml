@@ -305,16 +305,16 @@ KEDR provides a special configuration file for fault simulation. To use this con
 </programlisting>
 </para>
 <para>
-Now KEDR is loaded and prepared to simulate, e.g., the conditions when memory allocation (e.g., via <code>__kmalloc</code>) fails. Note that this simulation will be performed only with respect to the target module, other parts of the kernel will not be affected.
+Now KEDR is loaded and prepared to simulate, e.g., the conditions when memory allocation (e.g., via <function>__kmalloc</function>) fails. Note that this simulation will be performed only with respect to the target module, other parts of the kernel will not be affected.
 </para>
 <para>
-You can choose a scenario according to which KEDR will make calls to <code>__kmalloc</code> fail. A number of possible scenarios is already provided by KEDR and custom scenarios can also be developed. In this example, we will show how to configure and use a pre-defined scenario. To make it available, you should load the corresponding module:
+You can choose a scenario according to which KEDR will make calls to <function>__kmalloc</function> fail. A number of possible scenarios is already provided by KEDR and custom scenarios can also be developed. In this example, we will show how to configure and use a pre-defined scenario. To make it available, you should load the corresponding module:
 <programlisting><![CDATA[
 insmod /usr/local/lib/modules/`uname -r`/misc/kedr_fsim_indicator_kmalloc.ko
 ]]></programlisting>
-This module implements a scenario named <quote>kmalloc</quote>. Inform KEDR core that it should use this scenario for <code>__kmalloc</code> function:
+This module implements a scenario named <quote>kmalloc</quote>. Inform KEDR that it should use this scenario for <code>__kmalloc</code> function:
 <programlisting><![CDATA[
-echo "kmalloc" > /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/current_indicator
+echo "kmalloc" > /sys/kernel/debug/kedr_fault_simulation/points/kmalloc/current_indicator
 ]]></programlisting>
 Here we assume that debugfs is mounted to <filename class='directory'>/sys/kernel/debug</filename>.
 </para>
@@ -322,9 +322,9 @@ Here we assume that debugfs is mounted to <filename class='directory'>/sys/kerne
 <para>
 <quote>kmalloc</quote> is actually a name of a whole set of scenarios, so choose one of them:
 <programlisting><![CDATA[
-echo "1" > /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/expression
+echo "1" > /sys/kernel/debug/kedr_fault_simulation/points/kmalloc/expression
 ]]></programlisting>
-This meaning of this scenario is <quote>fail always</quote>. That is, the answer to the question whether to make a call fail or not is always <quote>1</quote> (<quote>yes</quote>) in this scenario.
+The meaning of this scenario is <quote>fail always</quote>. That is, the answer to the question whether to make a call fail or not is always <quote>1</quote> (<quote>yes</quote>) in this scenario.
 </para>
 
 <para>
@@ -348,7 +348,7 @@ Let us now consider a slightly more complex scenario.
 </para>
 
 <programlisting><![CDATA[
-echo "size > 2000" > /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/expression
+echo "size > 2000" > /sys/kernel/debug/kedr_fault_simulation/points/kmalloc/expression
 ]]></programlisting>
 
 <para>
@@ -380,7 +380,7 @@ To turn off fault simulation, just set the scenario to <quote>0</quote> (that me
 </para>
 
 <programlisting><![CDATA[
-echo "0" > /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/expression
+echo "0" > /sys/kernel/debug/kedr_fault_simulation/points/kmalloc/expression
 ]]></programlisting>
 
 <para>
@@ -392,7 +392,7 @@ rmmod kedr_fsim_indicator_kmalloc
 </programlisting>
 
 <para>
-The scenario for <code>__kmalloc</code> will be cleared automatically, that is no fault simulation will be performed for the function since that moment until a new scenario is loaded and configured.
+The scenario for <function>__kmalloc</function> will be cleared automatically, that is no fault simulation will be performed for the function since that moment until a new scenario is loaded and configured.
 </para>
 
 <para>

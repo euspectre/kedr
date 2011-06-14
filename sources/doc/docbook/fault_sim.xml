@@ -24,7 +24,7 @@ It is possible to restrict fault simulation even more, to handling of only those
     </para></note>
     
     <para>
-During fault simulation, <link linkend="replacement_function">replacement functions</link> are registered for some set of <link linkend="target_function">target functions</link>. Each replacement function serves as a <link linkend="fault_simulation_point">fault simulation point</link>. That is, it calls a special <link linkend="fault_simulation_indicator">indicator function</link> and decides based on its return value whether to call the corresponding target function normally or simulate its failure. In the latter case, the target is often not called at all, just the appropriate value is returned (as if it was returned by the target function).
+During fault simulation, <link linkend="replacement_function">replacement functions</link> are registered for some set of <link linkend="target_function">target functions</link>. Each replacement function may call target function or perform some set of actions. Former variant is referred as <quote>normal execution</quote>, the latter is referred as <quote>fault simulation</quote> and is usually interpreted by the caller of the target function as a fault in this function. Replacement function use a <link linkend="fault_simulation_point">fault simulation point</link> for choose between these variants. That is, it calls a special <link linkend="fault_simulation_indicator">indicator function</link> and decides based on its return value whether to call the corresponding target function normally or simulate its failure. In the latter case, the target function is often not called at all, just the appropriate value is returned (as if it was returned by the target function).
     </para>
     
     <para>
@@ -32,7 +32,7 @@ In KEDR, the replacement functions and fault simulation scenarios are  independe
     </para>
 
     <para>
-The default fault simulation scenario is <phrase role="pcite"><quote>never simulate failures</quote></phrase>. So all the fault simulation <link linkend="payload_module">payload modules</link> do not change behaviour of original functions. To manage scenarios, each payload module creates one or more directories in debugfs like <filename class='directory'>/sys/kernel/debug/kedr_fault_simulation/points/&lt;function-name&gt;</filename>, where <code>&lt;function-name&gt;</code> is a name of target kernel function (it is assumed here that debugfs filesystem is mounted to <filename class='directory'>/sys/kernel/debug</filename>). That is, fault simulation can be controlled separately for each target function.
+The default fault simulation scenario is <phrase role="pcite"><quote>never simulate failures</quote></phrase>. So all the fault simulation <link linkend="payload_module">payload modules</link> do not change behaviour of original functions. To manage scenarios, each payload module creates one or more directories in debugfs like <filename class='directory'>/sys/kernel/debug/kedr_fault_simulation/points/&lt;point-name&gt;</filename>, where <code>&lt;point-name&gt;</code> is a name of fault simulation point (it is assumed here that debugfs filesystem is mounted to <filename class='directory'>/sys/kernel/debug</filename>). Names of fault simulation points usually coincide with the names of corresponded target functions, but also may differ from them. That is, fault simulation can be controlled separately for each target function.
     </para>
 
     <para>
@@ -42,23 +42,23 @@ In each such directory, there is at least file <filename>current_indicator</file
 Examples:
     </para>
 <programlisting><![CDATA[
-cat /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/current_indicator
+cat /sys/kernel/debug/kedr_fault_simulation/points/vmalloc/current_indicator
 ]]></programlisting>
 
 <para>
-After the payload module for fault simulation processing <function>__kmalloc</function> has just loaded, the above command will print <computeroutput><quote>none</quote></computeroutput>. This is because no indicator is currently set for <function>__kmalloc</function>.
+After the payload module for fault simulation processing <function>vmalloc</function> has just loaded, the above command will print <computeroutput><quote>none</quote></computeroutput>. This is because no indicator is currently set for <function>vmalloc</function>.
 </para>
 
 <programlisting><![CDATA[
-echo common > /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/current_indicator
+echo common > /sys/kernel/debug/kedr_fault_simulation/points/vmalloc/current_indicator
 ]]></programlisting>
 
 <para>
-This sets the indicator named <quote>common</quote> for <function>__kmalloc</function>. If you read <filename>current_indicator</filename> again, you will see that it contains that name now:
+This sets the indicator named <filename>common</filename> for <function>vmalloc</function>. If you read <filename>current_indicator</filename> again, you will see that it contains that name now:
 </para>
 
 <programlisting><![CDATA[
-cat /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/current_indicator
+cat /sys/kernel/debug/kedr_fault_simulation/points/vmalloc/current_indicator
 ]]></programlisting>
 
 <para>
@@ -71,7 +71,7 @@ If you try to set a non-existent indicator, writing to <filename>current_indicat
 
 <programlisting><![CDATA[
 echo unknown_indicator_name > \
-    /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/current_indicator
+    /sys/kernel/debug/kedr_fault_simulation/points/vmalloc/current_indicator
 ]]></programlisting>
 
     <para>
@@ -82,7 +82,7 @@ Each fault simulation point uses its own instance of an indicator. That is, chan
 </para></note>
     
     <para>
-The indicator with name <quote>common</quote> is the common indicator that can be used for any target function. By default, the indicator function always returns 0 (<quote>never make the calls fail</quote>). Once the indicator has been set, it creates three control files in <filename class='directory'>/sys/kernel/debug/kedr_fault_simulation/points/&lt;function-name&gt;</filename> directory: <filename>expression</filename>, <filename>times</filename> and <filename>pid</filename>. 
+The indicator with name <filename>common</filename> is the common indicator that can be used for any target function. By default, the indicator function always returns 0 (<quote>never make the calls fail</quote>). Once the indicator has been set, it creates three control files in <filename class='directory'>/sys/kernel/debug/kedr_fault_simulation/points/&lt;point-name&gt;</filename> directory: <filename>expression</filename>, <filename>times</filename> and <filename>pid</filename>. 
     </para>
     <para>
 <filename>expression</filename> file corresponds to the mathematical expression. The indicator function will return the resulting value of this expression when called from a fault simulation point. Reading from this file returns the expression currently used by the indicator function. If you would like to instruct the indicator to use another expression, write the expression to this file. 
@@ -153,15 +153,15 @@ Examples:
     </para>
 
 <programlisting><![CDATA[
-echo common > /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/current_indicator
+echo common > /sys/kernel/debug/kedr_fault_simulation/points/vmalloc/current_indicator
 ]]></programlisting>
 
     <para>
-This will set <quote>common</quote> indicator for <function>__kmalloc</function> function. The default scenario is <phrase role="pcite"><quote>never simulate failures</quote></phrase>. 
+This will set <filename>common</filename> indicator for <function>vmalloc</function> function. The default scenario is <phrase role="pcite"><quote>never simulate failures</quote></phrase>. 
     </para>
 
 <programlisting><![CDATA[
-cat /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/expression
+cat /sys/kernel/debug/kedr_fault_simulation/points/vmalloc/expression
 ]]></programlisting>
 
     <para>
@@ -169,16 +169,16 @@ The above command should print 0.
     </para>
 
 <programlisting><![CDATA[
-echo 1 > /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/expression
+echo 1 > /sys/kernel/debug/kedr_fault_simulation/points/vmalloc/expression
 ]]></programlisting>
 
     <para>
-This will set the scenario to <phrase role="pcite"><quote>make each call fail</quote></phrase> for <function>__kmalloc</function> function.
+This will set the scenario to <phrase role="pcite"><quote>make each call fail</quote></phrase> for <function>vmalloc</function> function.
     </para>
 
 <programlisting><![CDATA[
 echo '!in_init' > \
-    /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/expression
+    /sys/kernel/debug/kedr_fault_simulation/points/vmalloc/expression
 ]]></programlisting>
 
     <para>
@@ -187,7 +187,7 @@ This will set the scenario to <phrase role="pcite"><quote>after the target modul
 
 <programlisting><![CDATA[
 echo '!in_init && (rnd100 < 20)'> \
-    /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/expression
+    /sys/kernel/debug/kedr_fault_simulation/points/vmalloc/expression
 ]]></programlisting>
 
     <para>
@@ -196,7 +196,7 @@ This will set the scenario to <phrase role="pcite"><quote>after the target modul
 
 <programlisting><![CDATA[
 echo '(caller_address < 0xfe2ab8d0) && (caller_address > 0xfe2ab970) && (rnd100 < 20)'> \
-    /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/expression
+    /sys/kernel/debug/kedr_fault_simulation/points/vmalloc/expression
 ]]></programlisting>
 
     <para>
@@ -205,9 +205,9 @@ This will set the scenario to <phrase role="pcite"><quote>simulate failures of a
 
 <programlisting><![CDATA[
 echo 'times = 1'> \
-    /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/expression
+    /sys/kernel/debug/kedr_fault_simulation/points/vmalloc/expression
 echo '0'> \
-    /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/times
+    /sys/kernel/debug/kedr_fault_simulation/points/vmalloc/times
 ]]></programlisting>
 
     <para>
@@ -216,7 +216,7 @@ This will set the scenario to <phrase role="pcite"><quote>make only the first ca
 
 <programlisting><![CDATA[
 echo '(times % 3) = 0'> \
-    /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/expression
+    /sys/kernel/debug/kedr_fault_simulation/points/vmalloc/expression
 ]]></programlisting>
 
     <para>
@@ -236,26 +236,28 @@ In the following example, the fault simulation scenario is <phrase role="pcite">
     </para>
 
 <programlisting><![CDATA[
-echo common > /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/current_indicator
-echo 1 > /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/expression
-echo $$ > /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/pid
+echo common > /sys/kernel/debug/kedr_fault_simulation/points/vmalloc/current_indicator
+echo 1 > /sys/kernel/debug/kedr_fault_simulation/points/vmalloc/expression
+echo $$ > /sys/kernel/debug/kedr_fault_simulation/points/vmalloc/pid
 ]]></programlisting>
 
     <para>
-Other indicators provided with KEDR extend the abilities of <quote>common</quote> indicator. They support additional variables that can be used in the expression.
+Other indicators provided with KEDR extend the abilities of <filename>common</filename> indicator. They support additional variables that can be used in the expression.
     </para>
     
     <para>
-The indicator named <quote>kmalloc</quote> allows to use <varname>size</varname> and <varname>flags</varname> variables, that is, the parameters of <code>__kmalloc</code> function. It also accepts several named constants of <code>gfp_t</code> type like <code>GFP_KERNEL</code> and <varname>GFP_ATOMIC</varname>. Example:
+The indicator named <filename>kmalloc</filename> allows to use <varname>size</varname> and <varname>flags</varname> variables, that is, the parameters of <function>__kmalloc</function> function. It also accepts several named constants of <type>gfp_t</type> type like <constant>GFP_KERNEL</constant> and <constant>GFP_ATOMIC</constant>. Example:
     </para>
 
 <programlisting><![CDATA[
 echo 'kmalloc (flags = GFP_ATOMIC) && (size > 100)' > \
-    /sys/kernel/debug/kedr_fault_simulation/points/__kmalloc/current_indicator
+    /sys/kernel/debug/kedr_fault_simulation/points/kmalloc/current_indicator
 ]]></programlisting>
 
     <para>
-This will set the scenario for <function>__kmalloc</function> function to <phrase role="pcite"><quote>simulate faulure of each memory allocation request with flags equal to GFP_ATOMIC and size greater than 100</quote></phrase>.
+This will set the scenario for <function>__kmalloc</function> function to <phrase role="pcite"><quote>simulate faulure of each memory allocation request with flags equal to <constant>GFP_ATOMIC</constant> and size greater than <constant>100</constant></quote></phrase>.
+    <note>In this example name of fault simulation point (<filename>kmalloc</filename>) differs from the name of the target function (<function>__kmalloc</function>). Reasons for this difference will be explained below.
+    </note>
     </para>
 
     <para>
@@ -263,7 +265,7 @@ The convenience however comes at the cost of generality: this indicator can be s
     </para>
     
     <para>
-Similarly, the indicator named <quote>capable</quote> allows to use <varname>cap</varname> variable which is a parameter of <function>capable</function> function. It also accepts the named constants that may be used as the values of this parameter (<code>CAP_SYS_ADMIN</code>, etc.). Example:
+Similarly, the indicator named <filename>capable</filename> allows to use <varname>cap</varname> variable which is a parameter of <function>capable</function> function. It also accepts the named constants that may be used as the values of this parameter (<constant>CAP_SYS_ADMIN</constant>, etc.). Example:
     </para>
 
 <programlisting><![CDATA[
@@ -273,6 +275,13 @@ echo 'capable cap = CAP_SYS_ADMIN' > \
 
     <para>
 This will set the scenario for <function>capable</function> function to <phrase role="pcite"><quote>make each request for the administrative capabilities fail</quote></phrase>.
+    </para>
+    
+    <para>
+One replacement function can use only one fault simulation point, but inverse assertion is not true: one fault simulation point may be used by many replacement functions. In that case, fault simulation scenario set for the point is <emphasis>shared</emphasis> between replacement functions. Such sharing may have sence for related target functions, which use internally one mechanism, which in turn may fail.
+    </para>
+    <para>
+ Just because of it fault simulation point <filename>kmalloc</filename> is used not only by <function>__kmalloc</function> but also by some other function which allocate kernel memory: <function>kmem_cache_alloc</function>, <function>__get_free_pages</function>, <function>krealloc</function>, etc. So, all these functions share scenario, which is set for <filename>kmalloc</filename> fault simulation point.
     </para>
     
     <para>
