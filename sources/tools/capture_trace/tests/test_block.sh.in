@@ -92,6 +92,7 @@ fi
 
 # Unload target module
 /sbin/rmmod "${target_module}"
+sleep 0.5
 
 # Stop capturing
 # Turn trace capturing into non-blocking mode
