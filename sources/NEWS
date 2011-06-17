@@ -3,11 +3,20 @@ KEDR 0.3 released
 
 This release provides several enhancements and various fixes compared 
 to version 0.2.1. Most significant changes:
-    * Handling of intercepted function calls has been revisited to allow doing several kinds of analysis at the same time (e.g. performing fault simulation and memory leak detection simultaneously).
-    * The components responsible for fault simulation are now decoupled from call monitoring (call tracing) facilities and can be used independently if necessary.
-    * Several enhancements and fixes have been applied to the trace capturing utility.
-    * Stack trace-related API has been revisited and simplified. If the kernel provides reliable stack traces, the API works now even if save_stack_trace() is not available.
-    * Handling of allocations and frees in the memory leak detector is now deferred via a work queue. This allows to significantly reduce the time spent with locks held.
+    * Handling of intercepted function calls has been revisited to allow 
+doing several kinds of analysis at the same time (e.g. performing fault 
+simulation and memory leak detection simultaneously).
+    * The components responsible for fault simulation are now decoupled 
+from call monitoring (call tracing) facilities and can be used 
+independently if necessary.
+    * Several enhancements and fixes have been applied to the trace 
+capturing utility.
+    * Stack trace-related API has been revisited and simplified. If the 
+kernel provides reliable stack traces, the API works now even if 
+save_stack_trace() is not available.
+    * Handling of allocations and frees in the memory leak detector is now 
+deferred via a work queue. This allows to significantly reduce the time 
+spent with locks held.
 
 See ChangeLog for detailed information about the changes in this version. 
 -----------------------------------------------------------

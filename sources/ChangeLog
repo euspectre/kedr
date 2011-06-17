@@ -33,7 +33,8 @@ possible).
 kmalloc_order_trace() seems to have appeared in SLUB allocator in the kernel
 2.6.38. kmalloc() unfolds to it in some cases.
 
-    * Util: handled removal of obsoleted warning* fields from stacktrace_ops in kernel 3.0
+    * Util: handled removal of obsoleted warning* fields from 
+stacktrace_ops in kernel 3.0
 
 'warning' and 'warning_symbol' fileds have been removed from stacktrace_ops
 structure in the kernel.
@@ -67,43 +68,70 @@ evaluated if a <= b.
 
 Tsyvarev Andrey <tsyvarev@ispras.ru>:
 
-    * Core: Enhanced handler mechanism to support several handlers for a target function
+    * Core: Enhanced handler mechanism to support several handlers for a 
+target function
 
-It is now possible for several payload modules used simultaneously to process the same target functions. This allows, for example, to perform memory leak detection and fault simulation or some other kind of analysis at the same time. This is achieved by using "pre" handlers and "post" handlers in addition to the replacement functions. For a given target function there may be no more than one replacement function but any number of "pre" and "post" handlers. See "KEDR Reference" in the docs for details.
+It is now possible for several payload modules used simultaneously to 
+process the same target functions. This allows, for example, to perform 
+memory leak detection and fault simulation or some other kind of analysis 
+at the same time. This is achieved by using "pre" handlers and "post" 
+handlers in addition to the replacement functions. For a given target 
+function there may be no more than one replacement function but any number 
+of "pre" and "post" handlers. See "KEDR Reference" in the docs for details.
 
     * FSim: Decoupled call monitoring and fault simulation
 
-The payload modules for fault simulation no longer deal with the trace themselves. If one needs to collect the trace during fault simulation, one should simply load payload modules both for fault simulation and for call monitoring. 
+The payload modules for fault simulation no longer deal with the trace 
+themselves. If one needs to collect the trace during fault simulation, one 
+should simply load payload modules both for fault simulation and for call 
+monitoring. 
 
-    * Conf: Fixed handling of kmem_cache_*_trace functions that have different signatures in SLAB and SLUB memory allocators
+    * Conf: Fixed handling of kmem_cache_*_trace functions that have 
+different signatures in SLAB and SLUB memory allocators
     
-    * Util: Changed behaviour of capture trace program w.r.t. reading of the trace file in the blocking mode
+    * Util: Changed behaviour of capture trace program w.r.t. reading of 
+the trace file in the blocking mode
 
-The default behaviour of kedr_capture_trace program is now non-blocking reading of the trace. So the program will exit when there are no more messages in the trace.
-Passing '-b' option turns the blocking mode on. In this case, the program will wait for a message in the trace to appear if it is needed.
+The default behaviour of kedr_capture_trace program is now non-blocking 
+reading of the trace. So the program will exit when there are no more 
+messages in the trace.
+Passing '-b' option turns the blocking mode on. In this case, the program 
+will wait for a message in the trace to appear if it is needed.
 In that mode, SIGINT signal simply turn reading mode to non-blocking.
 
     * Util: Fixed kedr_capture_trace to work correctly in session mode
     
-    * mutex_trylock() function is now considered required on the target system rather than optional
+    * mutex_trylock() function is now considered required on the target 
+system rather than optional
 
-    * Tracing: If ring buffer is not supported, turn off the components that use it.
+    * Tracing: If ring buffer is not supported, turn off the components 
+that use it.
 
-The configuration system of KEDR now checks whether ring buffer is supported. If it is not, kedr_trace, call monitor payloads and capture trace tool will not be built.
+The configuration system of KEDR now checks whether ring buffer is 
+supported. If it is not, kedr_trace, call monitor payloads and capture 
+trace tool will not be built.
 
-Also the test for caller_address in the indicator was reworked in order not to use trace (and hence, the test no longer depends on the availability of ring buffer).
+Also the test for caller_address in the indicator was reworked in order not 
+to use trace (and hence, the test no longer depends on the availability of 
+ring buffer).
 
-    * Tests: In tests for tracing, add 'wait' after killing process that reads the trace file.
+    * Tests: In tests for tracing, add 'wait' after killing process that 
+reads the trace file.
 
-This allows to avoid the situation when kedr_trace module is being unloaded while the trace file is still opened.
+This allows to avoid the situation when kedr_trace module is being unloaded 
+while the trace file is still opened.
 
     * FSim: Fixed intermediate template for fault simulation payloads
 
-The template 'forgot' fpoint.reuse_point of the initial datafile. In addition, the tests for the final template of fault simulation payloads were added.
+The template 'forgot' fpoint.reuse_point of the initial datafile. In 
+addition, the tests for the final template of fault simulation payloads 
+were added.
 
-    * FSim: Added support for renaming fault simulation point for generated fault simulation payloads.
+    * FSim: Added support for renaming fault simulation point for generated 
+fault simulation payloads.
 
-Besides that, added tests for this new functionality. Renamed some points in standard payloads.
+Besides that, added tests for this new functionality. Renamed some points 
+in standard payloads.
 
 ---------------------------------------------------------------------------
 KEDR 0.2.1
