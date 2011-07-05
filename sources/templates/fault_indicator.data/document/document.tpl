@@ -271,6 +271,6 @@ indicator.file.get =>>
     return str;
 <<
 indicator.file.set =>>
-	atomic_set(&state(pid), 0);
+	atomic_set(&state(times), 0);
 	return 0;
 <<
