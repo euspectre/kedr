@@ -127,6 +127,23 @@ if  simulate; then
 	$do_commands_script "$commands_file" unload
 	exit 1
 fi
+# Now 'times' is 3, and next call of simulate shouldn't fail.
+# But if we clear counter before simulate, it should.
+echo 0 > ${point_dir}/times
+
+times_current=`cat ${point_dir}/times`
+if test $times_current != '0'; then
+	printf "Expected that function call counter('times') should be cleared after writing to 'times' file, but it is '%s'.\n" "$times_current"
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+if  simulate; then
+	printf "The fourth call to the function should fail with \"times %% 2\" expression because of clearing calls counter.\n"
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
 
 ##
 echo "$indicator_name" > "${point_dir}/current_indicator"
