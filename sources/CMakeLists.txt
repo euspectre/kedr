@@ -109,15 +109,22 @@ kbuild_include_directories("${CMAKE_BINARY_DIR}")
 # Make "Release" the default build type
 if (NOT CMAKE_BUILD_TYPE)
     set (CMAKE_BUILD_TYPE "Release" CACHE STRING
-      "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
+      "Choose the type of build, options are: Debug Release RelWithDebInfo."
       FORCE)
 endif ()
 message (STATUS "Build type is \"${CMAKE_BUILD_TYPE}\"")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     kbuild_add_definitions(
-        "-DKEDR_DEBUG"
+        "-g -DKEDR_DEBUG"
     )
+elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    kbuild_add_definitions(
+        "-g"
+    )
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+else(CMAKE_BUILD_TYPE STREQUAL "Debug")
+	message(FATAL_ERROR "Unknown type of build: ${CMAKE_BUILD_TYPE}.")
 endif()
 
 #######################################################################
@@ -333,7 +340,6 @@ add_subdirectory(core)
 
 add_subdirectory(templates)
 # For tests only
-add_subdirectory(wobject)
 add_subdirectory(control_file)
 add_subdirectory(calculator)
 add_subdirectory(util)

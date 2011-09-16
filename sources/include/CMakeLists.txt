@@ -11,7 +11,6 @@ set(KEDR_INCLUDE_FILES_SRC
     fault_simulation/fault_simulation.h
 	trace/trace.h
 	util/stack_trace.h
-	wobject/wobject.h
 )
 
 
