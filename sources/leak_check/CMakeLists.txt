@@ -67,6 +67,9 @@ endfunction(rules_build_datafile)
 rule_copy_file("stack_trace.c"
 	"${CMAKE_SOURCE_DIR}/util/stack_trace/stack_trace.c")
 
+# Check if kfree_rcu() is present and set HAVE_KFREE_RCU accordingly
+check_kfree_rcu()
+
 kmodule_configure_kernel_functions(functions 
 	REQUIRED "__kmalloc"
 	"krealloc"
@@ -106,6 +109,24 @@ kmodule_configure_kernel_functions(functions
 	"vmalloc_32_user"
 	"vfree"
 )
+
+# N.B. kfree_rcu() uses call_rcu/call_rcu_sched to call kfree() on an 
+# "RCU-protected" structure after the grace period has expired. So it makes 
+# sense to track the calls to these functions too if kfree_rcu is available.
+if (HAVE_KFREE_RCU)
+	kmodule_configure_kernel_functions(call_rcu_functions 
+		OPTIONAL "call_rcu"
+		"call_rcu_sched"
+	)
+	if (NOT call_rcu_functions)
+		message("\n[WARNING]\nThe system provides kfree_rcu() but "
+			"the corresponding call_rcu* functions are not available.\n"
+			"kfree_rcu() might have been implemented here in some other way. "
+			"Please report this problem to KEDR developers.\n"
+		)
+	endif (NOT call_rcu_functions)
+	list(APPEND functions ${call_rcu_functions})
+endif (HAVE_KFREE_RCU)
 
 kbuild_include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
 kbuild_add_module(${kmodule_name}

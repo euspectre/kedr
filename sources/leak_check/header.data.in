@@ -42,4 +42,20 @@ header =>>
 #include <linux/string.h>    /* *dup_user() */
 #include <linux/err.h>       /* ERR_PTR, etc. */
 #include <linux/vmalloc.h>   /* vmalloc() family */
+#include <linux/rcupdate.h>  /* RCU */
+
+/* If call_rcu() is used, it can be necessary to check if the pointer 
+ * passed to it is really an address of a callback function. If the 
+ * address is less than 4096, it can be an instruction to call_rcu() to
+ * call kfree or a similar function on the containing structure. 
+ *
+ * N.B. We do not rely on __is_kfree_rcu_offset() to check the address
+ * because this function is probably more likely to be changed in the 
+ * future (to make it possible to use kmem_cache_free(), for example).*/
+#define KEDR_RCU_ADDRESS_LIMIT	4096
+
+/* This is needed because the current system of data files, templates and 
+ * code generation tools does not allow specifying the type of a function
+ * pointer directly in the signatures of the functions. */
+typedef void (*kedr_rcu_callback_type)(struct rcu_head *);
 <<

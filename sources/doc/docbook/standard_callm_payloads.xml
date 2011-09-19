@@ -110,10 +110,15 @@ Here is a full list of the payload modules that currently may be used for call m
     <member>kstrdup</member>
     <member>kstrndup</member>
     <member>kmemdup</member>
+    <member>[call_rcu]</member>
+    <member>[call_rcu_sched]</member>
     </simplelist>
 </listitem>
 </itemizedlist>
     </para>
-
+	
+	<note><para>
+Note that <code>call_rcu*</code> functions are currently processed only if the system provides <code>kfree_rcu</code>. This is because it can be necessary to track this way to free the target module's data too.
+	</para></note>
 </section>
 </section>

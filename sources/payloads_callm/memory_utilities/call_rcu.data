@@ -1,0 +1,27 @@
+[group]
+	# Name and return type of the target function
+	function.name = call_rcu
+
+	# Names and types of the arguments of the target function
+	arg.type = struct rcu_head *
+	arg.name = head
+
+	arg.type = kedr_rcu_callback_type
+	arg.name = func
+	
+	# The parameters to be output to the trace. 
+	trace.param.type = const void *
+	trace.param.name = head
+
+	trace.param.type = const void *
+	trace.param.name = func
+
+	# Happens-before relationship with kmalloc
+	trace.happensBefore = yes 
+
+	# The format string to be used for trace output.
+	trace.formatString = "arguments: (%p, %p)"
+
+# End of the group of definitions for call_rcu().
+
+#######################################################################

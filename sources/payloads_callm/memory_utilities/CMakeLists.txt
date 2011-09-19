@@ -5,11 +5,32 @@ set(kmodule_name "kedr_cm_mem_util")
 configure_file("beginning.data.in"
 	"${CMAKE_CURRENT_BINARY_DIR}/beginning.data")
 
+# Check if kfree_rcu() is present and set HAVE_KFREE_RCU accordingly
+check_kfree_rcu()
+
 kmodule_configure_kernel_functions(functions REQUIRED
 	"kstrdup"
 	"kstrndup"
 	"kmemdup"
 )
+
+# N.B. kfree_rcu() uses call_rcu/call_rcu_sched to call kfree() on an 
+# "RCU-protected" structure after the grace period has expired. So it makes 
+# sense to track the calls to these functions too if kfree_rcu is available.
+if (HAVE_KFREE_RCU)
+	kmodule_configure_kernel_functions(call_rcu_functions 
+		OPTIONAL "call_rcu"
+		"call_rcu_sched"
+	)
+	if (NOT call_rcu_functions)
+		message("\n[WARNING]\nThe system provides kfree_rcu() but "
+			"the corresponding call_rcu* functions are not available.\n"
+			"kfree_rcu() might have been implemented here in some other way. "
+			"Please report this problem to KEDR developers.\n"
+		)
+	endif (NOT call_rcu_functions)
+	list(APPEND functions ${call_rcu_functions})
+endif (HAVE_KFREE_RCU)
 
 create_payload_callm(${kmodule_name} ${functions})
 

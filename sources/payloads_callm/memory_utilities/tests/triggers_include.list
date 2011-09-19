@@ -1,6 +1,28 @@
 header =>>
+#include <linux/kernel.h>
 #include <linux/slab.h>
 #include <linux/gfp.h>
 #include <linux/mm.h>
 #include <linux/string.h>
+#include <linux/rcupdate.h>
+
+/* 'kedr_foo' and 'trigger_rcu_callback' are used when triggering 
+ * call_rcu*() functions. */
+struct kedr_foo
+{
+	int bar_not_used;
+	void *baz_not_used;
+	struct rcu_head rcu_head;
+};
+
+static void 
+kedr_trigger_rcu_callback(struct rcu_head *rcu_head)
+{
+	struct kedr_foo *kedr_foo; 
+	
+	BUG_ON(rcu_head == NULL);
+	
+	kedr_foo = container_of(rcu_head, struct kedr_foo, rcu_head);
+	kfree(kedr_foo);
+}
 <<

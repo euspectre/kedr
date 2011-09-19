@@ -428,4 +428,41 @@ function(check_allocator)
 	message(STATUS "${check_allocator_message}")
 
 endfunction(check_allocator)
+
+# Check if 'kfree_rcu' is available in the kernel (it is likely to be 
+# a macro or an inline). If it is available, we should handle it as 
+# 'free' in LeakCheck. As KEDR cannot normally intercept kfree_rcu()
+# itself, it needs to intercept call_rcu/call_rcu_sched and check their
+# arguments.
+# The macro sets variable 'HAVE_KFREE_RCU'.
+macro(check_kfree_rcu)
+	set(check_kfree_rcu_message 
+		"Checking if kfree_rcu() is available"
+	)
+	message(STATUS "${check_kfree_rcu_message}")
+	if (DEFINED HAVE_KFREE_RCU)
+		set(check_kfree_rcu_message 
+"${check_kfree_rcu_message} [cached] - ${HAVE_KFREE_RCU}"
+		)
+	else (DEFINED HAVE_KFREE_RCU)
+		kmodule_try_compile(have_kfree_rcu_impl 
+			"${CMAKE_BINARY_DIR}/check_kfree_rcu"
+			"${kmodule_test_sources_dir}/check_kfree_rcu/module.c"
+		)
+		if (have_kfree_rcu_impl)
+			set(HAVE_KFREE_RCU "yes" CACHE INTERNAL
+				"Is kfree_rcu() available?"
+			)
+		else (have_kfree_rcu_impl)
+			set(HAVE_KFREE_RCU "no" CACHE INTERNAL
+				"Is kfree_rcu() available?"
+			)
+		endif (have_kfree_rcu_impl)
+				
+		set(check_kfree_rcu_message 
+"${check_kfree_rcu_message} - ${HAVE_KFREE_RCU}"
+		)
+	endif (DEFINED HAVE_KFREE_RCU)
+	message(STATUS "${check_kfree_rcu_message}")
+endmacro(check_kfree_rcu)
 ############################################################################

@@ -1,3 +1,5 @@
 kstrdup
 kstrndup
 kmemdup
+call_rcu
+call_rcu_sched
