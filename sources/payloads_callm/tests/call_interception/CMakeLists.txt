@@ -11,8 +11,8 @@
 # function.name - name of function to trigger
 # trigger.code - code which should trigger function call.
 #
-# Additionally, datafile triggers_include.list should contain common definitions
-# for all triggers(as parameter 'header').
+# Additionally, datafile triggers_beginning.data should contain common 
+# definitions for all triggers (as parameter 'header').
 #
 # kedr_test_add_ci_test(function_desc_dir name function ...)
 #
@@ -45,7 +45,7 @@ function(kedr_test_add_ci_test name functions)
         @ONLY)
     set(trigger_data_pieces "${CMAKE_CURRENT_BINARY_DIR}/trigger_common_info.data")
 
-    to_abs_path(trigger_data_include "triggers_include.list")
+    to_abs_path(trigger_data_include "triggers_beginning.data")
     list(APPEND trigger_data_pieces "${trigger_data_include}")
 
     foreach(function ${functions} ${ARGN})
