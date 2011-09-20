@@ -33,7 +33,10 @@ Here is a full list of the payload modules that currently may be used for call m
 	<member>[__free_pages]</member>
 	<member>[alloc_pages_exact]</member>
 	<member>[free_pages_exact]</member>
-    </simplelist>
+    <member>[alloc_pages_exact_nid]</member>
+    <member>[__kmalloc_track_caller]</member>
+    <member>[__kmalloc_node_track_caller]</member>
+	</simplelist>
 </listitem>
 <listitem><phrase role="emphasized">kedr_cm_user_space_access.ko:</phrase>
     <simplelist type='vert'>
@@ -91,6 +94,8 @@ Here is a full list of the payload modules that currently may be used for call m
     <member>vmalloc_32</member>
     <member>vmalloc_32_user</member>
     <member>vfree</member>
+    <member>[vzalloc]</member>
+    <member>[vzalloc_node]</member>
     </simplelist>
 </listitem>
 <listitem><phrase role="emphasized">kedr_cm_schedule.ko:</phrase>

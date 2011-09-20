@@ -1,10 +1,10 @@
 [group]
-function.name = free_pages_exact
+function.name = alloc_pages_exact_nid
 trigger.code =>>
 	int size;
 	void* p;
 	size = 100;
-	p = alloc_pages_exact(size, GFP_KERNEL);
+	p = alloc_pages_exact_nid(numa_node_id(), size, GFP_KERNEL);
 	if (p) 
 		free_pages_exact(p, size);
 <<

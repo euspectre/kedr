@@ -5,3 +5,5 @@ vmalloc_node
 vmalloc_32
 vmalloc_32_user
 vfree
+vzalloc
+vzalloc_node

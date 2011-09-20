@@ -1,0 +1,28 @@
+[group]
+	# Name and return type of the target function
+	function.name = vzalloc_node
+	returnType = void*
+
+	# Names and types of the arguments of the target function
+	arg.type = unsigned long
+	arg.name = size
+	
+	arg.type = int
+	arg.name = node
+
+	# The parameters to be output to the trace. 
+	trace.param.type = size_t
+	trace.param.name = size
+
+	trace.param.type = int
+	trace.param.name = node
+
+	trace.param.type = void*
+	trace.param.name = returnValue
+
+	# The format string to be used for trace output.
+	trace.formatString = "arguments: (%zu, %d), result: %p"
+
+# End of the group of definitions for vzalloc_node().
+
+#######################################################################

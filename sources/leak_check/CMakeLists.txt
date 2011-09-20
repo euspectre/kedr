@@ -93,6 +93,9 @@ kmodule_configure_kernel_functions(functions
 	"__free_pages"
 	"alloc_pages_exact"
 	"free_pages_exact" 
+	"alloc_pages_exact_nid"
+	"__kmalloc_track_caller"
+	"__kmalloc_node_track_caller"
 	
 	REQUIRED "kstrdup"
 	"kstrndup"
@@ -108,6 +111,9 @@ kmodule_configure_kernel_functions(functions
 	"vmalloc_32"
 	"vmalloc_32_user"
 	"vfree"
+
+	OPTIONAL "vzalloc"
+	"vzalloc_node"
 )
 
 # N.B. kfree_rcu() uses call_rcu/call_rcu_sched to call kfree() on an 

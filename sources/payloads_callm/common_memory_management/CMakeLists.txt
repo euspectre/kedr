@@ -28,6 +28,9 @@ kmodule_configure_kernel_functions(functions REQUIRED
 	"__free_pages"
 	"alloc_pages_exact"
 	"free_pages_exact"
+	"alloc_pages_exact_nid"
+	"__kmalloc_track_caller"
+	"__kmalloc_node_track_caller"
 )
 
 set(kmem_cache_alloc_FUNCTION "kmem_cache_alloc")

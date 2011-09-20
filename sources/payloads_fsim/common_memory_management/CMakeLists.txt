@@ -22,6 +22,9 @@ kmodule_configure_kernel_functions(functions REQUIRED
 	OPTIONAL "__alloc_pages_nodemask"
 	"alloc_pages_current"
 	"alloc_pages_exact"
+	"alloc_pages_exact_nid"
+	"__kmalloc_track_caller"
+	"__kmalloc_node_track_caller"
 )
 
 set(kmem_cache_alloc_FUNCTION "kmem_cache_alloc")

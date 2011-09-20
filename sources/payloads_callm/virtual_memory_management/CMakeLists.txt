@@ -13,6 +13,8 @@ kmodule_configure_kernel_functions(functions REQUIRED
 	"vmalloc_32"
 	"vmalloc_32_user"
 	"vfree"
+        OPTIONAL "vzalloc"
+        "vzalloc_node"
 )
 
 create_payload_callm(${kmodule_name} ${functions})

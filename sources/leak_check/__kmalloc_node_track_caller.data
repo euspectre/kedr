@@ -1,0 +1,28 @@
+[group]
+	# Name and return type of the target function
+	function.name = __kmalloc_node_track_caller
+	returnType = void *
+
+	# Names and types of the arguments of the target function
+	arg.type = size_t
+	arg.name = size
+
+	arg.type = gfp_t
+	arg.name = flags
+
+	arg.type = int
+	arg.name = nodeid
+
+	arg.type = unsigned long
+	arg.name = caller
+	
+	# The body of the replacement function
+	handler.post =>>
+	if (!ZERO_OR_NULL_PTR(returnValue))
+		klc_handle_alloc(returnValue, size, stack_depth,
+                        caller_address);
+	<<
+
+# End of the group of definitions for __kmalloc_node_track_caller().
+
+#######################################################################

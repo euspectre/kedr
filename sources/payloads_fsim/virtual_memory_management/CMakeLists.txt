@@ -13,6 +13,8 @@ kmodule_configure_kernel_functions(functions REQUIRED
 	"vmalloc_node"
 	"vmalloc_32"
 	"vmalloc_32_user"
+	OPTIONAL "vzalloc"
+	"vzalloc_node"
 )
 
 create_payload_fsim(${kmodule_name} ${functions})
