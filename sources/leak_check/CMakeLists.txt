@@ -114,6 +114,13 @@ kmodule_configure_kernel_functions(functions
 
 	OPTIONAL "vzalloc"
 	"vzalloc_node"
+
+# add_to_page_cache* is handled similar to free_pages() here to avoid
+# false positives when analysing NFS modules or the like. These modules
+# allocate memory pages and sometimes transfer the responsibility for 
+# them to the kernel proper among other things.
+	OPTIONAL "add_to_page_cache_lru"
+	"add_to_page_cache_locked"
 )
 
 # N.B. kfree_rcu() uses call_rcu/call_rcu_sched to call kfree() on an 

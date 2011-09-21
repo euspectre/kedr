@@ -119,6 +119,8 @@ Here is a full list of the payload modules that currently may be used for call m
     <member>kmemdup</member>
     <member>[call_rcu]</member>
     <member>[call_rcu_sched]</member>
+    <member>[add_to_page_cache_lru]</member>
+    <member>[add_to_page_cache_locked]</member>
     </simplelist>
 </listitem>
 </itemizedlist>

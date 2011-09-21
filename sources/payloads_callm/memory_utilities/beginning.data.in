@@ -22,6 +22,7 @@ header =>>
 #include <linux/gfp.h>
 #include <linux/mm.h>
 #include <linux/string.h>
+#include <linux/pagemap.h>
 #include <linux/rcupdate.h>
 
 /* This is needed because the current system of data files, templates and 

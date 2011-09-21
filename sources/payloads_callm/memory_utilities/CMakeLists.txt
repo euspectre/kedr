@@ -3,16 +3,22 @@ set(kmodule_name "kedr_cm_mem_util")
 
 # The header of the data file
 configure_file("beginning.data.in"
-	"${CMAKE_CURRENT_BINARY_DIR}/beginning.data")
-
-# Check if kfree_rcu() is present and set HAVE_KFREE_RCU accordingly
-check_kfree_rcu()
+	"${CMAKE_CURRENT_BINARY_DIR}/beginning.data"
+)
 
 kmodule_configure_kernel_functions(functions REQUIRED
 	"kstrdup"
 	"kstrndup"
 	"kmemdup"
+	OPTIONAL "add_to_page_cache_lru"
+	"add_to_page_cache_locked"
 )
+# N.B. add_to_page_cache_* is to be intercepted only to handle some
+# situations where the repsonsibility for a page is transferred from 
+# the target kernel module (e.g. some NFS module) to the kernel proper.
+
+# Check if kfree_rcu() is present and set HAVE_KFREE_RCU accordingly
+check_kfree_rcu()
 
 # N.B. kfree_rcu() uses call_rcu/call_rcu_sched to call kfree() on an 
 # "RCU-protected" structure after the grace period has expired. So it makes 

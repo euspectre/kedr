@@ -43,6 +43,7 @@ header =>>
 #include <linux/err.h>       /* ERR_PTR, etc. */
 #include <linux/vmalloc.h>   /* vmalloc() family */
 #include <linux/rcupdate.h>  /* RCU */
+#include <linux/pagemap.h>   /* add_to_page_cache_* */
 
 /* If call_rcu() is used, it can be necessary to check if the pointer 
  * passed to it is really an address of a callback function. If the 
