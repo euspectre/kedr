@@ -14,15 +14,4 @@ struct kedr_foo
 	void *baz_not_used;
 	struct rcu_head rcu_head;
 };
-
-static void 
-kedr_trigger_rcu_callback(struct rcu_head *rcu_head)
-{
-	struct kedr_foo *kedr_foo; 
-	
-	BUG_ON(rcu_head == NULL);
-	
-	kedr_foo = container_of(rcu_head, struct kedr_foo, rcu_head);
-	kfree(kedr_foo);
-}
 <<
