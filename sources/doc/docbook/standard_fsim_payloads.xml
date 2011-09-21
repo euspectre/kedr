@@ -51,8 +51,10 @@ Unless the opposite is stated explicitly, the name of the fault simulation point
     <member>[<function>alloc_pages_current</function>]</member>
     <member>[<function>alloc_pages_exact</function>]</member>
     <member>[<function>alloc_pages_exact_nid</function>]</member>
+<!--
     <member>[<function>__kmalloc_track_caller</function>]</member>
     <member>[<function>__kmalloc_node_track_caller</function>]</member>
+-->
     </simplelist>
     All these functions use a shared fault simulation point named <filename>kmalloc</filename> that provides the following parameters for a fault simulation scenario: <varname>size</varname> (of type <type>size_t</type>) and <varname>flags</varname> (of type <type>gfp_t</type>).
 </listitem>

@@ -94,8 +94,8 @@ kmodule_configure_kernel_functions(functions
 	"alloc_pages_exact"
 	"free_pages_exact" 
 	"alloc_pages_exact_nid"
-	"__kmalloc_track_caller"
-	"__kmalloc_node_track_caller"
+#	"__kmalloc_track_caller"
+#	"__kmalloc_node_track_caller"
 	
 	REQUIRED "kstrdup"
 	"kstrndup"
