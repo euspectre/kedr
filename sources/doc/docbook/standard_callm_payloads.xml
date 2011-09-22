@@ -124,6 +124,7 @@ Here is a full list of the payload modules that currently may be used for call m
     <member>[posix_acl_alloc]</member>
     <member>[posix_acl_clone]</member>
     <member>[posix_acl_from_mode]</member>
+    <member>[match_strdup]</member>
     </simplelist>
 </listitem>
 </itemizedlist>

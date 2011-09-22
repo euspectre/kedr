@@ -24,4 +24,5 @@ header =>>
 #include <linux/string.h>
 #include <linux/fs.h>
 #include <linux/posix_acl.h>
+#include <linux/parser.h>
 <<

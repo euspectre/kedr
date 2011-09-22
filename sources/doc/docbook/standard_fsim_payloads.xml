@@ -66,8 +66,9 @@ Unless the opposite is stated explicitly, the name of the fault simulation point
     <member>[<function>posix_acl_alloc</function>]</member>
     <member>[<function>posix_acl_clone</function>]</member>
     <member>[<function>posix_acl_from_mode</function>]</member>
+    <member>[<function>match_strdup</function>]</member>
     </simplelist>
-    Fault simulation points for these functions do not provide additional parameters for a fault simulation scenario.
+    Fault simulation points for these functions do not provide additional parameters for a fault simulation scenario except for <function>posix_acl_*</function> functions similar to <function>__kmalloc</function> in this respect.
 </listitem>
 <listitem><phrase role="emphasized">kedr_fsim_vmm.ko</phrase>
     <simplelist type='vert'>

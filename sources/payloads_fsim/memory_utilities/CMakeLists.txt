@@ -13,6 +13,8 @@ kmodule_configure_kernel_functions(functions REQUIRED
 	OPTIONAL "posix_acl_alloc"
 	"posix_acl_clone"
 	"posix_acl_from_mode"
+
+	OPTIONAL "match_strdup"
 )
 
 create_payload_fsim(${kmodule_name} ${functions})

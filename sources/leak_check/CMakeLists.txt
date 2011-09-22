@@ -125,6 +125,8 @@ kmodule_configure_kernel_functions(functions
 	OPTIONAL "posix_acl_alloc"
 	"posix_acl_clone"
 	"posix_acl_from_mode"
+
+	OPTIONAL "match_strdup"
 )
 
 # N.B. kfree_rcu() uses call_rcu/call_rcu_sched to call kfree() on an 

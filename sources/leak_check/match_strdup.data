@@ -1,0 +1,21 @@
+[group]
+	# Name and return type of the target function
+	function.name = match_strdup
+	returnType = char *
+
+	# Names and types of the arguments of the target function
+	arg.type = const substring_t *
+	arg.name = s
+	
+	# The body of the replacement function
+	handler.post =>>
+	if (returnValue != NULL) {
+		size_t size = s->to - s->from + 1;
+		klc_handle_alloc(returnValue, size, stack_depth, 
+                        caller_address);
+	}
+	<<
+
+# End of the group of definitions for match_strdup().
+
+#######################################################################
