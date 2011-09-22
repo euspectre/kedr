@@ -63,6 +63,9 @@ Unless the opposite is stated explicitly, the name of the fault simulation point
     <member><function>kstrdup</function></member>
     <member><function>kstrndup</function></member>
     <member><function>kmemdup</function></member>
+    <member>[<function>posix_acl_alloc</function>]</member>
+    <member>[<function>posix_acl_clone</function>]</member>
+    <member>[<function>posix_acl_from_mode</function>]</member>
     </simplelist>
     Fault simulation points for these functions do not provide additional parameters for a fault simulation scenario.
 </listitem>
@@ -74,8 +77,8 @@ Unless the opposite is stated explicitly, the name of the fault simulation point
     <member><function>vmalloc_node</function></member>
     <member><function>vmalloc_32</function></member>
     <member><function>vmalloc_32_user</function></member>
-    <member><function>[vzalloc]</function></member>
-    <member><function>[vzalloc_node]</function></member>
+    <member>[<function>vzalloc</function>]</member>
+    <member>[<function>vzalloc_node</function>]</member>
     </simplelist>
     All these functions use a shared fault simulation point named <filename>vmalloc</filename> that provides no additional parameters for a fault simulation scenario.
 </listitem>

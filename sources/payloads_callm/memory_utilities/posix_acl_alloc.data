@@ -1,0 +1,28 @@
+[group]
+	# Name and return type of the target function
+	function.name = posix_acl_alloc
+	returnType = struct posix_acl *
+
+	# Names and types of the arguments of the target function
+	arg.type = int 
+	arg.name = count
+
+	arg.type = gfp_t
+	arg.name = flags
+	
+	# The parameters to be output to the trace. 
+	trace.param.type = int
+	trace.param.name = count
+
+	trace.param.type = unsigned int
+	trace.param.name = flags
+
+	trace.param.type = void *
+	trace.param.name = returnValue
+
+	# The format string to be used for trace output.
+	trace.formatString = "arguments: (%d, %x), result: %p"
+
+# End of the group of definitions for posix_acl_alloc().
+
+#######################################################################

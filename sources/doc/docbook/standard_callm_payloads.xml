@@ -121,6 +121,9 @@ Here is a full list of the payload modules that currently may be used for call m
     <member>[call_rcu_sched]</member>
     <member>[add_to_page_cache_lru]</member>
     <member>[add_to_page_cache_locked]</member>
+    <member>[posix_acl_alloc]</member>
+    <member>[posix_acl_clone]</member>
+    <member>[posix_acl_from_mode]</member>
     </simplelist>
 </listitem>
 </itemizedlist>

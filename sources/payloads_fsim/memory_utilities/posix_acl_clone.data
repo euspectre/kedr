@@ -1,0 +1,30 @@
+[group]
+	# Name and return type of the target function
+	function.name = posix_acl_clone
+	returnType = struct posix_acl *
+
+	# Names and types of the arguments of the target function
+	arg.type = const struct posix_acl *
+	arg.name = acl
+
+	arg.type = gfp_t
+	arg.name = flags
+
+	prologue =>>
+	size_t size = sizeof(struct posix_acl) + 
+		(size_t)acl->a_count * sizeof(struct posix_acl_entry);
+<<
+	
+	# Fault Simulation
+	fpoint.reuse_point = posix_acl_alloc
+
+	fpoint.param.type = size_t
+	fpoint.param.name = size
+
+	fpoint.param.type = gfp_t
+	fpoint.param.name = flags
+
+	fpoint.fault_code =	returnValue = NULL;
+
+# End of the group of definitions for posix_acl_clone().
+#######################################################################

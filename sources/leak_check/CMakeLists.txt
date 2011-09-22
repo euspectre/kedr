@@ -121,6 +121,10 @@ kmodule_configure_kernel_functions(functions
 # them to the kernel proper among other things.
 	OPTIONAL "add_to_page_cache_lru"
 	"add_to_page_cache_locked"
+
+	OPTIONAL "posix_acl_alloc"
+	"posix_acl_clone"
+	"posix_acl_from_mode"
 )
 
 # N.B. kfree_rcu() uses call_rcu/call_rcu_sched to call kfree() on an 

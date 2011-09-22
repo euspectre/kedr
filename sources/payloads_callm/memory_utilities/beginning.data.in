@@ -24,6 +24,8 @@ header =>>
 #include <linux/string.h>
 #include <linux/pagemap.h>
 #include <linux/rcupdate.h>
+#include <linux/fs.h>
+#include <linux/posix_acl.h>
 
 /* This is needed because the current system of data files, templates and 
  * code generation tools does not allow specifying the type of a function

@@ -44,6 +44,8 @@ header =>>
 #include <linux/vmalloc.h>   /* vmalloc() family */
 #include <linux/rcupdate.h>  /* RCU */
 #include <linux/pagemap.h>   /* add_to_page_cache_* */
+#include <linux/fs.h>        /* POSIX ACLs, etc. */
+#include <linux/posix_acl.h> /* POSIX ACLs */
 
 /* If call_rcu() is used, it can be necessary to check if the pointer 
  * passed to it is really an address of a callback function. If the 

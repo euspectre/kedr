@@ -12,6 +12,10 @@ kmodule_configure_kernel_functions(functions REQUIRED
 	"kmemdup"
 	OPTIONAL "add_to_page_cache_lru"
 	"add_to_page_cache_locked"
+
+	OPTIONAL "posix_acl_alloc"
+	"posix_acl_clone"
+	"posix_acl_from_mode"
 )
 # N.B. add_to_page_cache_* is to be intercepted only to handle some
 # situations where the repsonsibility for a page is transferred from 

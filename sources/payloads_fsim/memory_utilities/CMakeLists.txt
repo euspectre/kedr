@@ -9,6 +9,10 @@ kmodule_configure_kernel_functions(functions REQUIRED
 	"kstrdup"
 	"kstrndup"
 	"kmemdup"
+	
+	OPTIONAL "posix_acl_alloc"
+	"posix_acl_clone"
+	"posix_acl_from_mode"
 )
 
 create_payload_fsim(${kmodule_name} ${functions})

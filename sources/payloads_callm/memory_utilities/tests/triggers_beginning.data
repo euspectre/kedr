@@ -5,6 +5,8 @@ header =>>
 #include <linux/mm.h>
 #include <linux/string.h>
 #include <linux/rcupdate.h>
+#include <linux/fs.h>
+#include <linux/posix_acl.h>
 
 /* 'kedr_foo' and 'trigger_rcu_callback' are used when triggering 
  * call_rcu*() functions. */

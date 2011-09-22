@@ -1,3 +1,6 @@
 kstrdup
 kstrndup
 kmemdup
+posix_acl_alloc
+posix_acl_clone
+posix_acl_from_mode
