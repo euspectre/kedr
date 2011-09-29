@@ -10,7 +10,7 @@ The tools provided by KEDR operate on a kernel module chosen by the user (<first
 </para>
 
 <para>
-The typical usage of KEDR is as follows. The user works with the target kernel module normally or may be runs some specific tests on it. At the same time, KEDR tools are monitoring the operation of the module, checking if it works correctly, doing fault simulation if requested, dumping the data about the actions made by the module to the trace file for future analysis, etc. 
+The typical usage of KEDR is as follows. The user works with the target kernel module normally or maybe runs some specific tests on it. At the same time, KEDR tools are monitoring the operation of the module, checking if it works correctly, doing fault simulation if requested, dumping the data about the actions made by the module to the trace file for future analysis, etc. 
 </para>
 
 <para>

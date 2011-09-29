@@ -48,8 +48,8 @@ module including its interaction with the rest of the kernel.
 At the core of KEDR lies its ability to intercept function calls made by 
 the target kernel module. If the module uses a function exported by the kernel 
 proper or by some other module, KEDR can instrument the calls to this 
-function in the target module. This allows to find out with what arguments the 
-function was called, what value it returned, etc. This also 
+function in the target module. This allows to find out the values of 
+arguments the function was called with, the value it returned, etc. This also 
 allows to alter the execution of the target module, for example, to simulate a 
 situaton when memory allocation fails or to allocate memory from some 
 special tracked pool instead of the default one and so on.
