@@ -99,7 +99,6 @@ indicator_instance_init(void** state,
         return -ENOMEM;
     }
 <$endif$>
-    (void)params;//unused
 <$if concat(indicator.init.name)$>    // Call init functions
 <$indicatorInitCall : join(\n)$>
 <$endif$><$if concat(indicator.file.name)$>    // Create control files

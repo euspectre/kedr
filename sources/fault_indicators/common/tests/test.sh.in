@@ -69,7 +69,29 @@ if test $? -ne 0; then
 	exit 1
 fi
 
-if  simulate; then
+if simulate; then
+	printf "Simulate should fail with \"1\" expression.\n"
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+## Set indicator and expression at once.
+echo "$indicator_name 1" > "${point_dir}/current_indicator"
+
+if test $? -ne 0; then
+	printf "Cannot set indicator with expression '1' for the point.\n"
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+expression=`cat "${point_dir}/expression"`
+if test "$expression" != "1"; then
+	printf "Indicator was set with expression '%s', but expression is '%s'.\n" "1" "$expression"
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+if simulate; then
 	printf "Simulate should fail with \"1\" expression.\n"
 	$do_commands_script "$commands_file" unload
 	exit 1

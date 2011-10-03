@@ -96,7 +96,7 @@ indicator.simulate.code =>>
 
 indicator.init.name = expression
 indicator.init.code =>>
-	const char* expression = "0";//hardcoded
+	const char* expression = params && *params ? params : "0";
 	// Initialize expression
     atomic_set(&state(times), 0);
     
