@@ -33,10 +33,7 @@ const char* device_name = "kedr_test_device";
 //contain last value, returned by read_point or write_point simulation
 int current_value = 0;
 module_param(current_value, int, S_IRUGO);
-//for set by other modules(e.g., when they unloaded)
-//int a_external_value = 0;
-//module_param(a_external_value, int, S_IRUGO);
-//EXPORT_SYMBOL(a_external_value);
+
 
 static struct kedr_simulation_point* read_point = NULL;
 static struct kedr_simulation_point* write_point = NULL;
@@ -168,6 +165,8 @@ module_read(struct file *filp, char __user *buf, size_t count,
     (void)f_pos;
 
     current_value = kedr_fsim_point_simulate(read_point, NULL);
+    if(current_value)
+        kedr_fsim_fault_message("Read: %d", current_value);
     return count;
 }
                 
@@ -180,7 +179,9 @@ module_write(struct file *filp, const char __user *buf, size_t count,
     (void)f_pos;
 
     current_value = kedr_fsim_point_simulate(write_point, &count);
-
+    if(current_value)
+        kedr_fsim_fault_message("Write for %d: %d", count, current_value);
+    
     return count;
 }
 

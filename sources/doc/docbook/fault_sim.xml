@@ -290,4 +290,10 @@ Full list of standard fault simulation scenarios is provided in <xref linkend="s
     <para>
 List of all functions available for fault simulation by standard set of fault simulation payloads is provided in <xref linkend="standard_fsim_payloads.functions"/>. If you would like to create a payload module to perform fault simulation for other functions, see <xref linkend="custom_fsim_payloads"/>.
     </para>
+    <para>
+Message described last fault simulated may be readed from the file <filename>/sys/kernel/debug/kedr_fault_simulation/last_fault</filename>. It looks like
+<programlisting><![CDATA[
+__kmalloc at [<e17b938d>] cfake_open+0x5d/0xa4 [kedr_sample_target]
+]]></programlisting>
+</para>
 </section>

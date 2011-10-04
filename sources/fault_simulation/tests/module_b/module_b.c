@@ -14,7 +14,6 @@
 
 #include <linux/kernel.h>	/* printk() */
 
-//#include <kedr/fault_simulation/fsim_base.h>
 #include <kedr/fault_simulation/fault_simulation.h>
 
 const char* read_indicator_name = "indicator_for_read";

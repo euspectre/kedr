@@ -10,6 +10,8 @@
  * by the Free Software Foundation.
  ======================================================================== */
 
+#include <kedr/fault_simulation/fault_simulation.h>
+
 #include <linux/kernel.h>	/* printk() */
 #include <linux/slab.h>		/* kmalloc() */
 
@@ -21,8 +23,6 @@
 
 #include <linux/uaccess.h> /* copy_*_user functions */
     
-#include <linux/debugfs.h>
-
 #include <linux/ctype.h> /* isspace() */
 
 #include <linux/string.h> /* memcpy */
@@ -108,6 +108,12 @@ static DEFINE_MUTEX(fsim_mutex);
 static struct dentry* root_directory;
 static struct dentry* points_root_directory;
 static struct dentry* indicators_root_directory;
+
+// File for access last fault.
+static struct dentry* last_fault_file;
+
+char kedr_fsim_fault_message_buf[KEDR_FSIM_FAULT_MESSAGE_LEN + 1] = "none";
+spinlock_t kedr_fsim_fault_message_lock;
 
 // Auxiliary functions
 
@@ -405,6 +411,24 @@ int kedr_fsim_point_simulate(struct kedr_simulation_point* point,
     return result;
 }
 EXPORT_SYMBOL(kedr_fsim_point_simulate);
+
+int kedr_fsim_fault_message(const char* fmt, ...)
+{
+    int len;
+    unsigned long flags;
+    va_list args;
+    
+    spin_lock_irqsave(&kedr_fsim_fault_message_lock, flags);
+    
+    va_start(args, fmt);
+    len = vsnprintf(kedr_fsim_fault_message_buf, KEDR_FSIM_FAULT_MESSAGE_LEN + 1, fmt, args);
+    va_end(args);
+    
+    spin_unlock_irqrestore(&kedr_fsim_fault_message_lock, flags);
+    
+    return len > KEDR_FSIM_FAULT_MESSAGE_LEN;
+}
+EXPORT_SYMBOL(kedr_fsim_fault_message);
 ///////////////////Implementation of auxiliary functions/////////////////////
 
 /*
@@ -549,6 +573,12 @@ CONTROL_FILE_OPS(point_format_string_file_operations,
     point_format_string_file_get_str, NULL);
 
 
+static char* last_fault_file_get_str(struct inode* inode);
+
+CONTROL_FILE_OPS(last_fault_file_operations,
+    last_fault_file_get_str, NULL);
+
+
 int create_point_files(struct kedr_simulation_point* point)
 {
     point->control_dir = debugfs_create_dir(point->name, points_root_directory);
@@ -647,8 +677,21 @@ kedr_fault_simulation_init(void)
         print_error0("Cannot create directory in debugfs for indicators.");
         goto err_indicators_dir;
     }
+    
+    last_fault_file = debugfs_create_file("last_fault", 
+        S_IRUGO,
+        root_directory,
+        NULL, &last_fault_file_operations);
+    if(last_fault_file == NULL)
+    {
+        print_error0("Cannot create 'last_fault' file in debugfs.");
+        goto err_last_fault_file;
+    }
+    
     return 0;
 
+err_last_fault_file:
+    debugfs_remove(indicators_root_directory);
 err_indicators_dir:
     debugfs_remove(points_root_directory);
 err_points_dir:
@@ -663,6 +706,7 @@ kedr_fault_simulation_exit(void)
     BUG_ON(!list_empty(&points));
     BUG_ON(!list_empty(&indicators));
 
+    debugfs_remove(last_fault_file);
     debugfs_remove(points_root_directory);
     debugfs_remove(indicators_root_directory);
     debugfs_remove(root_directory);
@@ -774,6 +818,24 @@ char* point_format_string_file_get_str(struct inode* inode)
         str = NULL; //'device' corresponding to the file does not exist
     }
     mutex_unlock(&fsim_mutex);
+    
+    return str;
+}
+
+char* last_fault_file_get_str(struct inode* inode)
+{
+    unsigned long flags;
+
+    char* str = kmalloc(KEDR_FSIM_FAULT_MESSAGE_LEN + 1, GFP_KERNEL);
+    
+    if(str == NULL) return NULL;
+    
+    spin_lock_irqsave(&kedr_fsim_fault_message_lock, flags);
+
+    strncpy(str, kedr_fsim_fault_message_buf, KEDR_FSIM_FAULT_MESSAGE_LEN);
+    str[KEDR_FSIM_FAULT_MESSAGE_LEN] = '\0';
+    
+    spin_unlock_irqrestore(&kedr_fsim_fault_message_lock, flags);
     
     return str;
 }

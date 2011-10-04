@@ -1,7 +1,6 @@
 #!/bin/sh
 
 fault_simulation_module="@CMAKE_CURRENT_BINARY_DIR@/../kedr_fault_simulation.ko"
-#fsim_base_module="@CMAKE_CURRENT_BINARY_DIR@/../kedr_fsim_base.ko"
 
 read_point_name="kedr-read-point"
 write_point_name="kedr-write-point"
@@ -15,28 +14,49 @@ indicators_simple="@CMAKE_CURRENT_BINARY_DIR@/indicators_simple/fsim_test_indica
 current_value_file="/sys/module/${module_a_name}/parameters/current_value"
 
 device=kedr_test_device
+
 debugfs_mount_point="@CMAKE_CURRENT_BINARY_DIR@/debugfs"
 control_root="$debugfs_mount_point/kedr_fault_simulation"
+last_fault_file="$control_root/last_fault"
 
 # set_indicator point_name indicator_name
+#
+# Set indicator for the point.
 set_indicator()
 {
     printf "$2" > "$control_root/points/$1/current_indicator"
 }
 # clear_indicator point_name
+#
+# Clear indicator for the point.
 clear_indicator()
 {
     printf "%s" "none" > "$control_root/points/$1/current_indicator"
 }
 # get_indicator point_name
-# print indicator to output
+#
+# Print current indicator of the point.
 get_indicator()
 {
     cat "$control_root/points/$1/current_indicator"
 }
-
+# check_last_fault fault_message
+#
+# Check that last fault message is an expected one.
+# Otherwise print error message and return 1.
+check_last_fault()
+{
+if test "$last_fault" != "$1"; then
+    printf "'Last fault' file contains '%s', but should contain '%s'.\n" "$last_fault" "$1"
+    return 1
+fi
+return 0
+}
 
 # simulate_point (read_point_name) | (write_point_name size)
+#
+# Call simulate for the point.
+# Also update 'current_value' and 'last_fault'.
 simulate_point()
 {
 if test "$1" == "$read_point_name"; then
@@ -46,6 +66,7 @@ elif test "$1" == "$write_point_name"; then
 fi
 local result=$?
 current_value=`cat "$current_value_file"`
+last_fault=`cat "$last_fault_file"`
 return $result
 }
 
@@ -86,6 +107,10 @@ if test "$current_value" != "0"; then
     exit 1
 fi
 
+if ! check_last_fault "none"; then
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
 
 if ! insmod "$module_b"; then
     printf "Cannot load module 'b' into kernel.\n"
@@ -112,6 +137,12 @@ if test "$current_value" != "9"; then
     exit 1
 fi
 
+if ! check_last_fault "Read: 9"; then
+    rmmod "$module_b"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
 
 if ! set_indicator "$write_point_name" "$write_indicator_name"; then
     printf "Cannot set indicator for write point.\n"
@@ -129,6 +160,13 @@ if test "$current_value" != "25"; then
     $do_commands_script "$commands_file" unload
     exit 1
 fi
+
+if ! check_last_fault "Write for 25: 25"; then
+    rmmod "$module_b"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
 
 #Rewrite indicator for write point
 if ! set_indicator "$write_point_name" "$read_indicator_name"; then
@@ -148,6 +186,13 @@ if test "$current_value" != "9"; then
     exit 1
 fi
 
+if ! check_last_fault "Write for 25: 9"; then
+    $do_commands_script "$commands_file" unload
+    rmmod "$module_b"
+    exit 1
+fi
+
+
 #Clear indicator for read point
 if ! clear_indicator "$read_point_name"; then
     printf "Cannot clear indicator for the read point.\n"
@@ -164,8 +209,6 @@ if test "$current_indicator" != "none"; then
     $do_commands_script "$commands_file" unload
     exit 1
 fi
-
-
 
 # Simulate with cleared indicator
 simulate_point "$read_point_name"
@@ -193,7 +236,10 @@ if test "$current_value" != "0"; then
     exit 1
 fi
 
-
+if ! check_last_fault "Write for 25: 9"; then
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
 
 
 # Set "never" and "always" scenarious

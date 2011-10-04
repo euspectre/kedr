@@ -16,10 +16,7 @@ fpoint.param.name = caller_address
 
 <$if concat(fpoint.param.name)$><$fpointParam: join(\n)$>
 
-<$endif$># Extract value of 'caller_address' from replacement function's parameters
-prologue = void* caller_address = call_info->return_address;
-
-<$if concat(prologue)$><$prologueSection: join(\n)$>
+<$endif$><$if concat(prologue)$><$prologueSection: join(\n)$>
 
 <$endif$><$if concat(epilogue)$><$epilogueSection: join(\n)$>
 
@@ -27,4 +24,8 @@ prologue = void* caller_address = call_info->return_address;
 
 <$endif$><$if fpoint.rename$>fpoint.rename = <$fpoint.rename$>
 
-<$endif$>
+<$endif$><$if message.formatString$>message.formatString = <$message.formatString$>
+
+<$if message.param.type$><$messageParamDefinition: join(\n)$>
+
+<$endif$><$endif$>

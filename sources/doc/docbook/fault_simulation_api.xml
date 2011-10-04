@@ -9,6 +9,15 @@ This section describes the interface provided for creating and using <link linke
 Although this API is used by KEDR in the payload modules for fault simulation, the API can be used without KEDR core and payloads.
 </para></note>
 
+<section id="fault_simulation_api.module">
+<title>Kernel module providing API</title>
+
+<para>
+API described in that section is provided by the kernel module <filename>kedr_fault_simulation.ko</filename>, placed in <filename class="directory">/usr/local/lib/modules/`uname -r`/misc</filename> directory.
+</para>
+
+</section> <!-- "fault_simulation_api.module" -->
+
 <section id="fault_simulation_api.header">
 <title>Header file</title>
 
@@ -21,6 +30,7 @@ The API is declared in a header file that a module implementing fault simulation
 ]]></programlisting>
 
 </section> <!-- "fault_simulation_api.header" -->
+
 <!-- ================================================================ -->
 
 <section id="fault_simulation_api.fault_simulation_point">
@@ -47,7 +57,7 @@ When it is needed to decide which branch of code should be executed, one should 
 <section id="fault_simulation_api.format_string">
 <title>Format of the Data Passed from a Fault Simulation Point to the Scenario</title>
 <para>
-When calling <function linkend="fault_simulation_api.kedr_fsim_point_simulate">kedr_fsim_point_simulate</function>, one should also pass the parameters for the fault simulation scenario. The format is expected to be a struct containing fields of possibly different types. It can be encoded in a string with a comma-separated ordered list of these types. E.g. a string <quote>int*,long</quote> encodes the parameters of the corresponding types:
+When call <function linkend="fault_simulation_api.kedr_fsim_point_simulate">kedr_fsim_point_simulate</function>, one should also pass the parameters for the fault simulation scenario. The format is expected to be a struct containing fields of possibly different types. It can be encoded in a string with a comma-separated ordered list of these types. E.g. a string <quote>int*,long</quote> encodes the parameters of the corresponding types:
 <programlisting><![CDATA[
 struct 
 {
@@ -129,6 +139,10 @@ int kedr_fsim_point_simulate(struct kedr_simulation_point *point,
 
 <para>
 Returns an integer value according to the scenario set for that point. If no scenario is set, returns <constant>0</constant>.
+</para>
+
+<para>
+If function returns non-zero, <function linkend="fault_simulation_api.kedr_fsim_fault_message">kedr_fsim_fault_message</function> function should be called for set message describing fault is simulated. Description of last fault simulated may be read from file <filename linkend="fault_simulation_api.last_fault_file">&lt;debugfs-mount-point&gt;/kedr_fault_simulation/last_fault</filename>.
 </para>
 
 </section> <!-- "fault_simulation_api.kedr_fsim_point_simulate" -->
@@ -289,6 +303,39 @@ This function is called indirectly when a fault simulation point is unregistered
 
 </section> <!-- "fault_simulation_api.kedr_fsim_point_clear_indicator" -->
 
+<section id="fault_simulation_api.kedr_fsim_fault_message">
+<title>kedr_fsim_fault_message()</title>
+<para>
+Write message described fault simulated. Should be called after <function linkend="fault_simulation_api.kedr_fsim_point_simulate">kedr_fsim_point_simulate</function> return non-zero.
+</para>
+
+<programlisting><![CDATA[
+int kedr_fsim_fault_message(const char *fmt);
+]]></programlisting>
+
+<para>
+Message is writed in the snprintf-like format. Function returns 1 if message was truncated while written, 0 otherwise.
+</para>
+
+<para>
+Message describing last fault simulated may be read from <filename linkend="fault_simulation_api.last_fault_file">&lt;debugfs-mount-point&gt;/kedr_fault_simulation/last_fault</filename> file.
+</para>
+
+</section> <!-- "fault_simulation_api.kedr_fsim_fault_message" -->
+
+<section id="fault_simulation_api.kedr_fsim_fault_message_len">
+<title>KEDR_FSIM_FAULT_MESSAGE_LEN</title>
+<para>
+Length of fault message which is garanteed to be written without truncation. See also function <function linkend="fault_simulation_api.kedr_fsim_fault_message">kedr_fsim_fault_message</function>.
+</para>
+
+<programlisting><![CDATA[
+#define KEDR_FSIM_FAULT_MESSAGE_LEN 100
+]]></programlisting>
+
+</section> <!-- "fault_simulation_api.kedr_fsim_fault_message_len" -->
+
+
 <section id="fault_simulation_api.format_string_file">
 <title>Control File <filename>format_string</filename></title>
 
@@ -318,11 +365,11 @@ For each registered point, there is a file in the point's control directory that
 </programlisting>
 
 <para>
-Reading from this file returns the name of the scenario currently set for the point (more precisely, the name of the indicator used to create this scenario). If no scenario is set for the point, <quote>none</quote> is returned.
+Reading from this file returns the name of the scenario currently set for the point (more precisely, the name of the indicator used to create this scenario). If no scenario is set for the point, <constant>none</constant> is returned.
 </para>
 
 <para>
-Writing to this file sets a new scenario for the point. Everything before the first space in the written sequence is treated as a name of the indicator, which is used for create a new scenario. Everything after the first space is treated as a parameter string for the new scenario. If there are no spaces in the written sequence, the whole sequence is treated as name of the indicator, and no parameters are passed for the new scenario. Writing a special name <quote>none</quote> forces clearing the scenario.
+Writing to this file sets a new scenario for the point. Everything before the first space in the written sequence is treated as a name of the indicator, which is used for create a new scenario. Everything after the first space is treated as a parameter string for the new scenario. If there are no spaces in the written sequence, the whole sequence is treated as name of the indicator, and no parameters are passed for the new scenario. Writing a special name <constant>none</constant> forces clearing the scenario.
 </para>
 
 <para>
@@ -357,4 +404,21 @@ kedr_fsim_point_clear_indicator("point3");
 
 </section> <!-- "fault_simulation_api.current_indicator_file" -->
 
-</section>
+<section id="fault_simulation_api.last_fault_file">
+<title>Control File <filename>last_fault</filename></title>
+
+<para>
+Contain message describing last fault simulated.
+</para>
+
+<programlisting>
+<filename>&lt;debugfs-mount-point&gt;/kedr_fault_simulation/last_fault</filename>
+</programlisting>
+
+<para>
+Reading from this file returns string which was written with last <function linkend="fault_simulation_api.kedr_fsim_fault_message">kedr_fsim_fault_message</function> call or <constant>none</constant> if no calls of <function>kedr_fsim_fault_message</function> had been since <filename>kedr_fault_simulation</filename> module was loaded.
+</para>
+
+</section> <!-- "fault_simulation_api.last_fault_file" -->
+
+</section> <!-- "fault_simulation.api"-->

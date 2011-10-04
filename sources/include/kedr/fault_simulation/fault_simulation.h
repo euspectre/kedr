@@ -6,6 +6,7 @@
 #endif
 
 #include <linux/debugfs.h> /* struct dentry */
+#include <linux/spinlock.h> /* spinlock for 'last_fault'*/
 
 /*
  * Format description of 'user_data' parameter,
@@ -134,5 +135,28 @@ int kedr_fsim_point_clear_indicator(const char* point_name);
 int kedr_fsim_point_simulate(struct kedr_simulation_point* point,
     void *user_data);
 
+/*
+ * Fault message - message describing fault simulated.
+ * 
+ * Last fault message written may be read from user space via
+ * '<debugfs>/fault_simulation/last_fault' file.
+ * 
+ * Each user of fault simulation point should write this message
+ * after 'simulate' return non-zero.
+ * 
+ * NOTE: API for that message may be changed in the future(not stable).
+ */
+
+// Length of the buffer for fault message.
+#define KEDR_FSIM_FAULT_MESSAGE_LEN 100
+
+/*
+ * Write fault message in snprintf-style.
+ * 
+ * Return 1 if message was truncated, 0 otherwise.
+ */
+
+int kedr_fsim_fault_message(const char* fmt, ...)
+	__attribute__ ((format (printf, 1, 2)));
 
 #endif /* KEDR_FAULT_SIMULATION_H */

@@ -57,14 +57,14 @@ fi
 # Verify trace
 LC_ALL=C awk -f "@CMAKE_CURRENT_SOURCE_DIR@/../verify_trace_format.awk" \
     "${trace_file_copy}"
-if $? -ne 0; then
+if test $? -ne 0; then
 	printf "Trace file has incorrect format.\n"
 	exit 1
 fi
 
 LC_ALL=C awk -f "@CMAKE_CURRENT_SOURCE_DIR@/verify_trace.awk" \
     "${trace_file_copy}"
-if $? -ne 0; then
+if test $? -ne 0; then
 	printf "Trace file is inconsistent.\n"
 	exit 1
 fi
