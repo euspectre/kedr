@@ -360,7 +360,7 @@ So we can see from the above listing that the trace records corresponds to the c
 
 <note>
 <para>
-The technique described below is quite easy to use. Still, to understand it better, it is recommended that you familiarize yourself first with the instructions on how to create custom payload modules using template-based code generation and fault simulation infrastructure (see <xref linkend="extend"/>). 
+The technique described below is quite easy to use. Still, to understand it better, it is recommended that you familiarize yourself first with the instructions on how to create custom payload modules using template-based code generation and fault simulation infrastructure (see <xref linkend="kedr_manual_extend"/>). 
 </para>
 
 <para>
