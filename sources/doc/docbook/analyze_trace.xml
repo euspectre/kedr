@@ -25,7 +25,7 @@ It is desirable to have the target module with debug information enabled. Note t
 <title>General</title>
 
 <para>
-Let us consider the trace from the example described in <xref linkend="getting_started"/> (the records are numbered just for convenience):
+Let us consider the trace from the example described in <xref linkend="kedr_manual_getting_started"/> (the records are numbered just for convenience):
 </para>
 
 <programlisting><![CDATA[

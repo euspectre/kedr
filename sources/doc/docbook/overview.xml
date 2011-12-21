@@ -1,10 +1,10 @@
-﻿<section id="overview">
+﻿<section id="kedr_manual_overview">
 <title>Overview</title>
 
 <section id="overview.general">
 <title>General</title>
 <para>
-KEDR is a system for the analysis of Linux <link linkend="glossary">kernel modules</link> (including 
+KEDR is a system for the analysis of Linux <link linkend="kedr_manual_glossary">kernel modules</link> (including 
 but not limited to device drivers and file system modules) in 
 runtime. The types of analysis that can be performed with KEDR vary from simply 
 collecting the statistics on the kernel functions used by a particular 
@@ -133,7 +133,7 @@ kernel probes is disabled in the kernel.
 
 Here is what a common use case for the runtime analysis of a kernel module with 
 KEDR may look like. This is just <quote>a big picture</quote>, see <xref 
-linkend="getting_started"/> for a more detailed description of the operations
+linkend="kedr_manual_getting_started"/> for a more detailed description of the operations
 executed at each step.
 
 The steps listed below can be performed manually or perhaps by a user-space 

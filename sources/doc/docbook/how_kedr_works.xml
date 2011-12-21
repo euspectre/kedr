@@ -122,7 +122,7 @@ Loads the payload modules listed in the configuration file. Each payload
 module should register itself with the KEDR core by calling <function>kedr_payload_register</function> (see <xref 
 linkend="payload_api"/>), this is usually done in its init function. From 
 this moment, KEDR begins watching for the specified target module 
-to load (see also <xref linkend="getting_started"/>).
+to load (see also <xref linkend="kedr_manual_getting_started"/>).
 </para></listitem>
 </orderedlist>
 
