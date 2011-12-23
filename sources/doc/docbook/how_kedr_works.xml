@@ -52,11 +52,11 @@ the payload module can register a <link linkend="replacement_function"><firstter
 example, to make it look like the target function has failed.
 </para>
 
-<itemizedlist>
 <para>
 Payload modules can do various things:
 </para>
 
+<itemizedlist>
 <listitem><para>
 Collect data about which function was called when, with what arguments, and
 what it returned (<firstterm><quote>Call Monitor</quote></firstterm> 
@@ -105,7 +105,6 @@ on the figure) - either manually or via a user-space application.
 Note that the term <quote>API</quote> is used here in a rather broad sense. Currently, it is not a set of functions or classes provided for the applications written in some programming language. It rather consists of all the means that KEDR provides for the user-space applications to start the analysis process, to control it and to retrieve the results. These means include the parameters of the kernel modules from KEDR, the special files that allow to configure fault simulation scenarios, etc. All these facilities are described in the respective sections of this manual.
 </para></note>
 
-<orderedlist>
 <para>
 <link linkend="kedr_control">KEDR control tool</link> makes sure each 
 component of KEDR is loaded in proper order and with proper parameters. It does roughly the following 
@@ -113,6 +112,7 @@ component of KEDR is loaded in proper order and with proper parameters. It does 
 linkend="kedr_control"/>):
 </para>
 
+<orderedlist>
 <listitem><para>
 Loads the <filename>KEDR core</filename> responsible to keep track of payload modules and to provide API to them. The name of the target module passed to <filename>KEDR core</filename> a parameter (<quote>target_name</quote>).
 </para></listitem>

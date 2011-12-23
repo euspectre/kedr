@@ -87,41 +87,42 @@ The indicator with name <filename>common</filename> is the common indicator that
     <para>
 <filename>expression</filename> file corresponds to the mathematical expression. The indicator function will return the resulting value of this expression when called from a fault simulation point. Reading from this file returns the expression currently used by the indicator function. If you would like to instruct the indicator to use another expression, write the expression to this file. 
     </para>
-    
-<itemizedlist mark='circle'>
-<para>The expression may contain the following.</para>
 
+    <para>
+The expression may contain the following.
+    </para>
+<itemizedlist mark='circle'>
 <listitem><para>Signed or unsigned decimal integer numbers</para>
 </listitem>
 
-<listitem><para>Unsigned hexadecimal integer numbers with the format <quote>0x[0-9a-f]+</quote> (similar to <quote>0x%x</quote> format for printf() function)</para>
+<listitem><para>Unsigned hexadecimal integer numbers with the format <code><quote>0x[0-9a-f]+</quote></code> (similar to <quote>0x%x</quote> format for printf() function)</para>
 </listitem>
 
 <listitem>Any mathematical operation from the list:
     <simplelist type='vert'>
-    <member><quote>!</quote> - logical not</member>
-    <member><quote>~</quote> - binary not</member>
-    <member><quote>+</quote> - unary plus</member>
-    <member><quote>-</quote> - unary minus</member>
-    <member><quote>*</quote> - multiplication</member>
-    <member><quote>/</quote> - integer division</member>
-    <member><quote>%</quote> - remainder of division</member>
-    <member><quote>+</quote> - binary plus</member>
-    <member><quote>-</quote> - binary minus</member>
-    <member><quote>&gt;&gt;</quote> - arithmetic right shift</member>
-    <member><quote>&lt;&lt;</quote> - arithmetic left shift</member>
-    <member><quote>&lt;</quote> - less</member>
-    <member><quote>&gt;</quote> - greater</member>
-    <member><quote>&lt;=</quote> - less or equal</member>
-    <member><quote>&gt;=</quote> - greater or equal</member>
-    <member><quote>a=b</quote> - equal</member>
-    <member><quote>a!=b</quote> - not equal</member>
-    <member><quote>&amp;</quote> - binary and</member>
-    <member><quote>^</quote> - binary xor</member>
-    <member><quote>|</quote> - binary or</member>
-    <member><quote>&amp;&amp;</quote> - logical and</member>
-    <member><quote>a||b</quote> - logical or</member>
-    <member><quote>c ? a : b</quote> - conditional operator</member>
+    <member><code><quote>!</quote></code> - logical not</member>
+    <member><code><quote>~</quote></code> - binary not</member>
+    <member><code><quote>+</quote></code> - unary plus</member>
+    <member><code><quote>-</quote></code> - unary minus</member>
+    <member><code><quote>*</quote></code> - multiplication</member>
+    <member><code><quote>/</quote></code> - integer division</member>
+    <member><code><quote>%</quote></code> - remainder of division</member>
+    <member><code><quote>+</quote></code> - binary plus</member>
+    <member><code><quote>-</quote></code> - binary minus</member>
+    <member><code><quote>&gt;&gt;</quote></code> - arithmetic right shift</member>
+    <member><code><quote>&lt;&lt;</quote></code> - arithmetic left shift</member>
+    <member><code><quote>&lt;</quote></code> - less</member>
+    <member><code><quote>&gt;</quote></code> - greater</member>
+    <member><code><quote>&lt;=</quote></code> - less or equal</member>
+    <member><code><quote>&gt;=</quote></code> - greater or equal</member>
+    <member><code><quote>a=b</quote></code> - equal</member>
+    <member><code><quote>a!=b</quote></code> - not equal</member>
+    <member><code><quote>&amp;</quote></code> - binary and</member>
+    <member><code><quote>^</quote></code> - binary xor</member>
+    <member><code><quote>|</quote></code> - binary or</member>
+    <member><code><quote>&amp;&amp;</quote></code> - logical and</member>
+    <member><code><quote>a||b</quote></code> - logical or</member>
+    <member><code><quote>c ? a : b</quote></code> - conditional operator</member>
     </simplelist>
 </listitem>
 <listitem>Variables:
@@ -130,10 +131,10 @@ The indicator with name <filename>common</filename> is the common indicator that
         <listitem>evaluates to nonzero if the target module is currently executing its init function, evaluates to 0 otherwise</listitem>
     </varlistentry>
     <varlistentry><term>rnd100</term>
-        <listitem>evaluates to a random integer number from [0...99]</listitem>
+        <listitem>evaluates to a random integer number from <code>[0...99]</code></listitem>
     </varlistentry>
     <varlistentry><term>rnd10000</term>
-        <listitem>evaluates to a random integer number from [0...9999]</listitem>
+        <listitem>evaluates to a random integer number from <code>[0...9999]</code></listitem>
     </varlistentry>
     <varlistentry><term>times</term>
         <listitem>evaluates to the ordinal number of the call to the corresponding target function since indicator has been set for it or since calls counter has been reset (see below)</listitem>
@@ -256,9 +257,11 @@ echo 'kmalloc (flags = GFP_ATOMIC) && (size > 100)' > \
 
     <para>
 This will set the scenario for <function>__kmalloc</function> function to <phrase role="pcite"><quote>simulate faulure of each memory allocation request with flags equal to <constant>GFP_ATOMIC</constant> and size greater than <constant>100</constant></quote></phrase>.
-    <note>In this example, the name of the fault simulation point (<filename>kmalloc</filename>) differs from the name of the target function (<function>__kmalloc</function>). The reasons for this difference will be explained below.
-    </note>
     </para>
+
+    <note><para>
+In this example, the name of the fault simulation point (<filename>kmalloc</filename>) differs from the name of the target function (<function>__kmalloc</function>). The reasons for this difference will be explained below.
+    </para></note>
 
     <para>
 The convenience however comes at the cost of generality: this indicator can be set only for <function>__kmalloc</function> function as well as those functions that provide <varname>size</varname> and <varname>flags</varname> parameters.

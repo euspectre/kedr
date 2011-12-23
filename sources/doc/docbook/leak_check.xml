@@ -59,23 +59,32 @@ should mount it:
 mount debugfs -t debugfs /sys/kernel/debug
 ]]></programlisting>
 
-<itemizedlist>
 	<para>
-There should be the following files in kedr_leak_check directory:
+There should be the following files in <filename class="directory">kedr_leak_check</filename> directory:
 	</para>
-	<listitem><itemizedlist>
-		<para><filename>info</filename>:</para>
+<itemizedlist>
+	<listitem>
+	<para>
+<filename>info</filename>:
+  </para>
+	<itemizedlist>
 		<listitem><para>information about the target module (its name, addresses of the <quote>init</quote> and <quote>core</quote> memory areas); </para></listitem>
 		<listitem><para>total number of memory allocations performed by the module;</para></listitem>
 		<listitem><para>number of possible memory leaks (allocations without matching frees);</para></listitem>
 		<listitem><para>number of free-like calls without matching allocation calls;</para></listitem>
 	</itemizedlist></listitem>
-	<listitem><itemizedlist>
-		<para><filename>possible_leaks</filename>:</para>
+	<listitem>
+	<para>
+<filename>possible_leaks</filename>:
+	</para>
+	<itemizedlist>
 		<listitem><para>information about each detected memory leak: address and size of the memory block and a portion of the call stack of allocation (the allocations with the same call stack are grouped together, only the most recent one is shown);</para></listitem>
 	</itemizedlist></listitem>
-	<listitem><itemizedlist>
-		<para><filename>unallocated_frees</filename>:</para>
+	<listitem>
+	<para>
+<filename>unallocated_frees</filename>:
+	</para>
+	<itemizedlist>
 		<listitem><para>information about each free-like call without  matching allocation call: address of the memory block and a portion of the call stack of that deallocation call (the deallocations with the same call stack are grouped together)</para></listitem>
 	</itemizedlist></listitem>
 </itemizedlist>

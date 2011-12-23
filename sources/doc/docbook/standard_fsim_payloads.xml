@@ -18,20 +18,16 @@ Unless the opposite is stated explicitly, the name of the fault simulation point
     <simplelist type='vert'>
     <member><function>capable</function></member>
     </simplelist>
-    Fault simulation point for this function provides <varname>cap</varname> parameter of type <type>int</type> for a fault simulation scenario.
+Fault simulation point for this function provides <varname>cap</varname> parameter of type <type>int</type> for a fault simulation scenario.
 </listitem>
 <listitem><phrase role="emphasized">kedr_fsim_user_space_access.ko</phrase>
     <simplelist type='vert'>
-    <member>
-    <function>copy_to_user</function>/<function>_copy_to_user</function>; no matter which of these functions is exported by the kernel, the name of the fault simulation point is <filename>copy_to_user</filename>
-    </member>
-    <member>
-    <function>copy_from_user</function>/<function>_copy_from_user</function>; no matter which of these functions is exported by the kernel, the name of the fault simulation point is <filename>copy_from_user</filename>
-    </member>
+    <member><function>copy_to_user</function>/<function>_copy_to_user</function>; no matter which of these functions is exported by the kernel, the name of the fault simulation point is <filename>copy_to_user</filename></member>
+    <member><function>copy_from_user</function>/<function>_copy_from_user</function>; no matter which of these functions is exported by the kernel, the name of the fault simulation point is <filename>copy_from_user</filename></member>
     <member><function>strndup_user</function></member>
     <member><function>memdup_user</function></member>
     </simplelist>
-    Fault simulation points for these functions do not provide additional parameters for a fault simulation scenario.
+Fault simulation points for these functions do not provide additional parameters for a fault simulation scenario.
 </listitem>
 <listitem><phrase role="emphasized">kedr_fsim_cmm.ko</phrase>
     <simplelist type='vert'>
@@ -39,36 +35,32 @@ Unless the opposite is stated explicitly, the name of the fault simulation point
     <member><function>krealloc</function></member>
     <member><function>__krealloc</function></member>
     <member><function>kmem_cache_alloc</function></member>
-    <member>[<function>kmem_cache_alloc_notrace</function>]</member>
-    <member>[<function>kmem_cache_alloc_trace</function>]</member>
+    <member><function>[kmem_cache_alloc_notrace]</function></member>
+    <member><function>[kmem_cache_alloc_trace]</function></member>
     <member><function>__get_free_pages</function></member>
     <member><function>get_zeroed_page</function></member>
-    <member>[<function>__kmalloc_node</function>]</member>
-    <member>[<function>kmem_cache_alloc_node</function>]</member>
-    <member>[<function>kmem_cache_alloc_node_notrace</function>]</member>
-    <member>[<function>kmem_cache_alloc_node_trace</function>]</member>
-    <member>[<function>__alloc_pages_nodemask</function>]</member>
-    <member>[<function>alloc_pages_current</function>]</member>
-    <member>[<function>alloc_pages_exact</function>]</member>
-    <member>[<function>alloc_pages_exact_nid</function>]</member>
-<!--
-    <member>[<function>__kmalloc_track_caller</function>]</member>
-    <member>[<function>__kmalloc_node_track_caller</function>]</member>
--->
+    <member><function>[__kmalloc_node]</function></member>
+    <member><function>[kmem_cache_alloc_node]</function></member>
+    <member><function>[kmem_cache_alloc_node_notrace]</function></member>
+    <member><function>[kmem_cache_alloc_node_trace]</function></member>
+    <member><function>[__alloc_pages_nodemask]</function></member>
+    <member><function>[alloc_pages_current]</function></member>
+    <member><function>[alloc_pages_exact]</function></member>
+    <member><function>[alloc_pages_exact_nid]</function></member>
     </simplelist>
-    All these functions use a shared fault simulation point named <filename>kmalloc</filename> that provides the following parameters for a fault simulation scenario: <varname>size</varname> (of type <type>size_t</type>) and <varname>flags</varname> (of type <type>gfp_t</type>).
+All these functions use a shared fault simulation point named <filename>kmalloc</filename> that provides the following parameters for a fault simulation scenario: <varname>size</varname> (of type <type>size_t</type>) and <varname>flags</varname> (of type <type>gfp_t</type>).
 </listitem>
 <listitem><phrase role="emphasized">kedr_fsim_mem_util.ko</phrase>
     <simplelist type='vert'>
     <member><function>kstrdup</function></member>
     <member><function>kstrndup</function></member>
     <member><function>kmemdup</function></member>
-    <member>[<function>posix_acl_alloc</function>]</member>
-    <member>[<function>posix_acl_clone</function>]</member>
-    <member>[<function>posix_acl_from_mode</function>]</member>
-    <member>[<function>match_strdup</function>]</member>
+    <member><function>[posix_acl_alloc]</function></member>
+    <member><function>[posix_acl_clone]</function></member>
+    <member><function>[posix_acl_from_mode]</function></member>
+    <member><function>[match_strdup]</function></member>
     </simplelist>
-    Fault simulation points for these functions do not provide additional parameters for a fault simulation scenario except for <function>posix_acl_*</function> functions similar to <function>__kmalloc</function> in this respect.
+Fault simulation points for these functions do not provide additional parameters for a fault simulation scenario except for <function>posix_acl_*</function> functions similar to <function>__kmalloc</function> in this respect.
 </listitem>
 <listitem><phrase role="emphasized">kedr_fsim_vmm.ko</phrase>
     <simplelist type='vert'>
@@ -78,10 +70,10 @@ Unless the opposite is stated explicitly, the name of the fault simulation point
     <member><function>vmalloc_node</function></member>
     <member><function>vmalloc_32</function></member>
     <member><function>vmalloc_32_user</function></member>
-    <member>[<function>vzalloc</function>]</member>
-    <member>[<function>vzalloc_node</function>]</member>
+    <member><function>[vzalloc]</function></member>
+    <member><function>[vzalloc_node]</function></member>
     </simplelist>
-    All these functions use a shared fault simulation point named <filename>vmalloc</filename> that provides no additional parameters for a fault simulation scenario.
+All these functions use a shared fault simulation point named <filename>vmalloc</filename> that provides no additional parameters for a fault simulation scenario.
 </listitem>
 </itemizedlist>
 

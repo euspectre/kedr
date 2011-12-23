@@ -12,119 +12,115 @@ Here is a full list of the payload modules that currently may be used for call m
 <itemizedlist mark='circle'>
 <listitem><phrase role="emphasized">kedr_cm_cmm.ko:</phrase>
     <simplelist type='vert'>
-    <member>__kmalloc</member>
-    <member>krealloc</member>
-    <member>__krealloc</member>
-    <member>kfree</member>
-    <member>kzfree</member>
-    <member>kmem_cache_alloc</member>
-    <member>[kmem_cache_alloc_notrace]</member>
-    <member>[kmem_cache_alloc_trace]</member>
-    <member>kmem_cache_free</member>
-    <member>__get_free_pages</member>
-    <member>get_zeroed_page</member>
-    <member>free_pages</member>
-	<member>[__kmalloc_node]</member>
-	<member>[kmem_cache_alloc_node]</member>
-	<member>[kmem_cache_alloc_node_notrace]</member>
-	<member>[kmem_cache_alloc_node_trace]</member>
-	<member>[__alloc_pages_nodemask]</member>
-	<member>[alloc_pages_current]</member>
-	<member>[__free_pages]</member>
-	<member>[alloc_pages_exact]</member>
-	<member>[free_pages_exact]</member>
-    <member>[alloc_pages_exact_nid]</member>
-<!--    
-	<member>[__kmalloc_track_caller]</member>
-    <member>[__kmalloc_node_track_caller]</member>
--->
+    <member><function>__kmalloc</function></member>
+    <member><function>krealloc</function></member>
+    <member><function>__krealloc</function></member>
+    <member><function>kfree</function></member>
+    <member><function>kzfree</function></member>
+    <member><function>kmem_cache_alloc</function></member>
+    <member><function>[kmem_cache_alloc_notrace]</function></member>
+    <member><function>[kmem_cache_alloc_trace]</function></member>
+    <member><function>kmem_cache_free</function></member>
+    <member><function>__get_free_pages</function></member>
+    <member><function>get_zeroed_page</function></member>
+    <member><function>free_pages</function></member>
+    <member><function>[__kmalloc_node]</function></member>
+    <member><function>[kmem_cache_alloc_node]</function></member>
+    <member><function>[kmem_cache_alloc_node_notrace]</function></member>
+    <member><function>[kmem_cache_alloc_node_trace]</function></member>
+    <member><function>[__alloc_pages_nodemask]</function></member>
+    <member><function>[alloc_pages_current]</function></member>
+    <member><function>[__free_pages]</function></member>
+    <member><function>[alloc_pages_exact]</function></member>
+    <member><function>[free_pages_exact]</function></member>
+    <member><function>[alloc_pages_exact_nid]</function></member>
 	</simplelist>
 </listitem>
 <listitem><phrase role="emphasized">kedr_cm_user_space_access.ko:</phrase>
     <simplelist type='vert'>
-    <member>copy_to_user/_copy_to_user</member>
-    <member>copy_from_user/_copy_from_user</member>
-    <member>strndup_user</member>
-    <member>memdup_user</member>
+    <member><function>copy_to_user/_copy_to_user</function></member>
+    <member><function>copy_from_user/_copy_from_user</function></member>
+    <member><function>strndup_user</function></member>
+    <member><function>memdup_user</function></member>
     </simplelist>
 </listitem>
 <listitem><phrase role="emphasized">kedr_cm_mutexes.ko:</phrase>
     <simplelist type='vert'>
-    <member>__mutex_init</member>
-    <member>[mutex_lock]</member>
-    <member>[mutex_lock_interruptible]</member>
-    <member>[mutex_lock_killable]</member>
-    <member>mutex_trylock</member>
-    <member>mutex_unlock</member>
+    <member><function>__mutex_init</function></member>
+    <member><function>[mutex_lock]</function></member>
+    <member><function>[mutex_lock_interruptible]</function></member>
+    <member><function>[mutex_lock_killable]</function></member>
+    <member><function>mutex_trylock</function></member>
+    <member><function>mutex_unlock</function></member>
     </simplelist>
 </listitem>
 <listitem><phrase role="emphasized">kedr_cm_spinlocks.ko:</phrase>
     <simplelist type='vert'>
-    <member>_spin_lock_irqsave/_raw_spin_lock_irqsave</member>
-    <member>_spin_unlock_irqrestore/_raw_spin_unlock_irqrestore</member>
+    <member><function>_spin_lock_irqsave/_raw_spin_lock_irqsave</function></member>
+    <member><function>_spin_unlock_irqrestore/_raw_spin_unlock_irqrestore</function></member>
     </simplelist>
-    additionally, if KEDR was configured with <quote>enable_full_spinlock</quote> option set,
+additionally, if KEDR was configured with <quote>enable_full_spinlock</quote> option set,
     <simplelist type='vert'>
-    <member>_spin_lock/_raw_spin_lock</member>
-    <member>_spin_lock_irq/_raw_spin_lock_irq</member>
-    <member>_spin_unlock/_raw_spin_unlock</member>
-    <member>_spin_unlock_irq/_raw_spin_unlock_irq</member>
+    <member><function>_spin_lock/_raw_spin_lock</function></member>
+    <member><function>_spin_lock_irq/_raw_spin_lock_irq</function></member>
+    <member><function>_spin_unlock/_raw_spin_unlock</function></member>
+    <member><function>_spin_unlock_irq/_raw_spin_unlock_irq</function></member>
     </simplelist>
 </listitem>
 <listitem><phrase role="emphasized">kedr_cm_waitqueue.ko:</phrase>
     <simplelist type='vert'>
-    <member>__wake_up</member>
-    <member>init_waitqueue_head/__init_waitqueue_head</member>
-    <member>prepare_to_wait</member>
-    <member>finish_wait</member>
-    <member>remove_wait_queue</member>
-    <member>add_wait_queue</member>
-    <member>add_wait_queue_exclusive</member>
+    <member><function>__wake_up</function></member>
+    <member><function>init_waitqueue_head/__init_waitqueue_head</function></member>
+    <member><function>prepare_to_wait</function></member>
+    <member><function>finish_wait</function></member>
+    <member><function>remove_wait_queue</function></member>
+    <member><function>add_wait_queue</function></member>
+    <member><function>add_wait_queue_exclusive</function></member>
     </simplelist>
 </listitem>
 <listitem><phrase role="emphasized">kedr_cm_capable.ko:</phrase>
     <simplelist type='vert'>
-    <member>capable</member>
+    <member><function>capable</function></member>
     </simplelist>
 </listitem>
 <listitem><phrase role="emphasized">kedr_cm_vmm.ko:</phrase>
     <simplelist type='vert'>
-    <member>vmalloc</member>
-    <member>__vmalloc</member>
-    <member>vmalloc_user</member>
-    <member>vmalloc_node</member>
-    <member>vmalloc_32</member>
-    <member>vmalloc_32_user</member>
-    <member>vfree</member>
-    <member>[vzalloc]</member>
-    <member>[vzalloc_node]</member>
+    <member><function>vmalloc</function></member>
+    <member><function>__vmalloc</function></member>
+    <member><function>vmalloc_user</function></member>
+    <member><function>vmalloc_node</function></member>
+    <member><function>vmalloc_32</function></member>
+    <member><function>vmalloc_32_user</function></member>
+    <member><function>vfree</function></member>
+    <member><function>[vzalloc]</function></member>
+    <member><function>[vzalloc_node]</function></member>
     </simplelist>
 </listitem>
 <listitem><phrase role="emphasized">kedr_cm_schedule.ko:</phrase>
     <simplelist type='vert'>
-    <member>schedule</member>
-    <member>[preempt_schedule]</member>
-    <member>_cond_resched</member>
-    <member>schedule_timeout</member>
-    <member>schedule_timeout_uninterruptible</member>
-    <member>schedule_timeout_interruptible</member>
-    <member>io_schedule</member>
-    <member>cond_resched_lock/__cond_resched_lock</member>
+    <member><function>schedule</function></member>
+    <member><function>[preempt_schedule]</function></member>
+    <member><function>_cond_resched</function></member>
+    <member><function>schedule_timeout</function></member>
+    <member><function>schedule_timeout_uninterruptible</function></member>
+    <member><function>schedule_timeout_interruptible</function></member>
+    <member><function>io_schedule</function></member>
+    <member><function>cond_resched_lock/__cond_resched_lock</function></member>
     </simplelist>
 </listitem>
 <listitem><phrase role="emphasized">kedr_cm_mem_util.ko:</phrase>
     <simplelist type='vert'>
-    <member>kstrdup</member>
-    <member>kstrndup</member>
-    <member>kmemdup</member>
-    <member>[call_rcu]</member>
-    <member>[call_rcu_sched]</member>
-    <member>[add_to_page_cache_lru]</member>
-    <member>[add_to_page_cache_locked]</member>
-    <member>[posix_acl_alloc]</member>
-    <member>[posix_acl_clone]</member>
-    <member>[posix_acl_from_mode]</member>
-    <member>[match_strdup]</member>
+    <member><function>kstrdup</function></member>
+    <member><function>kstrndup</function></member>
+    <member><function>kmemdup</function></member>
+    <member><function>[call_rcu]</function></member>
+    <member><function>[call_rcu_sched]</function></member>
+    <member><function>[add_to_page_cache_lru]</function></member>
+    <member><function>[add_to_page_cache_locked]</function></member>
+    <member><function>[posix_acl_alloc]</function></member>
+    <member><function>[posix_acl_clone]</function></member>
+    <member><function>[posix_acl_from_mode]</function></member>
+    <member><function>[match_strdup]</function></member>
     </simplelist>
 </listitem>
 </itemizedlist>

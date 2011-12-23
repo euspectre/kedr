@@ -19,13 +19,11 @@ This scenario derives its functionality from <quote>common</quote> scenario desc
 variables <varname>size</varname> and <varname>flags</varname> can be used in the expression; they refer to the corresponding parameters of the scenario.
     </listitem>
     <listitem>
-several constants corresponding to the allocation flags can be used in the expression:
-        <simplelist type="inline">
+several constants corresponding to the allocation flags can be used in the expression: <simplelist type="inline">
             <member><constant>GFP_NOWAIT</constant></member>
             <member><constant>GFP_KERNEL</constant></member>
             <member><constant>GFP_USER</constant></member>
-            <member><constant>GFP_ATOMIC</constant></member>
-        </simplelist>. The values of this constants are the same as the values of the corresponding macros in the kernel code.
+            <member><constant>GFP_ATOMIC</constant></member></simplelist>. The values of this constants are the same as the values of the corresponding macros in the kernel code.
     </listitem>
 </itemizedlist>
     </para>

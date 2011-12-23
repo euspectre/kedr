@@ -4,7 +4,7 @@
 <section id="capture_trace.general">
 <title>General</title>
 <para>
-    <command>kedr_capture_trace</command> - a tool to capture the data output by payload modules to the trace.
+<command>kedr_capture_trace</command> - a tool to capture the data output by payload modules to the trace.
 </para>
 </section>
 

@@ -16,7 +16,7 @@ A system to analyze <phrase role="emphasized">KE</phrase>rnel-mode <phrase role=
 </glossentry>
 
 <glossentry id="target_module">
-<glossterm><emphasis>Target module, target driver</emphasis></glossterm>
+<glossterm><emphasis>Target module</emphasis></glossterm>
 
 <glossdef>
     <para>

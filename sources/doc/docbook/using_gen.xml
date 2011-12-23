@@ -29,8 +29,7 @@ Of course, using the <quote>generator</quote> is not an universal way to extend 
 Let us now consider the common format of <quote>definition</quote> files. 
     </para>
     <para>
-The <quote>generator</quote> is based on MiST Engine library from <ulink url="http://template2code.sourceforge.net"><citetitle>Template2Code 
-project</citetitle></ulink> and is very similar to <quote>mist_gen</quote> example from that project. As a result, the format of definition files accepted by the generator is the same as the format of <firstterm>configuration files</firstterm> accepted by <quote>mist_gen</quote>. The format is fully described <ulink url="http://template2code.sourceforge.net/mist-doc/param.html"><citetitle>here</citetitle></ulink>. The only difference is that a definition file (as well as a configuration file for <quote>mist_gen</quote>) may contain <code>[group]</code> keywords that divide the file into blocks.
+The <quote>generator</quote> is based on MiST Engine library from <ulink url="http://template2code.sourceforge.net"><citetitle>Template2Code project</citetitle></ulink> and is very similar to <quote>mist_gen</quote> example from that project. As a result, the format of definition files accepted by the generator is the same as the format of <firstterm>configuration files</firstterm> accepted by <quote>mist_gen</quote>. The format is fully described <ulink url="http://template2code.sourceforge.net/mist-doc/param.html"><citetitle>here</citetitle></ulink>. The only difference is that a definition file (as well as a configuration file for <quote>mist_gen</quote>) may contain <code>[group]</code> keywords that divide the file into blocks.
     </para>
     <para>
 A definition file is treated as an array of records. The lines that contain only whitespace characters (spaces and tabs) are ignored, so are the lines where the first non-whitespace character is <code>#</code>:
@@ -139,25 +138,16 @@ obj.description = This is object1
 obj.name = object2
 obj.description = This is object2
 </programlisting>
-This defines <code>obj.name</code> as 
-<simplelist type='inline'>
+This defines <code>obj.name</code> as <simplelist type='inline'>
 <member><quote>object1</quote></member>
-<member><quote>object2</quote></member>
-</simplelist>,
- <code>obj.description</code> as
- <simplelist type='inline'>
+<member><quote>object2</quote></member></simplelist>, <code>obj.description</code> as <simplelist type='inline'>
 <member><quote>This is object1</quote></member>
-<member><quote>This is object2</quote></member>
-</simplelist>.
-This may mean there are two object instances with attributes
-<simplelist type='inline'>
+<member><quote>This is object2</quote></member></simplelist>.
+This may mean there are two object instances with attributes <simplelist type='inline'>
 <member><quote>object1</quote></member>
-<member><quote>This is object1</quote></member>
-</simplelist> and 
-<simplelist type='inline'>
+<member><quote>This is object1</quote></member></simplelist> and <simplelist type='inline'>
 <member><quote>object2</quote></member>
-<member><quote>This is object2</quote></member>
-</simplelist>
+<member><quote>This is object2</quote></member></simplelist>
     </para>
     <para>
 Let us consider the following definitions where the values of <code>obj.description</code> are given in a reverse order.
@@ -167,26 +157,16 @@ obj.description = This is object2
 obj.name = object2
 obj.description = This is object1
 </programlisting>
-This defines <code>obj.name</code> as 
+This defines <code>obj.name</code> as <simplelist type='inline'>
+<member><quote>object1</quote></member>
+<member><quote>object2</quote></member></simplelist>, <code>obj.description</code> as <simplelist type='inline'>
+<member><quote>This is object2</quote></member>
+<member><quote>This is object1</quote></member></simplelist>. This may mean two object instances with attributes
 <simplelist type='inline'>
 <member><quote>object1</quote></member>
+<member><quote>This is object2</quote></member></simplelist> and <simplelist type='inline'>
 <member><quote>object2</quote></member>
-</simplelist>,
- <code>obj.description</code> as
-<simplelist type='inline'>
-<member><quote>This is object2</quote></member>
-<member><quote>This is object1</quote></member>
-</simplelist>.
-This may mean two object instances with attributes
-<simplelist type='inline'>
-<member><quote>object1</quote></member>
-<member><quote>This is object2</quote></member>
-</simplelist> and 
-<simplelist type='inline'>
-<member><quote>object2</quote></member>
-<member><quote>This is object1</quote></member>
-</simplelist>,
-which is probably not what you want. 
+<member><quote>This is object1</quote></member></simplelist>, which is probably not what you want. 
     </para>
     <para>
 A simple way to avoid such confusion with ordering is to define all attributes for one instance first and only then define attributes for another one.

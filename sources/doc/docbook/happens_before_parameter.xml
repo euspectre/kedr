@@ -10,53 +10,60 @@ There is a parameter that changes order of <link linkend="target_function">targe
     </para>
     <para>
 The main purpose of using <code>trace.happensBefore</code> parameter is collecting correct trace on SMP systems and the like. Suppose, two threads of execution call <function>mutex_lock</function> and <function>mutex_unlock</function> functions for the same mutex. One of the correct sequences of these calls is:
-<programlisting>
-[1]    <function>mutex_lock</function>
-[1]    <function>mutex_unlock</function>
-[2]    <function>mutex_lock</function>
-[2]    <function>mutex_unlock</function>
-</programlisting>
-([<replaceable>n</replaceable>] means that the operation is performed by the thread <replaceable>n</replaceable>).
+		</para>
+<programlisting><![CDATA[
+[1]    mutex_lock
+[1]    mutex_unlock
+[2]    mutex_lock
+[2]    mutex_unlock
+]]></programlisting>
+		<para>
+(<code>[n]</code> means that the operation is performed by the thread <replaceable>n</replaceable>).
     </para>
     <para>
 So one may expect that same order will be recorded in the trace:
-<programlisting>
+    </para>
+
+<programlisting><![CDATA[
 1    called_mutex_lock
 1    called_mutex_unlock
 2    called_mutex_lock
 2    called_mutex_unlock
-</programlisting>
-    </para>
+]]></programlisting>
+    
     <para>
 Normally, target function is called and then its parameters are output to the trace. So the following order of the instructions is possible:
-<programlisting>
-[1]    [call trampoline function for <function>mutex_lock</function>]
+    </para>
+
+<programlisting><![CDATA[
+[1]    [call trampoline function for mutex_lock()]
 [1]    mutex_lock
 [1]    output("called_mutex_lock")
-[1]    [trampoline function for <function>mutex_lock</function> returns]
+[1]    [trampoline function for mutex_lock() returns]
 [1]    [call trampoline function for mutex_unlock]
 [1]    mutex_unlock
-[2]    [call trampoline function for <function>mutex_lock</function>]
+[2]    [call trampoline function for mutex_lock()]
 [2]    mutex_lock
 [2]    output("called_mutex_lock")
-[2]    [trampoline function for <function>mutex_lock</function> returns]
+[2]    [trampoline function for mutex_lock() returns]
 [1]    output("called_mutex_unlock")
-[1]    [trampoline function for <function>mutex_unlock</function> returns]
+[1]    [trampoline function for mutex_unlock() returns]
 [2]    [call trampoline function for mutex_unlock]
 [2]    mutex_unlock
 [2]    output("called_mutex_unlock")
-[2]    [trampoline function for <function>mutex_unlock</function> returns]
-</programlisting>
-    </para>
+[2]    [trampoline function for mutex_unlock() returns]
+]]></programlisting>
+
     <para>
 Even though the order of calls to the target functions is correct, these instructions produce the trace that shows an impossible order of the calls:
-<programlisting>
+    </para>
+<programlisting><![CDATA[
 1    called_mutex_lock
 2    called_mutex_lock
 1    called_mutex_unlock
 2    called_mutex_unlock
-</programlisting>
-    </para>
+]]></programlisting>
+
     <para>
 From the kernel's point of view, the calls to <function>mutex_lock</function> and <function>mutex_unlock</function> are not related to the trace output made by KEDR. So the operations that output trace can be performed in any order, no matter in what order the target functions were called.
     </para>
@@ -67,19 +74,20 @@ To get a correct trace, we need to use <code>trace.happensBefore</code> paramete
 Note that although <function>mutex_lock</function> function must also be called before the corresponding <function>mutex_unlock</function>, this order is not affected by <code>trace.happensBefore</code> parameter.
     </para>
 
-<programlisting>
+<programlisting><![CDATA[
 ...
 [1]    mutex_lock
 ...
 [1]    mutex_unlock
 ...
-</programlisting>
+]]></programlisting>
 
     <para>
 The difference is that such order should be enforced <emphasis>explicitly</emphasis>, that is, by the user of these functions and thus of the target module. If the target module calls, say, <function>mutex_lock</function> strictly before <function>mutex_unlock</function>, the trampoline function for <function>mutex_lock</function> will return strictly before the one for <function>mutex_unlock</function> starts executing. This, in turn, automatically enforces that the corresponding trace records will go in the right order too.
     </para>
     <para>
 Another example of internal happens-before relationship is the one between <function>kfree</function> and <function>__kmalloc</function> functions. This relationship reflects the fact that <function>__kmalloc</function> cannot return an address that was previously returned by another <function>__kmalloc</function> call and was not processed by <function>kfree</function>. Using <code>trace.happensBefore</code> parameter one can make sure the order of the trace records is correct:
+    </para>
 <programlisting> 
     [group]
     # Name and return type of the target function
@@ -101,9 +109,9 @@ Another example of internal happens-before relationship is the one between <func
 
 # End of the group of definitions for kfree().
 </programlisting>
-    </para>
+
     <note><para>
-For the trace records to reflect the fact that function <function>A</function> has happens-before ordering with function <function>B</function>, one should define <code>trace.happensBefore</code> parameter for the function <function>A</function> and <emphasis>should not define it</emphasis> for the function <function>B</function>. <code>trace.happensBefore</code> cannot be used to enforce two different orderings for the calls to a single function such as <function>krealloc</function> (which may be modelled as <function>__kmalloc</function> + <function>kfree</function>).
+For the trace records to reflect the fact that function <function>A</function> has happens-before ordering with function <function>B</function>, one should define <code>trace.happensBefore</code> parameter for the function <function>A</function> and <emphasis>should not define it</emphasis> for the function <function>B</function>. <code>trace.happensBefore</code> cannot be used to enforce two different orderings for the calls to a single function such as <function>krealloc</function> (which may be modelled as <function>__kmalloc</function> followed by <function>kfree</function>).
     </para>
 </note>
 </section>

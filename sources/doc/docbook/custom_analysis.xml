@@ -158,10 +158,15 @@ header=>>
 <title>Generating the Trampolines</title>
 <para>
 Assuming that the data file you have written in the previous section is named  <filename>functions_support.data</filename>, generation of the source file containing the definition of trampoline functions cay be performed as follows:
-<programlisting>
-<replaceable>&lt;kedr_install_dir&gt;</replaceable>/lib/kedr/kedr_gen <replaceable>&lt;kedr_install_dir&gt;</replaceable>/share/kedr/templates/function_support.c \
-    <filename>functions_support.data</filename> &gt; <filename>functions_support.c</filename>
-</programlisting>
+</para>
+
+<programlisting><![CDATA[
+<kedr_install_dir>/lib/kedr/kedr_gen \
+    <kedr_install_dir>/share/kedr/templates/function_support.c \
+    functions_support.data > functions_support.c
+]]></programlisting>
+
+<para>
 This will generate file <filename>functions_support.c</filename> with the appropriate definitions.
 </para>
 </section>
@@ -229,7 +234,8 @@ post___kmalloc(size_t size, gfp_t flags, void *returnValue,
     spin_lock_irqsave(&spinlock_alloc_max_size, irq_flags);
     if (size > cnt_alloc_max_size) cnt_alloc_max_size = size;
     spin_unlock_irqrestore(&spinlock_alloc_max_size, irq_flags);
-}]]></programlisting>
+}
+]]></programlisting>
 
 <para>
 This handler updates the variables corresponding to the relevant counters, <varname>cnt_alloc_total</varname>, <varname>cnt_alloc_failed</varname> and <varname>cnt_alloc_max_size</varname>, according to arguments of target functions and its return value.

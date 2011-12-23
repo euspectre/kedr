@@ -4,7 +4,7 @@
 <section id="kedr_control.general">
 <title>General</title>
 <para>
-    <command>&kedr-service;</command> - a service-like tool to control KEDR.
+<command>&kedr-service;</command> - a service-like tool to control KEDR.
 </para>
 </section>
 
@@ -128,11 +128,13 @@ That is, whether <filename>KEDR core</filename> is loaded, which payload modules
     <section id="kedr_control.description.restart">
     <title>&kedr-service; restart</title>
         <para>
-<command>&kedr-service; restart</command> does effectively the same as
-<programlisting>
+<command>&kedr-service; restart</command> does effectively the same as this:
+        </para>
+        <para>
 <command>&kedr-service; stop</command> &amp;&amp; <command>&kedr-service; start</command> <replaceable>target_name</replaceable> <replaceable>conf_file</replaceable>
-</programlisting>
-with <replaceable>target_name</replaceable> being the name of the current target and <replaceable>conf_file</replaceable> - the effective configuration file (default or the one constructed from options) with which KEDR was started last time.
+        </para>
+        <para>
+<replaceable>target_name</replaceable> is the name of the current target, <replaceable>conf_file</replaceable> - the effective configuration file (default or the one constructed from options) with which KEDR was started last time.
         </para>
         <para>
 If <filename>KEDR core</filename> is not currently loaded, <command>&kedr-service; restart</command> does nothing and returns 1.
@@ -170,19 +172,19 @@ The configuration file is treated as an ordered list of lines each of which has 
             </member>
             <member>
 <synopsis>
-<literal>module</literal>|<literal>payload</literal> <replaceable>module-name</replaceable>|<replaceable>module-filename</replaceable> <optional><replaceable>parameters...</replaceable></optional>
+<literal>module</literal> | <literal>payload</literal> <replaceable>module-name</replaceable> | <replaceable>module-filename</replaceable> <optional><replaceable>parameters...</replaceable></optional>
 </synopsis>
             </member>
         </simplelist>
     </para>
     <para>
-        Besides that, empty lines as well as the lines containing only spaces and lines starting with <literal>#</literal> character are allowed and ignored when the <link linkend="kedr_control.general">control tool</link> processes the configuration file.
+Besides that, empty lines as well as the lines containing only spaces and lines starting with <literal>#</literal> character are allowed and ignored when the <link linkend="kedr_control.general">control tool</link> processes the configuration file.
     </para>
     <para>
-        A line containing <replaceable>shell-command</replaceable> preceded by <literal>on_load</literal> is executed in <quote>on_load</quote> mode and is ignored otherwise.
+A line containing <replaceable>shell-command</replaceable> preceded by <literal>on_load</literal> is executed in <quote>on_load</quote> mode and is ignored otherwise.
     </para>
     <para>
-        A line containing <replaceable>shell-command</replaceable> preceded by <literal>on_unload</literal> is executed in <quote>on_unload</quote>  mode and is ignored otherwise.
+A line containing <replaceable>shell-command</replaceable> preceded by <literal>on_unload</literal> is executed in <quote>on_unload</quote>  mode and is ignored otherwise.
     </para>
     <para>
 <quote>on_load</quote> and <quote>on_unload</quote> modes are described in <xref linkend="kedr_control.description"/>.
@@ -192,28 +194,36 @@ Line
 <synopsis>
 <literal>module</literal> <replaceable>module-name</replaceable> <optional><replaceable>parameters...</replaceable></optional>
 </synopsis>
-where <replaceable>module-name</replaceable> is the name of a module or its alias, is actually equivalent to
-<programlisting>
-<literal>on_load</literal> modprobe <replaceable>module-name</replaceable> <optional><replaceable>parameters...</replaceable></optional>
-<literal>on_unload</literal> modprobe -r <replaceable>module-name</replaceable> 
-</programlisting>
+where <replaceable>module-name</replaceable> is the name of a module or its alias, is actually equivalent to the following two lines:
     </para>
+<synopsis>
+<literal>on_load</literal> modprobe <replaceable>module-name</replaceable> <optional><replaceable>parameters...</replaceable></optional>
+</synopsis>
+
+<synopsis>
+<literal>on_unload</literal> modprobe -r <replaceable>module-name</replaceable> 
+</synopsis>
+
     <para>
 Line
 <synopsis>
 <literal>module</literal> <replaceable>module-filename</replaceable> <optional><replaceable>parameters...</replaceable></optional>
 </synopsis>
-where <replaceable>module-filename</replaceable> is the absolute path to the module, is actually equivalent to
-<programlisting>
-<literal>on_load</literal> insmod <replaceable>module-filename</replaceable> <optional><replaceable>parameters...</replaceable></optional>
-<literal>on_unload</literal> rmmod <replaceable>module-filename</replaceable> 
-</programlisting>
+where <replaceable>module-filename</replaceable> is the absolute path to the module, is actually equivalent to the following two lines:
     </para>
+<synopsis>
+<literal>on_load</literal> insmod <replaceable>module-filename</replaceable> <optional><replaceable>parameters...</replaceable></optional>
+</synopsis>
+
+<synopsis>
+<literal>on_unload</literal> rmmod <replaceable>module-filename</replaceable> 
+</synopsis>
+
     <para>
 <literal>payload</literal> keyword at the start of the line has same meaning as <literal>module</literal> but also marks <replaceable>module-name</replaceable> or <replaceable>module-filename</replaceable> as a <link linkend="payload_module">payload module</link>.
     </para>
     <para>
-        In <quote>on_load</quote> mode, all processed lines in the configuration file are executed from the first to the last. In <quote>on_unload</quote> mode, they are executed in a reverse order (i.e. if module A is loaded after module B then A unloaded before B).
+In <quote>on_load</quote> mode, all processed lines in the configuration file are executed from the first to the last. In <quote>on_unload</quote> mode, they are executed in a reverse order (i.e. if module A is loaded after module B then A unloaded before B).
     </para>
 </section>
 <section id="kedr_control.examples">

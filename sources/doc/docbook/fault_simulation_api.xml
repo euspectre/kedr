@@ -57,7 +57,7 @@ When it is needed to decide which branch of code should be executed, one should 
 <section id="fault_simulation_api.format_string">
 <title>Format of the Data Passed from a Fault Simulation Point to the Scenario</title>
 <para>
-When call <function linkend="fault_simulation_api.kedr_fsim_point_simulate">kedr_fsim_point_simulate</function>, one should also pass the parameters for the fault simulation scenario. The format is expected to be a struct containing fields of possibly different types. It can be encoded in a string with a comma-separated ordered list of these types. E.g. a string <quote>int*,long</quote> encodes the parameters of the corresponding types:
+When call <function linkend="fault_simulation_api.kedr_fsim_point_simulate">kedr_fsim_point_simulate</function>, one should also pass the parameters for the fault simulation scenario. The format is expected to be a struct containing fields of possibly different types. It can be encoded in a string with a comma-separated ordered list of these types. E.g. a string <code><quote>int*,long</quote></code> encodes the parameters of the corresponding types:
 <programlisting><![CDATA[
 struct 
 {
@@ -343,9 +343,9 @@ Length of fault message which is garanteed to be written without truncation. See
 For each registered point, there is a file in the point's control directory that reflects the format of the data this point passes to the scenario.
 </para>
 
-<programlisting>
+<para>
 <filename>&lt;debugfs-mount-point&gt;/kedr_fault_simulation/&lt;point-name&gt;/format_string</filename>
-</programlisting>
+</para>
 
 <para>
 Reading from this file returns a string containing the encoded format of the data this point passes to the scenario.
@@ -360,9 +360,9 @@ Reading from this file returns a string containing the encoded format of the dat
 For each registered point, there is a file in the point's control directory that reflects information about the current scenario for the point and allows to set another scenario.
 </para>
 
-<programlisting>
+<para>
 <filename>&lt;debugfs-mount-point&gt;/kedr_fault_simulation/&lt;point-name&gt;/current_indicator</filename>
-</programlisting>
+</para>
 
 <para>
 Reading from this file returns the name of the scenario currently set for the point (more precisely, the name of the indicator used to create this scenario). If no scenario is set for the point, <constant>none</constant> is returned.
@@ -408,15 +408,15 @@ kedr_fsim_point_clear_indicator("point3");
 <title>Control File <filename>last_fault</filename></title>
 
 <para>
-Contain message describing last fault simulated.
+Contains the information about the last simulated fault.
 </para>
 
-<programlisting>
+<para>
 <filename>&lt;debugfs-mount-point&gt;/kedr_fault_simulation/last_fault</filename>
-</programlisting>
+</para>
 
 <para>
-Reading from this file returns string which was written with last <function linkend="fault_simulation_api.kedr_fsim_fault_message">kedr_fsim_fault_message</function> call or <constant>none</constant> if no calls of <function>kedr_fsim_fault_message</function> had been since <filename>kedr_fault_simulation</filename> module was loaded.
+Reading from this file returns a string that was written by the last <function linkend="fault_simulation_api.kedr_fsim_fault_message">kedr_fsim_fault_message</function> call or <constant>none</constant> if no calls of <function>kedr_fsim_fault_message</function> had been made since <filename>kedr_fault_simulation</filename> module was loaded.
 </para>
 
 </section> <!-- "fault_simulation_api.last_fault_file" -->

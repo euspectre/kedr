@@ -52,17 +52,17 @@ rmmod-6441  [001] 869.438885: target_session_ends: target module: "kedr_sample_t
 <code>FUNCTION</code> field has the following format for the records corresponding to the detected function calls:
     </para>
 
-<synopsis>
+<programlisting>
 called_&lt;function-name&gt;: (&lt;call_address&gt;) arguments(&lt;arguments-list&gt;), result:&lt;value-returned&gt;
-</synopsis> 
+</programlisting> 
 
 <para>
 <code>&lt;call_address&gt;</code> specifies the address of the next instruction after the call to the target function. This field has the following format:
 </para>
 
-<synopsis>
+<programlisting>
 [&lt;absolute_address&gt;] &lt;area&gt;+&lt;offset&gt;
-</synopsis> 
+</programlisting> 
 
 <para>
 <code>&lt;absolute_address&gt;</code> is the absolute address of the instruction immediately following the call in the memory image of the target module. <code>&lt;area&gt;</code> can be <quote>init</quote> or <quote>core</quote>. It is the name of the area containing the executable code of the module (these terms are used by module loader in the Linux kernel). An area may contain one or more sections (ELF sections) of the module. <code>&lt;offset&gt;</code> is the offset of the instruction from the beginning of the area. 
@@ -76,9 +76,9 @@ If you would like to find the lines in the source code of the target module corr
 A different format is used for marker records indicating loading and unloading of the target module:
 </para>
 
-<synopsis>
+<programlisting>
 target_session_&lt;begins|ends&gt;: target_module: "&lt;target-module-name&gt;"
-</synopsis> 
+</programlisting> 
 
     <para>
 Only calls to the subset of all kernel functions are detected. This subset however can be extended easily by implementing your own modules (see <xref linkend="custom_callm_payloads"/>). The compete list of the default payload modules that currently can currently be used for call monitoring and the lists of the functions processed by each module are provided in <xref linkend="standard_callm_payloads.functions"></xref>.

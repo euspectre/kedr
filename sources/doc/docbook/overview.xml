@@ -39,8 +39,7 @@ two other systems that analyze the selected kernel modules in runtime and help
 reveal problems in these: <ulink 
 url="http://msdn.microsoft.com/en-us/library/ff545448(VS.85).aspx">Microsoft Driver Verifier for Windows</ulink>
 and <quote>Impostor</quote> (<quote>API Swapping</quote>) facilities used 
-by <ulink url="http://developer.novell.com/devnet/yes/">Novell YES Tools 
-for Linux</ulink>. Both systems seem to monitor the operation of a target 
+by <ulink url="http://developer.novell.com/devnet/yes/">Novell YES Tools for Linux</ulink>. Both systems seem to monitor the operation of a target 
 module including its interaction with the rest of the kernel.
 </para>
 
@@ -63,16 +62,14 @@ Note that KEDR is not generally a tool to analyze the interaction between a low-
 
 <section id="overview.analysis">
 <title>Types of Analysis KEDR Supports</title>
-
-<itemizedlist>
     <para>
 Currently, KEDR provides tools for the following kinds of analysis: 
     </para>
+<itemizedlist>
     <listitem><para>
 <link linkend="call_mon"><firstterm>Call monitoring (call tracing)</firstterm></link> 
 During the operation of the module under analysis, the information is 
-collected about the calls to <link linkend="target_function">target 
-functions</link>: arguments, return values, etc. This information can be 
+collected about the calls to <link linkend="target_function">target functions</link>: arguments, return values, etc. This information can be 
 saved to a file (<firstterm>trace</firstterm>) for future analysis in the user space.
     <para>
 This is similar to what <ulink url="http://sourceforge.net/projects/strace/">strace</ulink> 
@@ -216,12 +213,12 @@ initialized and running target module.
 <section id="overview.technologies">
 <title>Key Technologies KEDR Relies Upon</title>
 
-<itemizedlist>
 <para>
 The core components of KEDR have been developed based on the technologies 
 heavily used in the kernel itself, for example:
 </para>
 
+<itemizedlist>
 <listitem><para>
 <firstterm>notification system</firstterm>;
 </para></listitem>
@@ -249,12 +246,12 @@ the kernel space and the user space.
 <section id="overview.limit">
 <title>Limitations</title>
 
-<itemizedlist>
 <para>
 The ideas KEDR is based upon and the technologies it currently uses impose 
 some limitations on what it can do.
 </para>
 
+<itemizedlist>
 <listitem>
     <para>
 KEDR operates on the binary interface used by a target module (ABI rather 

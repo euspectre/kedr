@@ -58,7 +58,7 @@ GNU Make
 </para></listitem>
 
 <listitem><para>
-Other tools and packages necessary to build kernel modules: on some systems it can be <quote>kernel-*-devel</quote>, <quote>kernel-*-source</quote>, <quote>kernel-*-syms</quote>, <quote>linux-headers-*</quote> or other packages. On some systems you may also need to install <quote>DKMS</quote> package or something like that.
+Other tools and packages necessary to build kernel modules: on some systems it can be <filename>kernel-*-devel</filename>, <filename>kernel-*-source</filename>, <filename>kernel-*-syms</filename>, <filename>linux-headers-*</filename> or other packages. On some systems you may also need to install <filename>DKMS</filename> package or something like that.
 </para></listitem>
 </itemizedlist>
 
