@@ -36,7 +36,7 @@ The default fault simulation scenario is <phrase role="pcite"><quote>never simul
     </para>
 
     <para>
-In each such directory, there is at least file <filename>current_indicator</filename> containing the name of the <link linkend="fault_simulation_indicator">fault simulation indicator</link>, currently used for the function. You can consider fault simulation indicator a function which is called whenever the payload module needs to decide whether to simulate a failure of the target function. If the indicator function returns nonzero, a failure will be simulated. You might say that an indicator <emphasis>implements</emphasis> fault simulation scenario. Reading from file <filename>current_indicator</filename> gives the name of the currently used indicator. Writing a name of some indicator to this file sets this indicator for the function.
+In each such directory, there is at least file <filename>current_indicator</filename> containing the name of the <link linkend="fault_simulation_indicator">fault simulation indicator</link>, currently used for the function. You can consider fault simulation indicator a function which is called whenever the payload module needs to decide whether to simulate a failure of the target function. If the indicator function returns nonzero, a failure will be simulated. You might say that an indicator <emphasis>implements</emphasis> a fault simulation scenario. Reading from file <filename>current_indicator</filename> gives the name of the currently used indicator. Writing a name of some indicator to this file sets this indicator for the function.
     </para>
     <para>
 Examples:

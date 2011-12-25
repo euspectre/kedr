@@ -87,7 +87,7 @@ The value of <code>multi-line-parameter</code> is precisely as follows:
 </programlisting>
     </para>
     <para>
-Note that a newline character should immediately follow <code>&gt;&gt;</code> delimiter and apart from the delimiter <code>&lt;&lt;</code> the should be no characters on the line (except whitespace characters).
+Note that a newline character should immediately follow <code>&gt;&gt;</code> delimiter and apart from the delimiter <code>&lt;&lt;</code>, there should be no characters on the line (except whitespace characters).
 
 <programlisting>
 # Correct definition of a multiline parameter containing &gt;&gt;

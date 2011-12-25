@@ -10,7 +10,7 @@ Note that the terms <firstterm>driver</firstterm> and <firstterm>kernel module</
 
 <glossdef>
     <para>
-A system to analyze <phrase role="emphasized">KE</phrase>rnel-mode <phrase role="emphasized">D</phrase>rivers in <phrase role="emphasized">R</phrase>untime. The tools provided by KEDR rely heavily on the means to intercept calls made by the kernel module under analysis. These call interception facilities are provided by the core components of KEDR.
+<emphasis>KEDR</emphasis> stands for <phrase role="emphasized">KE</phrase>rnel-mode <phrase role="emphasized">D</phrase>rivers in <phrase role="emphasized">R</phrase>untime. KEDR framework provides the means to collect data about the operation of a kernel module in runtime and analyze these data. The tools provided by the framework rely heavily on the means to intercept the function calls made by the kernel module under analysis. 
     </para>
 </glossdef>
 </glossentry>
@@ -33,7 +33,7 @@ A kernel module to be analyzed.
 To perform analysis of the target module, it can be necessary to intercept function calls the module makes. The functions the calls to which are to be intercepted are called <firstterm>target functions</firstterm>. For example, to analyze how memory is allocated and freed by the target module, one may need to intercept calls to <code>__kmalloc()</code>, <code>kfree()</code>, etc.
     </para>
     <para>
-The target functions can be exported by the <firstterm>base kernel</firstterm> (<firstterm><quote>kernel core</quote></firstterm>) or by other kernel modules.
+The target functions can be exported by the <firstterm>base kernel</firstterm> (<firstterm><quote>kernel proper</quote></firstterm>) or by some kernel modules.
     </para>
     <para>
 By choosing appropriate <link linkend="payload_module">payload modules</link>, the user may select the groups of functions the calls to which are to be intercepted.
