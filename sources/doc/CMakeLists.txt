@@ -10,7 +10,7 @@ add_custom_target(doc ALL)
 # simply copied to the build tree, ready to be installed.
 ########################################################################
 option(KEDR_GENERATE_DOC 
-	"Generate the HTML documentation from DocBook sources." 
+	"Generate KEDR Reference Manual from the sources in DocBook XML format." 
 	OFF
 )
 
@@ -22,6 +22,9 @@ add_custom_target (make_doc_dirs
 # Clean html directory - just in case it existed before
     COMMAND rm -rf "${KEDR_HTML_DIR}/*"
 )
+
+# Directory for the documentation in Wiki format in the binary tree.
+set (KEDR_WIKI_DIR "${CMAKE_CURRENT_BINARY_DIR}/wiki")
 
 if (KEDR_GENERATE_DOC)
     message (STATUS 
@@ -77,7 +80,7 @@ if (KEDR_GENERATE_DOC)
         "${CMAKE_CURRENT_SOURCE_DIR}/docbook/entities.xml.cmake"
         "${KEDR_DOCBOOK_DIR}/entities.xml"
     )
-  
+ 
 # Copy the files needed to generate the docs to the build tree for them to
 # be located in a single place.
     file (GLOB DOCBOOK_SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/docbook/*.xml")
@@ -107,6 +110,7 @@ if (KEDR_GENERATE_DOC)
     
     add_custom_target (copy_doc_files
 # Copy DocBook XML sources
+		COMMAND rm -f 
         COMMAND cp -p ${DOCBOOK_SRC_FILES} "${KEDR_DOCBOOK_DIR}"
 
 # Copy CSS files to both docbook and html directories 
@@ -126,12 +130,44 @@ if (KEDR_GENERATE_DOC)
     add_custom_target (generate_doc
         COMMAND ${XSLTPROC} --nonet -o "${KEDR_HTML_DIR}/" config.xsl main.xml
         WORKING_DIRECTORY "${KEDR_DOCBOOK_DIR}"
-        COMMENT "Generating HTML documentation from DocBook sources"
+        COMMENT "Generating KEDR Reference Manual in HTML format"
     )
     add_dependencies (generate_doc copy_doc_files)
 
 # Chain up doc generation stuff to 'doc' target.
     add_dependencies (doc generate_doc)
+############################################################################
+
+# Prepare the sources and generate KEDR Reference Manual in the format
+# appropriate for Google Code Wiki.
+	add_custom_target (make_wiki_dir
+	    COMMAND ${CMAKE_COMMAND} -E make_directory "${KEDR_WIKI_DIR}"
+	    
+	# Clean the directory - just in case it existed before
+	    COMMAND rm -rf "${KEDR_WIKI_DIR}/*"
+	)
+
+	configure_file (
+        "${CMAKE_CURRENT_SOURCE_DIR}/docbook/gc_wiki.xsl.cmake"
+        "${KEDR_DOCBOOK_DIR}/gc_wiki.xsl"
+    )
+
+	configure_file (
+        "${CMAKE_CURRENT_SOURCE_DIR}/docbook/gc_wiki_impl.xsl.cmake"
+        "${KEDR_DOCBOOK_DIR}/gc_wiki_impl.xsl"
+    )
+
+	add_custom_target (copy_doc_files_for_wiki
+		COMMAND cp -p ${DOCBOOK_SRC_FILES} "${KEDR_DOCBOOK_DIR}"
+	)
+    add_custom_target (wiki_doc
+        COMMAND ${XSLTPROC} --nonet -o "${KEDR_WIKI_DIR}/" gc_wiki.xsl main.xml
+        WORKING_DIRECTORY "${KEDR_DOCBOOK_DIR}"
+        COMMENT "Generating KEDR Reference Manual in Wiki format"
+    )
+    add_dependencies (wiki_doc copy_doc_files_for_wiki)
+	add_dependencies (wiki_doc make_wiki_dir)
+############################################################################
 
 else () # KEDR_GENERATE_DOC is not defined.
     message (STATUS 

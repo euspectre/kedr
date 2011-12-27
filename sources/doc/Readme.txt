@@ -131,3 +131,23 @@ Than you can use "&ispras-url;" in your DocBook sources instead of
 
 You can use entities not only for URLs but rather for almost any data.
 ========================================================================
+
+5. Generating the docs for Google Code Wiki
+
+KEDR Manual can also be generated in the format appropriate for Google Code 
+Wiki (http://code.google.com/p/support/wiki/WikiSyntax) from the same
+sources in DocBook XML format. This is implemented on top of the "official"
+DocBook XSL stylesheets for HTML (see docbook/docbook_xsl_copying.txt for
+copyright and license information).
+
+The instructions are almost the same as described in section 2 above:
+- make sure DocBook DTD and XSL stylesheets are available in the appropriate
+  directories (see section 2);
+- configure KEDR with KEDR_GENERATE_DOC option turned on if it has not been
+  done already;
+- run 'make wiki_doc'.
+The generated docs will be placed to ${CMAKE_BINARY_DIR}/doc/wiki/
+
+This variant of the docs is not installed by 'make install', it makes no 
+sense anyway.
+========================================================================
