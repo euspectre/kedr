@@ -4,7 +4,7 @@
 This section describes the payload modules for call monitoring (call tracing) provided by KEDR.
 </para>
 <section id="standard_callm_payloads.functions">
-<title>Functions Processed by the Standard Payload Modules for Call Monitoring</title>
+<title>List of Functions</title>
     <para>
 Here is a full list of the payload modules that currently may be used for call monitoring, and the lists of the functions processed by each module. A function name in square brackets indicates that this function may or may not be exported on each particular system, and if it is exported, it will be processed. Only one of the functions separated by a slash is expected to be exported by the kernel, that function will be processed.
     </para>

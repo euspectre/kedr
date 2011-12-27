@@ -2,7 +2,7 @@
 <title>Standard Fault Simulation Payloads</title>
 
 <section id="standard_fsim_payloads.functions">
-<title>Functions Processed by the Standard Payload Modules for Fault Simulation</title>
+<title>List of Functions</title>
     <para>
 Here is a full list of the payload modules that currently can be used for fault simulation, and the lists of the functions for which fault simulation is implemented by each module. For each function, the parameters that can be used in a fault simulation scenario are described.
     </para>

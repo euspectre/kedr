@@ -5,10 +5,11 @@
 KEDR has a plugin-based architecture similar to the architecture of <ulink url="http://valgrind.org/">Valgrind</ulink> and other binary analysis frameworks for user-space applications and libraries.
 </para>
 
-<itemizedlist>
 <para>
 Each data collection and analysis tool based on KEDR has at least the following parts:
 </para>
+
+<itemizedlist>
 <listitem><para><emphasis>KEDR core</emphasis> - the core components provided by the framework, their main responsibility it to instrument the target module when it is loaded. The core also provides utilities to simplify commonly used operations, for example, output of the collected data, etc.</para></listitem>
 
 <listitem><para>One or more <emphasis>tool plugins</emphasis> (<quote>payload modules</quote>) that actually collect and, if necessary, analyze the data about the target module.</para></listitem>

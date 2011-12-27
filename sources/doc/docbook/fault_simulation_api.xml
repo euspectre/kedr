@@ -55,7 +55,7 @@ When it is needed to decide which branch of code should be executed, one should 
 </section> <!-- "fault_simulation_api.fault_simulation_point" -->
 
 <section id="fault_simulation_api.format_string">
-<title>Format of the Data Passed from a Fault Simulation Point to the Scenario</title>
+<title>Format of the Data Passed from a Point to the Scenario</title>
 <para>
 When call <function linkend="fault_simulation_api.kedr_fsim_point_simulate">kedr_fsim_point_simulate</function>, one should also pass the parameters for the fault simulation scenario. The format is expected to be a struct containing fields of possibly different types. It can be encoded in a string with a comma-separated ordered list of these types. E.g. a string <code><quote>int*,long</quote></code> encodes the parameters of the corresponding types:
 <programlisting><![CDATA[
