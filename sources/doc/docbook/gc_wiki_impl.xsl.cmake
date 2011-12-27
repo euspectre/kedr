@@ -71,7 +71,10 @@
 	<xsl:text>*</xsl:text>
 </xsl:template>
 
-<xsl:template match="programlisting/emphasis|screen/emphasis">
+<xsl:template match="programlisting/emphasis|screen/emphasis
+											|programlisting/filename|screen/filename
+											|programlisting/replaceable|screen/replaceable
+											|programlisting/command|screen/command">
 	<xsl:apply-templates/>
 </xsl:template>
 
@@ -131,7 +134,9 @@
 	<xsl:text>&lt;/i&gt;</xsl:text>
 </xsl:template>
 
-<xsl:template match="link/firstterm|ulink/firstterm">
+<xsl:template match="link/firstterm|ulink/firstterm
+											|link/command|ulink/command
+											|link/emphasis|ulink/emphasis">
 	<xsl:apply-templates/>
 </xsl:template>
 
