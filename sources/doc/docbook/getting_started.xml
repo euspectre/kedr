@@ -33,7 +33,7 @@ It is recommended to build KEDR from source. This allows to avoid a lot of issue
 </para>
 
 <para>
-The source code of the framework can be downloaded from the <ulink url="&kedr-url;">project site</ulink> at BerliOS Developer.
+The source code of the framework can be downloaded from the project sites <ulink url="&kedr-url-gc;">at Google Code</ulink> (main site) and <ulink url="&kedr-url-berlios;">at BerliOS Developer</ulink> (mirror).
 </para>
 
 <itemizedlist>

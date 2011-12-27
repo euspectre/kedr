@@ -8,7 +8,8 @@
 <!ENTITY kedr-lifespan   "2010-2011">
 
 <!-- various URLs  -->
-<!ENTITY kedr-url           "http://developer.berlios.de/projects/kedr/">
+<!ENTITY kedr-url-berlios   "http://developer.berlios.de/projects/kedr/">
+<!ENTITY kedr-url-gc        "http://code.google.com/p/kedr/">
 <!ENTITY kernel-url         "http://kernel.org/">
 
 <!-- service script -->

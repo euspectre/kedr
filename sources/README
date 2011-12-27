@@ -16,13 +16,6 @@ checking if it works correctly, doing fault simulation if requested,
 dumping the data about the actions made by the driver to some kind of a 
 trace for future analysis, etc. 
 
-KEDR framework is designed to be easy to extend and build upon. For 
-example, the set of kernel functions to be monitored is fully customizable; 
-fault simulation scenarios can also be provided and controlled by the user. 
-Besides that, KEDR provides an interface to implement custom types of 
-analysis via pluggable modules - in addition to call monitoring and fault 
-simulation.
-
 Currently, KEDR works on x86 and x86-64 architectures. 
 
 KEDR is free software and is distributed under the terms of GNU General 
@@ -32,8 +25,14 @@ See the documentation (doc/html/index.html) for the detailed information
 about KEDR framework.
 
 The latest stable version of KEDR as well as the development versions can 
-be found at KEDR project site at BerliOS Developer: 
-http://developer.berlios.de/projects/kedr/
+be found at KEDR project sites: 
+ - (main site) at Google Code: http://code.google.com/p/kedr/
+ - (mirror) at BerliOS Developer: http://developer.berlios.de/projects/kedr/
 
-KEDR is developed at the Institute for System Programming of the Russian 
-Academy of Sciences (ISPRAS), http://www.ispras.ru/en/
+For bug reports, please use the issue tracker:
+http://code.google.com/p/kedr/issues/
+
+If you have questions, suggestions, proposals, etc., concerning KEDR 
+framework, feel free to join "kedr-discuss" mailing list (Google Group) at 
+http://groups.google.com/group/kedr-discuss and write us a message. 
+Note that currently only the members of that list may post messages there.

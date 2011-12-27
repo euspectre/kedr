@@ -26,7 +26,7 @@ KEDR is free software and is distributed under the terms of <ulink url="http://w
 </para>
 
 <para>
-The latest stable version of KEDR as well as the development versions (Mercurial repository) can be found at <ulink url="&kedr-url;"><quote>KEDR</quote> project site at BerliOS Developer.</ulink>
+The latest stable version of KEDR as well as the source code repository can be found at the project sites <ulink url="&kedr-url-gc;">at Google Code</ulink> (main site) and <ulink url="&kedr-url-berlios;">at BerliOS Developer</ulink> (mirror).
 </para>
 
 </section>

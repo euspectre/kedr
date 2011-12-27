@@ -39,7 +39,7 @@ two other systems that analyze the selected kernel modules in runtime and help
 reveal problems in these: <ulink 
 url="http://msdn.microsoft.com/en-us/library/ff545448(VS.85).aspx">Microsoft Driver Verifier for Windows</ulink>
 and <quote>Impostor</quote> (<quote>API Swapping</quote>) facilities used 
-by <ulink url="http://developer.novell.com/devnet/yes/">Novell YES Tools for Linux</ulink>. Both systems seem to monitor the operation of a target 
+by <ulink url="http://developer.novell.com/devnet/yes/">SUSE YES Tools for Linux</ulink>. Both systems seem to monitor the operation of a target 
 module including its interaction with the rest of the kernel.
 </para>
 

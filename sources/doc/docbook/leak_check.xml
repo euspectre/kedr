@@ -92,7 +92,7 @@ There should be the following files in <filename class="directory">kedr_leak_che
 <para>
 <filename class="directory">unallocated_frees</filename> file should normally be empty. If it is not empty 
 in some of your analysis sessions, it could be a problem in LeakCheck itself (e.g., the target module used some allocation 
-function that LeakCheck was unaware of) or memory is probably allocated by some other module. If you suppose it is a problem in LeakCheck, please report it to <ulink url="http://developer.berlios.de/bugs/?group_id=11780">the bug tracker</ulink>.
+function that LeakCheck was unaware of) or memory is probably allocated by some other module. If you suppose it is a problem in LeakCheck, please report it to <ulink url="http://code.google.com/p/kedr/issues/">the issue tracker</ulink>.
 </para>
 
 </section>
