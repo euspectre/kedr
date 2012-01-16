@@ -10,18 +10,18 @@ newline='
 # kedr --help
 # kedr --version
 #
-# 'start' - start KEDR, when it is not started, for watching for given target.
-# Use config file @KEDR_FILE_DEFAULT_CONTROL_CONFIG@, if no other arguments are passed.
-# Otherwise, join config strings and config files, passed to it, into one config file,
-# and use it instead default.
+# 'start' - start KEDR (if it is not started already) to watch for a given target.
+# Uses config file @KEDR_FILE_DEFAULT_CONTROL_CONFIG@ if no other arguments are passed.
+# Otherwise, joins the config strings and config files passed to it into one config file,
+# and uses it instead of the default one.
 #
-# 'stop' - stop KEDR, if it was running.
+# 'stop' - stop KEDR if it is running.
 #
-# 'restart' - stop KEDR and start it with same configuration.
+# 'restart' - stop KEDR and start it again with same configuration.
 #
-# 'status' - output current state of KEDR.
+# 'status' - output the current state of KEDR.
 #
-# 'version' - output version of the KEDR installed.
+# 'version' - output the version of KEDR installed.
 
 usage()
 {
@@ -257,7 +257,7 @@ fi
 case ${command} in
 start)
     if is_module_running ${kedr_name}; then
-        printf "%s\n" "Service already running. To stop it, execute '$0 stop'"
+        printf "%s\n" "Service is already running. To stop it, execute '$0 stop'"
         exit 1
     fi
     if test $# -eq 0; then
@@ -363,7 +363,7 @@ status)
             printf "Target is not set\n"
         fi;
     else
-        printf "KDER is not running\n"
+        printf "KEDR is not running\n"
     fi;
     ;;
 restart)
