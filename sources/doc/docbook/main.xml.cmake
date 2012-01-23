@@ -51,12 +51,16 @@
         </author>
     </authorgroup>
     <copyright>
-        <year>&kedr-lifespan;</year>
+        <year>&kedr-lifespan-first;</year>
         <holder>&ispras-name;</holder>
     </copyright>
-    <legalnotice>
+    <copyright>
+        <year>&kedr-lifespan;</year>
+        <holder>KEDR development team</holder>
+    </copyright>
+    <!--<legalnotice>
         <para><ulink url="&ispras-url;">&ispras-url;</ulink></para>
-    </legalnotice>
+    </legalnotice>-->
 </articleinfo>
 
 <!-- ============ Top-level sections ============ -->

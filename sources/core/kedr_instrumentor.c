@@ -5,6 +5,7 @@
  */
  
 /* ========================================================================
+ * Copyright (C) 2012, KEDR development team
  * Copyright (C) 2010-2011, Institute for System Programming 
  *                          of the Russian Academy of Sciences (ISPRAS)
  * Authors: 
