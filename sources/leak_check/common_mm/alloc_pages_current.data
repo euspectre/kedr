@@ -1,0 +1,28 @@
+[group]
+	# Name and return type of the target function
+	function.name = alloc_pages_current
+	returnType = struct page *
+
+	# Names and types of the arguments of the target function
+	arg.type = gfp_t
+	arg.name = gfp
+
+	arg.type = unsigned int 
+	arg.name = order
+
+	# The body of the handler
+	handler.post =>>
+	struct page *page = returnValue;
+	
+	if (page != NULL) {
+		const void *p = (const void *)page_address(page);
+		if (p != NULL) 
+			kedr_lc_handle_alloc(target_module, p, 
+				(size_t)(PAGE_SIZE << order), 
+				caller_address);
+	}
+	<<
+
+# End of the group of definitions for alloc_pages_current().
+
+#######################################################################

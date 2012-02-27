@@ -1,0 +1,25 @@
+[group]
+	# Name and return type of the target function
+	function.name = kmemdup
+	returnType = void *
+
+	# Names and types of the arguments of the target function
+	arg.type = const void *
+	arg.name = src
+
+	arg.type = size_t
+	arg.name = len
+
+	arg.type = gfp_t
+	arg.name = flags
+	
+	# The body of the replacement function
+	handler.post =>>
+	if (returnValue != NULL)
+		kedr_lc_handle_alloc(target_module, returnValue, len,
+			caller_address);
+	<<
+
+# End of the group of definitions for kmemdup().
+
+#######################################################################

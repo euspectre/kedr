@@ -1,0 +1,29 @@
+[group]
+	# Name and return type of the target function
+	function.name = kmem_cache_alloc_node_trace
+	returnType = void *
+
+	# Names and types of the arguments of the target function
+	arg.type = size_t
+	arg.name = size
+
+	arg.type = struct kmem_cache *
+	arg.name = mc
+	
+	arg.type = gfp_t
+	arg.name = flags
+
+	arg.type = int
+	arg.name = nodeid
+	
+	# The body of the replacement function
+	handler.post =>>
+	if (returnValue != NULL)
+		kedr_lc_handle_alloc(target_module, returnValue, 
+			(size_t)kmem_cache_size(mc), 
+			caller_address);
+	<<
+
+# End of the group of definitions for kmem_cache_alloc_node_trace().
+
+#######################################################################

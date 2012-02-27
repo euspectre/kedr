@@ -1,0 +1,22 @@
+[group]
+	# Name and return type of the target function
+	function.name = alloc_pages_exact
+	returnType = void *
+
+	# Names and types of the arguments of the target function
+	arg.type = size_t
+	arg.name = size
+
+	arg.type = gfp_t
+	arg.name = gfp_mask
+	
+	# The body of the replacement function
+	handler.post =>>
+	if (!ZERO_OR_NULL_PTR(returnValue))
+		kedr_lc_handle_alloc(target_module, returnValue, size,
+			caller_address);
+	<<
+
+# End of the group of definitions for alloc_pages_exact().
+
+#######################################################################

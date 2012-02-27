@@ -1,0 +1,23 @@
+[group]
+	# Name and return type of the target function
+	function.name = __get_free_pages
+	returnType = unsigned long
+
+	# Names and types of the arguments of the target function
+	arg.type = gfp_t
+	arg.name = flags
+	
+	arg.type = unsigned int
+	arg.name = order
+
+	# The body of the replacement function
+	handler.post =>>
+	if ((void *)returnValue != NULL) {
+		kedr_lc_handle_alloc(target_module, (const void *)returnValue, 
+			(size_t)(PAGE_SIZE << order), caller_address);
+	}
+	<<
+
+# End of the group of definitions for __get_free_pages().
+
+#######################################################################

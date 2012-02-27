@@ -1,0 +1,17 @@
+[group]
+	# Name and return type of the target function
+	function.name = kfree
+
+	# Names and types of the arguments of the target function
+	arg.type = void *
+	arg.name = p
+	
+	# The body of the replacement function
+	handler.pre =>>
+	if (!ZERO_OR_NULL_PTR(p)) 
+		kedr_lc_handle_free(target_module, p, caller_address);
+	<<
+
+# End of the group of definitions for kfree().
+
+#######################################################################

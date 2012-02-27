@@ -1,0 +1,18 @@
+[group]
+	# Name and return type of the target function
+	function.name = vfree
+
+	# Names and types of the arguments of the target function
+	arg.type = const void *
+	arg.name = addr
+	
+	# The body of the replacement function
+	handler.pre =>>
+	if (!ZERO_OR_NULL_PTR(addr))
+		kedr_lc_handle_free(target_module, addr, 
+			caller_address);
+	<<
+
+# End of the group of definitions for vfree().
+
+#######################################################################

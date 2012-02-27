@@ -11,6 +11,7 @@ set(KEDR_INCLUDE_FILES_SRC
     fault_simulation/fault_simulation.h
 	trace/trace.h
 	util/stack_trace.h
+	leak_check/leak_check.h
 )
 
 
@@ -24,6 +25,7 @@ set(KEDR_INCLUDE_FILES_INSTALL
     fault_simulation/fault_simulation.h
 	trace/trace.h
 	util/stack_trace.h
+	leak_check/leak_check.h
 )
 
 # Copy headers from src-tree into binary tree

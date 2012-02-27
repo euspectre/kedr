@@ -8,8 +8,8 @@ set(templates
     "payload_fsim_add_caller_address.data"
     "fault_indicator.c"
     "fault_indicator.data"
-    "fault_indicator_add_caller_address.data")
-
+    "fault_indicator_add_caller_address.data"
+    "payload_leak_check.c")
 
 if(KEDR_CALLM_PAYLOADS)
     list(APPEND templates "payload_callm.c")

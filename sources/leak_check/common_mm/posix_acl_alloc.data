@@ -1,0 +1,25 @@
+[group]
+	# Name and return type of the target function
+	function.name = posix_acl_alloc
+	returnType = struct posix_acl *
+
+	# Names and types of the arguments of the target function
+	arg.type = int
+	arg.name = count
+
+	arg.type = gfp_t
+	arg.name = flags
+	
+	# The body of the replacement function
+	handler.post =>>
+	if (returnValue != NULL) {
+		size_t size = sizeof(struct posix_acl) + 
+			(size_t)count * sizeof(struct posix_acl_entry);
+		kedr_lc_handle_alloc(target_module, returnValue, size,
+			caller_address);
+	}
+	<<
+
+# End of the group of definitions for posix_acl_alloc().
+
+#######################################################################

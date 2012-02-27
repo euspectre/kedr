@@ -13,7 +13,7 @@ set(functions_support_file "functions_support.c")
 # Common name of beginning part of the data-file
 set(begin_data_file "beginning.data")
 
-#  Commands for create call monitor payload module.
+# Commands to create a payload module for call monitoring.
 #
 # ${begin_data_file} file should contain data, common for all functions(i.e., includes).
 # For each function in ${functions} list file ${function}.data

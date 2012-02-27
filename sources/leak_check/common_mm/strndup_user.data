@@ -1,0 +1,22 @@
+[group]
+	# Name and return type of the target function
+	function.name = strndup_user
+	returnType = char *
+
+	# Names and types of the arguments of the target function
+	arg.type = const char __user *
+	arg.name = src
+
+	arg.type = long
+	arg.name = n
+
+	# The body of the replacement function
+	handler.post =>>
+	if (!IS_ERR(returnValue))
+		kedr_lc_handle_alloc(target_module, (void *)returnValue, 
+			strnlen_user(src, n), caller_address);
+	<<
+
+# End of the group of definitions for strndup_user().
+
+#######################################################################
