@@ -39,7 +39,7 @@ MODULE_LICENSE("GPL");
 /* ====================================================================== */
 
 /* Default number of stack frames to output (at most) */
-#define KEDR_STACK_DEPTH_DEFAULT 12
+#define KEDR_STACK_DEPTH_DEFAULT KEDR_MAX_FRAMES
 
 /* At most 'max_stack_entries' stack entries will be output for each 
  * suspicious allocation or deallocation. 
