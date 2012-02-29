@@ -29,6 +29,7 @@ struct module;
  * block. For other types of resources, it is still recommended to provide 
  * a meaningful value of 'size'. In some cases, the size of the structure 
  * corresponding to the resource could be convenient to use here.
+ * 'size' must not be equal (size_t)(-1), this value is reserved.
  * 
  * This function should be called AFTER the resource has actually been 
  * successfully allocated. */

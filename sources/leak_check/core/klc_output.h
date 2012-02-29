@@ -55,48 +55,12 @@ kedr_lc_output_destroy(struct kedr_lc_output *output);
 void
 kedr_lc_output_clear(struct kedr_lc_output *output);
 
-/* Types of information that can be output.
- * The point is, different types of information can be output to different
- * places or distinguished in some other way. */
-enum kedr_lc_output_type {
-	/* possible leaks */
-	KLC_UNFREED_ALLOC,
-	
-	/* bad frees */
-	KLC_BAD_FREE,
-	
-	/* other info: parameters of the target module, totals, ... */
-	KLC_OTHER
-};
-
-/* Outputs a string pointed to by 's' taking type of this information into.
- * account ('output_type').
- * The implementation defines where the string will be output and how 
- * different kinds of information will be distinguished.
- * This function is a basic block for the functions that output particular
- * data structures.
- *
- * A newline will be added at the end automatically.
- *
- * This function cannot be used in atomic context. */
-void
-kedr_lc_print_string(struct kedr_lc_output *output, 
-	enum kedr_lc_output_type output_type, const char *s);
-
-/* Outputs first 'num_entries' elements of 'stack_entries' array as a stack
- * trace. 
- * 
- * This function cannot be used in atomic context. */
-void
-kedr_lc_print_stack_trace(struct kedr_lc_output *output, 
-	enum kedr_lc_output_type output_type, 
-	unsigned long *stack_entries, unsigned int num_entries);
-
 /* Output information about the target module.
  *
  * This function cannot be used in atomic context. */
 void
-kedr_lc_print_target_info(struct kedr_lc_output *output);
+kedr_lc_print_target_info(struct kedr_lc_output *output, 
+	struct module *target);
 
 /* Helpers to output kedr_lc_resource_info structures corresponding to 
  * suspicious resource allocation and deallocation events.

@@ -39,8 +39,46 @@ static struct dentry *dir_klc_main = NULL;
 static const char *sep = "----------------------------------------";
 /* ====================================================================== */
 
+/* Types of information that can be output.
+ * The point is, different types of information can be output to different
+ * places or distinguished in some other way. */
+enum klc_output_type {
+	/* possible leaks */
+	KLC_UNFREED_ALLOC,
+	
+	/* bad frees */
+	KLC_BAD_FREE,
+	
+	/* other info: parameters of the target module, totals, ... */
+	KLC_OTHER
+};
+
+/* Outputs a string pointed to by 's' taking type of this information into.
+ * account ('output_type').
+ * The implementation defines where the string will be output and how 
+ * different kinds of information will be distinguished.
+ * This function is a basic block for the functions that output particular
+ * data structures.
+ *
+ * A newline will be added at the end automatically.
+ *
+ * This function cannot be used in atomic context. */
+void
+klc_print_string(struct kedr_lc_output *output, 
+	enum klc_output_type output_type, const char *s);
+
+/* Outputs first 'num_entries' elements of 'stack_entries' array as a stack
+ * trace. 
+ * 
+ * This function cannot be used in atomic context. */
+void
+klc_print_stack_trace(struct kedr_lc_output *output, 
+	enum klc_output_type output_type, 
+	unsigned long *stack_entries, unsigned int num_entries);
+/* ====================================================================== */
+
 /* An output buffer that accumulates strings sent to it by 
- * kedr_lc_print_string().
+ * klc_print_string().
  * The buffer grows automatically when necessary.
  * The operations with each such buffer (klc_output_buffer_*(), etc.) 
  * should be performed with the corresponding mutex locked (see 'lock' 
@@ -69,8 +107,6 @@ struct klc_output_buffer
 /* The structure for the output objects. */
 struct kedr_lc_output
 {
-	struct module *target;
-	
 	/* A subdirectory for the output files in debugfs. */
 	struct dentry *dir_klc;
 
@@ -283,12 +319,13 @@ klc_remove_debugfs_files(struct kedr_lc_output *output)
 /* [NB] We do not check here if debugfs is supported because this is done 
  * when creating the directory for these files ('dir_klc_main'). */
 static int
-klc_create_debugfs_files(struct kedr_lc_output *output)
+klc_create_debugfs_files(struct kedr_lc_output *output, 
+	struct module *target)
 {
-	BUG_ON(output == NULL || output->target == NULL);
+	BUG_ON(output == NULL || target == NULL);
 	BUG_ON(dir_klc_main == NULL);
 	
-	output->dir_klc = debugfs_create_dir(module_name(output->target),
+	output->dir_klc = debugfs_create_dir(module_name(target),
 		dir_klc_main);
 	if (output->dir_klc == NULL)
 		goto fail;
@@ -313,7 +350,7 @@ klc_create_debugfs_files(struct kedr_lc_output *output)
 fail:
 	pr_warning("[kedr_leak_check] "
 	"failed to create output files in debugfs for module \"%s\"\n",
-		module_name(output->target));
+		module_name(target));
 	klc_remove_debugfs_files(output);
 	return -EINVAL;    
 }
@@ -351,14 +388,11 @@ kedr_lc_output_create(struct module *target)
 {
 	int ret = 0;
 	struct kedr_lc_output *output = NULL;
-	BUG_ON(target == NULL);
 	
 	output = kzalloc(sizeof(*output), GFP_KERNEL);
 	if (output == NULL) 
 		return ERR_PTR(-ENOMEM);
 	/* [NB] All fields of '*output' are now 0 or NULL. */
-	
-	output->target = target;
 	
 	ret = klc_output_buffer_init(&output->ob_leaks);
 	if (ret != 0) 
@@ -370,7 +404,7 @@ kedr_lc_output_create(struct module *target)
 	if (ret != 0) 
 		goto out_ob;
 
-	ret = klc_create_debugfs_files(output);
+	ret = klc_create_debugfs_files(output, target);
 	if (ret != 0) 
 		goto out_ob;
 	
@@ -416,8 +450,8 @@ kedr_lc_output_clear(struct kedr_lc_output *output)
 /* ====================================================================== */
 
 void
-kedr_lc_print_string(struct kedr_lc_output *output, 
-	enum kedr_lc_output_type output_type, const char *s)
+klc_print_string(struct kedr_lc_output *output, 
+	enum klc_output_type output_type, const char *s)
 {
 	struct klc_output_buffer *ob = NULL;
 	
@@ -454,8 +488,8 @@ kedr_lc_print_string(struct kedr_lc_output *output,
 }
 
 void
-kedr_lc_print_stack_trace(struct kedr_lc_output *output, 
-	enum kedr_lc_output_type output_type, 
+klc_print_stack_trace(struct kedr_lc_output *output, 
+	enum klc_output_type output_type, 
 	unsigned long *stack_entries, unsigned int num_entries)
 {
 	static const char* fmt = "[<%p>] %pS";
@@ -482,7 +516,7 @@ kedr_lc_print_stack_trace(struct kedr_lc_output *output,
 			snprintf(buf, len + 1, fmt, 
 				(void *)stack_entries[i], 
 				(void *)stack_entries[i]);
-			kedr_lc_print_string(output, output_type, buf);
+			klc_print_string(output, output_type, buf);
 			kfree(buf);
 		} else { 
 			pr_warning("[kedr_leak_check] "
@@ -494,7 +528,8 @@ kedr_lc_print_stack_trace(struct kedr_lc_output *output,
 }
 
 void
-kedr_lc_print_target_info(struct kedr_lc_output *output)
+kedr_lc_print_target_info(struct kedr_lc_output *output, 
+	struct module *target)
 {
 	static const char* fmt = 
 "Target module: \"%s\", init area at 0x%p, core area at 0x%p";
@@ -503,11 +538,8 @@ kedr_lc_print_target_info(struct kedr_lc_output *output)
 	char *buf = NULL;
 	int len;
 	const char *name;
-	struct module *target = output->target;
 	
-	BUG_ON(target == NULL);
 	name = module_name(target);
-	
 	len = snprintf(&one_char[0], 1, fmt, name, 
 		target->module_init, target->module_core);
 	buf = kmalloc(len + 1, GFP_KERNEL);
@@ -518,7 +550,7 @@ kedr_lc_print_target_info(struct kedr_lc_output *output)
 	}
 	snprintf(buf, len + 1, fmt, name, 
 		target->module_init, target->module_core);
-	kedr_lc_print_string(output, KLC_OTHER, buf);
+	klc_print_string(output, KLC_OTHER, buf);
 	kfree(buf);
 }
 
@@ -526,7 +558,7 @@ kedr_lc_print_target_info(struct kedr_lc_output *output)
  * format. The format must contain "%llu", "%llx" or the like. */
 static void 
 klc_print_u64(struct kedr_lc_output *output, 
-	enum kedr_lc_output_type output_type, u64 data, const char *fmt)
+	enum klc_output_type output_type, u64 data, const char *fmt)
 {
 	char one_char[1];
 	char *buf = NULL;
@@ -543,7 +575,7 @@ klc_print_u64(struct kedr_lc_output *output,
 		return;
 	}
 	snprintf(buf, len + 1, fmt, data);
-	kedr_lc_print_string(output, output_type, buf);
+	klc_print_string(output, output_type, buf);
 	kfree(buf);
 }
 
@@ -569,10 +601,10 @@ kedr_lc_print_alloc_info(struct kedr_lc_output *output,
 			len);
 	}
 	snprintf(buf, len + 1, fmt, info->addr, info->size);
-	kedr_lc_print_string(output, KLC_UNFREED_ALLOC, buf);
+	klc_print_string(output, KLC_UNFREED_ALLOC, buf);
 	kfree(buf);
 	
-	kedr_lc_print_stack_trace(output, KLC_UNFREED_ALLOC, 
+	klc_print_stack_trace(output, KLC_UNFREED_ALLOC, 
 		&(info->stack_entries[0]), info->num_entries);
 	
 	if (similar_allocs != 0) {
@@ -580,7 +612,7 @@ kedr_lc_print_alloc_info(struct kedr_lc_output *output,
 		"+%llu more allocation(s) with the same call stack.");
 	}
 	
-	kedr_lc_print_string(output, KLC_UNFREED_ALLOC, sep); /* separator */
+	klc_print_string(output, KLC_UNFREED_ALLOC, sep); /* separator */
 }
 
 void 
@@ -604,10 +636,10 @@ kedr_lc_print_dealloc_info(struct kedr_lc_output *output,
 			len);
 	}
 	snprintf(buf, len + 1, fmt, info->addr);
-	kedr_lc_print_string(output, KLC_BAD_FREE, buf);
+	klc_print_string(output, KLC_BAD_FREE, buf);
 	kfree(buf);
 	
-	kedr_lc_print_stack_trace(output, KLC_BAD_FREE, 
+	klc_print_stack_trace(output, KLC_BAD_FREE, 
 		&(info->stack_entries[0]), info->num_entries);
 	
 	if (similar_deallocs != 0) {
@@ -615,7 +647,7 @@ kedr_lc_print_dealloc_info(struct kedr_lc_output *output,
 		"+%llu more deallocation(s) with the same call stack.");
 	}
 	
-	kedr_lc_print_string(output, KLC_BAD_FREE, sep); /* separator */
+	klc_print_string(output, KLC_BAD_FREE, sep); /* separator */
 }
 
 void

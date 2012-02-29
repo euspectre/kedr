@@ -40,6 +40,11 @@ struct kedr_leak_check
 	/* The target module. */
 	struct module *target;
 	
+	/* The name of the target. It is stored here to enable lookup of the 
+	 * LeakCheck objects after the target us unloaded and then loaded
+	 * again. */
+	char *name;
+	
 	/* The output subsystem for this LeakCheck object */
 	struct kedr_lc_output *output;
 	
@@ -74,11 +79,6 @@ struct kedr_leak_check
 	 * workqueue. */
 	struct workqueue_struct *wq;
 	
-	/* A spinlock that protects the top half of alloc/free handling. 
-	 * Note that the work queue takes care of the bottom half, so it 
-	 * is not necessary to additionally protect that. */
-	spinlock_t lock;
-	
 	/* Statistics: total number of the detected resource allocations,
 	 * possible leaks and unallocated frees. */
 	u64 total_allocs;
@@ -91,8 +91,8 @@ struct kedr_leak_check
  * the appropriate call to an allocation or deallocation function 
  * ('stack_entries' array containing 'num_entries' meaningful elements).
  * 
- * The instances of this structure are to be stored in a hash table
- * with linked lists as buckets, hence 'hlist' field here. */
+ * The instances of this structure are to be stored in a hash table with 
+ * linked lists as buckets, hence 'hlist' field here. */
 struct kedr_lc_resource_info
 {
 	struct hlist_node hlist;
@@ -107,7 +107,5 @@ struct kedr_lc_resource_info
 	unsigned int num_entries;
 	unsigned long stack_entries[KEDR_MAX_FRAMES];
 };
-
-// TODO
 
 #endif /* LEAK_CHECK_IMPL_H_1548_INCLUDED */
