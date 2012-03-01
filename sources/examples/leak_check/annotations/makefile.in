@@ -1,0 +1,19 @@
+module_name := @module_name@
+
+# The module in this example uses LeakCheck API, so it needs the 
+# .symvers file of LeakCheck.
+kedr_leak_check_symbols := @kedr_leak_check_symbols@
+
+KBUILD_DIR=@KBUILD_BUILD_DIR@
+PWD=`pwd`
+
+all: $(module_name).ko
+
+$(module_name).ko: module.c cfake.h $(kedr_leak_check_symbols)
+	cp "$(kedr_leak_check_symbols)" ./Module.symvers
+	$(MAKE) -C $(KBUILD_DIR) M=$(PWD) modules
+
+clean:
+	$(MAKE) -C $(KBUILD_DIR) M=$(PWD) clean
+
+.PHONY: all clean
