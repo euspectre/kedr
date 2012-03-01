@@ -29,6 +29,10 @@ struct module;
  * block. For other types of resources, it is also recommended to provide 
  * a meaningful value of 'size'. In some cases, the size of the structure 
  * corresponding to the resource could be convenient to use here.
+ * 
+ * If the size cannot be obtained, pass 0 as 'size'. This will be 
+ * interpreted as "unknown size" by LeakCheck
+ *
  * 'size' must not be equal to (size_t)(-1), this value is reserved.
  * 
  * This function should be called AFTER the resource has actually been 

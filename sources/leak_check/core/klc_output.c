@@ -583,8 +583,11 @@ void
 kedr_lc_print_alloc_info(struct kedr_lc_output *output, 
 	struct kedr_lc_resource_info *info, u64 similar_allocs)
 {
-	static const char* fmt = 
-		"Address: 0x%p, size: %zu; stack trace of the allocation:";
+	static const char* fmt_common = 
+	"Address: 0x%p, size: %zu; stack trace of the allocation:";
+	
+	static const char* fmt_unknown = 
+	"Address: 0x%p, size: unknown; stack trace of the allocation:";
 	
 	char one_char[1];
 	char *buf = NULL;
@@ -592,15 +595,26 @@ kedr_lc_print_alloc_info(struct kedr_lc_output *output,
 	
 	BUG_ON(info == NULL);
 	
-	len = snprintf(&one_char[0], 1, fmt, info->addr, 
-		info->size);
+	if (info->size != 0) {
+		len = snprintf(&one_char[0], 1, fmt_common, info->addr, 
+			info->size);
+	}
+	else {
+		len = snprintf(&one_char[0], 1, fmt_unknown, info->addr);
+	}
 	buf = kmalloc(len + 1, GFP_KERNEL);
 	if (buf == NULL) {
 		pr_warning("[kedr_leak_check] klc_print_alloc_info: "
 		"not enough memory to prepare a message of size %d\n",
 			len);
 	}
-	snprintf(buf, len + 1, fmt, info->addr, info->size);
+	
+	if (info->size != 0) {
+		snprintf(buf, len + 1, fmt_common, info->addr, info->size);
+	}
+	else {
+		snprintf(buf, len + 1, fmt_unknown, info->addr);
+	}
 	klc_print_string(output, KLC_UNFREED_ALLOC, buf);
 	kfree(buf);
 	
