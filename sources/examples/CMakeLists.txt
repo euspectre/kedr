@@ -22,4 +22,8 @@ endif(KEDR_CALLM_PAYLOADS)
 add_subdirectory(custom_payload_fsim)
 add_subdirectory(custom_indicator_fsim)
 
+if(KEDR_LEAK_CHECK)
+	add_subdirectory(leak_check)
+endif(KEDR_LEAK_CHECK) 
+
 kedr_test_add_subdirectory(tests)

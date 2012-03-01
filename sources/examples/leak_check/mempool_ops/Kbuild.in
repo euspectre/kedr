@@ -1,0 +1,5 @@
+module_name=@module_name@
+
+ccflags-y :=  -I@KEDR_INCLUDE_DIR@
+obj-m := $(module_name).o
+$(module_name)-y := payload.o functions_support.o

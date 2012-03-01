@@ -1,0 +1,79 @@
+# A plugin to LeakCheck that tracks the calls to mempool_alloc() and
+# mempool_free().
+#
+# Demonstrates how to create plugins to LeakCheck using our template-
+# based generation system and to track custom allocation/deallocation 
+# operations.
+
+module.name = @module_name@
+module.author = Eugene A. Shatokhin
+module.license = GPL
+
+header =>>
+/* ========================================================================
+ * Copyright (C) 2012, KEDR development team
+ *
+ * Authors: 
+ *      Eugene A. Shatokhin <spectre@ispras.ru>
+ *      Andrey V. Tsyvarev  <tsyvarev@ispras.ru>
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 as published
+ * by the Free Software Foundation.
+ ======================================================================== */
+
+#include <linux/mempool.h>
+#include <linux/slab.h>
+<<
+
+[group]
+	# Name and return type of the target function
+	function.name = mempool_alloc
+	returnType = void *
+
+	# Names and types of the arguments of the target function
+	arg.type = mempool_t *
+	arg.name = pool
+	
+	arg.type = gfp_t
+	arg.name = gfp_mask
+	
+	# The body of the replacement function.
+	# For allocation events, kedr_lc_handle_alloc() should be 
+	# called in the post-handler. 
+	# Note that only successful memory allocations should be 
+	# reported to LeakCheck via kedr_lc_handle_alloc().
+	#
+	# 'target_module' and 'caller_address' variables are provided
+	# by KEDR core and LeakCheck, no need to bother about them.
+	#
+	# We don't know the size of the allocated object, so 0 is passed
+	# as the value of 'size' here. LeakCheck will interpret it as
+	# "unknown size".
+	handler.post =>>
+	if (returnValue != NULL)
+		kedr_lc_handle_alloc(target_module, returnValue, 0,
+			caller_address);
+	<< 
+# End of the group of definitions for mempool_alloc().
+#######################################################################
+
+[group]
+	# Name of the target function
+	function.name = mempool_free
+
+	# Names and types of the arguments of the target function
+	arg.type = void *
+	arg.name = element
+	
+	arg.type = mempool_t *
+	arg.name = pool
+	
+	# The body of the replacement function
+	handler.pre =>>
+	if (!ZERO_OR_NULL_PTR(element)) 
+		kedr_lc_handle_free(target_module, element, 
+			caller_address);
+	<< 
+# End of the group of definitions for mempool_free().
+#######################################################################
