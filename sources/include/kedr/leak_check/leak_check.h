@@ -22,14 +22,14 @@ struct module;
 /* ====================================================================== */
 
 /* Call this function to inform LeakCheck core that the given kernel module
- * ('mod') has allocated a resource at the address 'addr' in memory. The 
- * size of the resource is 'size'.
+ * ('mod') has allocated a resource (e.g. memory block, some object, etc.) 
+ * at the address 'addr' in memory. The size of the resource is 'size'.
  *
  * [NB] If the resource is a memory block, 'size' should be the size of this
- * block. For other types of resources, it is still recommended to provide 
+ * block. For other types of resources, it is also recommended to provide 
  * a meaningful value of 'size'. In some cases, the size of the structure 
  * corresponding to the resource could be convenient to use here.
- * 'size' must not be equal (size_t)(-1), this value is reserved.
+ * 'size' must not be equal to (size_t)(-1), this value is reserved.
  * 
  * This function should be called AFTER the resource has actually been 
  * successfully allocated. */
@@ -39,7 +39,7 @@ kedr_lc_handle_alloc(struct module *mod, const void *addr, size_t size,
 
 /* Call this function to inform LeakCheck core that the given kernel module 
  * ('mod') has freed (released) the resource that was located at the given 
- * addressblock in memory ('addr'). 
+ * address in memory ('addr'). 
  * 
  * This function should be called BEFORE the resource is actually freed.
  * This is because LeakCheck assumes that the calls to its API happen in 
@@ -51,7 +51,8 @@ kedr_lc_handle_alloc(struct module *mod, const void *addr, size_t size,
  * deallocation and that call and allocate the resource. The chances are,
  * the new resource will have the same address as the old one. As a 
  * result, a call to kedr_lc_handle_alloc() could also occur before the 
- * call to kedr_lc_handle_free() with the same 'addr' value. */
+ * call to kedr_lc_handle_free() with the same 'addr' value, which could
+ * make a mess. */
 void
 kedr_lc_handle_free(struct module *mod, const void *addr, 
 	const void *caller_address);
