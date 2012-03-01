@@ -10,4 +10,5 @@ on_load mount debugfs -t debugfs "@CMAKE_CURRENT_BINARY_DIR@/debugfs"
 on_unload umount "@CMAKE_CURRENT_BINARY_DIR@/debugfs"
 
 # Load payloads
-payload @CMAKE_CURRENT_BINARY_DIR@/../kedr_leak_check.ko
+payload @CMAKE_BINARY_DIR@/leak_check/core/kedr_leak_check.ko
+payload @CMAKE_BINARY_DIR@/leak_check/common_mm/kedr_lc_common_mm.ko

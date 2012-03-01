@@ -87,13 +87,6 @@ doTest()
     # Load KEDR core and the payload module, mount debugfs
     sh ${CONTROL_SCRIPT} start ${TARGET_NAME} -f "${CONF_FILE}" || exit 1
     
-    # Check if the necessary files have been created in debugfs
-    if test ! -d "${DEBUGFS_LC_DIR}"; then
-        printf "Directory for LeakCheck files was not created in debugfs.\n"
-        cleanupAll
-        exit 1
-    fi
-    
     insmod "${TARGET_MODULE}"
     if test $? -ne 0; then
         printf "Failed to load the target module\n"
@@ -101,6 +94,13 @@ doTest()
         exit 1
     fi
     
+    # Check if the necessary files have been created in debugfs
+    if test ! -d "${DEBUGFS_LC_DIR}"; then
+        printf "Directory for LeakCheck files was not created in debugfs.\n"
+        cleanupAll
+        exit 1
+    fi
+
     rmmod ${TARGET_NAME}
     if test $? -ne 0; then
         printf "Errors occured while trying to unload the target module\n"
@@ -157,7 +157,7 @@ TARGET_MODULE="${WORK_DIR}/kfree_rcu_module/${TARGET_NAME}.ko"
 CONTROL_SCRIPT="@KEDR_TOOLS_DIR@/control/tests/kedr"
 CONF_FILE="${WORK_DIR}/leak_check_test.conf"
 
-DEBUGFS_LC_DIR="${WORK_DIR}/debugfs/kedr_leak_check"
+DEBUGFS_LC_DIR="${WORK_DIR}/debugfs/kedr_leak_check/${TARGET_NAME}"
 
 # Expected number of memory allocations
 EXP_ALLOCS_TOTAL=2

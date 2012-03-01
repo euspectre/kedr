@@ -23,8 +23,8 @@ BEGIN {
     unallocatedFrees = 0
 }
 
-/^Memory allocations:/ {
-    sub("^Memory allocations:[\\t ]*", "")
+/^Allocations:/ {
+    sub("^Allocations:[\\t ]*", "")
     totalAllocs = $0
     next
 }

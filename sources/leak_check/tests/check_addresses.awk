@@ -30,9 +30,9 @@ BEGIN {
     unknownFound = 0
 }
 
-/^Block at/ {
+/^Address:/ {
     split($0, parts, "[ \\t,;]")
-    block = parts[3]
+    block = parts[2]
 
     if (block == addrKmalloc) {
         addrKmallocFound = 1
