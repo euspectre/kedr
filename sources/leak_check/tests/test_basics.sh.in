@@ -8,6 +8,17 @@
 # - "cleaner" module actually frees these leaked memory blocks to leave 
 # the system in a consistent state. In addition, this allows to verify
 # that LeakCheck detects "unallocated frees" too.
+# 
+# Usage:
+#   sh test_basics.sh <mode> <num_repeats>
+# <mode> can be "leaker", "cleaner" or "both".
+# - "both" - both leaker and cleaner modules are analyzed by LeakCheck
+#   in turn during a single session. <num_repeats> is ignored in this case.
+# - "leaker" - LeakCheck tracks only the "leaker" module which is loaded 
+#   <num_repeats> times while LeakCheck remains in memory. "cleaner" is
+#   used to free memory allocated by the "leaker" but is not tracked.
+# - "cleaner" - similar to "leaker" but LeakCheck tracks only the 
+#   "cleaner" module.
 ########################################################################
 
 ########################################################################
@@ -154,24 +165,16 @@ saveLeakCheckReport()
     fi
 }
 
-########################################################################
-doTest()
+##########################################################################
+# Load and then unload the "leaker" module, check the results. If <clean>
+# is "yes", the "cleaner" module is used to free the leaked memory.
+# Usage:
+#   checkLeaker <clean>
+##########################################################################
+checkLeaker()
 {
-    cd "${WORK_DIR}" || exit 1
-
-    leakerReportDir="report_leaker"
-    cleanerReportDir="report_cleaner"
-    
-    # Load KEDR core and the payload module, mount debugfs
-    # Target: "leaker" module
-    sh ${CONTROL_SCRIPT} start ${LEAKER_NAME} -f "${CONF_FILE}" || exit 1
-    
-    # Check if the necessary files have been created in debugfs
-    if test ! -d "${DEBUGFS_LC_DIR}"; then
-        printf "Directory for LeakCheck files was not created in debugfs.\n"
-        cleanupAll
-        exit 1
-    fi
+    printf "Executing checkLeaker() with <clean>=\"$1\"\n";
+    leakerReportDir="report_leaker_mode_${TEST_MODE}"
     
     insmod "${LEAKER_MODULE}"
     if test $? -ne 0; then
@@ -191,14 +194,12 @@ doTest()
     fi
 
     saveLeakCheckReport "${LEAKER_NAME}" "${leakerReportDir}"
-    sh ${CONTROL_SCRIPT} stop || exit 1
     
-    # Check the report files
+        # Check the report files
     unallocatedFrees=$(cat "${leakerReportDir}/unallocated_frees")
     if test -n "${unallocatedFrees}"; then
         printf "'unallocated_frees' must be empty for \"leaker\" module\n"
-        # KEDR is already stopped, target is not loaded - no need to 
-        # clean up here.
+        cleanupAll
         exit 1
     fi
     
@@ -209,6 +210,7 @@ doTest()
         "${WORK_DIR}/${leakerReportDir}/info"
     if test $? -ne 0; then
         printf "'info' file for \"leaker\" module contains incorrect data\n"
+        cleanupAll
         exit 1
     fi
     
@@ -221,17 +223,59 @@ doTest()
         "${WORK_DIR}/${leakerReportDir}/possible_leaks"
     if test $? -ne 0; then
         printf "'possible_leaks' file for \"leaker\" module contains incorrect data\n"
-        exit 1
-    fi
-
-    # Load KEDR again - for "cleaner" module this time.
-    sh ${CONTROL_SCRIPT} start ${CLEANER_NAME} -f "${CONF_FILE}" || exit 1
-    
-    # Check if the necessary files have been created in debugfs
-    if test ! -d "${DEBUGFS_LC_DIR}"; then
-        printf "Directory for LeakCheck files was not created in debugfs.\n"
         cleanupAll
         exit 1
+    fi
+    
+    if test "t$1" = "tyes"; then
+        insmod "${CLEANER_MODULE}" \
+            leak_kmalloc=${LEAK_KMALLOC} \
+            leak_gfp=${LEAK_GFP} \
+            leak_vmalloc=${LEAK_VMALLOC} \
+            leak_kmemdup=${LEAK_KMEMDUP}
+        if test $? -ne 0; then
+            printf "checkLeaker(): failed to load \"cleaner\" module\n"
+            cleanupAll
+            exit 1
+        fi
+        
+        rmmod ${CLEANER_NAME}
+        if test $? -ne 0; then
+            printf "checkLeaker(): failed to unload \"cleaner\" module\n"
+            cleanupAll
+            exit 1
+        fi
+    fi
+}
+
+##########################################################################
+# Load and then unload the "cleaner" module, check the results. If <leak>
+# is "yes", the "leaker" module is used to leak memory first.
+# Usage:
+#   checkCleaner <leak>
+##########################################################################
+checkCleaner()
+{
+    printf "Executing checkCleaner() with <leak>=\"$1\"\n";
+    cleanerReportDir="report_cleaner_mode_${TEST_MODE}"
+    
+    if test "t$1" = "tyes"; then
+        insmod "${LEAKER_MODULE}"
+        if test $? -ne 0; then
+            printf "checkCleaner(): failed to load \"leaker\" module\n"
+            cleanupAll
+            exit 1
+        fi
+        
+        # Save leak addresses, unload the "leaker"
+        readLeakAddresses
+        
+        rmmod ${LEAKER_NAME}
+        if test $? -ne 0; then
+            printf "checkCleaner(): failed to unload \"leaker\" module\n"
+            cleanupAll
+            exit 1
+        fi
     fi
     
     insmod "${CLEANER_MODULE}" \
@@ -254,12 +298,12 @@ doTest()
     fi
     
     saveLeakCheckReport "${CLEANER_NAME}" "${cleanerReportDir}"
-    sh ${CONTROL_SCRIPT} stop || exit 1
     
-    # Check the report files
+        # Check the report files
     possibleLeaks=$(cat "${cleanerReportDir}/possible_leaks")
     if test -n "${possibleLeaks}"; then
         printf "'possible_leaks' must be empty for \"cleaner\" module\n"
+        cleanupAll
         exit 1
     fi
 
@@ -274,6 +318,7 @@ doTest()
         "${WORK_DIR}/${cleanerReportDir}/info"
     if test $? -ne 0; then
         printf "'info' file for \"cleaner\" module contains incorrect data\n"
+        cleanupAll
         exit 1
     fi
     
@@ -286,13 +331,96 @@ doTest()
         "${WORK_DIR}/${cleanerReportDir}/unallocated_frees"
     if test $? -ne 0; then
         printf "'unallocated_frees' file for \"cleaner\" module contains incorrect data\n"
+        cleanupAll
         exit 1
     fi
 }
 
 ########################################################################
+doTestBoth()
+{
+    cd "${WORK_DIR}" || exit 1
+   
+    # Load KEDR core and the payload module, mount debugfs
+    # Target: "leaker" module
+    sh ${CONTROL_SCRIPT} start ${LEAKER_NAME} -f "${CONF_FILE}" || exit 1
+    
+    # Check if the necessary files have been created in debugfs
+    if test ! -d "${DEBUGFS_LC_DIR}"; then
+        printf "Directory for LeakCheck files was not created in debugfs.\n"
+        cleanupAll
+        exit 1
+    fi
+    
+    checkLeaker "do_not_clean"
+    sh ${CONTROL_SCRIPT} stop || exit 1
+    
+    # Load KEDR again - for "cleaner" module this time.
+    sh ${CONTROL_SCRIPT} start ${CLEANER_NAME} -f "${CONF_FILE}" || exit 1
+    
+    # Check if the necessary files have been created in debugfs
+    if test ! -d "${DEBUGFS_LC_DIR}"; then
+        printf "Directory for LeakCheck files was not created in debugfs.\n"
+        cleanupAll
+        exit 1
+    fi
+    
+    checkCleaner "do_not_leak"
+    sh ${CONTROL_SCRIPT} stop || exit 1
+}
+
+########################################################################
+doTestLeaker()
+{
+    cd "${WORK_DIR}" || exit 1
+    sh ${CONTROL_SCRIPT} start ${LEAKER_NAME} -f "${CONF_FILE}" || exit 1
+    
+    ii=0
+    while test ${ii} -lt ${NUM_REPEATS}; do
+        checkLeaker "yes"
+        ii=$((${ii}+1))
+    done 
+    
+    sh ${CONTROL_SCRIPT} stop || exit 1
+}
+
+########################################################################
+doTestCleaner()
+{
+    cd "${WORK_DIR}" || exit 1
+    sh ${CONTROL_SCRIPT} start ${CLEANER_NAME} -f "${CONF_FILE}" || exit 1
+    
+    ii=0
+    while test ${ii} -lt ${NUM_REPEATS}; do
+        checkCleaner "yes"
+        ii=$((${ii}+1))
+    done 
+    sh ${CONTROL_SCRIPT} stop || exit 1
+}
+
+########################################################################
 # main
 ########################################################################
+if test $# -eq 0; then
+    printf "Usage: sh $0 <mode> <num_repeats>\n"
+    exit 1
+fi
+
+TEST_MODE="$1"
+NUM_REPEATS=1
+if test "t${TEST_MODE}" != "tboth"; then
+    if test "t${TEST_MODE}" = "tleaker" || test "t${TEST_MODE}" = "tcleaner"; then
+        if test -z "$2"; then
+            printf "<num_repeats> is not specified.\n"
+            exit 1
+        fi
+        NUM_REPEATS=$2
+    else
+        printf "Unknown mode: \"${TEST_MODE}\".\n"
+        exit 1
+    fi
+fi
+
 WORK_DIR=@CMAKE_CURRENT_BINARY_DIR@
 SCRIPT_DIR=@CMAKE_CURRENT_SOURCE_DIR@
 
@@ -325,7 +453,24 @@ EXP_LEAKS=4
 # There must be no unallocated frees made by the "leaker".
 
 checkPrereqs
-doTest
 
-# test passed
-exit 0
+if test "t${TEST_MODE}" = "tboth"; then
+    doTestBoth
+    exit 0 
+    # test passed
+fi
+
+if test "t${TEST_MODE}" = "tleaker"; then
+    doTestLeaker
+    exit 0 
+    # test passed
+fi
+
+if test "t${TEST_MODE}" = "tcleaner"; then
+    doTestCleaner
+    exit 0 
+    # test passed
+fi
+
+# Just in case
+exit 1

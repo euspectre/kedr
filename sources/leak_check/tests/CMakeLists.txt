@@ -20,7 +20,15 @@ configure_file(
 )
 
 kedr_test_add_script(leak_check.01 
-    test_basics.sh
+    test_basics.sh "both"
+)
+
+kedr_test_add_script(leak_check.02 
+    test_basics.sh "leaker" 4
+)
+
+kedr_test_add_script(leak_check.03 
+    test_basics.sh "cleaner" 4
 )
 
 add_subdirectory(leaker_module)
@@ -33,7 +41,7 @@ if (HAVE_KFREE_RCU)
 		"${CMAKE_CURRENT_BINARY_DIR}/test_kfree_rcu.sh"
 		@ONLY
 	)
-	kedr_test_add_script(leak_check.02 
+	kedr_test_add_script(leak_check.kfree_rcu.01
 		test_kfree_rcu.sh
 	)
 
