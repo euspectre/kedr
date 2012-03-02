@@ -181,7 +181,7 @@ module_write(struct file *filp, const char __user *buf, size_t count,
 
     current_value = kedr_fsim_point_simulate(write_point, &count);
     if(current_value)
-        kedr_fsim_fault_message("Write for %d: %d", count, current_value);
+        kedr_fsim_fault_message("Write for %zu: %d", count, current_value);
     
     return count;
 }
