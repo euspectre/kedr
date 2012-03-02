@@ -461,7 +461,7 @@ Unload the target module:
 ]]></programlisting>
 
 <para>
-By this moment, KEDR should have prepared a report about memory leaks it has detected. It should be available in <filename class="directory">kedr_leak_check</filename> directory in debugfs. 
+By this moment, KEDR should have prepared a report about memory leaks it has detected. It should be available in <filename class="directory">kedr_leak_check/kedr_sample_target</filename> directory in debugfs. 
 </para>
 
 <para>
@@ -471,7 +471,7 @@ The file named <filename>info</filename> presents the summary:
 <programlisting><![CDATA[
 Target module: "kedr_sample_target", 
     init area at 0xffffffffa0730000, core area at 0xffffffffa072d000
-Memory allocations: 3
+Allocations: 3
 Possible leaks: 2
 Unallocated frees: 0
 ]]></programlisting>
@@ -481,7 +481,7 @@ Unallocated frees: 0
 </para>
 
 <programlisting><![CDATA[
-Block at 0xffff880024285000, size: 4000; stack trace of the allocation:
+Address: 0xffff880024285000, size: 4000; stack trace of the allocation:
 [<ffffffffa072d35e>] cfake_open+0x6e/0xb8 [kedr_sample_target]
 [<ffffffff81156e3a>] chrdev_open+0x10a/0x200
 [<ffffffff81151295>] __dentry_open+0xe5/0x330

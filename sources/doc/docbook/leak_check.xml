@@ -50,7 +50,7 @@ target. Do not stop KEDR yet.
 </para>
 
 <para>
-Take a look at <filename class="directory">/sys/kernel/debug/kedr_leak_check</filename> directory. Here we 
+Take a look at <filename class="directory">/sys/kernel/debug/kedr_leak_check/&lt;target_name&gt;</filename> directory. Here we 
 assume that debugfs is mounted to <filename class="directory">/sys/kernel/debug</filename>. If it is not, you 
 should mount it: 
 </para>
@@ -60,7 +60,7 @@ mount debugfs -t debugfs /sys/kernel/debug
 ]]></programlisting>
 
 	<para>
-There should be the following files in <filename class="directory">kedr_leak_check</filename> directory:
+There should be the following files in <filename class="directory">kedr_leak_check/&lt;target_name&gt;</filename> directory:
 	</para>
 <itemizedlist>
 	<listitem>
@@ -198,7 +198,7 @@ shown.
 
 <para>
 <code>stack_depth</code> parameter is an unsigned integer, not greater than 16. 
-Default value: 12. 
+Default value: 16. 
 </para>
 
 <para>
