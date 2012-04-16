@@ -19,8 +19,8 @@
  */
 
 #include <linux/string.h>
-#include <asm/inat.h>
-#include <asm/insn.h>
+#include <kedr/asm/inat.h>
+#include <kedr/asm/insn.h>
 
 #define get_next(t, insn)	\
 	({t r; r = *(t*)insn->next_byte; insn->next_byte += sizeof(t); r; })

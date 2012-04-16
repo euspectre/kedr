@@ -27,7 +27,7 @@
 #include <linux/spinlock.h>
 #include <linux/mutex.h>
 
-#include <asm/insn.h>       /* instruction decoder machinery */
+#include <kedr/asm/insn.h>       /* instruction decoder machinery */
 
 #include "kedr_instrumentor_internal.h"
 
