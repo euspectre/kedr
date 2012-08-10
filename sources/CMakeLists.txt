@@ -130,8 +130,8 @@ endif()
 #######################################################################
 # Perform basic checks
 
-# Check if we use kernel version 2.6.31 or newer
-check_kernel_version(2 6 31)
+# Check if we use kernel version 2.6.32 or newer
+check_kernel_version(2 6 32)
 
 # Check if kernel modules can be built on this system
 check_module_build()
