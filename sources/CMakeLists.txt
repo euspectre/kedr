@@ -19,14 +19,14 @@ endif ()
 set(KEDR_PACKAGE_NAME "kedr")
 
 set(KEDR_VERSION_MAJOR 0)
-set(KEDR_VERSION_MINOR 3)
-set(KEDR_VERSION_MICRO 99)
+set(KEDR_VERSION_MINOR 4)
+set(KEDR_VERSION_MICRO 0)
 set(KEDR_VERSION_SUFFIX "-devel" CACHE STRING
 #set(KEDR_VERSION_SUFFIX "" CACHE STRING
 	"Version suffix, a string that should be appended to the version"
 )
 set(KEDR_VERSION 
-"${KEDR_VERSION_MAJOR}.${KEDR_VERSION_MINOR}.${KEDR_VERSION_MICRO}${KEDR_VERSION_SUFFIX}"
+"${KEDR_VERSION_MAJOR}.${KEDR_VERSION_MINOR}${KEDR_VERSION_SUFFIX}"
 )
 
 #######################################################################
