@@ -1,6 +1,15 @@
-// How many arguments takes ring_buffer_consume()
+// The number of arguments ring_buffer_consume() takes
 #cmakedefine RING_BUFFER_CONSUME_HAS_3_ARGS
 #cmakedefine RING_BUFFER_CONSUME_HAS_4_ARGS
+
+// The signature of ring_buffer_size()
+#cmakedefine RING_BUFFER_SIZE_BUF
+#cmakedefine RING_BUFFER_SIZE_BUF_CPU
+
+// The signature of ring_buffer_resize()
+#cmakedefine RING_BUFFER_RESIZE_BUF_SIZE
+#cmakedefine RING_BUFFER_RESIZE_BUF_SIZE_CPU
+
 // How to create module parameter with callbacks
 #cmakedefine MODULE_PARAM_CREATE_USE_OPS_STRUCT
 #cmakedefine MODULE_PARAM_CREATE_USE_OPS
