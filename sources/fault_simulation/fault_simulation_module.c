@@ -113,8 +113,8 @@ static struct dentry* indicators_root_directory;
 // File for access last fault.
 static struct dentry* last_fault_file;
 
-char kedr_fsim_fault_message_buf[KEDR_FSIM_FAULT_MESSAGE_LEN + 1] = "none";
-spinlock_t kedr_fsim_fault_message_lock;
+static char kedr_fsim_fault_message_buf[KEDR_FSIM_FAULT_MESSAGE_LEN + 1] = "none";
+static DEFINE_SPINLOCK(kedr_fsim_fault_message_lock);
 
 // Auxiliary functions
 
