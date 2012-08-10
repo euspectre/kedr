@@ -3,17 +3,17 @@
 	function.name = __init_waitqueue_head
 
 	# Names and types of the arguments of the target function
-	arg.type = wait_queue_head_t*
+	arg.type = wait_queue_head_t *
 	arg.name = q
 
-	arg.type = struct lock_class_key*
+	arg.type = struct lock_class_key *
 	arg.name = key
 
 	# The parameters to be output to the trace. 
-	trace.param.type = wait_queue_head_t*
+	trace.param.type = wait_queue_head_t *
 	trace.param.name = q
 
-	trace.param.type = struct lock_class_key*
+	trace.param.type = struct lock_class_key *
 	trace.param.name = key
 
 	# The format string to be used for trace output.
