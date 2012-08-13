@@ -97,6 +97,12 @@ When loaded, payload modules register themselves with the KEDR core - see
 </para>
 
 <para>
+KEDR core makes no assumptions about what 
+exactly the currently registered payload modules do. This allows to 
+implement different types of analysis with the help of KEDR.
+</para>
+
+<para>
 The user controls the analysis process via convenience API and tools 
 (<firstterm><quote>Kernel Module Analysis API + Tools</quote></firstterm> 
 on the figure) - either manually or via a user-space application. 
@@ -131,10 +137,16 @@ to load (see also <xref linkend="kedr_manual_getting_started"/>).
 When the analysis is done, the <link linkend="kedr_control">KEDR control tool</link> unloads the modules mentioned above, in appropriate order.
 </para>
 
-<note><para>
-Note that the KEDR core makes no assumptions about what 
-exactly the currently registered payload modules do. This allows to 
-implement different types of analysis with the help of KEDR.
-</para></note>
+<section id="how_kedr_works.target">
+<title>Setting the name of the target module</title>
+
+<para>
+As it was described above, the name of the target module is usually set as a parameter to <link linkend="kedr_control">KEDR control tool</link>. You can also change the target name when KEDR is already loaded. To do this, write the new name to <filename>/sys/module/kedr/parameters/target_name</filename>. Note that this is only allowed when neither the previous target module nor the intended one are loaded.
+</para>
+
+<para>
+You can also <quote>clear</quote> the target name specification by writing <quote>none</quote> to the file mentioned above. This would mean that no target module were specified for KEDR.
+</para>
+</section>
 
 </section>
