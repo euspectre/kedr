@@ -44,7 +44,6 @@ module_param(set_unload_fn, uint, S_IRUGO);
 
 /* I do not like assignments of constant char pointers to 'char *' even for 
  * the parameters of the modules, hence this trick with an array below. */
-
 static char no_target[] = "<none>";
 
 /* [out] Name of the target that has just loaded. */
@@ -71,27 +70,29 @@ repl___kmalloc(size_t size, gfp_t flags,
 static void
 target_load_callback(struct module *target_module)
 {
-    char *name = NULL;
-    
-    BUG_ON(target_module == NULL);
-    name = module_name(target_module);
-    
-    kfree(target_load_name);
-    target_load_name = kstrdup(name, GFP_KERNEL); /* If NULL - also OK */
-    return;
+	char *name = NULL;
+	
+	BUG_ON(target_module == NULL);
+	name = module_name(target_module);
+	
+	kfree(target_load_name);
+	target_load_name = kstrdup(name, GFP_KERNEL);
+	/* If NULL, this is OK too */
+	return;
 }
 
 static void
 target_unload_callback(struct module *target_module)
 {
-    char *name = NULL;
-    
-    BUG_ON(target_module == NULL);
-    name = module_name(target_module);
-    
-    kfree(target_unload_name);
-    target_unload_name = kstrdup(name, GFP_KERNEL); /* If NULL - also OK */
-    return;
+	char *name = NULL;
+	
+	BUG_ON(target_module == NULL);
+	name = module_name(target_module);
+	
+	kfree(target_unload_name);
+	target_unload_name = kstrdup(name, GFP_KERNEL); 
+	/* If NULL, this is OK too */
+	return;
 }
 /*********************************************************************/
 
@@ -108,7 +109,6 @@ static struct kedr_replace_pair replace_pairs[] =
 
 static struct kedr_payload payload = {
 	.mod            = THIS_MODULE,
-
 	.replace_pairs	= replace_pairs
 };
 
@@ -121,49 +121,48 @@ static void
 kedr_test_cleanup_module(void)
 {
 	kedr_payload_unregister(&payload);
-    functions_support_unregister();
+	functions_support_unregister();
 
-    kfree(target_load_name);
-    kfree(target_unload_name);
+	kfree(target_load_name);
+	kfree(target_unload_name);
 	return;
 }
 
 static int __init
 kedr_test_init_module(void)
 {
-    int result = 0;
-    
-    
-    target_load_name = kstrdup(&no_target[0], GFP_KERNEL);
-    target_unload_name = kstrdup(&no_target[0], GFP_KERNEL);
-    if (target_load_name == NULL || target_unload_name == NULL)
-    {
-        result = -ENOMEM;
-        goto err;
-    }
-    
-    result = functions_support_register();
+	int result = 0;
+	
+	
+	target_load_name = kstrdup(&no_target[0], GFP_KERNEL);
+	target_unload_name = kstrdup(&no_target[0], GFP_KERNEL);
+	if (target_load_name == NULL || target_unload_name == NULL)
+	{
+		result = -ENOMEM;
+		goto err;
+	}
+	
+	result = functions_support_register();
 	if(result) goto err;
 	
 	if (set_load_fn != 0)
-        payload.target_load_callback = target_load_callback;
-    
-    if (set_unload_fn != 0)
-        payload.target_unload_callback = target_unload_callback;
-    
-    result = kedr_payload_register(&payload);
-    if (result != 0)
-        goto err_payload;
-    
+		payload.target_load_callback = target_load_callback;
+	
+	if (set_unload_fn != 0)
+		payload.target_unload_callback = target_unload_callback;
+	
+	result = kedr_payload_register(&payload);
+	if (result != 0)
+		goto err_payload;
+	
 	return 0;
 
 err_payload:
 	functions_support_unregister();
-
 err:
-    kfree(target_load_name);
-    kfree(target_unload_name);
-    return result;
+	kfree(target_load_name);
+	kfree(target_unload_name);
+	return result;
 }
 
 module_init(kedr_test_init_module);

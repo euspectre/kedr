@@ -1,4 +1,4 @@
-set(KMODULE_NAME "test_notifications_payload")
+set(KMODULE_NAME "test_basics_payload")
 
 set(functions_data_file "${CMAKE_CURRENT_SOURCE_DIR}/functions.data")
 
