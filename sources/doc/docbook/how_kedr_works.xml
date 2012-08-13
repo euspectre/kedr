@@ -147,6 +147,10 @@ As it was described above, the name of the target module is usually set as a par
 <para>
 You can also <quote>clear</quote> the target name specification by writing <quote>none</quote> to the file mentioned above. This would mean that no target module were specified for KEDR.
 </para>
+
+<note><para>
+Note that if the name of the target module contains dash characters (<code>'-'</code>), KEDR will replace them with underscores in the value of its <quote>target_name</quote> parameter. This is similar to what <command>insmod</command> and <command>modprobe</command> do.
+</para></note>
 </section>
 
 </section>

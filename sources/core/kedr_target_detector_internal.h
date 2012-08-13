@@ -20,35 +20,15 @@ struct kedr_target_module_notifier
         struct module* m);
     void (*on_target_unload)(struct kedr_target_module_notifier* notifier,
         struct module* m);
-
-    /* May be implemented in the future */
-
-    /* 
-     * 'Hot' versions of the previous functions.
-     * 
-     * If notifier is initialized when target module is already loaded,
-     * on_target_load_hot() will be called. If this functions return not 0,
-     * initialization will fail.
-     * 
-     * If notifier is destroyed when target module is loaded,
-     * on_target_unload_hot() will be called. If this functions return not 0,
-     * destroing will fail.
-     */
-    
-    //int (*on_target_load_hot)(struct kedr_target_module_notifier* notifier,
-        //struct module* m);
-    //int (*on_target_unload_hot)(struct kedr_target_module_notifier* notifier,
-        //struct module* m);
-        
 };
 
 /*
  * Initialize detector.
  * 
  * For simplification, only one notifier is available.
- * So, it is set at the initializing stage.
+ * So, it is set at the initialization stage.
  * 
- * Before call of 'set_target_name' detector is not detect
+ * Before the call of 'set_target_name' detector does not detect
  * loading and unloading of any module.
  */
 int kedr_target_detector_init(struct kedr_target_module_notifier* notifier);
@@ -61,10 +41,11 @@ int kedr_target_detector_init(struct kedr_target_module_notifier* notifier);
 void kedr_target_detector_destroy(void);
 
 /*
- * Set name of the module, which loading and unloading should be detect.
+ * Set the name of the module the loading and unloading of which should be 
+ * detected.
  * 
- * Currently one may set name of the module only when module with previouse name is not loaded
- * and module with new name also is not loaded.
+ * Currently one may set name of the module only when module with previous 
+ * name is not loaded and module with new name also is not loaded.
  */
 int kedr_target_detector_set_target_name(const char* target_name);
 
