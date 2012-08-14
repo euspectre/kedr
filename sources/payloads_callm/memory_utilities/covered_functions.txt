@@ -3,6 +3,7 @@ kstrndup
 kmemdup
 call_rcu
 call_rcu_sched
+kfree_call_rcu
 add_to_page_cache_lru	(TODO: trigger for testing)
 add_to_page_cache_locked (TODO: trigger for testing)
 posix_acl_alloc

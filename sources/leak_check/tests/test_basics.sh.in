@@ -195,7 +195,7 @@ checkLeaker()
 
     saveLeakCheckReport "${LEAKER_NAME}" "${leakerReportDir}"
     
-        # Check the report files
+    # Check the report files
     unallocatedFrees=$(cat "${leakerReportDir}/unallocated_frees")
     if test -n "${unallocatedFrees}"; then
         printf "'unallocated_frees' must be empty for \"leaker\" module\n"

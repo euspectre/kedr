@@ -17,4 +17,6 @@ struct kedr_foo
 	void *baz_not_used;
 	struct rcu_head rcu_head;
 };
+
+typedef void (*kedr_test_rcu_callback_type)(struct rcu_head *);
 <<

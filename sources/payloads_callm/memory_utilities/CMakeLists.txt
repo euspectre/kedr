@@ -34,6 +34,7 @@ if (HAVE_KFREE_RCU)
 	kmodule_configure_kernel_functions(call_rcu_functions 
 		OPTIONAL "call_rcu"
 		"call_rcu_sched"
+		"kfree_call_rcu"
 	)
 	if (NOT call_rcu_functions)
 		message("\n[WARNING]\nThe system provides kfree_rcu() but "
