@@ -421,8 +421,8 @@ if test "t${TEST_MODE}" != "tboth"; then
     fi
 fi
 
-WORK_DIR=@CMAKE_CURRENT_BINARY_DIR@
-SCRIPT_DIR=@CMAKE_CURRENT_SOURCE_DIR@
+WORK_DIR="@CMAKE_CURRENT_BINARY_DIR@"
+SCRIPT_DIR="@CMAKE_CURRENT_SOURCE_DIR@"
 
 LEAKER_NAME="@KEDR_TEST_LEAKER_MODULE@"
 LEAKER_MODULE="${WORK_DIR}/leaker_module/${LEAKER_NAME}.ko"
@@ -433,7 +433,7 @@ CLEANER_MODULE="${WORK_DIR}/cleaner_module/${CLEANER_NAME}.ko"
 CONTROL_SCRIPT="@KEDR_TOOLS_DIR@/control/tests/kedr"
 CONF_FILE="${WORK_DIR}/leak_check_test.conf"
 
-DEBUGFS_LC_DIR="${WORK_DIR}/debugfs/kedr_leak_check"
+DEBUGFS_LC_DIR="@KEDR_TEST_DIR@/debugfs/kedr_leak_check"
 
 # Addresses of the leaked memory blocks and their hex representations
 LEAK_KMALLOC=""

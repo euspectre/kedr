@@ -1,3 +1,5 @@
+kedr_load_test_prefixes()
+
 set(trigger_target_module_name "kedr_test_trigger_target")
 set(indicator_constant_module_name "kedr_indicator_constant")
 set(indicator_greater_than_module_name "kedr_indicator_greater_than")

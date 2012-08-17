@@ -15,7 +15,7 @@ target_name="target_caller_address"
 target_module="@CMAKE_CURRENT_BINARY_DIR@/target_caller_address/target_caller_address.ko"
 
 
-tmpdir="@KEDR_TEST_PREFIX_TEMP_SESSION@/kedr_caller_address"
+tmpdir="@KEDR_TEST_DIR@/kedr_caller_address"
 debugfs="${tmpdir}/debugfs"
 
 point_dir="${debugfs}/kedr_fault_simulation/points/${point_name}"

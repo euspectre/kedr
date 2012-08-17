@@ -4,7 +4,7 @@ control_script="sh @CMAKE_BINARY_DIR@/tools/control/tests/kedr"
 
 capture_trace_script="@CMAKE_BINARY_DIR@/tools/capture_trace/kedr_capture_trace"
 
-tmpdir="@KEDR_TEST_PREFIX_TEMP_SESSION@/caller_address"
+tmpdir="@KEDR_TEST_PREFIX_TEMP_SESSION@/payloads_callm/caller_address"
 trace_file="${tmpdir}/trace"
 debugfs_mount_point="${tmpdir}/debugfs"
 

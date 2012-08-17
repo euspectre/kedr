@@ -1,8 +1,12 @@
+kedr_load_test_prefixes()
+
 set(KEDR_TEST_LEAKER_MODULE "kedr_test_leaker")
 set(KEDR_TEST_CLEANER_MODULE "kedr_test_cleaner")
 
 # Where to find the common test-related scripts, etc.
 set(KEDR_TOOLS_DIR "${CMAKE_BINARY_DIR}/tools")
+
+set(KEDR_TEST_DIR "${KEDR_TEST_PREFIX_TEMP_SESSION}/leak_check")
 
 # '@ONLY' is essential when doing substitutions in the shell scripts. 
 # Without it, CMake would replace "${...}" too, which is usually not what 

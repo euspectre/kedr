@@ -3,11 +3,11 @@
 # the initialization fails.
 
 # Mount debugfs 
-on_load mkdir -p "@CMAKE_CURRENT_BINARY_DIR@/debugfs"
-on_load mount debugfs -t debugfs "@CMAKE_CURRENT_BINARY_DIR@/debugfs"
+on_load mkdir -p "@KEDR_TEST_DIR@/debugfs"
+on_load mount debugfs -t debugfs "@KEDR_TEST_DIR@/debugfs"
 
-# Provide a way to roll back in case of error
-on_unload umount "@CMAKE_CURRENT_BINARY_DIR@/debugfs"
+# Umount when KEDR is unloaded or on error
+on_unload umount "@KEDR_TEST_DIR@/debugfs"
 
 # Load payloads
 payload @CMAKE_BINARY_DIR@/leak_check/core/kedr_leak_check.ko

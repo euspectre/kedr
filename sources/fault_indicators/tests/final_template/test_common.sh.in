@@ -12,7 +12,7 @@ point_name="common"
 point_with_params_name="size"
 
 
-debugfs="@CMAKE_CURRENT_BINARY_DIR@/debugfs"
+debugfs="@KEDR_TEST_DIR@/debugfs"
 
 point_dir="${debugfs}/kedr_fault_simulation/points/${point_name}"
 point_with_params_dir="${debugfs}/kedr_fault_simulation/points/${point_with_params_name}"

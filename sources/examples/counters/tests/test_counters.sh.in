@@ -176,7 +176,7 @@ doTest()
 ########################################################################
 # main
 ########################################################################
-WORK_DIR=@CMAKE_CURRENT_BINARY_DIR@
+WORK_DIR="@CMAKE_CURRENT_BINARY_DIR@"
 
 TARGET_NAME="kedr_sample_target"
 TARGET_DIR="${WORK_DIR}/../../sample_target/tests"
@@ -186,7 +186,7 @@ TARGET_SCRIPT="${TARGET_DIR}/kedr_sample_target"
 CONTROL_SCRIPT="@KEDR_TOOLS_DIR@/control/tests/kedr"
 CONF_FILE="${WORK_DIR}/counters.conf"
 
-COUNTERS_DIR="${WORK_DIR}/debugfs/kedr_counters_example"
+COUNTERS_DIR="@KEDR_TEST_DIR@/debugfs/kedr_counters_example"
 
 # [NB] On some systems (e.g. debug kernels with CONFIG_DEBUG_LOCK_ALLOC=y)
 # mutex-related statistics will not be collected.

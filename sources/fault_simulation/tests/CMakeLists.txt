@@ -1,3 +1,7 @@
+kedr_load_test_prefixes()
+
+set(KEDR_TEST_DIR "${KEDR_TEST_PREFIX_TEMP_SESSION}/fault_simulation")
+
 add_subdirectory(module_a)
 add_subdirectory(module_b)
 add_subdirectory(indicators_simple)

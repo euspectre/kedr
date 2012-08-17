@@ -4,6 +4,8 @@ kbuild_use_symbols("${CMAKE_BINARY_DIR}/fault_simulation/Module.symvers")
 # Common name of data file
 set(indicator_data_file "indicator.data")
 
+set(KEDR_TEST_DIR "${KEDR_TEST_PREFIX_TEMP_SESSION}/fault_indicators/final_template")
+
 # Commands for generate indicator.c and place it into current directory
 # from ${indicator_data_file}, placed in the current source or binary directory.
 function(rules_generate_internal_indicator)

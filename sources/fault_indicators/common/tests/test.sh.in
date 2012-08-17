@@ -10,7 +10,7 @@ simulation_module="@CMAKE_CURRENT_BINARY_DIR@/module/kedr_indicator_common_test_
 point_name="common"
 
 
-debugfs="@CMAKE_CURRENT_BINARY_DIR@/debugfs"
+debugfs="@KEDR_TEST_DIR@/test/debugfs"
 
 point_dir="${debugfs}/kedr_fault_simulation/points/${point_name}"
 

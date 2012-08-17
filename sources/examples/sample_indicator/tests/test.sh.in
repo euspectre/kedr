@@ -6,7 +6,7 @@ point_name="common"
 indicator_module="@CMAKE_CURRENT_BINARY_DIR@/kedr_sample_indicator.ko"
 indicator_name="periodic"
 
-debugfs="@CMAKE_CURRENT_BINARY_DIR@/debugfs"
+debugfs="@KEDR_TEST_DIR@/debugfs"
 
 point_dir="${debugfs}/kedr_fault_simulation/points/${point_name}"
 

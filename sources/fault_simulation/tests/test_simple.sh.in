@@ -15,7 +15,7 @@ current_value_file="/sys/module/${module_a_name}/parameters/current_value"
 
 device=kedr_test_device
 
-debugfs_mount_point="@CMAKE_CURRENT_BINARY_DIR@/debugfs"
+debugfs_mount_point="@KEDR_TEST_DIR@/debugfs"
 control_root="$debugfs_mount_point/kedr_fault_simulation"
 last_fault_file="$control_root/last_fault"
 

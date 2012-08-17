@@ -1,3 +1,7 @@
+kedr_load_test_prefixes()
+
+set(KEDR_TEST_DIR "${KEDR_TEST_PREFIX_TEMP_SESSION}/fault_indicators/common")
+
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/test.sh.in"
 	"${CMAKE_CURRENT_BINARY_DIR}/test.sh"
 	@ONLY)

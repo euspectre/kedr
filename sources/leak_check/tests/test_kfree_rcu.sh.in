@@ -148,8 +148,8 @@ doTest()
 ########################################################################
 # main
 ########################################################################
-WORK_DIR=@CMAKE_CURRENT_BINARY_DIR@
-SCRIPT_DIR=@CMAKE_CURRENT_SOURCE_DIR@
+WORK_DIR="@CMAKE_CURRENT_BINARY_DIR@"
+SCRIPT_DIR="@CMAKE_CURRENT_SOURCE_DIR@"
 
 TARGET_NAME="@KEDR_TEST_KFREE_RCU_MODULE@"
 TARGET_MODULE="${WORK_DIR}/kfree_rcu_module/${TARGET_NAME}.ko"
@@ -157,7 +157,7 @@ TARGET_MODULE="${WORK_DIR}/kfree_rcu_module/${TARGET_NAME}.ko"
 CONTROL_SCRIPT="@KEDR_TOOLS_DIR@/control/tests/kedr"
 CONF_FILE="${WORK_DIR}/leak_check_test.conf"
 
-DEBUGFS_LC_DIR="${WORK_DIR}/debugfs/kedr_leak_check/${TARGET_NAME}"
+DEBUGFS_LC_DIR="@KEDR_TEST_DIR@/debugfs/kedr_leak_check/${TARGET_NAME}"
 
 # Expected number of memory allocations
 EXP_ALLOCS_TOTAL=2
