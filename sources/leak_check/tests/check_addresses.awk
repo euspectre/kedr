@@ -31,16 +31,21 @@ BEGIN {
 }
 
 /^Address:/ {
+	
     split($0, parts, "[ \\t,;]")
     block = parts[2]
 
-    if (block == addrKmalloc) {
+	# Plain '==' without "t" would be simpler but mawk 1.3.3 seems to 
+	# consider "0xffff88002ada0600" equal to "0xffff88002ada0b80" if 
+	# one or both are the values of the variables set with -v and are
+	# compared with '==' as they are.
+    if (block "t" == addrKmalloc "t") {
         addrKmallocFound = 1
-    } else if (block == addrGfp) {
+    } else if (block "t" == addrGfp "t") {
         addrGfpFound = 1
-    } else if (block == addrKmemdup) {
+    } else if (block "t" == addrKmemdup "t") {
         addrKmemdupFound = 1
-    } else if (block == addrVmalloc) {
+    } else if (block "t" == addrVmalloc "t") {
         addrVmallocFound = 1
     } else {
         printf("Unknown block address found: %s\n", block) > "/dev/stderr"
