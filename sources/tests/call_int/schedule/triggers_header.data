@@ -1,1 +1,3 @@
-# schedule: header is not used but newline is necessary
+header =>>
+#include <linux/hardirq.h> /* useful constants, etc. */
+<<
