@@ -10,7 +10,9 @@ enable_language(CXX)
 string (COMPARE EQUAL "${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}" in_source)
 if (in_source)
     message (FATAL_ERROR 
-"It is not allowed to build the project in its top source directory."
+"It is not allowed to build the project in its source directory. "
+"Please delete CMakeCache.txt and CMakeFiles from ${CMAKE_SOURCE_DIR} "
+"if they are there and then use some other directory to build KEDR."
 )
 endif () 
 

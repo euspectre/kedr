@@ -241,7 +241,9 @@ macro(check_module_build)
 		else (module_build_supported_impl)
 			set(MODULE_BUILD_SUPPORTED "no")
 			message(FATAL_ERROR 
-				"Kernel modules cannot be built on this system"
+"There are problems with building kernel modules on this system. "
+"Please check that the appropriate kernel headers and build tools "
+"are installed."
 			)
 		endif (module_build_supported_impl)
 				
