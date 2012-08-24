@@ -1,0 +1,11 @@
+[group]
+	# The parameters to be output to the trace. 
+	trace.param.type = const void *
+	trace.param.name = addr
+
+	# Happens-before relationship with vmalloc
+	trace.happensBefore = yes
+
+	# The format string to be used for trace output.
+	trace.formatString = "arguments: (%p)"
+#######################################################################

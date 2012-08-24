@@ -1,7 +1,0 @@
-header =>>
-#include <linux/kernel.h>
-#include <linux/uaccess.h>   /*  user space access functions */
-#include <linux/string.h>    /*  *dup_user() */
-#include <linux/err.h>
-#include <linux/slab.h>
-<<

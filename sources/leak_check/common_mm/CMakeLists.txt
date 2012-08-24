@@ -2,9 +2,10 @@
 set(kmodule_name "kedr_lc_common_mm")
 ########################################################################
 
-kbuild_use_symbols("${CMAKE_BINARY_DIR}/core/Module.symvers")
-kbuild_add_dependencies("kedr")
-
+# Additional symbols to use. Note that the symbols from KEDR Core are
+# made available to the payload modules automatically if 
+# kedr_create_payload_module() is used to create them.
+# The dependency on KEDR Core is also set automatically for such modules.
 kbuild_use_symbols("${CMAKE_BINARY_DIR}/leak_check/core/Module.symvers")
 kbuild_add_dependencies("kedr_leak_check")
 ########################################################################
@@ -38,8 +39,6 @@ kmodule_configure_kernel_functions(functions
 	"alloc_pages_exact"
 	"free_pages_exact" 
 	"alloc_pages_exact_nid"
-#	"__kmalloc_track_caller"
-#	"__kmalloc_node_track_caller"
 	
 	REQUIRED "kstrdup"
 	"kstrndup"
@@ -91,12 +90,6 @@ if (HAVE_KFREE_RCU)
 	endif (NOT call_rcu_functions)
 	list(APPEND functions ${call_rcu_functions})
 endif (HAVE_KFREE_RCU)
-
-check_allocator()
-rule_copy_file("${CMAKE_CURRENT_BINARY_DIR}/kmem_cache_alloc_trace.data"
-	"${CMAKE_CURRENT_SOURCE_DIR}/kmem_cache_alloc_trace.data.${KERNEL_MEMORY_ALLOCATOR}")
-rule_copy_file("${CMAKE_CURRENT_BINARY_DIR}/kmem_cache_alloc_node_trace.data"
-	"${CMAKE_CURRENT_SOURCE_DIR}/kmem_cache_alloc_node_trace.data.${KERNEL_MEMORY_ALLOCATOR}")
 ########################################################################
 
 create_payload_leak_check(${kmodule_name} ${functions})

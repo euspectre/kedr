@@ -1,0 +1,14 @@
+[group]
+	# Name and return type of the target function
+	function.name = __mutex_init
+
+	# Names and types of the arguments of the target function
+	arg.type = struct mutex*
+	arg.name = lock
+
+	arg.type = const char*
+	arg.name = name
+
+	arg.type = struct lock_class_key*
+	arg.name = key
+#######################################################################

@@ -1,0 +1,9 @@
+[group]
+	# Name and return type of the target function
+	function.name = mutex_lock_killable
+	returnType = int
+
+	# Names and types of the arguments of the target function
+	arg.type = struct mutex*
+	arg.name = lock
+#######################################################################

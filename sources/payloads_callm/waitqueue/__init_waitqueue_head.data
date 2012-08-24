@@ -1,0 +1,11 @@
+[group]
+	# The parameters to be output to the trace. 
+	trace.param.type = wait_queue_head_t *
+	trace.param.name = q
+
+	trace.param.type = struct lock_class_key *
+	trace.param.name = key
+
+	# The format string to be used for trace output.
+	trace.formatString = "arguments: (q=%p, key=%p)"
+#######################################################################

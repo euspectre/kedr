@@ -1,21 +1,8 @@
 [group]
-	# Name and return type of the target function
-	function.name = free_pages
-
-	# Names and types of the arguments of the target function
-	arg.type = unsigned long
-	arg.name = addr
-	
-	arg.type = unsigned int
-	arg.name = order
-
 	# The body of the replacement function
 	handler.pre =>>
 	void *p = (void *)addr;
 	if (!ZERO_OR_NULL_PTR(p)) 
 		kedr_lc_handle_free(target_module, p, caller_address);
 	<<
-
-# End of the group of definitions for free_pages().
-
 #######################################################################

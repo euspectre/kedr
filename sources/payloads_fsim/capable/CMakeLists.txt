@@ -1,9 +1,9 @@
-#name of module created
+# Name of the module to create
 set(kmodule_name "kedr_fsim_capable")
 
-#first part of data-file
-configure_file("beginning.data.in"
-	"${CMAKE_CURRENT_BINARY_DIR}/beginning.data")
+# The header part of the data file
+configure_file("header.data.in"
+	"${CMAKE_CURRENT_BINARY_DIR}/header.data")
 
 kmodule_configure_kernel_functions(functions REQUIRED
 	"capable"

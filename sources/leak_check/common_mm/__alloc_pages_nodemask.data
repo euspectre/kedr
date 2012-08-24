@@ -1,21 +1,4 @@
 [group]
-	# Name and return type of the target function
-	function.name = __alloc_pages_nodemask
-	returnType = struct page *
-
-	# Names and types of the arguments of the target function
-	arg.type = gfp_t
-	arg.name = gfp_mask
-
-	arg.type = unsigned int 
-	arg.name = order
-
-	arg.type = struct zonelist *
-	arg.name = zonelist
-	
-	arg.type = nodemask_t *
-	arg.name = nodemask
-
 	# The body of the replacement function
 	handler.post =>>
 	struct page *page = returnValue;
@@ -27,6 +10,4 @@
 				caller_address);
 	}
 	<<
-# End of the group of definitions for __alloc_pages_nodemask().
-
 #######################################################################

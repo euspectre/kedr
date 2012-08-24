@@ -1,0 +1,3 @@
+header =>>
+#include <linux/wait.h>   /* wait-related functions */
+<<

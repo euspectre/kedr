@@ -68,8 +68,9 @@ function(kmodule_try_compile RESULT_VAR bindir srcfile)
 	set("${RESULT_VAR}" "${result_tmp}" PARENT_SCOPE)
 endfunction(kmodule_try_compile RESULT_VAR bindir srcfile)
 
-# List of unreliable functions,
-# which existance in system map doesn't prove existance in headers.
+# The list of "unreliable" functions.
+# If such functions are listed in System.map and even exported, it doesn't 
+# mean they are available for the kernel modules.
 set(unreliable_functions_list
     "__kmalloc_node"
 	"kmem_cache_alloc_node"
@@ -183,7 +184,7 @@ function(kmodule_configure_kernel_functions output_list)
 			set(kmodule_configure_kernel_functions_one_of_section "FALSE")
 		else(arg STREQUAL "REQUIRED" OR arg STREQUAL "OPTIONAL")
 			set(kmodule_func_varname _KMODULE_IS_${arg}_EXIST)
-			kmodule_is_function_exist(${arg} ${kmodule_func_varname})
+			kedr_find_function(${arg} ${kmodule_func_varname})
 			if(kmodule_configure_kernel_functions_one_of_section)
 				if(${kmodule_func_varname})
 					if(kmodule_configure_kernel_functions_one_of_section_function)
@@ -465,4 +466,178 @@ macro(check_kfree_rcu)
 	endif (DEFINED HAVE_KFREE_RCU)
 	message(STATUS "${check_kfree_rcu_message}")
 endmacro(check_kfree_rcu)
+
+############################################################################
+
+# The payload modules should call kedr_find_function() for each kernel 
+# function they would like to process. If the function is not known
+# to KEDR (absent from the "function database", see "functions/" directory), 
+# kedr_find_function() issues a fatal error.
+# 
+# 'func_name' is the name of the function,
+# 'found_var' is the name of the output variable (the variable will evaluate
+# as "true" if found, as "false" otherwise). 
+function (kedr_find_function func_name found_var)
+	if (NOT DEFINED KEDR_DATA_FILE_${func_name})
+		message(FATAL_ERROR "Unsupported function: ${func_name}")
+	endif (NOT DEFINED KEDR_DATA_FILE_${func_name})
+	
+	# OK, known function. 
+	kmodule_is_function_exist(${func_name} ${found_var})
+	if (${found_var})
+		# Mark the function as used by at least one payload module.
+		# This can be used when preparing the tests for call interception.
+		# The actual value does not matter, it only matters that this 
+		# variable is defined.
+		set(KEDR_FUNC_USED_${func_name} "yes" CACHE INTERNAL
+			"Is kernel function ${func_name} used by any payload module?")
+		set(${found_var} "${${found_var}}" PARENT_SCOPE)
+	else ()
+		set(${found_var} "NO" PARENT_SCOPE)
+	endif (${found_var})
+endfunction (kedr_find_function func_name found_var)
+
+# Returns (in ${path_var}) the path to the .data file for the function 
+# ${func_name}. The function must be present in the system and 
+# kedr_find_function() must be called for it before kedr_get_data_for_func().
+function (kedr_get_data_for_func func_name path_var)
+	if (NOT DEFINED KEDR_FUNC_USED_${func_name})
+		message(FATAL_ERROR 
+"Attempt to lookup data for a function that is not marked as used: "
+		"${func_name}")
+	endif (NOT DEFINED KEDR_FUNC_USED_${func_name})
+	
+	set(${path_var} "${KEDR_DATA_FILE_${func_name}}" PARENT_SCOPE)
+endfunction (kedr_get_data_for_func func_name path_var)
+
+# kedr_get_header_data_list(list_var func1 [func2 func3 ...])
+# Get the list of paths to the 'header.data' files for the given functions.
+# The functions must be present in the system and # kedr_find_function() 
+# must be called for each of them before kedr_get_header_data_list() is 
+# called.
+# The resulting list is returned in ${list_var}. It will contain at least 
+# one item. It will not contain duplicates.
+function (kedr_get_header_data_list list_var)
+	set(hdata_list)
+	foreach (func ${ARGN})
+		if (NOT DEFINED KEDR_FUNC_USED_${func})
+			message(FATAL_ERROR 
+"Attempt to lookup header data for a function that is not marked as used: "
+			"${func}")
+		endif (NOT DEFINED KEDR_FUNC_USED_${func})
+		list(APPEND hdata_list "${KEDR_HEADER_DATA_FILE_${func}}")
+	endforeach ()
+	list(REMOVE_DUPLICATES hdata_list)
+	
+	list(LENGTH hdata_list hdata_list_len)
+	if (NOT hdata_list_len)
+		message(FATAL_ERROR 
+		"kedr_get_header_data_list(): BUG: the output list is empty.")
+	endif (NOT hdata_list_len)
+	
+	set(${list_var} ${hdata_list} PARENT_SCOPE)
+endfunction (kedr_get_header_data_list list_var)
+
+# kedr_create_header_rules(
+#	header_impl_file header_data_file func1 [func2 ...])
+# Create the rules to generate ${header_impl_file} from
+# ${header_data_file} and the specific header files for the given
+# functions.
+function(kedr_create_header_rules header_impl_file header_data_file 
+	functions)
+	set(hlist_data)
+	kedr_get_header_data_list(hlist_data ${functions} ${ARGN})
+	to_abs_path(hdata_files_abs ${header_data_file} ${hlist_data})
+	add_custom_command(OUTPUT ${header_impl_file}
+		COMMAND cat ${hdata_files_abs} > ${header_impl_file}
+		DEPENDS ${hdata_files_abs}
+	)
+endfunction(kedr_create_header_rules header_impl_file header_data_file 
+	functions)
+
+# kedr_create_data_rules(func)
+# Create the rules to generate ${func}_impl.data from
+# ${func}.data (contains processing instructions specific to the current 
+# payload) and the .data file from "func_db" (contains function signature).
+function(kedr_create_data_rules func)
+	set(func_db_data_file)
+	kedr_get_data_for_func(${func} func_db_data_file)
+	
+	set(func_proc_data_file)
+	to_abs_path(func_proc_data_file ${func}.data)
+	
+	add_custom_command(OUTPUT "${func}_impl.data"
+		COMMAND printf "\"[group]\\n\"" > "${func}_impl.data"
+		COMMAND grep -E -v '\\[group\\]' 
+			"${func_db_data_file}" >> "${func}_impl.data"
+		COMMAND printf "\"\\n\"" >> "${func}_impl.data"
+		COMMAND grep -E -v '\\[group\\]' 
+			"${func_proc_data_file}" >> "${func}_impl.data"
+		DEPENDS
+			"${func_proc_data_file}"
+			"${func_db_data_file}"
+	)
+endfunction(kedr_create_data_rules func)
+
+# kedr_create_payload_module(module_name payload_data_file template_dir)
+# Create the rules to build a payload module with the given name.
+# 'payload_data_file' defines how the kernel functions are to be processed
+# by this payload module.
+# 'template_dir' - path to the direcotry containing the templates to be used
+# to prepare the source code of the module from 'payload_data_file'.
+function(kedr_create_payload_module module_name payload_data_file 
+	template_dir)
+	set(payload_c_file "payload.c")
+	set(functions_support_file "functions_support.c")
+	
+	kbuild_use_symbols("${CMAKE_BINARY_DIR}/core/Module.symvers")
+	kbuild_add_dependencies("kedr")
+	
+	# Rules to build the module
+	kbuild_add_module(${module_name}
+		"payload.c"
+		"functions_support.c")
+		
+	# Rules to obtain the source files of the module
+	to_abs_path(payload_data_file_abs ${payload_data_file})
+	add_custom_command(OUTPUT "${payload_c_file}"
+		COMMAND ${KEDR_GEN_TOOL} "${template_dir}"
+			${payload_data_file_abs} > "${payload_c_file}"
+		DEPENDS ${payload_data_file_abs}
+	)
+	add_custom_command(OUTPUT "${functions_support_file}"
+		COMMAND ${KEDR_GEN_TOOL} 
+			${KEDR_GEN_TEMPLATES_DIR}/functions_support.c/ 
+			${payload_data_file_abs} > "${functions_support_file}"
+		DEPENDS ${payload_data_file_abs}
+	)
+endfunction(kedr_create_payload_module module_name payload_data_file 
+	template_dir)
+
+# kedr_create_payload_data(payload_data_file func1 [func2 ...])
+# Create .data files and the header data files for the functions and prepare
+# the main .data file (${payload_data_file}) for the payload module.
+function(kedr_create_payload_data header_data_file payload_data_file 
+	functions)
+	set(header_impl_file "header_impl.data")
+	set(functions_data)
+
+	foreach(func ${functions} ${ARGN})
+		list(APPEND functions_data "${func}_impl.data")
+		kedr_create_data_rules(${func})
+	endforeach(func ${functions} ${ARGN})
+	
+	kedr_create_header_rules(${header_impl_file} ${header_data_file} 
+		${functions} ${ARGN})
+	
+	to_abs_path(payload_data_file_abs ${payload_data_file})
+	to_abs_path(source_files_abs ${header_impl_file} ${functions_data})
+	
+	set(payload_data_file_abs "${CMAKE_CURRENT_BINARY_DIR}/${payload_data_file}")
+	add_custom_command(OUTPUT ${payload_data_file_abs}
+		COMMAND cat ${source_files_abs} > ${payload_data_file_abs}
+		DEPENDS ${source_files_abs}
+	)
+endfunction(kedr_create_payload_data header_data_file payload_data_file 
+	functions)
 ############################################################################

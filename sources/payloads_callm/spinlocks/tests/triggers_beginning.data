@@ -1,3 +1,0 @@
-header =>>
-#include <linux/spinlock.h>   /* spinlock related functions */
-<<

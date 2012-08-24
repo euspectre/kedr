@@ -1,0 +1,12 @@
+header =>>
+/* 'kedr_foo' and 'trigger_rcu_callback' are used when triggering 
+ * call_rcu*() functions. */
+struct kedr_foo
+{
+	int bar_not_used;
+	void *baz_not_used;
+	struct rcu_head rcu_head;
+};
+
+typedef void (*kedr_test_rcu_callback_type)(struct rcu_head *);
+<<

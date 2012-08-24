@@ -1,0 +1,12 @@
+[group]
+	# Name and return type of the target function
+	function.name = memdup_user
+	returnType = void *
+
+	# Names and types of the arguments of the target function
+	arg.type = const void __user *
+	arg.name = src
+
+	arg.type = size_t
+	arg.name = len
+#######################################################################

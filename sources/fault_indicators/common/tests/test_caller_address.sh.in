@@ -5,7 +5,7 @@ fault_simulation_module="@CMAKE_BINARY_DIR@/fault_simulation/kedr_fault_simulati
 indicator_module="@CMAKE_CURRENT_BINARY_DIR@/../kedr_fsim_indicator_common.ko"
 indicator_name="common"
 
-payload_module="@CMAKE_BINARY_DIR@/payloads_fsim/common_memory_management/kedr_fsim_cmm.ko"
+payload_module="@CMAKE_BINARY_DIR@/payloads_fsim/common_mm/kedr_fsim_cmm.ko"
 point_name="kmalloc"
 
 get_caller_address_payload_name="get_caller_address"

@@ -1,0 +1,12 @@
+[group]
+	# Name and return type of the target function
+	function.name = posix_acl_from_mode
+	returnType = struct posix_acl *
+
+	# Names and types of the arguments of the target function
+	arg.type = mode_t
+	arg.name = mode
+
+	arg.type = gfp_t
+	arg.name = flags
+#######################################################################

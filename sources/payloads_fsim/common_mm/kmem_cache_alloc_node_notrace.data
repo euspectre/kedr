@@ -1,0 +1,17 @@
+[group]
+	prologue =>>
+size_t size = kmem_cache_size(mc);
+<<
+	
+	# Fault Simulation
+	fpoint.reuse_point = kmalloc
+
+	# Duplicate parameters for kmalloc simulation point
+	fpoint.param.type = size_t
+	fpoint.param.name = size
+
+	fpoint.param.type = gfp_t
+	fpoint.param.name = flags
+
+	fpoint.fault_code =	returnValue = NULL;
+#######################################################################

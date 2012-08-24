@@ -1,18 +1,7 @@
 [group]
-	# Name and return type of the target function
-	function.name = capable
-	returnType = int
-
-	# Names and types of the arguments of the target function
-	arg.type = int
-	arg.name = cap
-
 	# Fault Simulation
 	fpoint.fault_code =	returnValue = 0;
 
 	fpoint.param.type = int
 	fpoint.param.name = cap
-
-# End of the group of definitions for capable().
-
 #######################################################################

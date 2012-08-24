@@ -1,14 +1,4 @@
 [group]
-	# Name and return type of the target function
-	function.name = kfree_call_rcu
-
-	# Names and types of the arguments of the target function
-	arg.type = struct rcu_head *
-	arg.name = head
-
-	arg.type = kedr_rcu_callback_type
-	arg.name = func
-	
 	handler.pre =>>
 	/* If a small value (less than KEDR_RCU_ADDRESS_LIMIT) is passed 
 	 * to kfree_call_rcu*() instead of the address of a callback, treat 
@@ -22,6 +12,4 @@
 			(void *)((unsigned long)head - offset), 
 			caller_address);
 	<<
-# End of the group of definitions for call_rcu().
-
 #######################################################################

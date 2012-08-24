@@ -1,0 +1,17 @@
+[group]
+	# Name and return type of the target function
+	function.name = __wake_up
+
+	# Names and types of the arguments of the target function
+	arg.type = wait_queue_head_t *
+	arg.name = q
+
+	arg.type = unsigned int
+	arg.name = mode
+
+	arg.type = int
+	arg.name = nr_exclusive
+
+	arg.type = void *
+	arg.name = key
+#######################################################################

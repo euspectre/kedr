@@ -1,0 +1,4 @@
+[group]
+	# Name and return type of the target function
+	function.name = schedule
+#######################################################################

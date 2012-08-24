@@ -1,0 +1,16 @@
+header =>>
+#include <linux/slab.h>
+#include <linux/gfp.h>
+#include <linux/mm.h>
+#include <linux/string.h>
+#include <linux/pagemap.h>
+#include <linux/rcupdate.h>
+#include <linux/fs.h>
+#include <linux/posix_acl.h>
+#include <linux/parser.h>
+
+/* This is needed because the current system of data files, templates and 
+ * code generation tools does not allow specifying the type of a function
+ * pointer directly in the signatures of the functions. */
+typedef void (*kedr_rcu_callback_type)(struct rcu_head *);
+<<

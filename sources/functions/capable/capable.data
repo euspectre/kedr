@@ -1,0 +1,9 @@
+[group]
+	# Name and return type of the target function
+	function.name = capable
+	returnType = int
+
+	# Names and types of the arguments of the target function
+	arg.type = int
+	arg.name = cap
+#######################################################################

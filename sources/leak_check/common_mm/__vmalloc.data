@@ -1,25 +1,8 @@
 [group]
-	# Name and return type of the target function
-	function.name = __vmalloc
-	returnType = void *
-
-	# Names and types of the arguments of the target function
-	arg.type = unsigned long
-	arg.name = size
-
-	arg.type = gfp_t
-	arg.name = gfp_mask
-
-	arg.type = pgprot_t
-	arg.name = prot
-	
 	# The body of the replacement function
 	handler.post =>>
 	if (returnValue != NULL)
 		kedr_lc_handle_alloc(target_module, returnValue, size,
 			caller_address);
 	<<
-
-# End of the group of definitions for __vmalloc().
-
 #######################################################################

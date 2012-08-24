@@ -1,3 +1,0 @@
-header =>>
-#include <linux/mutex.h>   /* mutex-related functions */
-<<

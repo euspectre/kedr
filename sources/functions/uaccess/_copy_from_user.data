@@ -1,0 +1,15 @@
+[group]
+	# Name and return type of the target function
+	function.name = _copy_from_user
+	returnType = unsigned long
+
+	# Names and types of the arguments of the target function
+	arg.type = void *
+	arg.name = to
+
+	arg.type = void __user *
+	arg.name = from
+
+	arg.type = unsigned long
+	arg.name = n
+#######################################################################

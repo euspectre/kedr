@@ -1,0 +1,5 @@
+[group]
+	# Fault Simulation
+	fpoint.reuse_point = vmalloc
+	fpoint.fault_code =	returnValue = NULL;
+#######################################################################

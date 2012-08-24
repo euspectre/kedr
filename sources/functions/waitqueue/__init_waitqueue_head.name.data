@@ -1,0 +1,14 @@
+[group]
+	# Name and return type of the target function
+	function.name = __init_waitqueue_head
+
+	# Names and types of the arguments of the target function
+	arg.type = wait_queue_head_t *
+	arg.name = q
+	
+	arg.type = const char *
+	arg.name = name
+
+	arg.type = struct lock_class_key *
+	arg.name = key
+#######################################################################

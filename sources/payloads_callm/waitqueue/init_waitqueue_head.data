@@ -1,18 +1,8 @@
 [group]
-	# Name and return type of the target function
-	function.name = init_waitqueue_head
-
-	# Names and types of the arguments of the target function
-	arg.type = wait_queue_head_t*
-	arg.name = q
-
 	# The parameters to be output to the trace. 
-	trace.param.type = wait_queue_head_t*
+	trace.param.type = wait_queue_head_t *
 	trace.param.name = q
 
 	# The format string to be used for trace output.
 	trace.formatString = "arguments: (%p)"
-
-# End of the group of definitions for init_waitqueue_head().
-
 #######################################################################

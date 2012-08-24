@@ -1,0 +1,8 @@
+[group]
+	# Name and return type of the target function
+	function.name = vfree
+
+	# Names and types of the arguments of the target function
+	arg.type = const void *
+	arg.name = addr
+#######################################################################

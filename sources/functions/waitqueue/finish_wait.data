@@ -1,0 +1,11 @@
+[group]
+	# Name and return type of the target function
+	function.name = finish_wait
+
+	# Names and types of the arguments of the target function
+	arg.type = wait_queue_head_t *
+	arg.name = q
+
+	arg.type = wait_queue_t *
+	arg.name = wait
+#######################################################################

@@ -1,0 +1,18 @@
+[group]
+	# Name and return type of the target function
+	function.name = kmem_cache_alloc_node_trace
+	returnType = void *
+
+	# Names and types of the arguments of the target function
+	arg.type = size_t
+	arg.name = size
+
+	arg.type = struct kmem_cache *
+	arg.name = mc
+	
+	arg.type = gfp_t
+	arg.name = flags
+
+	arg.type = int
+	arg.name = nodeid
+#######################################################################

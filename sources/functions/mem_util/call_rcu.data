@@ -1,0 +1,11 @@
+[group]
+	# Name and return type of the target function
+	function.name = call_rcu
+
+	# Names and types of the arguments of the target function
+	arg.type = struct rcu_head *
+	arg.name = head
+
+	arg.type = kedr_rcu_callback_type
+	arg.name = func
+#######################################################################

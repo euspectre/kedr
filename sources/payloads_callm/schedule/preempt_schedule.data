@@ -1,10 +1,4 @@
 [group]
-	# Name and return type of the target function
-	function.name = preempt_schedule
-
 	# The format string to be used for trace output.
 	trace.formatString = ""
-
-# End of the group of definitions for preempt_schedule().
-
 #######################################################################

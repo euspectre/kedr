@@ -1,22 +1,8 @@
 [group]
-	# Name and return type of the target function
-	function.name = vzalloc_node
-	returnType = void *
-
-	# Names and types of the arguments of the target function
-	arg.type = unsigned long
-	arg.name = size
-	
-	arg.type = int
-	arg.name = node
-
 	# The body of the replacement function
 	handler.post =>>
 	if (returnValue != NULL)
 		kedr_lc_handle_alloc(target_module, returnValue, size,
 			caller_address);
 	<<
-
-# End of the group of definitions for vzalloc_node().
-
 #######################################################################

@@ -1,0 +1,13 @@
+[group]
+	# Fault Simulation
+	fpoint.param.type = size_t
+	fpoint.param.name = size
+
+	fpoint.param.type = gfp_t
+	fpoint.param.name = flags
+
+	# Rename point
+	fpoint.rename = kmalloc
+	
+	fpoint.fault_code =	returnValue = NULL;
+#######################################################################

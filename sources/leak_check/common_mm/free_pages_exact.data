@@ -1,21 +1,8 @@
 [group]
-	# Name and return type of the target function
-	function.name = free_pages_exact
-
-	# Names and types of the arguments of the target function
-	arg.type = void *
-	arg.name = virt
-
-	arg.type = size_t
-	arg.name = size
-	
 	# The body of the replacement function
 	handler.pre =>>
 	if (!ZERO_OR_NULL_PTR(virt)) 
 		kedr_lc_handle_free(target_module, virt, 
 			caller_address);
 	<<
-
-# End of the group of definitions for free_pages_exact().
-
 #######################################################################

@@ -1,9 +1,9 @@
-#name of module created
+# Name of the module to create
 set(kmodule_name "kedr_cm_capable")
 
-#first part of data-file
-configure_file("beginning.data.in"
-	"${CMAKE_CURRENT_BINARY_DIR}/beginning.data")
+# The header part of the data file
+configure_file("header.data.in"
+	"${CMAKE_CURRENT_BINARY_DIR}/header.data")
 
 kmodule_configure_kernel_functions(functions REQUIRED
 	"capable"
@@ -14,5 +14,3 @@ create_payload_callm(${kmodule_name} ${functions})
 kedr_install_kmodule(${kmodule_name})
 
 kedr_conf_callm_add_payload(${kmodule_name})
-
-kedr_test_add_subdirectory(tests)

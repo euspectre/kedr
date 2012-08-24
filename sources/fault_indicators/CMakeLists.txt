@@ -44,7 +44,7 @@ function(create_indicator module_name)
 	endif(KEDR_ENABLE_CALLER_ADDRESS)
 endfunction(create_indicator module_name)
 
-add_subdirectory(common_memory_management)
+add_subdirectory(kmalloc)
 add_subdirectory(capable)
 add_subdirectory(common)
 

@@ -1,12 +1,4 @@
 [group]
-	# Name and return type of the target function
-	function.name = capable
-	returnType = int
-
-	# Names and types of the arguments of the target function
-	arg.type = int
-	arg.name = cap
-
 	# The parameters to be output to the trace. 
 	trace.param.type = int
 	trace.param.name = cap
@@ -16,7 +8,4 @@
 
 	# The format string to be used for trace output.
 	trace.formatString = "arguments: (%d), result: %d"
-
-# End of the group of definitions for capable().
-
 #######################################################################

@@ -1,0 +1,11 @@
+[group]
+	# Name and return type of the target function
+	function.name = free_pages
+
+	# Names and types of the arguments of the target function
+	arg.type = unsigned long
+	arg.name = addr
+	
+	arg.type = unsigned int
+	arg.name = order
+#######################################################################

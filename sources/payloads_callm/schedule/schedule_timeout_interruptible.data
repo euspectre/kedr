@@ -1,21 +1,11 @@
 [group]
-	# Name and return type of the target function
-	function.name = schedule_timeout_interruptible
-	returnType = signed long
-
-	# Names and types of the arguments of the target function
-	arg.type = signed long
-	arg.name = timeout
-
 	# The parameters to be output to the trace. 
 	trace.param.type = signed long
 	trace.param.name = timeout
 
 	trace.param.type = signed long
 	trace.param.name = returnValue
+
 	# The format string to be used for trace output.
 	trace.formatString = "arguments: (%ld), result: %ld"
-
-# End of the group of definitions for schedule_timeout_interruptible().
-
 #######################################################################

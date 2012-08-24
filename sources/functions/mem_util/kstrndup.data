@@ -1,0 +1,15 @@
+[group]
+	# Name and return type of the target function
+	function.name = kstrndup
+	returnType = char *
+
+	# Names and types of the arguments of the target function
+	arg.type = const char *
+	arg.name = s
+
+	arg.type = size_t
+	arg.name = max
+
+	arg.type = gfp_t
+	arg.name = flags
+#######################################################################

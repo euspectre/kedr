@@ -4,7 +4,7 @@ module.author = <$module.author$>
 
 module.license = <$module.license$>
 
-<$if concat(header)$><$headerSection: join(/n)$>
+<$if concat(header)$><$headerSection: join(\n)$>
 
 <$endif$><$if concat(function.name)$><$block: join(\n)$>
 

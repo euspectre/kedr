@@ -1,0 +1,5 @@
+[group]
+	# Name and return type of the target function
+	function.name = _cond_resched
+	returnType = int
+#######################################################################

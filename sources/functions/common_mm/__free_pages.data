@@ -1,0 +1,11 @@
+[group]
+	# Name and return type of the target function
+	function.name = __free_pages
+
+	# Names and types of the arguments of the target function
+	arg.type = struct page *
+	arg.name = page
+	
+	arg.type = unsigned int
+	arg.name = order
+#######################################################################

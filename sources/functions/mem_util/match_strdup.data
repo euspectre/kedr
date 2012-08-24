@@ -1,0 +1,9 @@
+[group]
+	# Name and return type of the target function
+	function.name = match_strdup
+	returnType = char *
+
+	# Names and types of the arguments of the target function
+	arg.type = const substring_t *
+	arg.name = s
+#######################################################################

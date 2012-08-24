@@ -1,0 +1,19 @@
+[group]
+	prologue =>>
+	char *str_from = s->from;
+	char *str_to = s->to;
+	<<
+	
+	# The parameters to be output to the trace. 
+	trace.param.type = const void *
+	trace.param.name = str_from
+
+	trace.param.type = const void *
+	trace.param.name = str_to
+
+	trace.param.type = void *
+	trace.param.name = returnValue
+
+	# The format string to be used for trace output.
+	trace.formatString = "arguments: (from=%p, to=%p), result: %p"
+#######################################################################

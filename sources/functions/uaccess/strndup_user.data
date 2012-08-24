@@ -1,0 +1,12 @@
+[group]
+	# Name and return type of the target function
+	function.name = strndup_user
+	returnType = char *
+
+	# Names and types of the arguments of the target function
+	arg.type = const char __user *
+	arg.name = src
+
+	arg.type = long
+	arg.name = n
+#######################################################################

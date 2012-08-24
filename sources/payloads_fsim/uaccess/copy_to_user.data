@@ -1,0 +1,7 @@
+[group]
+	# Rename
+	fpoint.rename = copy_to_user
+
+	# Fault Simulation
+	fpoint.fault_code =	returnValue = n;
+#######################################################################

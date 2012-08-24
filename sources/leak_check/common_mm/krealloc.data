@@ -1,18 +1,4 @@
 [group]
-	# Name and return type of the target function
-	function.name = krealloc
-	returnType = void *
-
-	# Names and types of the arguments of the target function
-	arg.type = const void *
-	arg.name = p
-
-	arg.type = size_t
-	arg.name = size
-
-	arg.type = gfp_t
-	arg.name = flags
-	
 	# The body of the replacement function
 	handler.pre =>>
 	if (size == 0 || !ZERO_OR_NULL_PTR(p)) {
@@ -43,7 +29,4 @@
 		}
 	}
 	<<
-
-# End of the group of definitions for krealloc().
-
 #######################################################################

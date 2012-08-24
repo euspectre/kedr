@@ -1,4 +1,0 @@
-header =>>
-#include <linux/sched.h>   /* shedule related functions */
-#include <linux/hardirq.h> /* need for cond_resched macro */
-<<

@@ -1,0 +1,9 @@
+[group]
+	# Name and return type of the target function
+	function.name = vzalloc
+	returnType = void *
+
+	# Names and types of the arguments of the target function
+	arg.type = unsigned long
+	arg.name = size
+#######################################################################

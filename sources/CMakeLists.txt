@@ -126,8 +126,8 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
 else(CMAKE_BUILD_TYPE STREQUAL "Debug")
 	message(FATAL_ERROR "Unknown type of build: ${CMAKE_BUILD_TYPE}.")
 endif()
-
 #######################################################################
+
 # Perform basic checks
 
 # Check if we use kernel version 2.6.32 or newer
@@ -140,10 +140,7 @@ check_module_build()
 # STACK_TRACE_RELIABLE will hold the result.
 # This only checks relevant configuration parameters of kernel.
 check_stack_trace()
-
 #######################################################################
-# Supported types of analysis (and, consequently, the sets of payload 
-# modules).
 
 option(KEDR_STANDARD_CALLM_PAYLOADS 
 	"Enable support for call monitoring" 
@@ -171,11 +168,11 @@ option(KEDR_LEAK_CHECK
 	ON
 )
 #######################################################################
-# Whether fault simulation facility use caller_address
-option(KEDR_ENABLE_CALLER_ADDRESS
-	"Enable support of 'caller_address' variable in fault simulation indicators."
-	ON)
 
+option(KEDR_ENABLE_CALLER_ADDRESS
+	"Enable support for 'caller_address' variable in fault simulation indicators."
+	ON
+)
 #######################################################################
 
 # kedr_gen (this time - for building KEDR itself)
@@ -338,6 +335,9 @@ set(KEDR_GEN_TEMPLATES_DIR "${CMAKE_SOURCE_DIR}/templates/")
 
 add_subdirectory(core)
 
+# Keep this before add_subdirectory() statements for payload modules.
+add_subdirectory(functions)
+
 add_subdirectory(templates)
 # For tests only
 add_subdirectory(control_file)
@@ -353,15 +353,22 @@ if(KEDR_TRACE)
 	add_subdirectory(trace)
 endif(KEDR_TRACE)
 
+# [NB] Keep this before "add_subdirectory(tools)".
 if(KEDR_STANDARD_CALLM_PAYLOADS)
-	# This file is used for create configuration file for call monitor payloads
-	set(kedr_conf_file_data_callm "${CMAKE_BINARY_DIR}/tools/control/kedr_callm.conf.data")
-	# Same but for test variant
-	set(kedr_test_conf_file_data_callm "${CMAKE_BINARY_DIR}/tools/control/tests/kedr_callm.conf.data")
+	# This file is used to create the configuration file for call 
+	# monitoring plugins
+	set(kedr_conf_file_data_callm 
+		"${CMAKE_BINARY_DIR}/tools/control/kedr_callm.conf.data")
+	# Same but for the variant used for testing
+	set(kedr_test_conf_file_data_callm 
+		"${CMAKE_BINARY_DIR}/tools/control/tests/kedr_callm.conf.data")
 endif(KEDR_STANDARD_CALLM_PAYLOADS)
+
 if(KEDR_STANDARD_FSIM_PAYLOADS)
-	# This file is used for create configuration file for fault simulation payloads
-	set(kedr_conf_file_data_fsim "${CMAKE_BINARY_DIR}/tools/control/kedr_fsim.conf.data")
+	# This file is used to create configuration file for fault 
+	# simulation plugins
+	set(kedr_conf_file_data_fsim 
+		"${CMAKE_BINARY_DIR}/tools/control/kedr_fsim.conf.data")
 endif(KEDR_STANDARD_FSIM_PAYLOADS)
 
 add_subdirectory(tools)
@@ -387,16 +394,19 @@ if (NOT CMAKE_CROSSCOMPILING)
 	# Documentation
 	add_subdirectory(doc)
 endif (NOT CMAKE_CROSSCOMPILING)
-
 #######################################################################
+
 # "Global" tests 
+# Keep this after all other add_subdirectory() statements. One reason is
+# that to configure the call interception tests, the complete list of 
+# the kernel functions involved must be collected first when processing 
+# the subdirectories for the payload modules.
 kedr_test_add_subdirectory(tests)
-
 #######################################################################
+
 configure_file("${CMAKE_SOURCE_DIR}/config.h.in" "${CMAKE_BINARY_DIR}/config.h")
 message(STATUS "Creating config.h - done")
-
 #######################################################################
-message (STATUS "Configured ${KEDR_PACKAGE_NAME} version ${KEDR_VERSION}")
 
+message (STATUS "Configured ${KEDR_PACKAGE_NAME} version ${KEDR_VERSION}")
 #######################################################################

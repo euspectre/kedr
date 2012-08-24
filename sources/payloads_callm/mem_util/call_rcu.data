@@ -1,0 +1,14 @@
+[group]
+	# The parameters to be output to the trace. 
+	trace.param.type = const void *
+	trace.param.name = head
+
+	trace.param.type = const void *
+	trace.param.name = func
+
+	# Happens-before relationship with kmalloc
+	trace.happensBefore = yes 
+
+	# The format string to be used for trace output.
+	trace.formatString = "arguments: (%p, %p)"
+#######################################################################

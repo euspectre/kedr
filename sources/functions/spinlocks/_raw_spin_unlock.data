@@ -1,0 +1,8 @@
+[group]
+	# Name and return type of the target function
+	function.name = _raw_spin_unlock
+
+	# Names and types of the arguments of the target function
+	arg.type = raw_spinlock_t *
+	arg.name = lock
+#######################################################################

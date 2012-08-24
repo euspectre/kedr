@@ -1,0 +1,17 @@
+[group]
+	# Name and return type of the target function
+	function.name = add_to_page_cache_lru
+
+	# Names and types of the arguments of the target function
+	arg.type = struct page *
+	arg.name = page
+	
+	arg.type = struct address_space *
+	arg.name = mapping
+ 
+	arg.type = pgoff_t
+	arg.name = offset
+
+	arg.type = gfp_t
+	arg.name = gfp_mask
+#######################################################################

@@ -1,0 +1,3 @@
+header =>>
+#include <linux/sched.h>  /* TASK_* macros */
+<<

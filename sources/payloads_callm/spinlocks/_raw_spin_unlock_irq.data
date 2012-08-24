@@ -1,13 +1,6 @@
 [group]
-	# Name and return type of the target function
-	function.name = _raw_spin_unlock_irq
-
-	# Names and types of the arguments of the target function
-	arg.type = raw_spinlock_t*
-	arg.name = lock
-	
 	# The parameters to be output to the trace. 
-	trace.param.type = raw_spinlock_t*
+	trace.param.type = raw_spinlock_t *
 	trace.param.name = lock
 
 	# Happens-before relationship with lock
@@ -15,7 +8,4 @@
 
 	# The format string to be used for trace output.
 	trace.formatString = "arguments: (%p)"
-
-# End of the group of definitions for _raw_spin_unlock_irq().
-
 #######################################################################

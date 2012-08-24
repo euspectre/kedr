@@ -14,6 +14,9 @@
 # For example, using "aaa.01" and "aaa.011" together is not allowed but
 # it is acceptable to use "aaa.001" and "aaa.011" together.
 ########################################################################
+
 # Scripts useful for tests
 add_subdirectory(scripts)
 
+# Tests for call interception
+add_subdirectory(call_int)

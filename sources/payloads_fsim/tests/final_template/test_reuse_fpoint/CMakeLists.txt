@@ -2,6 +2,7 @@ set(kmodule_name "payload_fsim_reuse_point")
 
 set(payload_data "${CMAKE_CURRENT_SOURCE_DIR}/payload.data")
 
+kbuild_use_symbols("${CMAKE_BINARY_DIR}/core/Module.symvers")
 kbuild_add_module(${kmodule_name} "payload.c" "functions_support.c")
 
 add_custom_command(OUTPUT "payload.c"

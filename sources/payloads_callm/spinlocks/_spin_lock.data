@@ -1,18 +1,8 @@
 [group]
-	# Name and return type of the target function
-	function.name = _spin_lock
-
-	# Names and types of the arguments of the target function
-	arg.type = spinlock_t*
-	arg.name = lock
-	
 	# The parameters to be output to the trace. 
-	trace.param.type = spinlock_t*
+	trace.param.type = spinlock_t *
 	trace.param.name = lock
 
 	# The format string to be used for trace output.
 	trace.formatString = "arguments: (%p)"
-
-# End of the group of definitions for _spin_lock().
-
 #######################################################################
