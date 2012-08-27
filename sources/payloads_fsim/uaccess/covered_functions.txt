@@ -1,6 +1,0 @@
-copy_to_user
-_copy_to_user
-copy_from_user
-_copy_from_user
-memdup_user
-strndup_user
