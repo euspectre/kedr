@@ -58,9 +58,6 @@ Here is a full list of the payload modules that currently may be used for call m
     <simplelist type='vert'>
     <member><function>_spin_lock_irqsave/_raw_spin_lock_irqsave</function></member>
     <member><function>_spin_unlock_irqrestore/_raw_spin_unlock_irqrestore</function></member>
-    </simplelist>
-additionally, if KEDR was configured with <quote>enable_full_spinlock</quote> option set,
-    <simplelist type='vert'>
     <member><function>_spin_lock/_raw_spin_lock</function></member>
     <member><function>_spin_lock_irq/_raw_spin_lock_irq</function></member>
     <member><function>_spin_unlock/_raw_spin_unlock</function></member>
