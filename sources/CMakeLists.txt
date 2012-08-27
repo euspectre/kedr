@@ -145,8 +145,8 @@ check_stack_trace()
 #######################################################################
 
 option(KEDR_STANDARD_CALLM_PAYLOADS 
-	"Enable support for call monitoring" 
-	ON
+	"Enable the standard plugins (payload modules) for call monitoring." 
+	OFF
 )
 
 check_ring_buffer()
@@ -162,11 +162,11 @@ if(KEDR_STANDARD_CALLM_PAYLOADS AND NOT RING_BUFFER_IMPLEMENTED)
 endif(KEDR_STANDARD_CALLM_PAYLOADS AND NOT RING_BUFFER_IMPLEMENTED)
 
 option(KEDR_STANDARD_FSIM_PAYLOADS 
-	"Enable support for fault simulation" 
+	"Enable the standard plugins (payload modules) for fault simulation." 
 	ON
 )
 option(KEDR_LEAK_CHECK
-	"Enable support for memory leak detection" 
+	"Enable support for memory leak detection." 
 	ON
 )
 #######################################################################
