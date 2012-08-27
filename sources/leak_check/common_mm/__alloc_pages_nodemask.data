@@ -1,7 +1,7 @@
 [group]
 	# The body of the replacement function
 	handler.post =>>
-	struct page *page = returnValue;
+	struct page *page = ret_val;
 	if (page != NULL) {
 		const void *p = (const void *)page_address(page);
 		if (p != NULL)

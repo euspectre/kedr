@@ -184,7 +184,7 @@ Output to the trace is currently supported only for the variables of simple type
 Additionally, the following parameters can be defined at group level:
 </p><div class="variablelist"><dl><dt><span class="term">prologue</span></dt><dd>code (may be multiline) which will be executed before the values are output to the trace. Usually, this code declares variables that will be used in the output.</dd><dt><span class="term">epilogue</span></dt><dd>code (may be multiline) which will be executed after the values have been output to the trace. If <code class="code">prologue</code> request some resources from the kernel, this is the place where these resources can be released.</dd></dl></div><p>
 
-If the target function does not return void, <code class="varname">returnValue</code> variable refers to the return value of the function. It may be used as the name of variable to output (<span class="symbol">arg.name</span>) and in the <span class="symbol">prologue</span> and <span class="symbol">epilogue</span> sections.
+If the target function does not return void, <code class="varname">ret_val</code> variable refers to the return value of the function. It may be used as the name of variable to output (<span class="symbol">arg.name</span>) and in the <span class="symbol">prologue</span> and <span class="symbol">epilogue</span> sections.
     </p><p>
 Example of the group section for module_put() target function:
 </p><pre class="programlisting">
@@ -205,7 +205,7 @@ Example of the group section for module_put() target function:
 
 # End of the group of definitions for module_put().
 </pre><p>
-Example of the group section for __kmalloc() target function (note the usage of <code class="varname">returnValue</code> variable as the value of <code class="code">trace.param.name</code> parameter):
+Example of the group section for __kmalloc() target function (note the usage of <code class="varname">ret_val</code> variable as the value of <code class="code">trace.param.name</code> parameter):
 </p><pre class="programlisting">
 [group]
     # Name and return type of the target function
@@ -227,7 +227,7 @@ Example of the group section for __kmalloc() target function (note the usage of 
     trace.param.name = flags
 
     trace.param.type = void *
-    trace.param.name = returnValue
+    trace.param.name = ret_val
 
     # The format string to be used for trace output.
     trace.formatString = "arguments: (%zu, %x), result: %p"
@@ -259,7 +259,7 @@ size_t size = kmem_cache_size(mc);
     trace.param.name = flags
 
     trace.param.type = void *
-    trace.param.name = returnValue
+    trace.param.name = ret_val
 
     # The format string to be used for trace output.
     trace.formatString = "arguments: (%zu, %x), result: %p"
@@ -274,7 +274,7 @@ After writing <code class="filename">payload.data</code> file, you can change th
 The last step is to run <span class="command"><strong>make</strong></span> utility. This will invoke the code generator tool (<span class="command"><strong>kedr_gen</strong></span>) to create the sources for your payload module, then the module will be built.
     </p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="happens_before_parameter"></a>5.3. <span class="quote">“<span class="quote">trace.happensBefore</span>”</span> Parameter for Call Monitoring</h3></div></div></div><p>
 There is a parameter that changes order of <a class="link" href="kedr_manual_glossary.html#target_function">target function</a> call and output of values to the trace:
-</p><div class="variablelist"><dl><dt><span class="term">trace.happensBefore</span></dt><dd>If this parameter is defined (its actual value does not matter), the trace will be output <span class="emphasis"><em>before</em></span> the target function is called. With this parameter defined, variable <code class="varname">returnValue</code> should not be used.</dd></dl></div><p>
+</p><div class="variablelist"><dl><dt><span class="term">trace.happensBefore</span></dt><dd>If this parameter is defined (its actual value does not matter), the trace will be output <span class="emphasis"><em>before</em></span> the target function is called. With this parameter defined, variable <code class="varname">ret_val</code> should not be used.</dd></dl></div><p>
     </p><p>
 The main purpose of using <code class="code">trace.happensBefore</code> parameter is collecting correct trace on SMP systems and the like. Suppose, two threads of execution call <code class="function">mutex_lock</code> and <code class="function">mutex_unlock</code> functions for the same mutex. One of the correct sequences of these calls is:
 		</p><pre class="programlisting">
@@ -391,12 +391,12 @@ header =&gt;&gt;
     </p><p>
 For each <a class="link" href="kedr_manual_glossary.html#target_function">target function</a> to be processed, a group should be prepared in the definition file.
 Each group should contain definitions for the following parameters:
-	</p><div class="variablelist"><dl><dt><span class="term">function.name</span></dt><dd>name of the target function</dd><dt><span class="term">returnType</span></dt><dd>return type of the target function if it is not void, otherwise shouldn't be defined at all</dd><dt><span class="term">arg.type</span></dt><dd>(multi-valued) types of the parameters of the target function, starting with the first one. If the function has no parameters, shouldn't be assigned at all.</dd><dt><span class="term">arg.name</span></dt><dd>(multi-valued) names of the parameters of the target function, starting with the first one. If the function has no parameters, shouldn't be assigned at all. Parameters of the target function will be accessible via these names in the code.</dd><dt><span class="term">fpoint.fault_code</span></dt><dd>code (may be multiline) which should be executed instead the call to the target function to simulate failure of the latter. Usually, this code simply sets <code class="varname">returnValue</code> variable to a value indicating that a failure has occured. For the caller of the target function, if will look like the target function has returned this value.</dd><dt><span class="term">fpoint.param.name</span></dt><dd>(multi-valued) names of the variables which values will be passed to the indicator function and may be used to specify the scenario of fault simulation in it. The order of these variables is important, because they will be passed sequentially to the indicator function. Usually, only the parameters of the target function are passed to the indicator.</dd><dt><span class="term">fpoint.param.type</span></dt><dd>(multi-valued) types of the values that will be passed to the indicator function. These types will be used to properly cast the values before passing to the indicator (so these types may differ from the real types of the variables).</dd><dt><span class="term">fpoint.rename</span></dt><dd>Instead of using the name of the target function as a  name of the fault simulation point, use the name given by this parameter.</dd><dt><span class="term">fpoint.reuse_point</span></dt><dd>Instead of creating a new fault simulation point for this function, use the previously defined point with the name given by this parameter.</dd></dl></div><p>
+	</p><div class="variablelist"><dl><dt><span class="term">function.name</span></dt><dd>name of the target function</dd><dt><span class="term">returnType</span></dt><dd>return type of the target function if it is not void, otherwise shouldn't be defined at all</dd><dt><span class="term">arg.type</span></dt><dd>(multi-valued) types of the parameters of the target function, starting with the first one. If the function has no parameters, shouldn't be assigned at all.</dd><dt><span class="term">arg.name</span></dt><dd>(multi-valued) names of the parameters of the target function, starting with the first one. If the function has no parameters, shouldn't be assigned at all. Parameters of the target function will be accessible via these names in the code.</dd><dt><span class="term">fpoint.fault_code</span></dt><dd>code (may be multiline) which should be executed instead the call to the target function to simulate failure of the latter. Usually, this code simply sets <code class="varname">ret_val</code> variable to a value indicating that a failure has occured. For the caller of the target function, if will look like the target function has returned this value.</dd><dt><span class="term">fpoint.param.name</span></dt><dd>(multi-valued) names of the variables which values will be passed to the indicator function and may be used to specify the scenario of fault simulation in it. The order of these variables is important, because they will be passed sequentially to the indicator function. Usually, only the parameters of the target function are passed to the indicator.</dd><dt><span class="term">fpoint.param.type</span></dt><dd>(multi-valued) types of the values that will be passed to the indicator function. These types will be used to properly cast the values before passing to the indicator (so these types may differ from the real types of the variables).</dd><dt><span class="term">fpoint.rename</span></dt><dd>Instead of using the name of the target function as a  name of the fault simulation point, use the name given by this parameter.</dd><dt><span class="term">fpoint.reuse_point</span></dt><dd>Instead of creating a new fault simulation point for this function, use the previously defined point with the name given by this parameter.</dd></dl></div><p>
 Additionally, the following parameters can be defined at the group level. They are similar to the ones used in the payload modules for call monitoring.
     </p><div class="variablelist"><dl><dt><span class="term">prologue</span></dt><dd>code (may be multiline) which will be inserted at the start of replacement function (before the call to the indicator function which should decide whether need to simulate a failure or not). Usually, this code declares variables that will be passed to the indicator function.</dd><dt><span class="term">epilogue</span></dt><dd>code (may be multiline) which will be inserted at the end of the replacement function (after  executing target function or simulating its fault). If <code class="code">prologue</code> request some resources from the kernel, this is the place to release these resources.</dd></dl></div><p>
-If the target function does not return void, <code class="varname">returnValue</code> variable should be set in <span class="symbol">fpoint.fault_code</span> to the value that the target function would return in case of the particular failure.
+If the target function does not return void, <code class="varname">ret_val</code> variable should be set in <span class="symbol">fpoint.fault_code</span> to the value that the target function would return in case of the particular failure.
     </p><p>
-Here is an example of the group section for __kmalloc target function. Note the definition of <code class="code">fpoint.fault_code</code> parameter. Its value is <span class="quote">“<span class="quote"><code class="code">returnValue = NULL;</code></span>”</span> because '=' characters after the leftmost one have no special meaning and are treated as the part of the value.
+Here is an example of the group section for __kmalloc target function. Note the definition of <code class="code">fpoint.fault_code</code> parameter. Its value is <span class="quote">“<span class="quote"><code class="code">ret_val = NULL;</code></span>”</span> because '=' characters after the leftmost one have no special meaning and are treated as the part of the value.
     </p><pre class="programlisting">
 [group]
     # Name and return type of the target function
@@ -417,7 +417,7 @@ Here is an example of the group section for __kmalloc target function. Note the 
     fpoint.param.type = gfp_t
     fpoint.param.name = flags
 
-    fpoint.fault_code = returnValue = NULL;
+    fpoint.fault_code = ret_val = NULL;
 
 # End of the group of definitions for __kmalloc().
 </pre><p>
@@ -445,7 +445,7 @@ Example of the group section for kstrdup() target function:
     fpoint.param.type = gfp_t
     fpoint.param.name = flags
 
-    fpoint.fault_code = returnValue = NULL;
+    fpoint.fault_code = ret_val = NULL;
 
 # End of the group of definitions for kstrdup().
 </pre><p>
@@ -478,7 +478,7 @@ If, say, function <code class="function">g</code> should share the fault simulat
     fpoint.param.type = gfp_t
     fpoint.param.name = flags
 
-    fpoint.fault_code = returnValue = NULL;
+    fpoint.fault_code = ret_val = NULL;
     
 # End of the group of definitions for __kmalloc().
 
@@ -506,7 +506,7 @@ If, say, function <code class="function">g</code> should share the fault simulat
     fpoint.param.type = gfp_t
     fpoint.param.name = flags
 
-    fpoint.fault_code = returnValue = NULL;
+    fpoint.fault_code = ret_val = NULL;
 
 # End of the group of definitions for krealloc().
 </pre><p>
@@ -765,7 +765,7 @@ static struct kedr_payload counters_payload = {
 The initial value of each counter is 0. Post handlers actually update the counters. They do this with special locks held to avoid some of the concurrency issues. For example, the post handler for <code class="code">__kmalloc()</code> looks like this:
 </p><pre class="programlisting">
 static void
-post___kmalloc(size_t size, gfp_t flags, void *returnValue,
+post___kmalloc(size_t size, gfp_t flags, void *ret_val,
     struct kedr_function_call_info *call_info)
 {
     unsigned long irq_flags;
@@ -775,7 +775,7 @@ post___kmalloc(size_t size, gfp_t flags, void *returnValue,
     spin_unlock_irqrestore(&amp;spinlock_alloc_total, irq_flags);
     
     spin_lock_irqsave(&amp;spinlock_alloc_failed, irq_flags);
-    if (returnValue == NULL) ++cnt_alloc_failed;
+    if (ret_val == NULL) ++cnt_alloc_failed;
     spin_unlock_irqrestore(&amp;spinlock_alloc_failed, irq_flags);
     
     spin_lock_irqsave(&amp;spinlock_alloc_max_size, irq_flags);

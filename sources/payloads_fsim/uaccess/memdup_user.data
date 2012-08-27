@@ -1,4 +1,4 @@
 [group]
    	# Fault Simulation
-	fpoint.fault_code =	returnValue = ERR_PTR(-ENOMEM);
+	fpoint.fault_code =	ret_val = ERR_PTR(-ENOMEM);
 #######################################################################

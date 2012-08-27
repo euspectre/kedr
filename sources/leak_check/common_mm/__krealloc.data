@@ -6,14 +6,14 @@
 	
 	if (p == NULL) { 
 		/* same as kmalloc */
-		if (returnValue != NULL)
-			kedr_lc_handle_alloc(target_module, returnValue, size,
+		if (ret_val != NULL)
+			kedr_lc_handle_alloc(target_module, ret_val, size,
 				caller_address);
 	} else {
 		/* this part is more tricky as __krealloc may or may not call
 		 * kmalloc and, in addition, it does not free 'p'. */
-		if (returnValue != NULL && returnValue != p) /* allocation has been done */
-			kedr_lc_handle_alloc(target_module, returnValue, size, 
+		if (ret_val != NULL && ret_val != p) /* allocation has been done */
+			kedr_lc_handle_alloc(target_module, ret_val, size, 
 				caller_address);
 	}
 	<<

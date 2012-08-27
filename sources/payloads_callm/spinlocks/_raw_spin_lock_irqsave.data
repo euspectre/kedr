@@ -4,7 +4,7 @@
 	trace.param.name = lock
 
 	trace.param.type = unsigned long
-	trace.param.name = returnValue
+	trace.param.name = ret_val
 
 	# The format string to be used for trace output.
 	trace.formatString = "arguments: (%p), result: %lu"

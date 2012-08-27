@@ -17,7 +17,7 @@ kedr_repl_<$function.name$>(<$if concat(arg.name)$><$argument : join(, )$>,
 {
 // Extract value of 'caller_address' from replacement function's parameters
 	void* caller_address = call_info->return_address;
-<$if returnType$>	<$returnType$> returnValue;
+<$if returnType$>	<$returnType$> ret_val;
 
 <$endif$><$if concat(fpoint.param.name)$>	struct fsim_point_data_<$point_name$> fsim_point_data;
 
@@ -33,11 +33,11 @@ kedr_repl_<$function.name$>(<$if concat(arg.name)$><$argument : join(, )$>,
 	else
 	{
 		/* Call the target function */
-		<$if returnType$>returnValue = <$endif$><$function.name$>(<$if concat(arg.name)$><$arg.name : join(, )$><$endif$>);
+		<$if returnType$>ret_val = <$endif$><$function.name$>(<$if concat(arg.name)$><$arg.name : join(, )$><$endif$>);
 	}
 <$if concat(epilogue)$><$epilogue: join(\n)$>
 
 <$endif$>    (void)caller_address;//for supress warnings about unused variable
 
-<$if returnType$>	return returnValue;
+<$if returnType$>	return ret_val;
 <$endif$>}

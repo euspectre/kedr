@@ -819,7 +819,7 @@ The most important part is to specify what exactly to do if a call to <code clas
             callNo
         );
         dump_stack();
-        returnValue = __kmalloc(size, flags);
+        ret_val = __kmalloc(size, flags);
     &lt;&lt;
 </pre><p>
 That is, if the indicator function returns non-zero for a given call to <code class="code">__kmalloc</code>, we output the call number and PID of the corresponding process and call <code class="code">dump_stack()</code> to output the call stack to the system log. Note that we call <code class="code">__kmalloc</code> at the end as we do not intend to simulate its failure rather than to allow the execution continue normally.

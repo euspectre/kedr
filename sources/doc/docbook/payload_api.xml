@@ -132,7 +132,7 @@ Examples:
  */
 
 void 
-post_foo(int a, void *p, long returnValue, 
+post_foo(int a, void *p, long ret_val, 
     struct kedr_function_call_info *call_info)
 {
     /* ... */
@@ -533,10 +533,10 @@ MODULE_LICENSE("<Some license here>");
 
 /* Handlers of the intercepted calls */
 static void
-post_kfoo(void *arg, unsigned long returnValue)
+post_kfoo(void *arg, unsigned long ret_val)
 {
     /* Process the result of function, dump data to a trace, etc. */
-    trace_function_call(arg, returnValue);
+    trace_function_call(arg, ret_val);
 }
 
 static void *

@@ -1,6 +1,6 @@
 [group]
 	# Fault Simulation
-	fpoint.fault_code =	returnValue = 0;
+	fpoint.fault_code =	ret_val = 0;
 
 	fpoint.param.type = int
 	fpoint.param.name = cap

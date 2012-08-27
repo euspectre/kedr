@@ -43,7 +43,7 @@ header =>>
 	fpoint.param.type = gfp_t
 	fpoint.param.name = flags
 
-	fpoint.fault_code =	returnValue = NULL;
+	fpoint.fault_code =	ret_val = NULL;
 
 # End of the group of definitions for kstrdup().
 

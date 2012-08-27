@@ -50,7 +50,7 @@ trace_called_<$function.name$>(void* abs_addr,
 #define KEDR_<$if trace.happensBefore$>PRE<$else$>POST<$endif$>_<$function.name$>
 static void
 kedr_<$if trace.happensBefore$>pre<$else$>post<$endif$>_<$function.name$>(<$if concat(arg.name)$><$argument : join(, )$>,
-	<$endif$><$if trace.happensBefore$><$else$><$if returnType$><$returnType$> returnValue,
+	<$endif$><$if trace.happensBefore$><$else$><$if returnType$><$returnType$> ret_val,
 	<$endif$><$endif$>struct kedr_function_call_info* call_info)
 {
 	void *abs_addr = call_info->return_address; 

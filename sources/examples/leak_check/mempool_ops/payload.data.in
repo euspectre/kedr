@@ -51,8 +51,8 @@ header =>>
 	# as the value of 'size' here. LeakCheck will interpret it as
 	# "unknown size".
 	handler.post =>>
-	if (returnValue != NULL)
-		kedr_lc_handle_alloc(target_module, returnValue, 0,
+	if (ret_val != NULL)
+		kedr_lc_handle_alloc(target_module, ret_val, 0,
 			caller_address);
 	<< 
 # End of the group of definitions for mempool_alloc().

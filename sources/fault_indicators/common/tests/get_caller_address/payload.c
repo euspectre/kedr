@@ -30,7 +30,7 @@ module_param_named(__kmalloc, __kmalloc_caller_address, ulong, S_IRUGO);
 /* ================================================================ */
 /* Interception functions */
 static void
-post___kmalloc(size_t size, gfp_t flags, void* returnValue,
+post___kmalloc(size_t size, gfp_t flags, void* ret_val,
     struct kedr_function_call_info* call_info)
 {
     __kmalloc_caller_address = (unsigned long)call_info->return_address;

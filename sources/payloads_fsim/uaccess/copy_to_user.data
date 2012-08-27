@@ -3,5 +3,5 @@
 	fpoint.rename = copy_to_user
 
 	# Fault Simulation
-	fpoint.fault_code =	returnValue = n;
+	fpoint.fault_code =	ret_val = n;
 #######################################################################

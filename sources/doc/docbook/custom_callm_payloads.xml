@@ -109,7 +109,7 @@ Additionally, the following parameters can be defined at group level:
     </varlistentry>
 </variablelist>
 
-If the target function does not return void, <varname>returnValue</varname> variable refers to the return value of the function. It may be used as the name of variable to output (<symbol>arg.name</symbol>) and in the <symbol>prologue</symbol> and <symbol>epilogue</symbol> sections.
+If the target function does not return void, <varname>ret_val</varname> variable refers to the return value of the function. It may be used as the name of variable to output (<symbol>arg.name</symbol>) and in the <symbol>prologue</symbol> and <symbol>epilogue</symbol> sections.
     </para>
     <para>
 Example of the group section for module_put() target function:
@@ -131,7 +131,7 @@ Example of the group section for module_put() target function:
 
 # End of the group of definitions for module_put().
 </programlisting>
-Example of the group section for __kmalloc() target function (note the usage of <varname>returnValue</varname> variable as the value of <code>trace.param.name</code> parameter):
+Example of the group section for __kmalloc() target function (note the usage of <varname>ret_val</varname> variable as the value of <code>trace.param.name</code> parameter):
 <programlisting>
 [group]
     # Name and return type of the target function
@@ -153,7 +153,7 @@ Example of the group section for __kmalloc() target function (note the usage of 
     trace.param.name = flags
 
     trace.param.type = void *
-    trace.param.name = returnValue
+    trace.param.name = ret_val
 
     # The format string to be used for trace output.
     trace.formatString = "arguments: (%zu, %x), result: %p"
@@ -185,7 +185,7 @@ size_t size = kmem_cache_size(mc);
     trace.param.name = flags
 
     trace.param.type = void *
-    trace.param.name = returnValue
+    trace.param.name = ret_val
 
     # The format string to be used for trace output.
     trace.formatString = "arguments: (%zu, %x), result: %p"

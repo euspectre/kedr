@@ -14,13 +14,13 @@
 	if (size != 0) {
 		if (p == NULL) { 
 			/* kmalloc */
-			if (returnValue != NULL)
-				kedr_lc_handle_alloc(target_module, returnValue,
+			if (ret_val != NULL)
+				kedr_lc_handle_alloc(target_module, ret_val,
 					size, caller_address);
 		} else {
 			/* kfree + kmalloc if everything succeeds */
 			kedr_lc_handle_alloc(target_module, 
-				((returnValue != NULL) ? returnValue : p), 
+				((ret_val != NULL) ? ret_val : p), 
 				size, caller_address);
 		/* If the allocation failed, we return information about 'p'
 		 * to the storage. A minor issue is that stack trace will 

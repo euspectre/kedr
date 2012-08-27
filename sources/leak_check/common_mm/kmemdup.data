@@ -1,8 +1,8 @@
 [group]
 	# The body of the replacement function
 	handler.post =>>
-	if (returnValue != NULL)
-		kedr_lc_handle_alloc(target_module, returnValue, len,
+	if (ret_val != NULL)
+		kedr_lc_handle_alloc(target_module, ret_val, len,
 			caller_address);
 	<<
 #######################################################################

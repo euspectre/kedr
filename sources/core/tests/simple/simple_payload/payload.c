@@ -34,13 +34,13 @@ MODULE_LICENSE("GPL");
 static void*
 repl___kmalloc(size_t size, gfp_t flags)
 {
-    void* returnValue;
+    void* ret_val;
     
     /* Call the target function */
-    returnValue = __kmalloc(size, flags);
+    ret_val = __kmalloc(size, flags);
     /* Do nothing more */
 
-    return returnValue;
+    return ret_val;
 }
 
 static void

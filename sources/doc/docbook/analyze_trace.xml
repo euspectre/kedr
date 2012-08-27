@@ -456,7 +456,7 @@ The most important part is to specify what exactly to do if a call to <code>__km
             callNo
         );
         dump_stack();
-        returnValue = __kmalloc(size, flags);
+        ret_val = __kmalloc(size, flags);
     <<
 ]]></programlisting>
 

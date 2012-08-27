@@ -218,7 +218,7 @@ The initial value of each counter is 0. Post handlers actually update the counte
 
 <programlisting><![CDATA[
 static void
-post___kmalloc(size_t size, gfp_t flags, void *returnValue,
+post___kmalloc(size_t size, gfp_t flags, void *ret_val,
     struct kedr_function_call_info *call_info)
 {
     unsigned long irq_flags;
@@ -228,7 +228,7 @@ post___kmalloc(size_t size, gfp_t flags, void *returnValue,
     spin_unlock_irqrestore(&spinlock_alloc_total, irq_flags);
     
     spin_lock_irqsave(&spinlock_alloc_failed, irq_flags);
-    if (returnValue == NULL) ++cnt_alloc_failed;
+    if (ret_val == NULL) ++cnt_alloc_failed;
     spin_unlock_irqrestore(&spinlock_alloc_failed, irq_flags);
     
     spin_lock_irqsave(&spinlock_alloc_max_size, irq_flags);

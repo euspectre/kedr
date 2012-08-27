@@ -1,12 +1,12 @@
 [group]
 	# The body of the replacement function
 	handler.post =>>
-	if (returnValue != NULL) {
+	if (ret_val != NULL) {
 		/* Similar to posix_acl_alloc() with count == 3 
 		 * (USER, GROUP, OTHER) */
 		size_t size = sizeof(struct posix_acl) + 
 			3 * sizeof(struct posix_acl_entry);
-		kedr_lc_handle_alloc(target_module, returnValue, size,
+		kedr_lc_handle_alloc(target_module, ret_val, size,
 			caller_address);
 	}
 	<<

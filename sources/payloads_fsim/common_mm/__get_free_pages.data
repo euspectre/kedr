@@ -12,5 +12,5 @@ size_t size = PAGE_SIZE * (((size_t)1) >> order);
 	fpoint.param.type = gfp_t
 	fpoint.param.name = flags
 
-	fpoint.fault_code =	returnValue = 0;
+	fpoint.fault_code =	ret_val = 0;
 #######################################################################

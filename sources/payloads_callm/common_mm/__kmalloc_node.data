@@ -10,7 +10,7 @@
 	trace.param.name = nodeid
 
 	trace.param.type = void *
-	trace.param.name = returnValue
+	trace.param.name = ret_val
 
 	# The format string to be used for trace output.
 	trace.formatString = "arguments: (%zu, %x, %d), result: %p"

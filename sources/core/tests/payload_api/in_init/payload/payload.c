@@ -46,10 +46,10 @@ static void*
 repl___kmalloc(size_t size, gfp_t flags,
 	struct kedr_function_call_info* call_info)
 {
-	void* returnValue;
+	void* ret_val;
     target_in_init = (kedr_target_module_in_init() ? 1 : 0);
-	returnValue = __kmalloc(size, flags);
-	return returnValue;
+	ret_val = __kmalloc(size, flags);
+	return ret_val;
 }
 /*********************************************************************/
 

@@ -1,8 +1,8 @@
 [group]
 	# The body of the replacement function
 	handler.post =>>
-	if ((void *)returnValue != NULL) {
-		kedr_lc_handle_alloc(target_module, (const void *)returnValue, 
+	if ((void *)ret_val != NULL) {
+		kedr_lc_handle_alloc(target_module, (const void *)ret_val, 
 			(size_t)(PAGE_SIZE << order), caller_address);
 	}
 	<<

@@ -4,7 +4,7 @@
 There is a parameter that changes order of <link linkend="target_function">target function</link> call and output of values to the trace:
 <variablelist>
     <varlistentry><term>trace.happensBefore</term>
-        <listitem>If this parameter is defined (its actual value does not matter), the trace will be output <emphasis>before</emphasis> the target function is called. With this parameter defined, variable <varname>returnValue</varname> should not be used.</listitem>
+        <listitem>If this parameter is defined (its actual value does not matter), the trace will be output <emphasis>before</emphasis> the target function is called. With this parameter defined, variable <varname>ret_val</varname> should not be used.</listitem>
     </varlistentry>
 </variablelist>
     </para>

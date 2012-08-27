@@ -181,7 +181,7 @@ fail:
 /* ================================================================ */
 /* Interception functions */
 static void
-post___kmalloc(size_t size, gfp_t flags, void* returnValue,
+post___kmalloc(size_t size, gfp_t flags, void* ret_val,
     struct kedr_function_call_info* call_info)
 {
     unsigned long irq_flags;
@@ -191,7 +191,7 @@ post___kmalloc(size_t size, gfp_t flags, void* returnValue,
     spin_unlock_irqrestore(&spinlock_alloc_total, irq_flags);
     
     spin_lock_irqsave(&spinlock_alloc_failed, irq_flags);
-    if (returnValue == NULL) ++cnt_alloc_failed;
+    if (ret_val == NULL) ++cnt_alloc_failed;
     spin_unlock_irqrestore(&spinlock_alloc_failed, irq_flags);
     
     spin_lock_irqsave(&spinlock_alloc_max_size, irq_flags);
@@ -201,7 +201,7 @@ post___kmalloc(size_t size, gfp_t flags, void* returnValue,
 
 static void
 post_krealloc(const void* p, size_t size, gfp_t flags,
-    void* returnValue,
+    void* ret_val,
     struct kedr_function_call_info* call_info)
 {
     unsigned long irq_flags;
@@ -212,7 +212,7 @@ post_krealloc(const void* p, size_t size, gfp_t flags,
     spin_unlock_irqrestore(&spinlock_alloc_total, irq_flags);
     
     spin_lock_irqsave(&spinlock_alloc_failed, irq_flags);
-    if (returnValue == NULL) ++cnt_alloc_failed;
+    if (ret_val == NULL) ++cnt_alloc_failed;
     spin_unlock_irqrestore(&spinlock_alloc_failed, irq_flags);
     
     spin_lock_irqsave(&spinlock_alloc_max_size, irq_flags);
@@ -222,7 +222,7 @@ post_krealloc(const void* p, size_t size, gfp_t flags,
 
 static void
 post_kmem_cache_alloc(struct kmem_cache* mc, gfp_t flags,
-    void* returnValue,
+    void* ret_val,
     struct kedr_function_call_info* call_info)
 {
     unsigned long irq_flags;
@@ -238,7 +238,7 @@ post_kmem_cache_alloc(struct kmem_cache* mc, gfp_t flags,
     spin_unlock_irqrestore(&spinlock_alloc_total, irq_flags);
     
     spin_lock_irqsave(&spinlock_alloc_failed, irq_flags);
-    if (returnValue == NULL) ++cnt_alloc_failed;
+    if (ret_val == NULL) ++cnt_alloc_failed;
     spin_unlock_irqrestore(&spinlock_alloc_failed, irq_flags);
     
     spin_lock_irqsave(&spinlock_alloc_max_size, irq_flags);
@@ -262,48 +262,48 @@ post_mutex_lock(struct mutex* lock, struct kedr_function_call_info* call_info)
 }
 
 static void
-post_mutex_lock_interruptible(struct mutex* lock, int returnValue,
+post_mutex_lock_interruptible(struct mutex* lock, int ret_val,
     struct kedr_function_call_info* call_info)
 {
     unsigned long irq_flags;
    
     spin_lock_irqsave(&spinlock_mutex_locks, irq_flags);
-    if (returnValue == 0) ++cnt_mutex_locks;
+    if (ret_val == 0) ++cnt_mutex_locks;
     spin_unlock_irqrestore(&spinlock_mutex_locks, irq_flags);
     
     spin_lock_irqsave(&spinlock_mutex_balance, irq_flags);
-    if (returnValue == 0) ++cnt_mutex_balance;
+    if (ret_val == 0) ++cnt_mutex_balance;
     spin_unlock_irqrestore(&spinlock_mutex_balance, irq_flags);
 }
 
 static void
-post_mutex_lock_killable(struct mutex* lock, int returnValue,
+post_mutex_lock_killable(struct mutex* lock, int ret_val,
     struct kedr_function_call_info* call_info)
 {
     unsigned long irq_flags;
     
     spin_lock_irqsave(&spinlock_mutex_locks, irq_flags);
-    if (returnValue == 0) ++cnt_mutex_locks;
+    if (ret_val == 0) ++cnt_mutex_locks;
     spin_unlock_irqrestore(&spinlock_mutex_locks, irq_flags);
     
     spin_lock_irqsave(&spinlock_mutex_balance, irq_flags);
-    if (returnValue == 0) ++cnt_mutex_balance;
+    if (ret_val == 0) ++cnt_mutex_balance;
     spin_unlock_irqrestore(&spinlock_mutex_balance, irq_flags);
 }
 #endif /* CONFIG_DEBUG_LOCK_ALLOC */
 
 static void
-post_mutex_trylock(struct mutex* lock, int returnValue,
+post_mutex_trylock(struct mutex* lock, int ret_val,
     struct kedr_function_call_info* call_info)
 {
     unsigned long irq_flags;
     
     spin_lock_irqsave(&spinlock_mutex_locks, irq_flags);
-    if (returnValue == 1) ++cnt_mutex_locks;
+    if (ret_val == 1) ++cnt_mutex_locks;
     spin_unlock_irqrestore(&spinlock_mutex_locks, irq_flags);
     
     spin_lock_irqsave(&spinlock_mutex_balance, irq_flags);
-    if (returnValue == 1) ++cnt_mutex_balance;
+    if (ret_val == 1) ++cnt_mutex_balance;
     spin_unlock_irqrestore(&spinlock_mutex_balance, irq_flags);
 }
 

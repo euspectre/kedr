@@ -9,5 +9,5 @@
 	# Rename point
 	fpoint.rename = kmalloc
 	
-	fpoint.fault_code =	returnValue = NULL;
+	fpoint.fault_code =	ret_val = NULL;
 #######################################################################
