@@ -51,3 +51,21 @@ if (HAVE_KFREE_RCU)
 
 	add_subdirectory(kfree_rcu_module)
 endif (HAVE_KFREE_RCU)
+
+if (DEFINED KEDR_FUNC_USED_kasprintf AND DEFINED KEDR_FUNC_USED_kvasprintf)
+	# Test the processing of kasprintf() and kvasprintf(). The former 
+	# function has a variable argument list so we currently can not 
+	# test interception of the calls to it in a usual way.
+	set(KEDR_TEST_KASPRINTF_MODULE "kedr_test_kasprintf")
+	
+	configure_file(
+		"${CMAKE_CURRENT_SOURCE_DIR}/test_kasprintf.sh.in"
+		"${CMAKE_CURRENT_BINARY_DIR}/test_kasprintf.sh"
+		@ONLY
+	)
+	kedr_test_add_script(leak_check.kasprintf.01
+		test_kasprintf.sh
+	)	
+
+	add_subdirectory(kasprintf_module)
+endif (DEFINED KEDR_FUNC_USED_kasprintf AND DEFINED KEDR_FUNC_USED_kvasprintf)

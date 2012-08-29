@@ -1,0 +1,15 @@
+[group]
+	# Name and return type of the target function
+	function.name = kvasprintf
+	returnType = char *
+
+	# Names and types of the arguments of the target function
+	arg.type = gfp_t
+	arg.name = gfp
+
+	arg.type = const char *
+	arg.name = fmt
+
+	arg.type = va_list
+	arg.name = ap
+#######################################################################

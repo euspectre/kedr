@@ -1,3 +1,4 @@
 # Memory leak detector (LeakCheck), the core and the plugins
 payload @leak_check_install_dir@/kedr_leak_check.ko
 payload @leak_check_install_dir@/kedr_lc_common_mm.ko
+payload @leak_check_install_dir@/kedr_lc_kasprintf.ko

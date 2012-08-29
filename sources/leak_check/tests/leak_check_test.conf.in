@@ -12,3 +12,4 @@ on_unload umount "@KEDR_TEST_DIR@/debugfs"
 # Load payloads
 payload @CMAKE_BINARY_DIR@/leak_check/core/kedr_leak_check.ko
 payload @CMAKE_BINARY_DIR@/leak_check/common_mm/kedr_lc_common_mm.ko
+payload @CMAKE_BINARY_DIR@/leak_check/kasprintf/kedr_lc_kasprintf.ko
