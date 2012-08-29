@@ -59,4 +59,4 @@ struct kedr_base_operations
 int kedr_base_init(struct kedr_base_operations* ops);
 void kedr_base_destroy(void);
 
-#endif /* KEDR_INTERNAL_H */
+#endif /* KEDR_BASE_INTERNAL_H */
