@@ -168,8 +168,8 @@ lc_object_create(struct module *target)
 	lc->wq = create_singlethread_workqueue(wq_name);
 	if (lc->wq == NULL) {
 		pr_warning("[kedr_leak_check] "
-		"Failed to create output object, error code: %d\n",
-			(int)PTR_ERR(lc->output));
+		"Failed to create the workqueue \"%s\"\n",
+			wq_name);
 		goto out_clean_output;
 	}
 	
