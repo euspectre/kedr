@@ -1,12 +1,16 @@
 #! /bin/sh
+
+# Just in case the tools like lsmod are not in their usual location.
+export PATH=$PATH:/sbin:/bin:/usr/bin
+
 control_script="sh @CMAKE_BINARY_DIR@/tools/control/tests/kedr"
 kedr_name="kedr"
 # Name of any payload (empty if shouldn't be tested)
 payload_name="@NAME_OF_PAYLOAD_LOADED@"
-#Whether module is currently loading
+# Whether module is currently loading
 is_module_loading()
 {
-    /sbin/lsmod | grep "^$1[[:blank:]]\{1,\}" > /dev/null
+    lsmod | grep "^$1[[:blank:]]\{1,\}" > /dev/null
 }
 
 output_file="`dirname $0`/tmp_output"

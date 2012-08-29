@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Just in case the tools like lsmod are not in their usual location.
+export PATH=$PATH:/sbin:/bin:/usr/bin
+
 newline='
 '
 # Usage: 
@@ -92,10 +95,10 @@ get_module_name()
 
 # is_module_running module_name
 #
-# Determine, whether module with given name(not from module file!), is currently running.
+# Determine, whether module with given name (not from module file!), is currently running.
 is_module_running()
 {
-    /sbin/lsmod | grep "^$1[[:blank:]]\{1,\}" > /dev/null
+    lsmod | grep "^$1[[:blank:]]\{1,\}" > /dev/null
 }
 
 # resolve_module_alias alias
