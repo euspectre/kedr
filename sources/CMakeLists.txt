@@ -335,6 +335,23 @@ set(KEDR_GEN_TEMPLATES_DIR "${CMAKE_SOURCE_DIR}/templates/")
 	message (STATUS "Creating \"kedr_gen\" - done")
 #######################################################################
 
+# This file will contain #defines that specify whether the particular 
+# functions are available and used. Keep these statements before 
+# "functions" subdirectory is processed.
+set(KEDR_FUNC_DEF_FILE "${CMAKE_BINARY_DIR}/func_def.h")
+
+# This is needed to generate func_def.h.
+set(KEDR_FUNC_DEF_FILE_IN "${CMAKE_BINARY_DIR}/func_def.h.in")
+
+# Clear the file, write the header guard
+file(WRITE "${KEDR_FUNC_DEF_FILE_IN}" 
+	"#ifndef KEDR_FUNC_DEF_1538_INCLUDED\n")
+file(APPEND "${KEDR_FUNC_DEF_FILE_IN}" 
+	"#define KEDR_FUNC_DEF_1538_INCLUDED\n\n")
+file(APPEND "${KEDR_FUNC_DEF_FILE_IN}" 
+	"/* Kernel functions to be processed by payload modules */\n\n")
+#######################################################################
+
 add_subdirectory(core)
 
 # Keep this before add_subdirectory() statements for payload modules.
@@ -396,6 +413,16 @@ if (NOT CMAKE_CROSSCOMPILING)
 	# Documentation
 	add_subdirectory(doc)
 endif (NOT CMAKE_CROSSCOMPILING)
+#######################################################################
+
+# After all payload modules have been processed, complete generation of
+# func_def.h
+file(APPEND "${KEDR_FUNC_DEF_FILE_IN}" 
+	"\n#endif /* KEDR_FUNC_DEF_1538_INCLUDED */\n")
+
+configure_file(
+	"${CMAKE_BINARY_DIR}/func_def.h.in"
+	"${CMAKE_BINARY_DIR}/func_def.h")
 #######################################################################
 
 # "Global" tests 

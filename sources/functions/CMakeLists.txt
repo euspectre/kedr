@@ -45,7 +45,8 @@ function(func_db_configure_functions)
 				message(FATAL_ERROR 
 				"The file is missing: ${KEDR_HEADER_DATA_FILE_${func}}}")
 			endif (NOT hdata_file_found)
-			
+			file(APPEND "${KEDR_FUNC_DEF_FILE_IN}" 
+				"#cmakedefine KEDR_FUNC_USED_${func}\n")
 		endif (func STREQUAL "GENERATED")
 	endforeach ()
 endfunction(func_db_configure_functions)
