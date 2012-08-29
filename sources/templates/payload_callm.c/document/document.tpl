@@ -41,15 +41,15 @@ enum module_section_type {
 static void process_caller_address(void* abs_addr, int* section_id, ptrdiff_t* rel_addr)
 {
 	if((target_core_addr != NULL)
-        && (abs_addr >= target_core_addr)
-        && (abs_addr < target_core_addr + target_core_size))
+		&& (abs_addr >= target_core_addr)
+		&& (abs_addr < target_core_addr + target_core_size))
 	{
 		*section_id = module_section_core;
 		*rel_addr = abs_addr - target_core_addr;
 	}
 	else if((target_init_addr != NULL)
-        && (abs_addr >= target_init_addr)
-        && (abs_addr < target_init_addr + target_init_size))
+		&& (abs_addr >= target_init_addr)
+		&& (abs_addr < target_init_addr + target_init_size))
 	{
 		*section_id = module_section_init;
 		*rel_addr = abs_addr - target_init_addr;
@@ -68,32 +68,32 @@ static void process_caller_address(void* abs_addr, int* section_id, ptrdiff_t* r
 static void
 target_load_callback(struct module *target_module)
 {
-    BUG_ON(target_module == NULL);
+	BUG_ON(target_module == NULL);
 
-    target_core_addr = target_module->module_core;
-    target_core_size = target_module->core_text_size;
+	target_core_addr = target_module->module_core;
+	target_core_size = target_module->core_text_size;
 
-    target_init_addr = target_module->module_init;
-    target_init_size = target_module->init_text_size;
+	target_init_addr = target_module->module_init;
+	target_init_size = target_module->init_text_size;
 	
 	kedr_trace_marker_target(target_module, THIS_MODULE, 1);
 	
-    return;
+	return;
 }
 
 static void
 target_unload_callback(struct module *target_module)
 {
-    kedr_trace_marker_target(target_module, THIS_MODULE, 0);
+	kedr_trace_marker_target(target_module, THIS_MODULE, 0);
 	
 	BUG_ON(target_module == NULL);
-    
-    target_core_addr = NULL;
-    target_core_size = 0;
+	
+	target_core_addr = NULL;
+	target_core_size = 0;
 
-    target_init_addr = NULL;
-    target_init_size = 0;
-    return;
+	target_init_addr = NULL;
+	target_init_size = 0;
+	return;
 }
 
 /*********************************************************************
@@ -118,13 +118,13 @@ static struct kedr_pre_pair pre_pairs[] =
 
 
 static struct kedr_payload payload = {
-    .mod                    = THIS_MODULE,
+	.mod                    = THIS_MODULE,
 
 	.post_pairs				= post_pairs,
 	.pre_pairs				= pre_pairs,
 
-    .target_load_callback   = target_load_callback,
-    .target_unload_callback = target_unload_callback
+	.target_load_callback   = target_load_callback,
+	.target_unload_callback = target_unload_callback
 };
 /*********************************************************************/
 
@@ -135,7 +135,7 @@ static void __exit
 <$module.name$>_cleanup_module(void)
 {
 	kedr_payload_unregister(&payload);
-    kedr_trace_pp_unregister();
+	kedr_trace_pp_unregister();
 	
 	functions_support_unregister();
 }
