@@ -53,9 +53,9 @@ default_config_dir=@KEDR_DEFAULT_CONFIG_DIR@
 default_config_file=@KEDR_DEFAULT_CONFIG_FILE@
 
 # commands for kernel module control
-MODPROBE=/sbin/modprobe
-INSMOD=/sbin/insmod
-RMMOD=/sbin/rmmod
+MODPROBE=modprobe
+INSMOD=insmod
+RMMOD=rmmod
 
 RMMOD_ONLY_ONE=rmmod_only_one
 rmmod_only_one()

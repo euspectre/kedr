@@ -3,12 +3,15 @@
 functions_support_module_name=@functions_support_module_name@
 functions_support_module="${functions_support_module_name}.ko"
 
-if ! /sbin/insmod "${functions_support_module}"; then
+# Just in case the tools like lsmod are not in their usual location.
+export PATH=$PATH:/sbin:/bin:/usr/bin
+
+if ! insmod "${functions_support_module}"; then
     printf "Loading of functions support module was failed.\n"
     exit 1
 fi
 
-if ! /sbin/rmmod "${functions_support_module}"; then
+if ! rmmod "${functions_support_module}"; then
     printf "Error occure while unload functions support module.\n"
     exit 1
 fi

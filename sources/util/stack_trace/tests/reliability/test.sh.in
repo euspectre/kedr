@@ -10,6 +10,9 @@
 #   sh test.sh
 ########################################################################
 
+# Just in case the tools like lsmod are not in their usual location.
+export PATH=$PATH:/sbin:/bin:/usr/bin
+
 ########################################################################
 # A function to check prerequisites: whether the necessary files exist,
 # etc.
@@ -27,7 +30,7 @@ checkPrereqs()
 ########################################################################
 cleanupAll()
 {
-    /sbin/rmmod "${TEST_MODULE}" || true
+    rmmod "${TEST_MODULE}" || true
 }
 
 ########################################################################
@@ -35,7 +38,7 @@ cleanupAll()
 ########################################################################
 doTest()
 {
-    /sbin/insmod "${WORK_DIR}/${TEST_MODULE}.ko"
+    insmod "${WORK_DIR}/${TEST_MODULE}.ko"
     if test $? -ne 0; then
         printf "Failed to load ${TEST_MODULE}\n"
         cleanupAll

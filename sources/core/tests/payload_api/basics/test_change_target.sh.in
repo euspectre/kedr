@@ -8,6 +8,9 @@
 # The target modules should be: <targetN_dir>/test_<targetN_dir>.ko
 ########################################################################
 
+# Just in case the tools like lsmod are not in their usual location.
+export PATH=$PATH:/sbin:/bin:/usr/bin
+
 ########################################################################
 # A function to check prerequisites: whether the necessary files exist,
 # etc.
@@ -44,22 +47,22 @@ cleanupAll()
 	
 	lsmod | grep "${TARGET_NAME1_ACTUAL}" > /dev/null 2>&1
 	if test $? -eq 0; then
-		/sbin/rmmod "${TARGET_NAME1_ACTUAL}"
+		rmmod "${TARGET_NAME1_ACTUAL}"
 	fi
 	
 	lsmod | grep "${TARGET_NAME2_ACTUAL}" > /dev/null 2>&1
 	if test $? -eq 0; then
-		/sbin/rmmod "${TARGET_NAME2_ACTUAL}"
+		rmmod "${TARGET_NAME2_ACTUAL}"
 	fi
 	
 	lsmod | grep "${PAYLOAD_NAME}" > /dev/null 2>&1
 	if test $? -eq 0; then
-		/sbin/rmmod "${PAYLOAD_NAME}"
+		rmmod "${PAYLOAD_NAME}"
 	fi
 	
 	lsmod | grep "@CORE_NAME@" > /dev/null 2>&1
 	if test $? -eq 0; then
-		/sbin/rmmod "@CORE_NAME@"
+		rmmod "@CORE_NAME@"
 	fi
 }
 
@@ -102,9 +105,9 @@ checkOutputStrings()
 ########################################################################
 doTest()
 {
-	/sbin/insmod "${KEDR_MODULE}" target_name="${TARGET_NAME1}" || exit 1
+	insmod "${KEDR_MODULE}" target_name="${TARGET_NAME1}" || exit 1
 
-	/sbin/insmod "${PAYLOAD_MODULE}" \
+	insmod "${PAYLOAD_MODULE}" \
 		set_load_fn=1 \
 		set_unload_fn=1
 	if test $? -ne 0; then
@@ -130,7 +133,7 @@ doTest()
 		exit 1
 	fi
 
-	/sbin/insmod "${TARGET_MODULE1}"
+	insmod "${TARGET_MODULE1}"
 	if test $? -ne 0; then
 		printf "Failed to load the target module: ${TARGET_NAME1}\n"
 		cleanupAll
@@ -139,7 +142,7 @@ doTest()
 
 	checkOutputStrings "${EXPECTED_LOAD_STRING}" "<none>"
 
-	/sbin/rmmod "${TARGET_NAME1_ACTUAL}"
+	rmmod "${TARGET_NAME1_ACTUAL}"
 	if test $? -ne 0; then
 		printf "Failed to unload the target module: ${TARGET_NAME1}\n"
 		cleanupAll
@@ -158,7 +161,7 @@ doTest()
 	
 	EXPECTED_LOAD_STRING="${TARGET_NAME2_ACTUAL}"
 	
-	/sbin/insmod "${TARGET_MODULE2}"
+	insmod "${TARGET_MODULE2}"
 	if test $? -ne 0; then
 		printf "Failed to load the target module: ${TARGET_NAME2}\n"
 		cleanupAll
@@ -169,7 +172,7 @@ doTest()
 	
 	EXPECTED_UNLOAD_STRING="${TARGET_NAME2_ACTUAL}"
 	
-	/sbin/rmmod "${TARGET_NAME2_ACTUAL}"
+	rmmod "${TARGET_NAME2_ACTUAL}"
 	if test $? -ne 0; then
 		printf "Failed to unload the target module: ${TARGET_NAME2}\n"
 		cleanupAll
@@ -189,14 +192,14 @@ doTest()
     
     # Load and unload the first target again and check that the payload 
     # has not been notified.
-    /sbin/insmod "${TARGET_MODULE1}" 
+    insmod "${TARGET_MODULE1}" 
 	if test $? -ne 0; then
 		printf "Failed to load the target module: ${TARGET_NAME1}\n"
 		cleanupAll
 		exit 1
 	fi
 	
-	/sbin/rmmod "${TARGET_NAME1_ACTUAL}"
+	rmmod "${TARGET_NAME1_ACTUAL}"
 	if test $? -ne 0; then
 		printf "Failed to unload the target module: ${TARGET_NAME1}\n"
 		cleanupAll

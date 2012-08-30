@@ -2,6 +2,9 @@
 module="kedr_sample_target"
 device="cfake"
 
+# Just in case the tools like lsmod are not in their usual location.
+export PATH=$PATH:/sbin:/bin:/usr/bin
+
 if test $# -eq 0; then
     echo "'load' or 'unload' command should be specified."
     exit 1
@@ -16,7 +19,7 @@ load)
 
     # Invoke insmod with all arguments we got
     # and use a pathname, as insmod doesn't look in . by default
-    /sbin/insmod ${current_dir}/${module}.ko $* || exit 1
+    insmod ${current_dir}/${module}.ko $* || exit 1
     
     # It seems, udev does not always create the device nodes instantly,
     # so wait a little if necessary.
@@ -30,7 +33,7 @@ load)
 unload)
     # Invoke rmmod with all arguments we got
     # The device nodes will be removed automatically
-    /sbin/rmmod $module $* || exit 1
+    rmmod $module $* || exit 1
     ;;
 *)
     echo "Incorrect command '$command' is specified. Should be 'load' or 'unload'"

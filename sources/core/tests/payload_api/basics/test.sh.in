@@ -14,6 +14,9 @@
 # when the target module is about to unload.
 ########################################################################
 
+# Just in case the tools like lsmod are not in their usual location.
+export PATH=$PATH:/sbin:/bin:/usr/bin
+
 ########################################################################
 # A function to check prerequisites: whether the necessary files exist,
 # etc.
@@ -45,17 +48,17 @@ cleanupAll()
     
     lsmod | grep "${TARGET_NAME_ACTUAL}" > /dev/null 2>&1
     if test $? -eq 0; then
-        /sbin/rmmod "${TARGET_NAME_ACTUAL}"
+        rmmod "${TARGET_NAME_ACTUAL}"
     fi
     
     lsmod | grep "${PAYLOAD_NAME}" > /dev/null 2>&1
     if test $? -eq 0; then
-        /sbin/rmmod "${PAYLOAD_NAME}"
+        rmmod "${PAYLOAD_NAME}"
     fi
     
     lsmod | grep "@CORE_NAME@" > /dev/null 2>&1
     if test $? -eq 0; then
-        /sbin/rmmod "@CORE_NAME@"
+        rmmod "@CORE_NAME@"
     fi
 }
 
@@ -98,9 +101,9 @@ checkOutputStrings()
 ########################################################################
 doTest()
 {
-    /sbin/insmod "${KEDR_MODULE}" target_name="${TARGET_NAME}" || exit 1
+    insmod "${KEDR_MODULE}" target_name="${TARGET_NAME}" || exit 1
 
-    /sbin/insmod "${PAYLOAD_MODULE}" \
+    insmod "${PAYLOAD_MODULE}" \
         set_load_fn=${SET_LOAD_FN} \
         set_unload_fn=${SET_UNLOAD_FN}
     if test $? -ne 0; then
@@ -142,7 +145,7 @@ doTest()
         exit 1
     fi
 
-    /sbin/insmod "${TARGET_MODULE}"
+    insmod "${TARGET_MODULE}"
     RESULT_INSMOD=$?
     if test "t${LOAD_MUST_FAIL}" = "tyes"; then
         # The target must have reported a failure during initialization
@@ -168,7 +171,7 @@ doTest()
 
         checkOutputStrings "${EXPECTED_LOAD_STRING}" "<none>"
 
-        /sbin/rmmod "${TARGET_NAME_ACTUAL}"
+        rmmod "${TARGET_NAME_ACTUAL}"
         if test $? -ne 0; then
             printf "Failed to unload the target module: ${TARGET_NAME}\n"
             cleanupAll

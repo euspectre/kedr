@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Just in case the tools like lsmod are not in their usual location.
+export PATH=$PATH:/sbin:/bin:/usr/bin
+
 fault_simulation_module="@CMAKE_BINARY_DIR@/fault_simulation/kedr_fault_simulation.ko"
 
 indicator_module="@CMAKE_CURRENT_BINARY_DIR@/../kedr_fsim_indicator_common.ko"
@@ -52,7 +55,7 @@ if ! $kedr_control_script start "${target_name}" -f "$kedr_config_file"; then
 	exit 1
 fi
 
-if ! /sbin/insmod "${target_module}"; then
+if ! insmod "${target_module}"; then
 	printf "Cannot load target module for testing.\n"
 	$kedr_control_script stop
 	exit 1
@@ -62,7 +65,7 @@ echo 1 > "$point_dir/expression"
 
 if simulate; then
 	printf "It was expected that simulate would fail (expression is '%s') but it succeeded.\n" `cat "$point_dir/expression"`
-	/sbin/rmmod "${target_module}"
+	rmmod "${target_module}"
 	$kedr_control_script stop
 	exit 1
 fi
@@ -71,7 +74,7 @@ caller_address=`cat /sys/module/${get_caller_address_payload_name}/parameters/__
 
 if test caller_address == "0"; then
 	printf "Fail to determine caller address of the __kmalloc()."
-	/sbin/rmmod "${target_module}"
+	rmmod "${target_module}"
 	$kedr_control_script stop
 	
 	exit 1
@@ -80,7 +83,7 @@ fi
 expression="caller_address != ${caller_address}"
 if ! echo "$expression" > "$point_dir/expression"; then
 	printf "Cannot set expression \"%s\" for fault simulation indicator.\n" "$expression"
-	/sbin/rmmod "${target_module}"
+	rmmod "${target_module}"
 	$kedr_control_script stop
 
 	exit 1
@@ -89,14 +92,14 @@ fi
 if ! simulate; then
 	printf "Fault simulation was not expected to be triggered for __kmalloc with expression \"%s\".\n" "$expression"
 
-	/sbin/rmmod "${target_module}"
+	rmmod "${target_module}"
 	$kedr_control_script stop
 
 	exit 1
 fi
 
 
-if ! /sbin/rmmod "${target_module}"; then
+if ! rmmod "${target_module}"; then
 	printf "Error occured while unloading the target module.\n"
 	$kedr_control_script stop
 	exit 1

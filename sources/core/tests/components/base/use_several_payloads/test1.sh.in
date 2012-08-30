@@ -9,51 +9,54 @@ payload_module2="payload2/${payload_module2_name}.ko"
 verificator_module_name=@verificator_module_name@
 verificator_module="interception_info_verificator/${verificator_module_name}.ko"
 
-if ! /sbin/insmod "$base_module"; then
+# Just in case the tools like lsmod are not in their usual location.
+export PATH=$PATH:/sbin:/bin:/usr/bin
+
+if ! insmod "$base_module"; then
     printf "Failed to load base module.\n"
     exit 1
 fi
 
-if ! /sbin/insmod "$payload_module1"; then
+if ! insmod "$payload_module1"; then
     printf "Failed to load payload module 1.\n"
-    /sbin/rmmod "$base_module"
+    rmmod "$base_module"
     exit 1
 fi
 
-if ! /sbin/insmod "$payload_module2"; then
+if ! insmod "$payload_module2"; then
     printf "Failed to load payload module 2.\n"
-    /sbin/rmmod "$payload_module1"
-    /sbin/rmmod "$base_module"
+    rmmod "$payload_module1"
+    rmmod "$base_module"
     exit 1
 fi
 
-if ! /sbin/insmod "$verificator_module" "situation=1"; then
+if ! insmod "$verificator_module" "situation=1"; then
     printf "Verification failed.\n"
-    /sbin/rmmod "$payload_module2"
-    /sbin/rmmod "$payload_module1"
-    /sbin/rmmod "$base_module"
+    rmmod "$payload_module2"
+    rmmod "$payload_module1"
+    rmmod "$base_module"
     exit 1
 fi
 
-if ! /sbin/rmmod "$verificator_module"; then
+if ! rmmod "$verificator_module"; then
     printf "Failed to unload verificator module."
-    /sbin/rmmod "$payload_module2"
-    /sbin/rmmod "$payload_module1"
-    /sbin/rmmod "$base_module"
+    rmmod "$payload_module2"
+    rmmod "$payload_module1"
+    rmmod "$base_module"
     exit 1
 fi
 
-if ! /sbin/rmmod "$payload_module1"; then
+if ! rmmod "$payload_module1"; then
     printf "Failed to unload payload module 1.\n"
     exit 1
 fi
 
-if ! /sbin/rmmod "$payload_module2"; then
+if ! rmmod "$payload_module2"; then
     printf "Failed to unload payload module 2.\n"
     exit 1
 fi
 
-if ! /sbin/rmmod "$base_module"; then
+if ! rmmod "$base_module"; then
     printf "Failed to unload base module."
     exit 1
 fi

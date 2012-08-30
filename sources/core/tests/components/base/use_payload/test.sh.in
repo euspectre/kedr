@@ -3,12 +3,15 @@
 base_module_name=@base_module_name@
 base_module="@CMAKE_CURRENT_BINARY_DIR@/${base_module_name}.ko"
 
-if ! /sbin/insmod "${base_module}"; then
+# Just in case the tools like lsmod are not in their usual location.
+export PATH=$PATH:/sbin:/bin:/usr/bin
+
+if ! insmod "${base_module}"; then
     printf "Loading of testing module was failed.\n"
     exit 1
 fi
 
-if ! /sbin/rmmod "${base_module_name}"; then
+if ! rmmod "${base_module_name}"; then
     printf "Failed to unload test module.\n"
     exit 1
 fi

@@ -22,6 +22,9 @@
 # the test is output via "test_passed" parameter (see sysfs).
 ########################################################################
 
+# Just in case the tools like lsmod are not in their usual location.
+export PATH=$PATH:/sbin:/bin:/usr/bin
+
 ########################################################################
 # A function to check prerequisites: whether the necessary files exist,
 # etc.
@@ -48,12 +51,12 @@ cleanupAll()
     
     lsmod | grep "${PAYLOAD_NAME}" > /dev/null 2>&1
     if test $? -eq 0; then
-        /sbin/rmmod "${PAYLOAD_NAME}"
+        rmmod "${PAYLOAD_NAME}"
     fi
     
     lsmod | grep "@CORE_NAME@" > /dev/null 2>&1
     if test $? -eq 0; then
-        /sbin/rmmod "@CORE_NAME@"
+        rmmod "@CORE_NAME@"
     fi
 }
 
@@ -62,9 +65,9 @@ cleanupAll()
 ########################################################################
 doTest()
 {
-    /sbin/insmod "${KEDR_MODULE}" || exit 1
+    insmod "${KEDR_MODULE}" || exit 1
 
-    /sbin/insmod "${PAYLOAD_MODULE}" scenario_number=${SCEN_NO}
+    insmod "${PAYLOAD_MODULE}" scenario_number=${SCEN_NO}
     if test $? -ne 0; then
         printf "Failed to load the payload module\n"
         cleanupAll
@@ -81,14 +84,14 @@ doTest()
     # Save the result to be analyzed below
     TEST_PASSED=$(cat "${OUT_PARAM_FILE}")
 
-    /sbin/rmmod "${PAYLOAD_NAME}"
+    rmmod "${PAYLOAD_NAME}"
     if test $? -ne 0; then
         printf "Failed to unload the payload module: ${PAYLOAD_NAME}\n"
         cleanupAll
         exit 1
     fi
 
-    /sbin/rmmod "@CORE_NAME@" || exit 1
+    rmmod "@CORE_NAME@" || exit 1
     
     # Check the saved result
     printf "Test result (1 - passed, other value - failed): ${TEST_PASSED}\n"

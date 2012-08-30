@@ -41,7 +41,7 @@ MODULE_LICENSE("GPL");
 /* 
  * Name of the module to analyze. It can be passed to 'insmod' as 
  * an argument, for example,
- *  /sbin/insmod kedr.ko target_name="module_to_be_analyzed".
+ *  insmod kedr.ko target_name="module_to_be_analyzed".
  * 
  * This module parameter is implemented by hand
  * (with 'set' and 'get' callbacks).

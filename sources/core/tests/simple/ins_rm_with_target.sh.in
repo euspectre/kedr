@@ -9,6 +9,9 @@
 # latter reports error as it should.
 ########################################################################
 
+# Just in case the tools like lsmod are not in their usual location.
+export PATH=$PATH:/sbin:/bin:/usr/bin
+
 ########################################################################
 # A function to check prerequisites: whether the necessary files exist,
 # etc.
@@ -41,12 +44,12 @@ cleanupAll()
     
     lsmod | grep "${PAYLOAD_NAME}" > /dev/null 2>&1
     if test $? -eq 0; then
-        /sbin/rmmod "${PAYLOAD_NAME}"
+        rmmod "${PAYLOAD_NAME}"
     fi
     
     lsmod | grep "@CORE_NAME@" > /dev/null 2>&1
     if test $? -eq 0; then
-        /sbin/rmmod "@CORE_NAME@"
+        rmmod "@CORE_NAME@"
     fi
 }
 ########################################################################
@@ -63,9 +66,9 @@ checkCommonScenario()
 {
     printf "Executing checkCommonScenario()\n"
     
-    /sbin/insmod "${KEDR_MODULE}" target_name="${TARGET_NAME}" || exit 1
+    insmod "${KEDR_MODULE}" target_name="${TARGET_NAME}" || exit 1
 
-    /sbin/insmod "${PAYLOAD_MODULE}"
+    insmod "${PAYLOAD_MODULE}"
     if test $? -ne 0; then
         printf "Failed to load the payload module\n"
         cleanupAll
@@ -87,7 +90,7 @@ checkCommonScenario()
     fi
 
     printf "Trying to unload the KEDR core while the target is under analysis (must fail)\n"
-    /sbin/rmmod "@CORE_NAME@"
+    rmmod "@CORE_NAME@"
     if test $? -eq 0; then
         printf "The KEDR core module must have been locked "
         printf "as long as the target module is under analysis\n"
@@ -104,14 +107,14 @@ checkCommonScenario()
     fi
     cd "${WORK_DIR}"
 
-    /sbin/rmmod "${PAYLOAD_NAME}"
+    rmmod "${PAYLOAD_NAME}"
     if test $? -ne 0; then
         printf "Failed to unload the payload module: ${PAYLOAD_NAME}\n"
         cleanupAll
         exit 1
     fi
 
-    /sbin/rmmod "@CORE_NAME@"
+    rmmod "@CORE_NAME@"
     if test $? -ne 0; then
         printf "Failed to unload the KEDR core module\n"
         cleanupAll
@@ -138,7 +141,7 @@ checkTargetFirstScenario()
 
     printf "Trying to load the KEDR core when the target is already loaded "
     printf "(must fail)\n"
-    /sbin/insmod "${KEDR_MODULE}" target_name="${TARGET_NAME}"
+    insmod "${KEDR_MODULE}" target_name="${TARGET_NAME}"
     if test $? -eq 0; then
         printf "KEDR core must have failed to load if the target "
         printf "was already loaded at that moment\n"

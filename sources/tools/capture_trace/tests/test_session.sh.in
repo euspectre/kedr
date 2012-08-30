@@ -2,6 +2,9 @@
 
 # Test kedr_capture_trace functionality in the session mode.
 
+# Just in case the tools like lsmod are not in their usual location.
+export PATH=$PATH:/sbin:/bin:/usr/bin
+
 kedr_module_name="@CORE_MODULE_NAME@"
 kedr_module="@CORE_MODULE@"
 kedr_trace_module_name="@TRACE_MODULE_NAME@"
@@ -24,46 +27,46 @@ mkdir -p "${debugfs_mount_point}"
 capture_trace_program="@CAPTURE_TRACE_PROGRAM@"
 
 # Load KEDR core and payload modules
-/sbin/insmod "${kedr_module}" "target_name=${target_module_name}"
+insmod "${kedr_module}" "target_name=${target_module_name}"
 if test $? -ne 0; then
 	printf "Failed to load KEDR core module for tests\n"
 	exit 1
 fi
 
-/sbin/insmod "${kedr_trace_module}"
+insmod "${kedr_trace_module}"
 if test $? -ne 0; then
 	printf "Failed to load kedr tracing module for tests\n"
-    /sbin/rmmod "${kedr_module_name}"
+    rmmod "${kedr_module_name}"
 	exit 1
 fi
 
 
-/sbin/insmod "${payload_module}"
+insmod "${payload_module}"
 if test $? -ne 0; then
 	printf "Failed to load payload module for tests\n"
-    /sbin/rmmod "${kedr_trace_module_name}"
-    /sbin/rmmod "${kedr_module_name}"
+    rmmod "${kedr_trace_module_name}"
+    rmmod "${kedr_module_name}"
 	exit 1
 fi
 
 #Load and unload target module 2 times
 for i in 1 2; do
     # Load target module
-    /sbin/insmod "${target_module}"
+    insmod "${target_module}"
 
     if test $? -ne 0; then
         printf "Failed to load target module\n"
         kill $capture_pid
         wait $capture_pid
         umount "${debugfs_mount_point}"
-        /sbin/rmmod "${payload_module_name}"
-        /sbin/rmmod "${kedr_trace_module_name}"
-        /sbin/rmmod "${kedr_module_name}"
+        rmmod "${payload_module_name}"
+        rmmod "${kedr_trace_module_name}"
+        rmmod "${kedr_module_name}"
         exit 1
     fi
 
     # Unload target module
-    /sbin/rmmod "${target_module}"
+    rmmod "${target_module}"
 done
 
 
@@ -71,9 +74,9 @@ mkdir -p "${debugfs_mount_point}"
 mount debugfs -t debugfs "${debugfs_mount_point}"
 if test $? -ne 0; then
     printf "Cannot mount debugfs.\n"
-    /sbin/rmmod "${payload_module_name}"
-    /sbin/rmmod "${kedr_trace_module_name}"
-    /sbin/rmmod "${kedr_module_name}"
+    rmmod "${payload_module_name}"
+    rmmod "${kedr_trace_module_name}"
+    rmmod "${kedr_module_name}"
     exit 1
 fi
 
@@ -86,9 +89,9 @@ done
 umount "${debugfs_mount_point}"
 
 #Unload payload and KEDR core and other modules
-/sbin/rmmod "${payload_module}"
-/sbin/rmmod "${kedr_trace_module_name}"
-/sbin/rmmod "${kedr_module}"
+rmmod "${payload_module}"
+rmmod "${kedr_trace_module_name}"
+rmmod "${kedr_module}"
 
 for trace_file in ${trace_file1} ${trace_file2}; do
     #Verify trace existance

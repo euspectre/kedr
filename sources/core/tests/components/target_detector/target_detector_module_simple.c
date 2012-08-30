@@ -28,7 +28,7 @@ MODULE_LICENSE("GPL");
 /* 
  * Name of the module to analyze. It can be passed to 'insmod' as 
  * an argument, for example,
- *  /sbin/insmod kedr_target_detector_module.ko target_name="module_to_detect"
+ *  insmod kedr_target_detector_module.ko target_name="module_to_detect"
  */
 static char* target_name = ""; /* an empty name will match no module */
 module_param(target_name, charp, S_IRUGO);
