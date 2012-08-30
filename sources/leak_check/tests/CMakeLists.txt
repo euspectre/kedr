@@ -69,3 +69,15 @@ if (DEFINED KEDR_FUNC_USED_kasprintf AND DEFINED KEDR_FUNC_USED_kvasprintf)
 
 	add_subdirectory(kasprintf_module)
 endif (DEFINED KEDR_FUNC_USED_kasprintf AND DEFINED KEDR_FUNC_USED_kvasprintf)
+
+set(KEDR_TEST_ALLOC_IMPL_MODULE "kedr_test_alloc_impl")
+configure_file(
+	"${CMAKE_CURRENT_SOURCE_DIR}/test_alloc_impl.sh.in"
+	"${CMAKE_CURRENT_BINARY_DIR}/test_alloc_impl.sh"
+	@ONLY
+)
+kedr_test_add_script(leak_check.alloc_impl.01
+	test_alloc_impl.sh
+)	
+
+add_subdirectory(alloc_impl_module)

@@ -10,6 +10,9 @@
 #       -v expectedLeaks=<expected_leak_count> \
 #       -v expectedBadFrees=<expected_unallocated_frees_count> \
 #       <input_summary_report_file>
+#
+# Instead of <expected_total_alloc_count>, "nonzero" can be used if it
+# is only needed to check that some allocations happened.
 ########################################################################
 
 function printError(msg) {
@@ -42,7 +45,13 @@ BEGIN {
 }
 
 END {
-    if (totalAllocs != expectedAllocs) {
+	if (expectedAllocs "T" == "nonzeroT") {
+		if (totalAllocs == 0) {
+			printf("Total number of allocations must not be 0 but it is.\n") > "/dev/stderr"
+	        exit 1
+		}
+	}
+    else if (totalAllocs != expectedAllocs) {
         printf("Total number of allocations is %d but it should be %d\n", 
             totalAllocs, expectedAllocs) > "/dev/stderr"
         exit 1
