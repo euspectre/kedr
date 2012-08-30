@@ -16,12 +16,12 @@ if(KEDR_STANDARD_CALLM_PAYLOADS)
            )
     endif(NOT CMAKE_CROSSCOMPILING)
 
-    # Function for add loading of given payload into
-    # call monitor configuration file.
+    # The function adds the instructions to load the given payload module 
+    # in the configuration file for call monitoring.
     #
-    # Also, test variant for this configuration file is created.
-    # For make it correct, payload module should be located in the current
-    # binary directory, from where the function is invoked.
+    # Besides that, a test variant of this configuration file is created.
+    # To make it correct, the payload module should be located in the current
+    # binary directory, the directory the function is invoked from.
     function(kedr_conf_callm_add_payload payload_name)
         file(APPEND ${kedr_conf_file_data_callm} "payload.name = ${payload_name}\n")
     	file(APPEND ${kedr_conf_file_data_callm} "payload.path = ${KEDR_INSTALL_PREFIX_KMODULE}/${payload_name}.ko\n")
@@ -37,18 +37,27 @@ if(KEDR_STANDARD_FSIM_PAYLOADS)
     	"fault_simulation_module = ${KEDR_INSTALL_PREFIX_KMODULE}/kedr_fault_simulation.ko\n"
     )
     
-    # Function for add loading of given payload into
-    # fault simulation configuration file.
+    # The function adds the instructions to load the given payload module 
+    # in the configuration file for fault simulation.
     function(kedr_conf_fsim_add_payload payload_name)
-	    file(APPEND ${kedr_conf_file_data_fsim} "payload.name = ${payload_name}\n")
-		file(APPEND ${kedr_conf_file_data_fsim} "payload.path = ${KEDR_INSTALL_PREFIX_KMODULE}/${payload_name}.ko\n")
+	    file(APPEND "${kedr_conf_file_data_fsim}" 
+	    	"payload.name = ${payload_name}\n")
+		file(APPEND "${kedr_conf_file_data_fsim}" 
+			"payload.path = ${KEDR_INSTALL_PREFIX_KMODULE}/${payload_name}.ko\n")
     endfunction(kedr_conf_fsim_add_payload payload_name)
-
+    
+ 	# The function adds the instructions to load the given indicator 
+ 	# module in the configuration file for fault simulation.
+    function(kedr_conf_fsim_add_indicator indicator_module_name)
+	    file(APPEND "${kedr_conf_file_data_fsim}" 
+	    	"indicator.path = ${KEDR_INSTALL_PREFIX_KMODULE}/${indicator_module_name}.ko\n")
+    endfunction(kedr_conf_fsim_add_indicator indicator_module_name)
 endif(KEDR_STANDARD_FSIM_PAYLOADS)
 
-# Configure kedr script(install mode)
+# Configure KEDR control script (install mode)
 kedr_load_install_prefixes()
-set(KEDR_DEFAULT_CONFIG_FILE "${KEDR_DEFAULT_CONFIG_DIR}/${kedr_conf_file_default_name}")
+set(KEDR_DEFAULT_CONFIG_FILE 
+	"${KEDR_DEFAULT_CONFIG_DIR}/${kedr_conf_file_default_name}")
 
 set(KEDR_FILE "${KEDR_INSTALL_PREFIX_KMODULE}/kedr.ko")
 
