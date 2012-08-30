@@ -38,13 +38,18 @@ set(KEDR_INSTALL_PREFIX_READONLY
 set(KEDR_INSTALL_PREFIX_MANPAGE
 		"${CMAKE_INSTALL_PREFIX}/share/man")
 # 3
-if(KEDR_INSTALL_TYPE STREQUAL "global")
-	set(KEDR_INSTALL_PREFIX_GLOBAL_CONF
+if (KEDR_INSTALL_TYPE STREQUAL "global")
+	if (KEDR_INSTALL_GLOBAL_IS_OPT)
+		set(KEDR_INSTALL_PREFIX_GLOBAL_CONF
+			"/etc/opt/${KEDR_PACKAGE_NAME}")
+	else ()
+		set(KEDR_INSTALL_PREFIX_GLOBAL_CONF
 			"/etc/${KEDR_PACKAGE_NAME}")
-else(KEDR_INSTALL_TYPE STREQUAL "global")
+	endif (KEDR_INSTALL_GLOBAL_IS_OPT)
+else ()
 	set(KEDR_INSTALL_PREFIX_GLOBAL_CONF
-			"${CMAKE_INSTALL_PREFIX}/etc/${KEDR_PACKAGE_NAME}")
-endif(KEDR_INSTALL_TYPE STREQUAL "global")
+		"${CMAKE_INSTALL_PREFIX}/etc/${KEDR_PACKAGE_NAME}")
+endif (KEDR_INSTALL_TYPE STREQUAL "global")
 # 4
 set(KEDR_INSTALL_PREFIX_LIB
 		"${CMAKE_INSTALL_PREFIX}/lib")
@@ -129,7 +134,7 @@ set(KEDR_INSTALL_PREFIX_TEMPLATES
 		"${KEDR_INSTALL_PREFIX_READONLY}/templates")
 
 # Default directory for configuration files
-set(KEDR_DEFAULT_CONFIG_DIR "${KEDR_INSTALL_PREFIX_VAR}/configs")
+set(KEDR_DEFAULT_CONFIG_DIR "${KEDR_INSTALL_PREFIX_GLOBAL_CONF}")
 
 ########################################################################
 # Path prefixes for tests
@@ -146,16 +151,18 @@ set(KEDR_TEST_PREFIX_INCLUDE "${CMAKE_BINARY_DIR}/include")
 set(KEDR_TEST_PREFIX_TEMPLATES "${CMAKE_SOURCE_DIR}/templates")
 
 
-#kedr_load_install_prefixes()
-#Set common prefixes variables equal to ones in install mode(should be called before configure files, which use prefixes)
+# kedr_load_install_prefixes()
+# Set common prefixes variables equal to ones in install mode (should be 
+# called before configure files, which use prefixes)
 macro(kedr_load_install_prefixes)
     foreach(var_suffix ${KEDR_ALL_PATH_SUFFIXES})
         set(KEDR_PREFIX_${var_suffix} ${KEDR_INSTALL_PREFIX_${var_suffix}})
     endforeach(var_suffix ${KEDR_ALL_PATH_SUFFIXES})
 endmacro(kedr_load_install_prefixes)
 
-#kedr_load_test_prefixes()
-#Set common prefixes variables equal to ones in test mode(should be called before configure files, which use prefixes)
+# kedr_load_test_prefixes()
+# Set common prefixes variables equal to ones in test mode(should be called 
+# before configure files, which use prefixes)
 macro(kedr_load_test_prefixes)
     foreach(var_suffix ${KEDR_ALL_PATH_SUFFIXES})
         set(KEDR_PREFIX_${var_suffix} ${KEDR_TEST_PREFIX_${var_suffix}})
@@ -163,8 +170,9 @@ macro(kedr_load_test_prefixes)
 endmacro(kedr_load_test_prefixes)
 
 ########################################################################
-# [NB] All the "prefix" directories ending with ${KEDR_PACKAGE_NAME}
-# should be removed when uninstalling the package.
+# [NB] All the "prefix" directories ending with ${KEDR_PACKAGE_NAME} or
+# ${KEDR_PACKAGE_NAME}/share should be removed when uninstalling the 
+# package.
 add_custom_target (uninstall_dirs
     COMMAND rm -rf "${KEDR_INSTALL_PREFIX_EXEC_AUX}"
     COMMAND rm -rf "${KEDR_INSTALL_PREFIX_READONLY}"
