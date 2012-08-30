@@ -86,13 +86,13 @@ calc_simple_test_init(void)
     }
     if(evaluate_str(x_str, &values[0]))
     {
-        printk(KERN_ERR "Cannot evaluate 'x'");
+        printk(KERN_ERR "Cannot evaluate 'x'\n");
         kedr_calc_delete(calc);
         return -1;
     }
     if(evaluate_str(y_str, &values[1]))
     {
-        pr_err("Cannot evaluate 'y'");
+        pr_err("Cannot evaluate 'y'\n");
         kedr_calc_delete(calc);
         return -1;
     }

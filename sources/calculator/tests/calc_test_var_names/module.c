@@ -38,11 +38,11 @@ this_module_init(void)
 {
     int result;
     kedr_calc_int_t vars[2] = {1,2};
-    //
+
     kedr_calc_t* calc = NULL;
     if((expr == NULL) || (var_names[0] == NULL) || (var_names[1] == NULL))
     {
-        pr_err("Parameter 'expr' should be passed to the module, as the names of two variables.");
+        pr_err("Parameter 'expr' should be passed to the module, as the names of two variables.\n");
         return -1;
     }
     
@@ -52,7 +52,7 @@ this_module_init(void)
 
     if(calc == NULL)
     {
-        pr_err("Cannot parse expression for some reason.");
+        pr_err("Cannot parse expression for some reason.\n");
         return -1;
     }
     result = kedr_calc_evaluate(calc, vars);

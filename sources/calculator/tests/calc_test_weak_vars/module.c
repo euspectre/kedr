@@ -47,7 +47,7 @@ static kedr_calc_int_t sub_expr_compute(void)
     calc = kedr_calc_parse(sub_expr, 0, NULL, 0, NULL, 0, NULL);
     if(calc == NULL)
     {
-        pr_err("Cannot parse subexpression for some reason.");
+        pr_err("Cannot parse subexpression for some reason.\n");
         sub_expr_error = 1;
         return 0;
     }
@@ -71,7 +71,7 @@ this_module_init(void)
     kedr_calc_t* calc = NULL;
     if(expr == NULL)
     {
-        pr_err("Parameter 'expr' should be passed to the module.");
+        pr_err("Parameter 'expr' should be passed to the module.\n");
         return -1;
     }
     
@@ -81,7 +81,7 @@ this_module_init(void)
 
     if(calc == NULL)
     {
-        pr_err("Cannot parse expression for some reason.");
+        pr_err("Cannot parse expression for some reason.\n");
         return -1;
     }
     result = kedr_calc_evaluate(calc, NULL);
@@ -89,7 +89,7 @@ this_module_init(void)
     
     if(sub_expr_error)
     {
-        pr_err("Error occurs while computing subexpression.");
+        pr_err("Error occurs while computing subexpression.\n");
         return -1;
     }
     

@@ -106,13 +106,13 @@ indicator.init.code =>>
 		ARRAY_SIZE(weak_vars), weak_vars);
 	if(state(calc) == NULL)
 	{
-		pr_err("Cannot parse string expression.");
+		pr_err("Cannot parse string expression.\n");
 		return -1;
 	}
 	state(expression) = kstrdup(expression , GFP_KERNEL);
 	if(state(expression) == NULL)
 	{
-		pr_err("Cannot allocate memory for string expression.");
+		pr_err("Cannot allocate memory for string expression.\n");
 		return -ENOMEM;
 	}
 	return 0;
@@ -146,14 +146,14 @@ indicator.file.set =>>
 		ARRAY_SIZE(weak_vars), weak_vars);
 	if(new_calc == NULL)
 	{
-		pr_err("Cannot parse expression");
+		pr_err("Cannot parse expression.\n");
 		return -EINVAL;
 	}
 
 	new_expression = kstrdup(str, GFP_KERNEL);
 	if(new_expression == NULL)
 	{
-		pr_err("Cannot allocate memory for string expression.");
+		pr_err("Cannot allocate memory for string expression.\n");
 		kedr_calc_delete(new_calc);
 		return -ENOMEM;
 	}
@@ -235,7 +235,7 @@ indicator.file.get =>>
 	str = kmalloc(str_len + 1, GFP_KERNEL);
 	if(str == NULL)
 	{
-		pr_err("Cannot allocate string for pid");
+		pr_err("Cannot allocate string for pid.\n");
 		return NULL;
 	}
 	snprintf(str, str_len + 1, "%ld", (long)pid);
@@ -264,7 +264,7 @@ indicator.file.get =>>
 	str = kmalloc(str_len + 1, GFP_KERNEL);
 	if(str == NULL)
 	{
-		pr_err("Cannot allocate string for times");
+		pr_err("Cannot allocate string for times.\n");
 		return NULL;
 	}
 	snprintf(str, str_len + 1, "%lu", times);
