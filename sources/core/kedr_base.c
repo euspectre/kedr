@@ -1182,13 +1182,13 @@ interception_info_array_create(void)
 {
 	int result;
     
-    struct payload_elem *elem;
+	struct payload_elem *elem;
 	struct kedr_base_interception_info* info_array = NULL;
 	struct function_counters_table function_counters;
 	struct function_counters_table_iter iter;
 	int i;
 	
-	if(function_counters_table_init(&function_counters, 100))
+	if (function_counters_table_init(&function_counters, 100))
 	{
 		return ERR_PTR(-ENOMEM);
 	}
@@ -1262,7 +1262,7 @@ interception_info_array_create(void)
 		goto err_allocate_array;
 	}
 	
-	for(function_counters_table_begin(&function_counters, &iter), i = 0;
+	for (function_counters_table_begin(&function_counters, &iter), i = 0;
 		iter.valid;
 		function_counters_table_iter_next(&iter), i++)
 	{
