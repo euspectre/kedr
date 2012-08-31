@@ -493,12 +493,6 @@ klc_print_stack_trace(struct kedr_lc_output *output,
 	unsigned long *stack_entries, unsigned int num_entries)
 {
 	static const char* fmt = "[<%p>] %pS";
-	
-	/* This is just to pass a buffer of known size to the first call
-	 * to snprintf() to determine the length of the string to which
-	 * the data will be converted. */
-	char one_char[1];
-	
 	char *buf = NULL;
 	int len;
 	unsigned int i;
@@ -509,7 +503,7 @@ klc_print_stack_trace(struct kedr_lc_output *output,
 		return;
 	
 	for (i = 0; i < num_entries; ++i) {
-		len = snprintf(&one_char[0], 1, fmt, 
+		len = snprintf(NULL, 0, fmt, 
 			(void *)stack_entries[i], (void *)stack_entries[i]);
 		buf = kmalloc(len + 1, GFP_KERNEL);
 		if (buf != NULL) {
@@ -533,14 +527,12 @@ kedr_lc_print_target_info(struct kedr_lc_output *output,
 {
 	static const char* fmt = 
 "Target module: \"%s\", init area at 0x%p, core area at 0x%p";
-	
-	char one_char[1];
 	char *buf = NULL;
 	int len;
 	const char *name;
 	
 	name = module_name(target);
-	len = snprintf(&one_char[0], 1, fmt, name, 
+	len = snprintf(NULL, 0, fmt, name, 
 		target->module_init, target->module_core);
 	buf = kmalloc(len + 1, GFP_KERNEL);
 	if (buf == NULL) {
@@ -560,13 +552,12 @@ static void
 klc_print_u64(struct kedr_lc_output *output, 
 	enum klc_output_type output_type, u64 data, const char *fmt)
 {
-	char one_char[1];
 	char *buf = NULL;
 	int len;
 	
 	BUG_ON(fmt == NULL);
 	
-	len = snprintf(&one_char[0], 1, fmt, data);
+	len = snprintf(NULL, 0, fmt, data);
 	buf = kmalloc(len + 1, GFP_KERNEL);
 	if (buf == NULL) {
 		pr_warning("[kedr_leak_check] klc_print_u64: "
@@ -589,18 +580,17 @@ kedr_lc_print_alloc_info(struct kedr_lc_output *output,
 	static const char* fmt_unknown = 
 	"Address: 0x%p, size: unknown; stack trace of the allocation:";
 	
-	char one_char[1];
 	char *buf = NULL;
 	int len;
 	
 	BUG_ON(info == NULL);
 	
 	if (info->size != 0) {
-		len = snprintf(&one_char[0], 1, fmt_common, info->addr, 
+		len = snprintf(NULL, 0, fmt_common, info->addr, 
 			info->size);
 	}
 	else {
-		len = snprintf(&one_char[0], 1, fmt_unknown, info->addr);
+		len = snprintf(NULL, 0, fmt_unknown, info->addr);
 	}
 	buf = kmalloc(len + 1, GFP_KERNEL);
 	if (buf == NULL) {
@@ -635,14 +625,12 @@ kedr_lc_print_dealloc_info(struct kedr_lc_output *output,
 {
 	static const char* fmt = 
 		"Address: 0x%p; stack trace of the deallocation:";
-	
-	char one_char[1];
 	char *buf = NULL;
 	int len;
  
 	BUG_ON(info == NULL);
 	
-	len = snprintf(&one_char[0], 1, fmt, info->addr);
+	len = snprintf(NULL, 0, fmt, info->addr);
 	buf = kmalloc(len + 1, GFP_KERNEL);
 	if (buf == NULL) {
 		pr_warning("[kedr_leak_check] klc_print_dealloc_info: "

@@ -31,10 +31,6 @@
 #define COUNTERS_DEFINE_FOPS_RO(__fops, __type, __get_copy_func, __fmt) \
 static int __fops ## _open(struct inode *inode, struct file *filp)      \
 {                                                                       \
-    /* This is just to pass a buffer of known size to the first call */ \
-    /* to snprintf to determine the length of the string to which    */ \
-    /* the data will be converted */                                    \
-    char one_char[1];                                                   \
     char *buf = NULL;                                                   \
     __type *pdata = NULL; /* The data to be shown to the reader(s) */   \
     int error = 0;                                                      \
@@ -44,7 +40,7 @@ static int __fops ## _open(struct inode *inode, struct file *filp)      \
     if (error) return error;                                            \
     BUG_ON(pdata == NULL);                                              \
                                                                         \
-    dataLen = snprintf(&one_char[0], 1, __fmt, *pdata);                 \
+    dataLen = snprintf(NULL, 0, __fmt, *pdata);                         \
     buf = (char*)kmalloc(dataLen + 1, GFP_KERNEL);                      \
     if (buf == NULL) {                                                  \
         kfree(pdata);                                                   \
