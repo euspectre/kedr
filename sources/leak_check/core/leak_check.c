@@ -540,7 +540,7 @@ klc_flush_deallocs(struct kedr_leak_check *lc)
 				struct kedr_lc_resource_info, hlist);
 			hlist_del(&ri->hlist);
 			
-			similar = ri_remove_similar(ri, &lc->allocs[0], i);
+			similar = ri_remove_similar(ri, &lc->bad_frees[0], i);
 			kedr_lc_print_dealloc_info(lc->output, ri, similar);
 			resource_info_destroy(ri);
 		}
