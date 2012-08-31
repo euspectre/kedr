@@ -108,4 +108,7 @@ struct kedr_lc_resource_info
 	unsigned long stack_entries[KEDR_MAX_FRAMES];
 };
 
+#define KEDR_LC_MSG_PREFIX "[leak_check] "
+extern unsigned int syslog_output;
+
 #endif /* LEAK_CHECK_IMPL_H_1548_INCLUDED */

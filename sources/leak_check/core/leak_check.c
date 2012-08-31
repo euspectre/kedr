@@ -46,6 +46,11 @@ MODULE_LICENSE("GPL");
  * Should not exceed KEDR_MAX_FRAMES (see <kedr/util/stack_trace.h>). */
 unsigned int stack_depth = KEDR_STACK_DEPTH_DEFAULT;
 module_param(stack_depth, uint, S_IRUGO);
+
+/* If non-zero, the results will be output not only to the files in 
+ * debugfs but also to the system log. */
+unsigned int syslog_output = 1;
+module_param(syslog_output, uint, S_IRUGO);
 /* ====================================================================== */
 
 /* LeakCheck objects are kept in a hash table for faster lookup, 'target'
@@ -83,6 +88,17 @@ static unsigned int obj_count = 0;
  * Note that if a function also accesses the table of the objects, it should
  * lock 'lc_objects_lock' even if 'load_mutex' is already taken. */
 static DEFINE_MUTEX(load_mutex);
+
+/* A mutex to guarantee that the results for a given target module are 
+ * output "atomically" w.r.t. the results for other target modules. This is
+ * especially useful for the output to the system log. Note that other 
+ * kernel messages may still go in between the lines output to the system
+ * log for the target. The mutex only guarantees that the results for 
+ * different targets do not get intermingled. 
+ *
+ * In particular, klc_print_*() functions must be called with this mutex 
+ * locked.*/
+static DEFINE_MUTEX(output_mutex);
 
 /* Maximum length of the name to be given to a workqueue created by 
  * LeakCheck. */
@@ -133,7 +149,7 @@ lc_object_create(struct module *target)
 	
 	lc = kzalloc(sizeof(*lc), GFP_KERNEL);
 	if (lc == NULL) {
-		pr_warning("[kedr_leak_check] "
+		pr_warning(KEDR_LC_MSG_PREFIX
 		"Failed to create LeakCheck object: not enough memory\n");
 		return NULL;
 	}
@@ -143,7 +159,7 @@ lc_object_create(struct module *target)
 	
 	lc->name = kstrdup(module_name(target), GFP_KERNEL);
 	if (lc->name == NULL) {
-		pr_warning("[kedr_leak_check] "
+		pr_warning(KEDR_LC_MSG_PREFIX
 		"Not enough memory to create a copy of the target name.\n");
 		goto out;
 	}
@@ -151,7 +167,7 @@ lc_object_create(struct module *target)
 	lc->output = kedr_lc_output_create(target);
 	BUG_ON(lc->output == NULL);
 	if (IS_ERR(lc->output)) {
-		pr_warning("[kedr_leak_check] "
+		pr_warning(KEDR_LC_MSG_PREFIX
 		"Failed to create output object, error code: %d\n",
 			(int)PTR_ERR(lc->output));
 		goto out_free_name;
@@ -167,7 +183,7 @@ lc_object_create(struct module *target)
 	++obj_count;
 	lc->wq = create_singlethread_workqueue(wq_name);
 	if (lc->wq == NULL) {
-		pr_warning("[kedr_leak_check] "
+		pr_warning(KEDR_LC_MSG_PREFIX
 		"Failed to create the workqueue \"%s\"\n",
 			wq_name);
 		goto out_clean_output;
@@ -498,6 +514,10 @@ klc_flush_allocs(struct kedr_leak_check *lc)
 	struct hlist_head *head = NULL;
 	unsigned int i;
 	
+	if (syslog_output != 0 && lc->total_leaks != 0)
+		pr_warning(KEDR_LC_MSG_PREFIX 
+			"LeakCheck has detected possible memory leaks: \n");
+			
 	/* No need to protect the storage because this function is called
 	 * from on_target_unload handler when no replacement function can
 	 * interfere and the workqueue has been flushed. */
@@ -526,6 +546,11 @@ klc_flush_deallocs(struct kedr_leak_check *lc)
 	struct hlist_head *head = NULL;
 	unsigned int i;
 	
+	if (syslog_output != 0 && lc->total_bad_frees != 0) {
+		pr_warning(KEDR_LC_MSG_PREFIX 
+"LeakCheck has detected deallocations without matching allocations.\n");
+	}
+	
 	/* No need to protect the storage because this function is called
 	 * from on_target_unload handler when no replacement function can
 	 * interfere and the workqueue has been flushed. */
@@ -553,6 +578,10 @@ klc_flush_stats(struct kedr_leak_check *lc)
 	kedr_lc_print_totals(lc->output, lc->total_allocs, lc->total_leaks,
 		lc->total_bad_frees);
 	
+	if (syslog_output != 0)
+		pr_warning(KEDR_LC_MSG_PREFIX
+			"======== end of LeakCheck report ========\n");
+	
 	/* No need to protect these counters here as this function is called
 	 * from on_target_unload handler when no replacement function can
 	 * interfere and the workqueue has been flushed. */
@@ -578,7 +607,7 @@ on_target_load(struct module *m)
 	BUG_ON(m == NULL);
 	
 	if (mutex_lock_killable(&load_mutex) != 0) {
-		pr_warning("[kedr_leak_check] "
+		pr_warning(KEDR_LC_MSG_PREFIX
 		"on_target_load(): failed to lock mutex\n");
 		return;
 	}
@@ -594,7 +623,7 @@ on_target_load(struct module *m)
 	/* Create a new LeakCheck object and add it to the table. */
 	lc = lc_object_create(m);
 	if (lc == NULL) {
-		pr_warning("[kedr_leak_check] on_target_load(): "
+		pr_warning(KEDR_LC_MSG_PREFIX "on_target_load(): "
 		"failed to create LeakCheck object for \"%s\"\n",
 			module_name(m));
 		goto out;
@@ -620,12 +649,20 @@ on_target_unload(struct module *m)
 	}
 	
 	flush_workqueue(lc->wq);
-	
 	/* All pending requests to handle alloc/free events should have 
 	 * been processed by now. */
+	 
+	if (mutex_lock_killable(&output_mutex) != 0) {
+		pr_warning(KEDR_LC_MSG_PREFIX
+		"on_target_unload(): failed to lock mutex\n");
+		return;
+	}
+	
 	klc_flush_allocs(lc);
 	klc_flush_deallocs(lc);
 	klc_flush_stats(lc);
+	
+	mutex_unlock(&output_mutex);
 }
 
 /* [NB] Both the LeakCheck core and the payloads need to be notified when
@@ -690,14 +727,14 @@ klc_handle_event(struct kedr_leak_check *lc, const void *addr, size_t size,
 	
 	ri = resource_info_create(addr, size, caller_address);
 	if (ri == NULL) {
-		pr_warning("[kedr_leak_check] klc_handle_event: "
+		pr_warning(KEDR_LC_MSG_PREFIX "klc_handle_event: "
 	"not enough memory to create 'struct kedr_lc_resource_info'\n");
 		return;
 	}
 	
 	klc_work = kzalloc(sizeof(*klc_work), GFP_ATOMIC);
 	if (klc_work == NULL) {
-		pr_warning("[kedr_leak_check] klc_handle_event: "
+		pr_warning(KEDR_LC_MSG_PREFIX "klc_handle_event: "
 	"not enough memory to create 'struct klc_work'\n");
 		resource_info_destroy(ri);
 		return;
@@ -767,7 +804,7 @@ leak_check_init_module(void)
 	int ret = 0;
 	
 	if (stack_depth == 0 || stack_depth > KEDR_MAX_FRAMES) {
-		pr_err("[kedr_leak_check] "
+		pr_err(KEDR_LC_MSG_PREFIX
 		"Invalid value of 'stack_depth': %u (should be a positive "
 		"integer not greater than %u)\n",
 			stack_depth,
