@@ -8,6 +8,7 @@ header =>>
 #include <linux/fs.h>
 #include <linux/posix_acl.h>
 #include <linux/parser.h>
+#include <linux/pagemap.h>	/* __page_cache_alloc() */
 
 /* This is needed because the current system of data files, templates and 
  * code generation tools does not allow specifying the type of a function

@@ -5,6 +5,7 @@ func_db_configure_functions (
 	
 	"add_to_page_cache_lru"
 	"add_to_page_cache_locked"
+	"__page_cache_alloc"
 
 	"posix_acl_alloc"
 	"posix_acl_clone"

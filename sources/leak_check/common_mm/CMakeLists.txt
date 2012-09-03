@@ -64,6 +64,7 @@ kmodule_configure_kernel_functions(functions
 # them to the kernel proper among other things.
 	OPTIONAL "add_to_page_cache_lru"
 	"add_to_page_cache_locked"
+	"__page_cache_alloc"
 
 	OPTIONAL "posix_acl_alloc"
 	"posix_acl_clone"

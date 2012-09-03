@@ -2,6 +2,7 @@
 # for the following functions: 
 # 	 add_to_page_cache_lru
 #	 add_to_page_cache_locked
+#	 __page_cache_alloc
 # The main problem here is how to create a reasonably simple code to use
 # these functions in the correct environment and how to properly clean up
 # after that. 
@@ -14,6 +15,7 @@ kedr_test_add_ci_test("mem_util"
 	
 #	"add_to_page_cache_lru"
 #	"add_to_page_cache_locked"
+#	"__page_cache_alloc"
 
 	"posix_acl_alloc"
 	"posix_acl_clone"

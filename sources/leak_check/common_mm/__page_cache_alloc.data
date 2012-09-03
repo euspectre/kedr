@@ -1,0 +1,13 @@
+[group]
+	# The body of the replacement function
+	handler.post =>>
+	struct page *page = ret_val;
+	if (page != NULL) {
+		const void *p = (const void *)page_address(page);
+		if (p != NULL)
+			kedr_lc_handle_alloc(target_module, p, 
+				(size_t)(PAGE_SIZE), 
+				caller_address);
+	}
+	<<
+#######################################################################

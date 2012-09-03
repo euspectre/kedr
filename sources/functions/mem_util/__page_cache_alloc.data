@@ -1,0 +1,9 @@
+[group]
+	# Name and return type of the target function
+	function.name = __page_cache_alloc
+	returnType = struct page *
+
+	# Names and types of the arguments of the target function
+	arg.type = gfp_t
+	arg.name = gfp
+#######################################################################
