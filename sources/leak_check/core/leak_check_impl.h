@@ -53,11 +53,13 @@ struct kedr_leak_check
 	 * Order of elements: last in - first found. */
 	struct hlist_head allocs[KEDR_RI_TABLE_SIZE];
 	
-	/* The storage of kedr_lc_resource_info structures corresponding 
-	 * to the memory deallocation events for which no allocation event
-	 * has been found ("unallocated frees").
-	 * Order of elements: last in - first found. */
-	struct hlist_head bad_frees[KEDR_RI_TABLE_SIZE];
+	/* The storage of the information about the memory deallocation 
+	 * events for which no allocation event has been found 
+	 * ("unallocated frees", "bad frees").
+	 * The actual number of the elements in this array is 
+	 * 'nr_bad_free_groups'. */
+	struct kedr_lc_bad_free_group *bad_free_groups;
+	unsigned int nr_bad_free_groups;
 	
 	/* A single-threaded (ordered) workqueue where the requests to 
 	 * handle allocations and deallocations are placed. It takes care of
@@ -91,7 +93,7 @@ struct kedr_leak_check
  * the appropriate call to an allocation or deallocation function 
  * ('stack_entries' array containing 'num_entries' meaningful elements).
  * 
- * The instances of this structure are to be stored in a hash table with 
+ * The instances of this structure may be stored in a hash table with 
  * linked lists as buckets, hence 'hlist' field here. */
 struct kedr_lc_resource_info
 {
@@ -106,6 +108,19 @@ struct kedr_lc_resource_info
 	/* Call stack */
 	unsigned int num_entries;
 	unsigned long stack_entries[KEDR_MAX_FRAMES];
+};
+
+/* This structure is used to store the information about the bad 
+ * ("unallocated") frees in a LeakCheck object. The records with the same
+ * call stack are combined into a single object of this type ("a group"). */
+struct kedr_lc_bad_free_group
+{
+	/* The information about the event. */
+	struct kedr_lc_resource_info *ri;
+	
+	/* Number of the bad free events with the same call stack in 
+	 * this group. */
+	unsigned long nr_items;
 };
 
 #define KEDR_LC_MSG_PREFIX "[leak_check] "

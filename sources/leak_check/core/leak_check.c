@@ -51,6 +51,15 @@ module_param(stack_depth, uint, S_IRUGO);
  * debugfs but also to the system log. */
 unsigned int syslog_output = 1;
 module_param(syslog_output, uint, S_IRUGO);
+
+/* The maximum number of the groups of bad free events that can be stored.
+ * A group is two or more events with the same call stack. If more than
+ * that number of bad free groups is detected, the newest ones are
+ * discarded. 
+ * 'total_bad_frees' will reflect the total number of bad free events 
+ * nevertheless. */
+unsigned int bad_free_groups_stored = 8;
+module_param(bad_free_groups_stored, uint, S_IRUGO);
 /* ====================================================================== */
 
 /* LeakCheck objects are kept in a hash table for faster lookup, 'target'
@@ -173,10 +182,17 @@ lc_object_create(struct module *target)
 		goto out_free_name;
 	}
 	
-	for (i = 0; i < KEDR_RI_TABLE_SIZE; ++i) {
+	for (i = 0; i < KEDR_RI_TABLE_SIZE; ++i)
 		INIT_HLIST_HEAD(&lc->allocs[i]);
-		INIT_HLIST_HEAD(&lc->bad_frees[i]);
+
+	lc->bad_free_groups = kzalloc(bad_free_groups_stored * 
+		sizeof(struct kedr_lc_bad_free_group), GFP_KERNEL);
+	if (lc->bad_free_groups == NULL) {
+		pr_warning(KEDR_LC_MSG_PREFIX
+		"Not enough memory to create 'bad_free_groups'.\n");
+		goto out_clean_output;
 	}
+	/* nr_bad_free_groups is now 0. */
 	
 	snprintf(&wq_name[0], KLC_WQ_NAME_MAX_LEN + 1, wq_name_fmt, 
 		obj_count);
@@ -186,7 +202,7 @@ lc_object_create(struct module *target)
 		pr_warning(KEDR_LC_MSG_PREFIX
 		"Failed to create the workqueue \"%s\"\n",
 			wq_name);
-		goto out_clean_output;
+		goto out_free_bad_frees;
 	}
 	
 	kedr_lc_print_target_info(lc->output, target);
@@ -194,6 +210,8 @@ lc_object_create(struct module *target)
 	/* [NB] The totals are already zero due to kzalloc(). */
 	return lc;
 
+out_free_bad_frees:
+	kfree(lc->bad_free_groups);
 out_clean_output:
 	kedr_lc_output_destroy(lc->output);
 out_free_name:
@@ -221,11 +239,10 @@ lc_object_destroy(struct kedr_leak_check *lc)
 	
 	/* The tables of resource leaks and bad frees should be already 
 	 * empty. Warn if they are not. */
-	for (i = 0; i < KEDR_RI_TABLE_SIZE; ++i) {
+	for (i = 0; i < KEDR_RI_TABLE_SIZE; ++i)
 		WARN_ON_ONCE(!hlist_empty(&lc->allocs[i]));
-		WARN_ON_ONCE(!hlist_empty(&lc->bad_frees[i]));
-	}
 	
+	kfree(lc->bad_free_groups);
 	kedr_lc_output_destroy(lc->output);
 	kfree(lc->name);
 	kfree(lc);
@@ -242,13 +259,13 @@ lc_object_reset(struct kedr_leak_check *lc)
 	
 	/* The tables of resource leaks and bad frees should be already 
 	 * empty. Warn if they are not. */
-	for (i = 0; i < KEDR_RI_TABLE_SIZE; ++i) {
+	for (i = 0; i < KEDR_RI_TABLE_SIZE; ++i)
 		WARN_ON_ONCE(!hlist_empty(&lc->allocs[i]));
-		WARN_ON_ONCE(!hlist_empty(&lc->bad_frees[i]));
-	}
 	
 	kedr_lc_output_clear(lc->output);
 	kedr_lc_print_target_info(lc->output, lc->target);
+	
+	lc->nr_bad_free_groups = 0;
 	lc->total_allocs = 0;
 	lc->total_leaks = 0;
 	lc->total_bad_frees = 0;
@@ -427,6 +444,30 @@ ri_add(struct kedr_lc_resource_info *ri, struct hlist_head *ri_table)
 	hlist_add_head(&ri->hlist, head);
 }
 
+static void
+ri_add_bad_free(struct kedr_lc_resource_info *ri, 
+	struct kedr_leak_check *lc)
+{
+	unsigned int i = 0;
+	for (i = 0; i < lc->nr_bad_free_groups; ++i) {
+		if (call_stacks_equal(ri, lc->bad_free_groups[i].ri)) {
+			++lc->bad_free_groups[i].nr_items;
+			/* Similar events have already been stored, 
+			 * nothing more to do. */
+			return;
+		}
+	}
+	
+	if (lc->nr_bad_free_groups == bad_free_groups_stored)
+		/* No space for a new group. */
+		return;
+	
+	++lc->nr_bad_free_groups;
+	
+	lc->bad_free_groups[i].ri = ri;
+	lc->bad_free_groups[i].nr_items = 1;
+}
+
 /* A helper function that looks for an item with 'addr' field equal
  * to 'addr' in the table. If found, the item is removed from the table and
  * a pointer to it is returned. If not found, NULL is returned. */
@@ -543,10 +584,17 @@ static void
 klc_flush_deallocs(struct kedr_leak_check *lc)
 {
 	struct kedr_lc_resource_info *ri = NULL;
-	struct hlist_head *head = NULL;
 	unsigned int i;
+	u64 stored = 0;
 	
-	if (syslog_output != 0 && lc->total_bad_frees != 0) {
+	if (lc->total_bad_frees == 0) {
+		BUG_ON(lc->nr_bad_free_groups != 0);
+		return;
+	}
+	
+	BUG_ON(lc->nr_bad_free_groups == 0);
+		
+	if (syslog_output != 0) {
 		pr_warning(KEDR_LC_MSG_PREFIX 
 "LeakCheck has detected deallocations without matching allocations.\n");
 	}
@@ -554,22 +602,18 @@ klc_flush_deallocs(struct kedr_leak_check *lc)
 	/* No need to protect the storage because this function is called
 	 * from on_target_unload handler when no replacement function can
 	 * interfere and the workqueue has been flushed. */
-	for (i = 0; i < KEDR_RI_TABLE_SIZE; ++i) {
-		head = &lc->bad_frees[i];
-		while (!hlist_empty(head)) {
-	/* We output only one bad deallocation with a given call stack 
-	 * to reduce the needed size of the output buffer and to make the
-	 * report more readable. */
-			u64 similar;
-			ri = hlist_entry(head->first, 
-				struct kedr_lc_resource_info, hlist);
-			hlist_del(&ri->hlist);
-			
-			similar = ri_remove_similar(ri, &lc->bad_frees[0], i);
-			kedr_lc_print_dealloc_info(lc->output, ri, similar);
-			resource_info_destroy(ri);
-		}
-	} 
+	for (i = 0; i < lc->nr_bad_free_groups; ++i) {
+		u64 similar = (u64)(lc->bad_free_groups[i].nr_items - 1);
+		ri = lc->bad_free_groups[i].ri;
+		stored += lc->bad_free_groups[i].nr_items;
+		
+		kedr_lc_print_dealloc_info(lc->output, ri, similar);
+		resource_info_destroy(ri);
+		lc->bad_free_groups[i].ri = NULL;
+	}
+	
+	kedr_lc_print_dealloc_note(lc->output, stored, lc->total_bad_frees);	
+	lc->nr_bad_free_groups = 0;
 }
 
 static void
@@ -709,7 +753,7 @@ work_func_free(struct work_struct *work)
 	BUG_ON(info == NULL);
 	
 	if (!find_and_remove_alloc(info->addr, lc)) {
-		ri_add(info, &lc->bad_frees[0]);
+		ri_add_bad_free(info, lc);
 		++lc->total_bad_frees;
 	}
 		
@@ -809,6 +853,13 @@ leak_check_init_module(void)
 		"integer not greater than %u)\n",
 			stack_depth,
 			KEDR_MAX_FRAMES
+		);
+		return -EINVAL;
+	}
+	
+	if (bad_free_groups_stored == 0) {
+		pr_err(KEDR_LC_MSG_PREFIX
+	"Parameter 'bad_free_groups_stored' must have a non-zero value.\n"
 		);
 		return -EINVAL;
 	}

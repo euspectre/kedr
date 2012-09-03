@@ -74,6 +74,12 @@ void
 kedr_lc_print_dealloc_info(struct kedr_lc_output *output, 
 	struct kedr_lc_resource_info *info, u64 similar_deallocs);
 
+/* Output a note that only 'reported' of 'total' bad free events have
+ * been reported. */
+void 
+kedr_lc_print_dealloc_note(struct kedr_lc_output *output, 
+	u64 reported, u64 total);
+
 /* Output statistics about the analysis session of the target module:
  * total number of resource allocations, potential leaks and spurious 
  * ("unallocated") frees.

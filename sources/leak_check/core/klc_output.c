@@ -674,5 +674,18 @@ kedr_lc_print_totals(struct kedr_lc_output *output,
 	klc_print_u64(output, KLC_OTHER, total_bad_frees,
 		"Unallocated frees: %llu");
 }
+
+void 
+kedr_lc_print_dealloc_note(struct kedr_lc_output *output, 
+	u64 reported, u64 total)
+{
+	if (reported == total)
+		return;
+	
+	klc_print_u64(output, KLC_BAD_FREE, reported,
+"The information about only %llu of the \"unallocated free\" events is " 
+"shown above. The data for other such events have been discarded to "
+"save memory.");
+}
 /* ====================================================================== */
 
