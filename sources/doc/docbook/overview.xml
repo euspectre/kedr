@@ -66,15 +66,13 @@ Note that KEDR is not generally a tool to analyze the interaction between a low-
 Currently, KEDR provides tools for the following kinds of analysis: 
     </para>
 <itemizedlist>
-    <listitem><para>
-<link linkend="call_mon"><firstterm>Call monitoring (call tracing)</firstterm></link> 
-During the operation of the module under analysis, the information is 
-collected about the calls to <link linkend="target_function">target functions</link>: arguments, return values, etc. This information can be 
-saved to a file (<firstterm>trace</firstterm>) for future analysis in the user space.
-    <para>
-This is similar to what <ulink url="http://sourceforge.net/projects/strace/">strace</ulink> 
-utility does for user-space applications.
-    </para>
+	  <listitem><para>
+<link linkend="leak_check"><firstterm>Checking for memory leaks</firstterm></link> 
+The appropriate components of KEDR keep track of various memory allocation and 
+deallocation operations made by the target module. After the target module 
+has unloaded, KEDR generates a report listing the memory blocks that have 
+been allocated but not freed by that module along with a call stack for each of the 
+corresponding memory allocation calls.
     </para></listitem>
     <listitem><para>
 <link linkend="fault_sim"><firstterm>Fault simulation</firstterm></link> 
@@ -85,13 +83,16 @@ KEDR simulates the failure without actually calling the respective
 controlled and customized by the user.
     </para></listitem>
     <listitem><para>
-<link linkend="leak_check"><firstterm>Checking for memory leaks</firstterm></link> 
-The appropriate components of KEDR keep track of various memory allocation and 
-deallocation operations made by the target module. After the target module 
-has unloaded, KEDR generates a report listing the memory blocks that have 
-been allocated but not freed by that module along with a call stack for each of the 
-corresponding memory allocation calls.
-    </para></listitem>
+<link linkend="call_mon"><firstterm>Call monitoring (call tracing)</firstterm></link> 
+During the operation of the module under analysis, the information is 
+collected about the calls to <link linkend="target_function">target functions</link>: arguments, return values, etc. This information can be 
+saved to a file (<firstterm>trace</firstterm>) for future analysis in the user space.
+    </para>
+    <para>
+This is similar to what <ulink url="http://sourceforge.net/projects/strace/">strace</ulink> 
+utility does for user-space applications.
+    </para>
+    </listitem>
 </itemizedlist>
 
 <para>
@@ -105,7 +106,7 @@ Other types of analysis can be implemented with the help of KEDR. See
 <title>System Requirements</title>
 
 <para>
-KEDR system supports Linux kernel versions 2.6.31 or newer. Of all kernel 
+KEDR system supports Linux kernel versions 2.6.32 or newer. Of all kernel 
 facilities it relies upon, tracing facilities (implementation of ring 
 buffer, etc.) currently have the highest requirements for the version of 
 the kernel.
@@ -142,8 +143,8 @@ At the beginning, the target module is not loaded.
 </para></step>
 
 <step><para>
-The user loads the core components of KEDR system along with the appropriate 
-<link linkend="payload_module">payload modules</link> and specifies the 
+The user loads the core components of KEDR system along with the appropriate plugins
+(<link linkend="payload_module">payload modules</link>) and specifies the 
 name of the target module. KEDR begins watching for the target module to load.
 </para></step>
 
@@ -162,11 +163,10 @@ initialization, KEDR detects that and hooks into the target module
 
 <step>
 <para>
-The user performs actions on the target module: reads data from the 
-corresponding device file and/or writes data to it, performs ioctl() calls 
-or any other operation (s)he wants to. As this is being done, the payload 
-modules collect the information about the operation of the module, perform 
-fault simulation, etc.
+The user performs actions on the target module: operates on the 
+corresponding device or a partition with a given file system, etc. At the 
+same time, the payload modules collect the information about the 
+operation of the module, perform fault simulation, etc.
 </para>
 
 <para>
@@ -177,28 +177,18 @@ code that the user wants to check.
 </step>
 
 <step><para>
-If necessary, the user may save (<quote>capture</quote>) the trace output by
-the payload modules to a file and analyze the trace to determine if the 
-module operates correctly. On the other hand, the analysis of the trace could
-be postponed if necessary, until the target module is unloaded.
+The user unloads the target module. 
 </para></step>
 
 <step><para>
-The user unloads the target module or does something else that results in 
-unloading of the module: unplugs the corresponding device, etc. 
-</para></step>
-
-<step><para>
-The user (or, likely, an application chosen by the user) analyzes the trace 
-and/or any other results output by the payload modules and decides whether 
+The user analyzes the results output by the payload modules and decides whether 
 the target module behaved as it was required.
 </para></step>
 
 <step><para>
 If it is necessary to analyze the target module once more (may be, perform 
-a different type of checks, etc.), the process can be repeated. If the analysis
-is done, the user unloads the payload modules and KEDR core or just reboots 
-the operating system.
+a different type of checks, etc.), the process can be repeated. When the 
+components of KEDR are no longer needed, they can be unloaded.
 </para></step>
 </procedure>
 
@@ -229,9 +219,9 @@ to implement KProbes;
 </para></listitem>
 
 <listitem><para>
-<firstterm>tracing support</firstterm> (namely, <firstterm>kernel markers</firstterm>
-and implementation of a special <firstterm>ring buffer</firstterm> - 
-the basis of various data collection systems used in the kernel;
+<firstterm>tracing support</firstterm> (namely, the implementation of a 
+special <firstterm>ring buffer</firstterm> - the basis of various data 
+collection systems used in the kernel;
 </para></listitem>
 
 <listitem><para>
