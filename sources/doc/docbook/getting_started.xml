@@ -42,7 +42,7 @@ To be able to build KEDR, you need the following:
 </para>
 
 <listitem><para>
-Your Linux system should have kernel version 2.6.31 or newer. <command>uname -r</command> command should tell you what kernel version you are currently using. x86 and x86-64 architectures are currently supported.
+Your Linux system should have kernel version 2.6.32 or newer. <command>uname -r</command> command should tell you what kernel version you are currently using. x86 and x86-64 architectures are currently supported.
 </para></listitem>
 
 <listitem><para>
