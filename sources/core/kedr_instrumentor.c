@@ -64,134 +64,132 @@ DEFINE_SPINLOCK(target_in_init_lock);
 /* Replacement table as a hash table */
 struct repl_elem
 {
-    struct hlist_node list;//hash table organization
-    
-    void* orig;
-    void* repl;
+	struct hlist_node list;
+	void* orig;
+	void* repl;
 };
 
 struct repl_hash_table
 {
-    struct hlist_head* heads;
-    unsigned int bits;
+	struct hlist_head* heads;
+	unsigned int bits;
 };
-
-static int repl_hash_table_init_from_array(struct repl_hash_table* table,
-    const struct kedr_instrumentor_replace_pair* array)
-{
-    int result;
-    
-    size_t hash_table_size;
-    unsigned int bits;
-    struct hlist_head *heads;
-    
-    size_t array_size = 0;
-    const struct kedr_instrumentor_replace_pair* repl_pair;
-    for(repl_pair = array; repl_pair->orig != NULL; repl_pair++)
-    {
-        array_size++;
-    }
-    
-    hash_table_size = (array_size * 10 + 6)/ 7;
-    
-    bits = 0;
-    for(; hash_table_size >= 1; hash_table_size >>= 1)
-        bits++;
-    if(bits == 0) bits = 1;
-    
-    hash_table_size = 1 << bits;
-    
-    heads = kzalloc(hash_table_size * sizeof(*heads), GFP_KERNEL);
-    if(heads == NULL)
-    {
-        pr_err("Fail to allocate hash table for replacement functions.");
-        return -ENOMEM;
-    }
-    
-    for(repl_pair = array; repl_pair->orig != NULL; repl_pair++)
-    {
-        struct hlist_head* head;
-        struct hlist_node* node_tmp;
-        struct repl_elem* elem;
-        
-        head = &heads[hash_ptr(repl_pair->orig, bits)];
-        
-        hlist_for_each_entry(elem, node_tmp, head, list)
-        {
-            if(elem->orig == repl_pair->orig)
-            {
-                pr_err("Cannot replace function twice.");
-                result = -EINVAL;
-                goto free_table;
-            }
-        }
-        elem = kmalloc(sizeof(*elem), GFP_KERNEL);
-        if(elem == NULL)
-        {
-            pr_err("Fail to allocate replace table's element.");
-            result = -ENOMEM;
-            goto free_table;
-        }
-        elem->orig = repl_pair->orig;
-        elem->repl = repl_pair->repl;
-        hlist_add_head(&elem->list, head);
-    }
-
-    table->heads = heads;
-    table->bits = bits;
-    
-    return 0;
-
-free_table:
-    {
-        int i;
-        for(i = 0; i < hash_table_size; i++)
-        {
-            struct hlist_head* head = &heads[i];
-            while(!hlist_empty(head))
-            {
-                hlist_del(head->first);
-            }
-        }
-    }
-    
-    return result;
-}
 
 static void
 repl_hash_table_destroy(struct repl_hash_table* table)
 {
-    int i;
-    size_t hash_table_size = 1 << table->bits;
-    struct hlist_head* heads = table->heads;
-    
-    for(i = 0; i < hash_table_size; i++)
-    {
-        struct hlist_head* head = &heads[i];
-        while(!hlist_empty(head))
-        {
-            hlist_del(head->first);
-        }
-    }
+	int i;
+	size_t hash_table_size = 1 << table->bits;
+	struct hlist_head *heads = table->heads;
+	
+	if (heads == NULL)
+		return;
+	
+	for (i = 0; i < hash_table_size; i++)
+	{
+		struct hlist_node *node;
+		struct hlist_node *tmp;
+		struct repl_elem *elem;
+
+		hlist_for_each_entry_safe(elem, node, tmp, &heads[i], list) {
+			hlist_del(&elem->list);
+			kfree(elem);
+		}
+	}
+	
+	kfree(table->heads);
+	table->heads = NULL;
+	table->bits = 0;
+}
+
+static int 
+repl_hash_table_init_from_array(struct repl_hash_table* table,
+	const struct kedr_instrumentor_replace_pair* array)
+{
+	int result;
+	
+	size_t hash_table_size;
+	unsigned int bits;
+	struct hlist_head *heads = NULL;
+	
+	size_t array_size = 0;
+	const struct kedr_instrumentor_replace_pair* repl_pair;
+	for(repl_pair = array; repl_pair->orig != NULL; repl_pair++)
+	{
+		array_size++;
+	}
+	
+	hash_table_size = (array_size * 10 + 6)/ 7;
+	
+	bits = 0;
+	for(; hash_table_size >= 1; hash_table_size >>= 1)
+		bits++;
+	if(bits == 0) bits = 1;
+	
+	hash_table_size = 1 << bits;
+	
+	heads = kzalloc(hash_table_size * sizeof(*heads), GFP_KERNEL);
+	if(heads == NULL)
+	{
+		pr_err("Failed to allocate hash table for replacement functions.");
+		return -ENOMEM;
+	}
+	
+	table->heads = heads;
+	table->bits = bits;
+	
+	for (repl_pair = array; repl_pair->orig != NULL; repl_pair++)
+	{
+		struct hlist_head* head;
+		struct hlist_node* node_tmp;
+		struct repl_elem* elem;
+		
+		head = &heads[hash_ptr(repl_pair->orig, bits)];
+		
+		hlist_for_each_entry(elem, node_tmp, head, list)
+		{
+			if(elem->orig == repl_pair->orig)
+			{
+				pr_err("Cannot replace function twice.");
+				result = -EINVAL;
+				goto free_table;
+			}
+		}
+		elem = kmalloc(sizeof(*elem), GFP_KERNEL);
+		if(elem == NULL)
+		{
+			pr_err("Fail to allocate replace table's element.");
+			result = -ENOMEM;
+			goto free_table;
+		}
+		elem->orig = repl_pair->orig;
+		elem->repl = repl_pair->repl;
+		hlist_add_head(&elem->list, head);
+	}
+	return 0;
+
+free_table:
+	repl_hash_table_destroy(table);	
+	return result;
 }
 
 static void*
 repl_hash_table_get_repl(struct repl_hash_table* table, void* orig)
 {
-    struct hlist_head* head;
-    struct hlist_node* node_tmp;
-    struct repl_elem* elem;
-    
-    head = &table->heads[hash_ptr(orig, table->bits)];
-    
-    hlist_for_each_entry(elem, node_tmp, head, list)
-    {
-        if(elem->orig == orig)
-        {
-            return elem->repl;
-        }
-    }
-    return NULL;
+	struct hlist_head* head;
+	struct hlist_node* node_tmp;
+	struct repl_elem* elem;
+	
+	head = &table->heads[hash_ptr(orig, table->bits)];
+	
+	hlist_for_each_entry(elem, node_tmp, head, list)
+	{
+		if(elem->orig == orig)
+		{
+			return elem->repl;
+		}
+	}
+	return NULL;
 }
 
 /* ================================================================ */
@@ -224,15 +222,15 @@ repl_hash_table_get_repl(struct repl_hash_table* table, void* orig)
  * */
 #ifdef CONFIG_X86_64
 #  define CALL_ADDR_FROM_OFFSET(insn_addr, insn_len, offset) \
-    (void*)((s64)(insn_addr) + (s64)(insn_len) + (s64)(s32)(offset))
+	(void*)((s64)(insn_addr) + (s64)(insn_len) + (s64)(s32)(offset))
 
 #else /* CONFIG_X86_32 */
 #  define CALL_ADDR_FROM_OFFSET(insn_addr, insn_len, offset) \
-    (void*)((u32)(insn_addr) + (u32)(insn_len) + (u32)(offset))
+	(void*)((u32)(insn_addr) + (u32)(insn_len) + (u32)(offset))
 #endif
 
 #define CALL_OFFSET_FROM_ADDR(insn_addr, insn_len, dest_addr) \
-    (u32)(dest_addr - (insn_addr + (u32)insn_len))
+	(u32)(dest_addr - (insn_addr + (u32)insn_len))
 /* ================================================================ */
 
 /* ================================================================ */
@@ -246,98 +244,98 @@ repl_hash_table_get_repl(struct repl_hash_table* table, void* orig)
  */
 static unsigned int
 do_process_insn(struct insn* c_insn, void* kaddr, void* end_kaddr,
-    struct repl_hash_table* repl_table)
+	struct repl_hash_table* repl_table)
 {
-    /* ptr to the 32-bit offset argument in the instruction */
-    u32* offset = NULL; 
-    
-    /* address of the function being called */
-    void* addr = NULL;
-    void* repl_addr; 
-    
-    static const unsigned char op_call = 0xe8; /* 'call <offset>' */
-    static const unsigned char op_jmp  = 0xe9; /* 'jmp  <offset>' */
-    
-    /* Decode the instruction and populate 'insn' structure */
-    kernel_insn_init(c_insn, kaddr);
-    insn_get_length(c_insn);
-    
-    if (c_insn->length == 0)
-    {
-        return 0;
-    }
-    
-    if (kaddr + c_insn->length > end_kaddr)
-    {
-    /* Note: it is OK to stop at 'end_kaddr' but no further */
-        KEDR_MSG(COMPONENT_STRING
-    "instruction decoder stopped past the end of the section.\n");
-        insn_get_opcode(c_insn);
-        printk(KERN_ALERT COMPONENT_STRING 
-    "kaddr=%p, end_kaddr=%p, c_insn->length=%d, opcode=0x%x\n",
-            (void*)kaddr,
-            (void*)end_kaddr,
-            (int)c_insn->length,
-            (unsigned int)c_insn->opcode.value
-        );
-        WARN_ON(1);
-    }
-        
+	/* ptr to the 32-bit offset argument in the instruction */
+	u32* offset = NULL; 
+	
+	/* address of the function being called */
+	void* addr = NULL;
+	void* repl_addr; 
+	
+	static const unsigned char op_call = 0xe8; /* 'call <offset>' */
+	static const unsigned char op_jmp  = 0xe9; /* 'jmp  <offset>' */
+	
+	/* Decode the instruction and populate 'insn' structure */
+	kernel_insn_init(c_insn, kaddr);
+	insn_get_length(c_insn);
+	
+	if (c_insn->length == 0)
+	{
+		return 0;
+	}
+	
+	if (kaddr + c_insn->length > end_kaddr)
+	{
+	/* Note: it is OK to stop at 'end_kaddr' but no further */
+		KEDR_MSG(COMPONENT_STRING
+	"instruction decoder stopped past the end of the section.\n");
+		insn_get_opcode(c_insn);
+		printk(KERN_ALERT COMPONENT_STRING 
+	"kaddr=%p, end_kaddr=%p, c_insn->length=%d, opcode=0x%x\n",
+			(void*)kaddr,
+			(void*)end_kaddr,
+			(int)c_insn->length,
+			(unsigned int)c_insn->opcode.value
+		);
+		WARN_ON(1);
+	}
+		
 /* This call may be overkill as insn_get_length() probably has to decode 
  * the instruction completely.
  * Still, to operate safely, we need insn_get_opcode() before we can access
  * c_insn->opcode. 
  * The call is cheap anyway, no re-decoding is performed.
  */
-    insn_get_opcode(c_insn); 
-    if (c_insn->opcode.value != op_call &&
-        c_insn->opcode.value != op_jmp)
-    {
-        /* Neither 'call' nor 'jmp' instruction, nothing to do. */
-        return c_insn->length;
-    }
-    
+	insn_get_opcode(c_insn); 
+	if (c_insn->opcode.value != op_call &&
+		c_insn->opcode.value != op_jmp)
+	{
+		/* Neither 'call' nor 'jmp' instruction, nothing to do. */
+		return c_insn->length;
+	}
+	
 /* [NB] For some reason, the decoder stores the argument of 'call' and 'jmp'
  * as 'immediate' rather than 'displacement' (as Intel manuals name it).
  * May be it is a bug, may be it is not. 
  * Meanwhile, I'll call this value 'offset' to avoid confusion.
  */
 
-    /* Call this before trying to access c_insn->immediate */
-    insn_get_immediate(c_insn);
-    if (c_insn->immediate.nbytes != 4)
-    {
-        KEDR_MSG(COMPONENT_STRING 
-    "at 0x%p: "
-    "opcode: 0x%x, "
-    "immediate field is %u rather than 32 bits in size; "
-    "insn.length = %u, insn.imm = %u, off_immed = %d\n",
-            kaddr,
-            (unsigned int)c_insn->opcode.value,
-            8 * (unsigned int)c_insn->immediate.nbytes,
-            c_insn->length,
-            (unsigned int)c_insn->immediate.value,
-            insn_offset_immediate(c_insn));
-        WARN_ON(1);
-        return c_insn->length;
-    }
-    
-    offset = (u32*)(kaddr + insn_offset_immediate(c_insn));
-    addr = CALL_ADDR_FROM_OFFSET(kaddr, c_insn->length, *offset);
-    
-    /* Check if one of the functions of interest is called */
-    repl_addr = repl_hash_table_get_repl(repl_table, addr);
-    if (repl_addr != NULL)
-    {
-        /* Change the address of the function to be called */
-        *offset = CALL_OFFSET_FROM_ADDR(
-            kaddr, 
-            c_insn->length,
-            repl_addr
-        );
-    }
-    
-    return c_insn->length;
+	/* Call this before trying to access c_insn->immediate */
+	insn_get_immediate(c_insn);
+	if (c_insn->immediate.nbytes != 4)
+	{
+		KEDR_MSG(COMPONENT_STRING 
+	"at 0x%p: "
+	"opcode: 0x%x, "
+	"immediate field is %u rather than 32 bits in size; "
+	"insn.length = %u, insn.imm = %u, off_immed = %d\n",
+			kaddr,
+			(unsigned int)c_insn->opcode.value,
+			8 * (unsigned int)c_insn->immediate.nbytes,
+			c_insn->length,
+			(unsigned int)c_insn->immediate.value,
+			insn_offset_immediate(c_insn));
+		WARN_ON(1);
+		return c_insn->length;
+	}
+	
+	offset = (u32*)(kaddr + insn_offset_immediate(c_insn));
+	addr = CALL_ADDR_FROM_OFFSET(kaddr, c_insn->length, *offset);
+	
+	/* Check if one of the functions of interest is called */
+	repl_addr = repl_hash_table_get_repl(repl_table, addr);
+	if (repl_addr != NULL)
+	{
+		/* Change the address of the function to be called */
+		*offset = CALL_OFFSET_FROM_ADDR(
+			kaddr, 
+			c_insn->length,
+			repl_addr
+		);
+	}
+	
+	return c_insn->length;
 }
 
 /* Process the instructions in [kbeg, kend) area.
@@ -350,19 +348,19 @@ do_process_insn(struct insn* c_insn, void* kaddr, void* end_kaddr,
  */
 static void
 do_process_area(void* kbeg, void* kend, 
-    struct repl_hash_table* repl_table)
+	struct repl_hash_table* repl_table)
 {
-    struct insn c_insn; /* current instruction */
-    void* pos = NULL;
-    
-    BUG_ON(kbeg == NULL);
-    BUG_ON(kend == NULL);
-    BUG_ON(kend < kbeg);
-        
-    for (pos = kbeg; pos + 4 < kend; )
-    {
-        unsigned int len;
-        unsigned int k;
+	struct insn c_insn; /* current instruction */
+	void* pos = NULL;
+	
+	BUG_ON(kbeg == NULL);
+	BUG_ON(kend == NULL);
+	BUG_ON(kend < kbeg);
+		
+	for (pos = kbeg; pos + 4 < kend; )
+	{
+		unsigned int len;
+		unsigned int k;
 
 /* 'pos + 4 < kend' is based on another "heuristics". 'call' and 'jmp' 
  * instructions we need to instrument are 5 bytes long on x86 and x86-64 
@@ -379,22 +377,22 @@ do_process_area(void* kbeg, void* kend,
  *
  * [NB] The above check automatically handles 'pos == kend' case.
  */
-       
-        len = do_process_insn(&c_insn, pos, kend,
-            repl_table);
-        if (len == 0)   
-        {
-            KEDR_MSG(COMPONENT_STRING
-                "do_process_insn() returned 0\n");
-            WARN_ON(1);
-            break;
-        }
+	   
+		len = do_process_insn(&c_insn, pos, kend,
+			repl_table);
+		if (len == 0)   
+		{
+			KEDR_MSG(COMPONENT_STRING
+				"do_process_insn() returned 0\n");
+			WARN_ON(1);
+			break;
+		}
 
-        if (pos + len > kend)
-        {
-            break;
-        }
-        
+		if (pos + len > kend)
+		{
+			break;
+		}
+		
 /* If the decoded instruction contains only zero bytes (this is the case,
  * for example, for one flavour of 'add'), skip to the first nonzero byte
  * after it. 
@@ -407,26 +405,26 @@ do_process_area(void* kbeg, void* kend,
  * section or to the end of the area this way which is what we want in this
  * case.
  */
-        for (k = 0; k < len; ++k)
-        {
-            if (*((unsigned char*)pos + k) != 0) 
-            {
-                break;
-            }
-        }
-        pos += len;
-        
-        if (k == len) 
-        {
-            /* all bytes are zero, skip the following 0s */
-            while (pos < kend && *(unsigned char*)pos == 0)
-            {
-                ++pos;
-            }
-        }
-    }
-    
-    return;
+		for (k = 0; k < len; ++k)
+		{
+			if (*((unsigned char*)pos + k) != 0) 
+			{
+				break;
+			}
+		}
+		pos += len;
+		
+		if (k == len) 
+		{
+			/* all bytes are zero, skip the following 0s */
+			while (pos < kend && *(unsigned char*)pos == 0)
+			{
+				++pos;
+			}
+		}
+	}
+	
+	return;
 }
 
 /* Replace all calls to to the target functions with calls to the 
@@ -434,30 +432,30 @@ do_process_area(void* kbeg, void* kend,
  */
 static void 
 replace_calls_in_module(struct module* mod,
-    struct repl_hash_table* repl_table)
+	struct repl_hash_table* repl_table)
 {
-    BUG_ON(mod == NULL);
-    BUG_ON(mod->module_core == NULL);
+	BUG_ON(mod == NULL);
+	BUG_ON(mod->module_core == NULL);
 
-    if (mod->module_init != NULL)
-    {
-        KEDR_MSG(COMPONENT_STRING 
-            "target module: \"%s\", processing \"init\" area\n",
-            module_name(mod));
-            
-        do_process_area(mod->module_init, 
-            mod->module_init + mod->init_text_size,
-            repl_table);
-    }
+	if (mod->module_init != NULL)
+	{
+		KEDR_MSG(COMPONENT_STRING 
+			"target module: \"%s\", processing \"init\" area\n",
+			module_name(mod));
+			
+		do_process_area(mod->module_init, 
+			mod->module_init + mod->init_text_size,
+			repl_table);
+	}
 
-    KEDR_MSG(COMPONENT_STRING 
-        "target module: \"%s\", processing \"core\" area\n",
-        module_name(mod));
-        
-    do_process_area(mod->module_core, 
-        mod->module_core + mod->core_text_size,
-        repl_table);
-    return;
+	KEDR_MSG(COMPONENT_STRING 
+		"target module: \"%s\", processing \"core\" area\n",
+		module_name(mod));
+		
+	do_process_area(mod->module_core, 
+		mod->module_core + mod->core_text_size,
+		repl_table);
+	return;
 }
 
 /*
@@ -467,42 +465,41 @@ replace_calls_in_module(struct module* mod,
  * Note that this function is called with instrumentor_mutex locked.
  */
 int kedr_instrumentor_replace_functions(struct module* m,
-    const struct kedr_instrumentor_replace_pair* replace_pairs)
+	const struct kedr_instrumentor_replace_pair* replace_pairs)
 {
-    int result;
-    unsigned long flags;
-    
-    struct repl_hash_table repl_hash_table;
-    
-    result = repl_hash_table_init_from_array(&repl_hash_table, replace_pairs);
-    if (result)
-    {
-        pr_err("Failed to create hash table of replacements.");
-        return result;
-    }
-    
-    spin_lock_irqsave(&target_in_init_lock, flags);
-    target_in_init = 1;
-    target_module = m;
-    spin_unlock_irqrestore(&target_in_init_lock, flags);
+	int result;
+	unsigned long flags;
+	
+	struct repl_hash_table repl_hash_table;
+	
+	result = repl_hash_table_init_from_array(&repl_hash_table, replace_pairs);
+	if (result)
+	{
+		pr_err("Failed to create hash table of replacements.");
+		return result;
+	}
+	
+	spin_lock_irqsave(&target_in_init_lock, flags);
+	target_in_init = 1;
+	target_module = m;
+	spin_unlock_irqrestore(&target_in_init_lock, flags);
 
-    replace_calls_in_module(m, &repl_hash_table);
-    
-    repl_hash_table_destroy(&repl_hash_table);
-    
-    return 0;
+	replace_calls_in_module(m, &repl_hash_table);
+	
+	repl_hash_table_destroy(&repl_hash_table);
+	return 0;
 }
 
 void kedr_instrumentor_replace_clean(struct module* m)
 {
-    unsigned long flags;
+	unsigned long flags;
    
-    spin_lock_irqsave(&target_in_init_lock, flags);
-    target_in_init = 0; 
-    target_module = NULL;
-    spin_unlock_irqrestore(&target_in_init_lock, flags);
-    
-    return;
+	spin_lock_irqsave(&target_in_init_lock, flags);
+	target_in_init = 0; 
+	target_module = NULL;
+	spin_unlock_irqrestore(&target_in_init_lock, flags);
+	
+	return;
 }
 
 /* ================================================================ */
@@ -540,28 +537,28 @@ kedr_target_module_in_init(void)
  * least one replacement function is working, the target module is still 
  * there because it is in use by some task.
  */
-    unsigned long flags;
-    int result;
-    
-    spin_lock_irqsave(&target_in_init_lock, flags);
-    if (target_in_init)
-    {
-        BUG_ON(target_module == NULL);
-        target_in_init = (target_module->module_init != NULL);
-    }
-    result = target_in_init;
-    spin_unlock_irqrestore(&target_in_init_lock, flags);
-    
-    /* [NB] When the target is unloaded, on_module_unload() will set 
-     * target_in_init to 0.*/
-    return result;
+	unsigned long flags;
+	int result;
+	
+	spin_lock_irqsave(&target_in_init_lock, flags);
+	if (target_in_init)
+	{
+		BUG_ON(target_module == NULL);
+		target_in_init = (target_module->module_init != NULL);
+	}
+	result = target_in_init;
+	spin_unlock_irqrestore(&target_in_init_lock, flags);
+	
+	/* [NB] When the target is unloaded, on_module_unload() will set 
+	 * target_in_init to 0.*/
+	return result;
 }
 
 /* ================================================================ */
 int
 kedr_instrumentor_init(void)
 {
-    return 0;
+	return 0;
 }
 void
 kedr_instrumentor_destroy(void)
