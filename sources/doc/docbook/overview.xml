@@ -297,4 +297,17 @@ The tools built using KEDR framework can operate only on the calls made by the t
 </section>
 <!-- End of "overview.limit" -->
 
+<section id="overview.feedback">
+<title>Reporting Bugs and Asking Questions</title>
+<para>
+If you have found a problem in KEDR or in this manual, please report it to <ulink url="http://code.google.com/p/kedr/issues/">our bug tracker</ulink>. 
+</para>
+
+<para>
+If you have questions about KEDR, feature requests, ideas on how to make KEDR better, or just anything else concerning KEDR to discuss, feel free to post to our mailing list: <ulink url="http://groups.google.com/group/kedr-discuss">kedr-discuss</ulink>. We appreciate your feedback.
+</para>
+
+</section>
+<!-- End of "overview.feedback" -->
+
 </section>
