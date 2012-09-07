@@ -26,3 +26,6 @@ indicator.simulate.code = return (atomic_inc_return(&state(times)) % 2) == 0;
 
 indicator.init.name = times
 indicator.init.code = atomic_set(&state(times), 0); return 0;
+
+indicator.destroy.name = times
+indicator.destroy.code = /* not used */
