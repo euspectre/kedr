@@ -370,8 +370,8 @@ function(check_ring_buffer)
 	message(STATUS "${check_ring_buffer_message}")
 	
 	if (NOT RING_BUFFER_IMPLEMENTED)
-		message("\n[WARNING]\n Ring buffer is not supported by the system.\n"
-			"This make tracing in KEDR unavailable, so call monitoring will also do not work."
+		message("\n[WARNING]\nRing buffer is not supported by the system.\n"
+			"The tracing facilities as well as call monitoring plugins will not be built.\n"
 			"If this is not acceptable, you could rebuild the kernel with\n"
 			"CONFIG_RING_BUFFER set to \"y\" and then reconfigure and rebuild KEDR.\n")
 	endif (NOT RING_BUFFER_IMPLEMENTED)

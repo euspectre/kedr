@@ -592,7 +592,7 @@ int payload_elem_fix_all(struct list_head *elems)
 		/* 
 		 * Currently failure to fix even one payload is an error.
 		 * 
-		 * This make 'is_used' field of the struct payload_elem
+		 * This makes 'is_used' field of the struct payload_elem
 		 * unneccesary - it always has same value as global variable
 		 * 'payloads_are_used'.
 		 * 
