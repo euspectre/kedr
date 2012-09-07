@@ -451,16 +451,18 @@ ri_add_bad_free(struct kedr_lc_resource_info *ri,
 	unsigned int i = 0;
 	for (i = 0; i < lc->nr_bad_free_groups; ++i) {
 		if (call_stacks_equal(ri, lc->bad_free_groups[i].ri)) {
+			/* Similar events have already been stored. */
 			++lc->bad_free_groups[i].nr_items;
-			/* Similar events have already been stored, 
-			 * nothing more to do. */
+			resource_info_destroy(ri);
 			return;
 		}
 	}
 	
-	if (lc->nr_bad_free_groups == bad_free_groups_stored)
+	if (lc->nr_bad_free_groups == bad_free_groups_stored) {
 		/* No space for a new group. */
+		resource_info_destroy(ri);
 		return;
+	}
 	
 	++lc->nr_bad_free_groups;
 	
@@ -755,6 +757,9 @@ work_func_free(struct work_struct *work)
 	if (!find_and_remove_alloc(info->addr, lc)) {
 		ri_add_bad_free(info, lc);
 		++lc->total_bad_frees;
+	}
+	else {
+		resource_info_destroy(info);
 	}
 		
 	kfree(klc_work);
