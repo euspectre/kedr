@@ -25,6 +25,7 @@
 #include <linux/workqueue.h>
 #include <linux/string.h>
 #include <linux/slab.h>
+#include <linux/sched.h>
 
 #include <kedr/core/kedr.h>
 #include <kedr/leak_check/leak_check.h>
@@ -418,6 +419,14 @@ resource_info_destroy(struct kedr_lc_resource_info *info)
 }
 /* ====================================================================== */
 
+/* Non-zero for the addresses that may belong to the user space, 
+ * 0 otherwise. If the address is valid and this function returns non-zero,
+ * it is an address in the user space. */
+static int
+is_user_space_address(unsigned long addr)
+{
+	return (addr < TASK_SIZE);
+}
 
 /* Returns 0 if the call stacks in the given kedr_lc_resource_info 
  * structures are not equal, non-zero otherwise. */
@@ -430,6 +439,14 @@ call_stacks_equal(const struct kedr_lc_resource_info *lhs,
 		return 0;
 	
 	for (i = 0; i < lhs->num_entries; ++i) {
+		/* The "outermost" call stack elements for a system call
+		 * may be different for different processes. If the call
+		 * stacks differ in such elements only, we still consider
+		 * them equal. */
+		if (is_user_space_address(lhs->stack_entries[i]) &&
+		    is_user_space_address(rhs->stack_entries[i]))
+			break;
+		
 		if (lhs->stack_entries[i] != rhs->stack_entries[i])
 			return 0;
 	}
