@@ -75,7 +75,7 @@ Change current directory to <filename class='directory'>kedr-build</filename> an
 </para>
 
 <programlisting><![CDATA[
-cmake ../kedr-0.3/
+cmake ../kedr-0.4/
 ]]></programlisting>
 
 <para>
@@ -95,7 +95,7 @@ Example:
 </para>
 
 <programlisting><![CDATA[
-cmake -DCMAKE_INSTALL_PREFIX=/opt/kedr/ ../kedr-0.3/
+cmake -DCMAKE_INSTALL_PREFIX=/opt/kedr/ ../kedr-0.4/
 ]]></programlisting>
 
 <para>
