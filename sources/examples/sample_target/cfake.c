@@ -64,7 +64,7 @@ cfake_open(struct inode *inode, struct file *filp)
 	if (mj != cfake_major || mn < 0 || mn >= cfake_ndevices)
 	{
 		printk(KERN_WARNING "[target] "
-            "No device found with minor=%d and major=%d\n", 
+			"No device found with minor=%d and major=%d\n", 
 			mj, mn);
 		return -ENODEV; /* No such device */
 	}
@@ -127,10 +127,10 @@ cfake_read(struct file *filp, char __user *buf, size_t count,
 	retval = count;
 	
 out:
-  	mutex_unlock(&dev->cfake_mutex);
+	mutex_unlock(&dev->cfake_mutex);
 	return retval;
 }
-                
+				
 ssize_t 
 cfake_write(struct file *filp, const char __user *buf, size_t count, 
 	loff_t *f_pos)
@@ -142,10 +142,10 @@ cfake_write(struct file *filp, const char __user *buf, size_t count,
 		return -EINTR;
 	
 	if (*f_pos >= dev->buffer_size) {
-    /* Writing beyond the end of the buffer is not allowed. */
+	/* Writing beyond the end of the buffer is not allowed. */
 		retval = -EINVAL;
-        goto out;
-    }
+		goto out;
+	}
 	
 	if (*f_pos + count > dev->buffer_size)
 		count = dev->buffer_size - *f_pos;
@@ -163,7 +163,7 @@ cfake_write(struct file *filp, const char __user *buf, size_t count,
 	retval = count;
 	
 out:
-  	mutex_unlock(&dev->cfake_mutex);
+	mutex_unlock(&dev->cfake_mutex);
 	return retval;
 }
 
@@ -190,8 +190,8 @@ cfake_llseek(struct file *filp, loff_t off, int whence)
 		return -EINVAL;
 	}
 	if (newpos < 0 || newpos > dev->buffer_size) 
-        return -EINVAL;
-    
+		return -EINVAL;
+	
 	filp->f_pos = newpos;
 	return newpos;
 }
@@ -202,7 +202,7 @@ struct file_operations cfake_fops = {
 	.write =    cfake_write,
 	.open =     cfake_open,
 	.release =  cfake_release,
-    .llseek =   cfake_llseek,
+	.llseek =   cfake_llseek,
 };
 
 /* ================================================================ */
@@ -212,55 +212,55 @@ struct file_operations cfake_fops = {
  */
 static int
 cfake_construct_device(struct cfake_dev *dev, int minor, 
-    struct class *class)
+	struct class *class)
 {
 	int err = 0;
 	dev_t devno = MKDEV(cfake_major, minor);
-    struct device *device = NULL;
-    
-    BUG_ON(dev == NULL || class == NULL);
+	struct device *device = NULL;
+	
+	BUG_ON(dev == NULL || class == NULL);
 
 	/* Memory is to be allocated when the device is opened the first time */
 	dev->data = NULL;     
-    dev->buffer_size = cfake_buffer_size;
+	dev->buffer_size = cfake_buffer_size;
 	dev->block_size = cfake_block_size;
 	mutex_init(&dev->cfake_mutex);
-    
+	
 	cdev_init(&dev->cdev, &cfake_fops);
 	dev->cdev.owner = THIS_MODULE;
-    
+	
 	err = cdev_add(&dev->cdev, devno, 1);
 	if (err)
 	{
 		printk(KERN_WARNING "[target] Error %d while trying to add %s%d",
 			err, CFAKE_DEVICE_NAME, minor);
-        return err;
+		return err;
 	}
 
-    device = device_create(class, NULL, /* no parent device */ 
-        devno, NULL, /* no additional data */
-        CFAKE_DEVICE_NAME "%d", minor);
+	device = device_create(class, NULL, /* no parent device */ 
+		devno, NULL, /* no additional data */
+		CFAKE_DEVICE_NAME "%d", minor);
 
-    if (IS_ERR(device)) {
-        err = PTR_ERR(device);
-        printk(KERN_WARNING "[target] Error %d while trying to create %s%d",
+	if (IS_ERR(device)) {
+		err = PTR_ERR(device);
+		printk(KERN_WARNING "[target] Error %d while trying to create %s%d",
 			err, CFAKE_DEVICE_NAME, minor);
-        cdev_del(&dev->cdev);
-        return err;
-    }
+		cdev_del(&dev->cdev);
+		return err;
+	}
 	return 0;
 }
 
 /* Destroy the device and free its buffer */
 static void
 cfake_destroy_device(struct cfake_dev *dev, int minor,
-    struct class *class)
+	struct class *class)
 {
-    BUG_ON(dev == NULL || class == NULL);
-    device_destroy(class, MKDEV(cfake_major, minor));
-    cdev_del(&dev->cdev);
-    kfree(dev->data);
-    return;
+	BUG_ON(dev == NULL || class == NULL);
+	device_destroy(class, MKDEV(cfake_major, minor));
+	cdev_del(&dev->cdev);
+	kfree(dev->data);
+	return;
 }
 
 /* ================================================================ */
@@ -272,16 +272,16 @@ cfake_cleanup_module(int devices_to_destroy)
 	/* Get rid of character devices (if any exist) */
 	if (cfake_devices) {
 		for (i = 0; i < devices_to_destroy; ++i) {
-		    cfake_destroy_device(&cfake_devices[i], i, cfake_class);
-        }
+			cfake_destroy_device(&cfake_devices[i], i, cfake_class);
+		}
 		kfree(cfake_devices);
 	}
-    
-    if (cfake_class)
-        class_destroy(cfake_class);
+	
+	if (cfake_class)
+		class_destroy(cfake_class);
 
 	/* [NB] cfake_cleanup_module is never called if alloc_chrdev_region()
-     * has failed. */
+	 * has failed. */
 	unregister_chrdev_region(MKDEV(cfake_major, 0), cfake_ndevices);
 	return;
 }
@@ -291,7 +291,7 @@ cfake_init_module(void)
 {
 	int err = 0;
 	int i = 0;
-    int devices_to_destroy = 0;
+	int devices_to_destroy = 0;
 	dev_t dev = 0;
 	
 	if (cfake_ndevices <= 0)
@@ -308,14 +308,14 @@ cfake_init_module(void)
 		printk(KERN_WARNING "[target] alloc_chrdev_region() failed\n");
 		return err;
 	}
-    cfake_major = MAJOR(dev);
+	cfake_major = MAJOR(dev);
 
-    /* Create device class (before allocation of the array of devices) */
-    cfake_class = class_create(THIS_MODULE, CFAKE_DEVICE_NAME);
-    if (IS_ERR(cfake_class)) {
-        err = PTR_ERR(cfake_class);
-        goto fail;
-    }
+	/* Create device class (before allocation of the array of devices) */
+	cfake_class = class_create(THIS_MODULE, CFAKE_DEVICE_NAME);
+	if (IS_ERR(cfake_class)) {
+		err = PTR_ERR(cfake_class);
+		goto fail;
+	}
 	
 	/* Allocate the array of devices */
 	cfake_devices = (struct cfake_dev *)kzalloc(
@@ -329,10 +329,10 @@ cfake_init_module(void)
 	/* Construct devices */
 	for (i = 0; i < cfake_ndevices; ++i) {
 		err = cfake_construct_device(&cfake_devices[i], i, cfake_class);
-        if (err) {
-            devices_to_destroy = i;
-            goto fail;
-        }
+		if (err) {
+			devices_to_destroy = i;
+			goto fail;
+		}
 	}
 	return 0; /* success */
 
