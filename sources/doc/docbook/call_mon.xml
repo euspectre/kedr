@@ -17,16 +17,16 @@ KEDR provides a set of payload modules that perform call monitoring. They collec
     </para>
 
 <para>
-The standard payload modules for call monitoring are built and installed with KEDR by default. If you would like to disable this, set CMake variable <code>KEDR_STANDARD_CALLM_PAYLOADS</code> to <code>OFF</code> when executing CMake before building KEDR:
+The standard payload modules for call monitoring are not built by default. If you would like to to build and install them, set CMake variable <code>KEDR_STANDARD_CALLM_PAYLOADS</code> to <code>ON</code> when executing CMake before building KEDR:
 </para>
 
 <programlisting><![CDATA[
-cmake -DKEDR_STANDARD_CALLM_PAYLOADS=OFF <other_options> <path_to_kedr_sources>
+cmake -DKEDR_STANDARD_CALLM_PAYLOADS=ON <other_options> <path_to_kedr_sources>
 ]]></programlisting>
 
     <para>
 The format of the output data is similar to the trace format of the <command>ftrace</command> system.
-Here is an example of such trace (the header line is shown only for the purpose of description):
+Here is an example of such trace:
     </para>
 <programlisting><![CDATA[
   TASK-PID  CPU#  TIMESTAMP   FUNCTION
@@ -81,6 +81,6 @@ target_session_&lt;begins|ends&gt;: target_module: "&lt;target-module-name&gt;"
 </programlisting> 
 
     <para>
-Only calls to the subset of all kernel functions are detected. This subset however can be extended easily by implementing your own modules (see <xref linkend="custom_callm_payloads"/>). The compete list of the default payload modules that currently can currently be used for call monitoring and the lists of the functions processed by each module are provided in <xref linkend="standard_callm_payloads.functions"></xref>.
+Only calls to the subset of all kernel functions are detected. This subset however can be extended easily by implementing your own modules (see <xref linkend="custom_callm_payloads"/>). The complete list of the default payload modules that can currently be used for call monitoring and the lists of the functions processed by each module are provided in <xref linkend="standard_callm_payloads.functions"></xref>.
     </para>
 </section>

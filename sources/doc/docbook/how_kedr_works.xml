@@ -59,11 +59,9 @@ Payload modules can do various things:
 
 <itemizedlist>
 <listitem><para>
-Collect data about which function was called when, with what arguments, and
-what it returned (<firstterm><quote>Call Monitor</quote></firstterm> 
-on the figure). The data are output to a trace 
-(via <firstterm><quote>Data Collector</quote></firstterm> facilities) 
-and can then be analyzed by user-space applications.
+Check various requirements for the operation of the module 
+(<firstterm><quote>Base Checker</quote></firstterm> on the figure): whether it 
+creates memory leaks, etc. 
 </para></listitem>
 
 <listitem>
@@ -71,18 +69,16 @@ and can then be analyzed by user-space applications.
 Simulate the situations when the kernel seems to fail to satisfy some of 
 the requests made by the target module 
 (<firstterm><quote>Fault Similator</quote></firstterm> on the 
-figure). That is, simulate low memory conditions, etc. Fault simulation is 
-performed according to the <firstterm>scenarios</firstterm> selected by the 
-user. It can be used to check if the module is still reliable in error 
-conditions, if possible failures of the called functions are properly 
-handled by the module, etc. 
+figure). That is, simulate low memory conditions, etc. 
     </para>
 </listitem>
 
 <listitem><para>
-Check various requirements for the operation of the module 
-(<firstterm><quote>Base Checker</quote></firstterm> on the figure): whether it 
-uses virtual memory facilities in a right way, etc. 
+Collect data about which function was called when, with what arguments, and
+what it returned (<firstterm><quote>Call Monitor</quote></firstterm> 
+on the figure). The data are output to a trace 
+(via <firstterm><quote>Data Collector</quote></firstterm> facilities) 
+and can then be analyzed by user-space applications.
 </para></listitem>
 
 <listitem><para>
@@ -145,7 +141,7 @@ As it was described above, the name of the target module is usually set as a par
 </para>
 
 <para>
-You can also <quote>clear</quote> the target name specification by writing <quote>none</quote> to the file mentioned above. This would mean that no target module were specified for KEDR.
+You can also <quote>clear</quote> the target name specification by writing <quote>none</quote> to the file mentioned above. This would mean that no target module is specified for KEDR.
 </para>
 
 <note><para>

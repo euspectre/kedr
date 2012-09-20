@@ -45,7 +45,7 @@
         <term>-f <replaceable>conf_file</replaceable></term>
         <listitem>
             <para>
-<replaceable>conf_file</replaceable> file provides configuration parameters that KEDR will use when loading and unloading. For the files in the default configuration directory (<filename class="directory">/var/opt/kedr/configs</filename>) or <filename class="directory">&lt;install_prefix&gt;/var/configs</filename> depending on where KEDR is installed), the directory part of the path may be omitted. In the current version, the default configuration directory contains the following files:
+<replaceable>conf_file</replaceable> file provides configuration parameters that KEDR will use when loading and unloading. For the files in the default configuration directory (<filename class="directory">/etc/kedr/</filename>, <filename class="directory">/etc/opt/kedr/</filename> or <filename class="directory">&lt;install_prefix&gt;/etc/kedr/</filename> depending on where KEDR is installed), the directory part of the path may be omitted. In the current version, the default configuration directory contains the following files:
                 <variablelist>
                     <varlistentry>
                         <term><filename>callm.conf</filename></term>
@@ -68,7 +68,7 @@
                     <varlistentry>
                         <term><filename>default.conf</filename></term>
                         <listitem>
-                            <para>Default configuration profile is the profile for call monitoring too (the same as <filename>callm.conf</filename>).</para>
+                            <para>Default configuration profile (same as the profile for memory leak detection <filename>leak_check.conf</filename>).</para>
                         </listitem>
                     </varlistentry>
                 </variablelist>
@@ -80,7 +80,7 @@
 All <replaceable>conf_string</replaceable> and <replaceable>conf_file</replaceable> arguments of the command will actually be combined into one configuration file by KEDR control tool, in the same order as they are listed. The resulting profile will be used when loading and unloading KEDR.
             </para>
             <para>
-If no <replaceable>conf_string</replaceable> and <replaceable>conf_file</replaceable> options are given, the command will use the default configuration file (<filename>/var/opt/kedr/configs/default.conf</filename> or <filename>&lt;install_prefix&gt;/var/configs/default.conf</filename>, depending on where KEDR is installed).
+If no <replaceable>conf_string</replaceable> and <replaceable>conf_file</replaceable> options are given, the command will use the default configuration file (<filename>default.conf</filename>).
             </para>
 			<para>
 If necessary, several <code>-f</code> and <code>-c</code> options can be specified.

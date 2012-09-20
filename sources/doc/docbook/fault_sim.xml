@@ -5,7 +5,7 @@ Fault simulation facilities provided by KEDR allow to put the target kernel modu
     </para>
 
 <para>
-The standard payloads modules for fault simulation are built and installed with KEDR by default. If you would like to disable this, set CMake variable <code>KEDR_STANDARD_FSIM_PAYLOADS</code> to <code>OFF</code> when executing CMake before building KEDR:
+The standard payload modules for fault simulation are built and installed with KEDR by default. If you would like to disable this, set CMake variable <code>KEDR_STANDARD_FSIM_PAYLOADS</code> to <code>OFF</code> when executing CMake before building KEDR:
 </para>
 
 <programlisting><![CDATA[
@@ -66,7 +66,13 @@ cat /sys/kernel/debug/kedr_fault_simulation/points/vmalloc/current_indicator
 </para>
 
 <para>
-If you try to set a non-existent indicator, writing to <filename>current_indicator</filename> will return an error like <computeroutput><quote>bash: echo: write error: Operation not permitted</quote></computeroutput>. You can check this using the following command:
+If you try to set a non-existent indicator, writing to <filename>current_indicator</filename> will return an error like 
+
+<programlisting><![CDATA[
+bash: echo: write error: Operation not permitted. 
+]]></programlisting>
+
+You can check this using the following command:
 </para>
 
 <programlisting><![CDATA[
@@ -256,7 +262,7 @@ echo 'kmalloc (flags = GFP_ATOMIC) && (size > 100)' > \
 ]]></programlisting>
 
     <para>
-This will set the scenario for <function>__kmalloc</function> function to <phrase role="pcite"><quote>simulate faulure of each memory allocation request with flags equal to <constant>GFP_ATOMIC</constant> and size greater than <constant>100</constant></quote></phrase>.
+This will set the scenario for <function>__kmalloc</function> function to <phrase role="pcite"><quote>simulate failure of each memory allocation request with flags equal to <constant>GFP_ATOMIC</constant> and size greater than <constant>100</constant></quote></phrase>.
     </para>
 
     <note><para>
@@ -293,8 +299,13 @@ Full list of standard fault simulation scenarios is provided in <xref linkend="s
     <para>
 List of all functions available for fault simulation by standard set of fault simulation payloads is provided in <xref linkend="standard_fsim_payloads.functions"/>. If you would like to create a payload module to perform fault simulation for other functions, see <xref linkend="custom_fsim_payloads"/>.
     </para>
+    
+<note><para>
+When the user loads KEDR with the standard fault simulation profile (<filename>fsim.conf</filename>), the kernel modules for the standard indicators are also loaded automatically. If it is needed to use a custom indicator, the relevant module should be loaded manually.
+</para></note>
+    
     <para>
-Message described last fault simulated may be readed from the file <filename>/sys/kernel/debug/kedr_fault_simulation/last_fault</filename>. It looks like
+The function call the last failure has been simulated for can be seen in <filename>/sys/kernel/debug/kedr_fault_simulation/last_fault</filename>. It looks like
 <programlisting><![CDATA[
 __kmalloc at [<e17b938d>] cfake_open+0x5d/0xa4 [kedr_sample_target]
 ]]></programlisting>
