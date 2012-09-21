@@ -141,7 +141,7 @@ As it was described above, the name of the target module is usually set as a par
 </para>
 
 <para>
-You can also <quote>clear</quote> the target name specification by writing <quote>none</quote> to the file mentioned above. This would mean that no target module is specified for KEDR.
+You can also <quote>clear</quote> the target name specification by writing <quote>none</quote> to the file mentioned above. This would mean that no target module were specified for KEDR.
 </para>
 
 <note><para>

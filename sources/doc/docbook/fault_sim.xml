@@ -301,7 +301,7 @@ List of all functions available for fault simulation by standard set of fault si
     </para>
     
 <note><para>
-When the user loads KEDR with the standard fault simulation profile (<filename>fsim.conf</filename>), the kernel modules for the standard indicators are also loaded automatically. If it is needed to use a custom indicator, the relevant module should be loaded manually.
+When the user loads KEDR with the standard fault simulation profile (<filename>fsim.conf</filename>), the kernel modules for the standard indicators are also loaded automatically. If it is needed to use a custom indicator, the relevant modules should be loaded manually.
 </para></note>
     
     <para>
