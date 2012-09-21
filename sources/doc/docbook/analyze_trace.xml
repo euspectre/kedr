@@ -1,12 +1,8 @@
 ﻿<section id="analyze_trace">
-<title>Analyzing the Trace</title>
+<title>Analyzing the Call Location Information</title>
 
 <para>
-This section describes a couple of techniques that can be used when analyzing the traces output by payload modules for call monitoring or fault simulation. In particular, it shows how to find out which place in the source code of the target module each particular trace record corresponds to and <link linkend="analyze_trace.stack">how to obtain call stack</link> for a call of interest.
-</para>
-
-<para>
-The techniques described here can also be used when analyzing the results of <link linkend="leak_check">memory leak detection</link>.
+This section describes some techniques that can be useful when analyzing the call stack information as well as traces output by call monitoring plugins. The techniques can also be used when analyzing the results of <link linkend="leak_check">memory leak detection</link>. In particular, it is shown below how to find out which place in the source code of the target module each particular trace record corresponds to and <link linkend="analyze_trace.stack">how to obtain call stack</link> for a call of interest.
 </para>
 
 <note>
@@ -25,7 +21,7 @@ It is desirable to have the target module with debug information enabled. Note t
 <title>General</title>
 
 <para>
-Let us consider the trace from the example described in <xref linkend="kedr_manual_getting_started"/> (the records are numbered just for convenience):
+Let us consider the following trace of events:
 </para>
 
 <programlisting><![CDATA[

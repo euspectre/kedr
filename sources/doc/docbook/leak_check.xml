@@ -2,7 +2,7 @@
 <title>Detecting Memory Leaks</title>
 
 <para>
-<firstterm>LeakCheck</firstterm> (implemented as payload module <filename>kedr_leak_check.ko</filename>) allows, as its name implies, to check the target kernel module for memory leaks, that is to reveal which memory blocks were allocated but were not freed by that module. 
+<firstterm>LeakCheck</firstterm> allows, as its name implies, to check the target kernel module for resource leaks, for example, to reveal memory blocks that were allocated but were not freed by that module. 
 </para>
 
 <para>
@@ -13,19 +13,21 @@ LeakCheck is enabled in KEDR by default. If you would like to disable it, set CM
 cmake -DKEDR_LEAK_CHECK=OFF <other_options> <path_to_kedr_sources>
 ]]></programlisting>
 
-<para>
-Note that LeakCheck may not detect all memory leaks in the target module. For the present, the tool monitors the usage of more than 30 kernel functions that allocate and deallocate memory (these are among the supported functions listed in <xref linkend='call_mon'/>). Still, the target module can use some other functions for this purpose and LeakCheck will not notice this. Nevertheless, it is possible to add support for more functions to LeakCheck.
-</para>
-
-<para>
-Besides that, if the target module allocates a memory block but it is another module (or the kernel proper) that frees it, this will also be reported as a memory leak by LeakCheck. That being said, possible leaks reported by LeakCheck should be further analyzed to find out whether they are actually leaks.
-</para>
-
 <note>
 <para>
 Starting from KEDR 0.3, LeakCheck can be used simultaneously with other kinds of payload modules provided by KEDR. In particular, you can use LeakCheck and fault simulation for memory-related functions at the same time. 
 </para>
 </note>
+
+<itemizedlist>
+<para>LeakCheck is now organized as follows.</para>
+	<listitem><para>
+The LeakCheck core (<filename>kedr_leak_check.ko</filename> module) analyzes the information about allocations and deallocations and provides API for other components. 
+	</para></listitem>
+	<listitem><para>
+One or more components obtain such information and pass it to the LeakCheck core via the API. Some of these components may be payload modules for KEDR, they may collect information about the calls to allocation/deallocation routines. Some may be the kernel-mode components of other kinds, e.g., the tools to track the callback operations of the target module, etc. Even the target module itself can use LeakCheck API to inform the analyzer about some allocation/deallocation events which could be otherwise more difficult to detect (some kind of annotations could be used here).
+	</para></listitem>
+</itemizedlist>
 
 <!-- ============================================================== -->
 
@@ -33,16 +35,21 @@ Starting from KEDR 0.3, LeakCheck can be used simultaneously with other kinds of
 <title>Typical Usage</title>
 
 <para>
-LeakCheck can be used like any other payload module for KEDR. First you need to load KEDR core and the appropriate payload module:
+LeakCheck can be used like any other payload module for KEDR. First you need to load KEDR core and the appropriate plugins:
+</para>
+
+<programlisting><![CDATA[
+kedr start <target_name>
+]]></programlisting>
+
+<para>
+or, equivalently,
 </para>
 
 <programlisting><![CDATA[
 kedr start <target_name> -f leak_check.conf
 ]]></programlisting>
 
-<para>
-<filename>leak_check.conf</filename> is placed to the main directory for config files when KEDR is installed (default: <filename class="directory">/var/opt/kedr/configs</filename>), so you usually do not need to specify the full path to the file.
-</para>
 
 <para>
 Load the target module and do something with it as usual, then unload the 
@@ -187,31 +194,208 @@ overcome this.
 </section>
 <!-- ============================================================== -->
 
-<section id="leak_check.stack_depth">
+<section id="leak_check.param">
+<title>Parameters of LeakCheck</title>
+
+<para>
+The parameters of the core LeakCheck module are described below. 
+</para>
+
+<para>
+If you would like to change the values of these parameters, copy the default <link linkend="kedr_control.config_file">configuration file</link>
+for LeakCheck to a directory of your choice and add <code>&lt;parameter_name&gt;=&lt;value&gt;</code> to the line for <filename>kedr_leak_check.ko</filename> module there. Then you can specify the path to the resulting configuration file when starting KEDR.
+</para>
+
+<section id="leak_check.param.stack_depth">
 <title>Stack Depth</title>
 
 <para>
-The maximum number of stack frames displayed is controlled by <code>stack_depth</code> 
-parameter of the module. That is, at most this many stack frames will be 
-shown.
-</para> 
+The maximum number of stack frames shown in the reports is controlled by <code>stack_depth</code> 
+parameter.</para> 
 
 <para>
 <code>stack_depth</code> parameter is an unsigned integer, not greater than 16. 
 Default value: 16. 
 </para>
 
+</section>
+<!-- ============================================================== -->
+
+<section id="leak_check.param.syslog_output">
+<title>Output to the System Log</title>
+
 <para>
-For example, to display at most 7 stack frames for each 
-allocation/deallocation, create a <link linkend="kedr_control.config_file">configuration file</link>
-for LeakCheck as follows (and use it instead of the default one when starting KEDR):
+By default, LeakCheck outputs the results not only to its files in debugfs but also to the system log. If output to the system log is not desirable, you can disable it by setting <code>syslog_output</code> parameter to 0. 
+</para> 
+
+<para>
+<code>syslog_output</code> parameter is an unsigned integer. Non-zero means <quote>on</quote>, zero means <quote>off</quote>.
+Default value: 1. 
 </para>
 
-<programlisting><![CDATA[
-payload /usr/local/lib/modules/<kernel_version>/misc/kedr_leak_check.ko stack_depth=7
-]]></programlisting>
+</section>
+<!-- ============================================================== -->
+
+<section id="leak_check.param.stack_depth">
+<title>Groups of Bad Frees</title>
+
+<para>
+In some cases, LeakCheck may produce many warnings about <quote>unallocated frees</quote>. This may happen, for example, when the resources were actually allocated but LeakCheck did not detect that.
+</para>
+
+<para><code>bad_free_groups_stored</code> parameter controls how many records (grouped by call stack) are presented in the detailed report. The greater the value of this parameter the more memory is needed to store the report, etc. Note that the summary always presents the complete number of the <quote>unallocated frees</quote> LeakCheck has detected and is not affected by this parameter.
+</para> 
+
+<para>
+<code>bad_free_groups_stored</code> parameter is an unsigned integer. 
+Default value: 8. 
+</para>
 
 </section>
+<!-- ============================================================== -->
+
+</section> <!-- leak_check.param -->
+<!-- ============================================================== -->
+
+<section id="leak_check.api">
+<title>LeakCheck API</title>
+
+<section id="leak_check.api.common">
+<title>Common notes</title>
+<orderedlist>
+	<listitem><para>
+Assuming the <filename class="directory">include</filename> directory of KEDR is in the search path for header files, the kernel module using the LeakCheck API should use the following <code>#include</code> directive:
+	</para>
+	
+<programlisting><![CDATA[
+#include <kedr/leak_check/leak_check.h>
+]]></programlisting>
+	</listitem>
+	
+	<listitem><para>
+As the module uses functions exported by another module (LeakCheck core), it also needs the <filename>.symvers</filename> file of the latter, namely
+	</para>
+<programlisting><![CDATA[
+<KEDR install prefix>/lib/modules/`uname -r`/symvers/kedr_leak_check.symvers
+]]></programlisting>
+	</listitem>
+	
+	<listitem><para>
+In the functions below, <code>caller_address</code> is the return address of the call to the corresponding allocation or deallocation function. That is the address of the machine instruction immediately following the call (x86-specific). The pre- and post-handlers in the payload modules for KEDR have caller_address variable for this purpose, so you can just use it there. If LeakCheck API is used in some other component rather than a KEDR payload module, it is the job of that component to properly determine the value to be passed as caller_address (see also <quote>Annotations</quote> example).
+	</para></listitem>
+	
+	<listitem><para>
+Currently, LeakCheck can analyze only one kernel module at a time. So, all the loaded components that use LeakCheck API should give LeakCheck the information only about that particular module.
+	</para></listitem>
+</orderedlist>
+</section>
+<!-- ============================================================== -->
+
+<section id="leak_check.api.handle_alloc">
+<title>kedr_lc_handle_alloc()</title>
+<programlisting><![CDATA[
+void
+kedr_lc_handle_alloc(struct module *mod, const void *addr, size_t size, 
+        const void *caller_address);
+]]></programlisting>
+
+<para>
+Call this function to inform LeakCheck core that the given kernel module, <code>mod</code>, has allocated a resource (e.g. memory block, some object, etc.) at the address <code>addr</code> in memory. <code>addr</code> must be neither <code>NULL</code> nor <code>ZERO_SIZE_PTR</code>.
+</para>
+
+<para>
+The size of the resource is passed as <code>size</code> argument. If the resource is a memory block, <code>size</code> should be the size of this block. For other types of resources, it is also recommended to provide a meaningful value of size argument. In some cases, the size of the structure corresponding to the resource could be convenient to use here.
+</para>
+
+<para>
+If the size cannot be obtained, pass 0 as size. This will be interpreted as <quote>unknown size</quote> by LeakCheck.
+</para>
+
+<para>
+<code>size</code> must not be equal to <code>(size_t)(-1)</code>, this value is reserved.
+</para>
+
+<para>
+This function should be called <emphasis>after</emphasis> the resource has actually been successfully allocated.
+</para>
+</section>
+<!-- ============================================================== -->
+
+<section id="leak_check.api.handle_free">
+<title>kedr_lc_handle_free()</title>
+
+<programlisting><![CDATA[
+void
+kedr_lc_handle_free(struct module *mod, const void *addr, 
+        const void *caller_address);
+]]></programlisting>
+
+<para>
+Call this function to inform LeakCheck core that the given kernel module, <code>mod</code>, has freed (released, deallocated, ...) the resource that was located at the given address in memory (<code>addr</code>). <code>addr</code> must be neither <code>NULL</code> nor <code>ZERO_SIZE_PTR</code>.
+</para>
+
+<para>
+This function should be called <emphasis>before</emphasis> the resource is actually freed. This is because LeakCheck assumes that the calls to its API happen in exactly the same order as the corresponding allocation and deallocation calls in the code under analysis.
+</para>
+
+<para>
+If <code>kedr_lc_handle_free()</code> was called after the deallocation, some other part of the code under analysis could get in between the actual deallocation and that call and allocate the resource. The chances are, the new resource will have the same address as the old one. As a result, a call to <code>kedr_lc_handle_alloc()</code> could also occur before the call to <code>kedr_lc_handle_free()</code> with the same addr value, which could make a mess.
+</para>
+
+</section>
+<!-- ============================================================== -->
+
+</section> <!-- leak_check.api -->
+<!-- ============================================================== -->
+
+<section id="leak_check.examples">
+<title>Examples</title>
+
+<para>
+The following examples are provided to demonstrate how to use LeakCheck to build custom analysis tools. The examples are located in the following directory: <filename class="directory">&lt;KEDR install prefix&gt;/share/kedr/examples/leak_check/</filename>.
+</para>
+
+<section id="leak_check.examples.mempool">
+<title>Mempool Operations</title>
+
+<para>
+<quote>Mempool_ops</quote> example demonstrates how to create plugins to LeakCheck using the template-based generation system provided by KEDR and how to track custom allocation and deallocation operations.
+</para>
+
+<para>
+The module built in this example tracks calls to <code>mempool_alloc()</code> and <code>mempool_free()</code> and uses LeakCheck to analyze consistency of these calls.
+</para>
+
+<para>
+See <ulink url="http://kedr.googlecode.com/hg/sources/examples/leak_check/mempool_ops/Readme.txt">Readme.txt</ulink> for the example for details.
+</para>
+
+<para>
+If you would like to use LeakCheck to process allocation/deallocation events from the functions it currently does not track, the recommended way is to prepare a custom module like it is done in this example rather than to change the modules provided by KEDR framework.
+</para>
+
+</section>
+<!-- ============================================================== -->
+
+<section id="leak_check.examples.annotations">
+<title>Annotations</title>
+
+<para>
+<quote>Annotations</quote> example demonstrates how to use LeakCheck API in a module that is not a plugin to KEDR by itself. One common use case is annotating custom resource allocation/deallocation operations in a module you develop or, at least, can change a bit and rebuild.
+</para>
+
+<para>
+The module is almost the same in this example as in "sample_target" example. The difference is, <code>device_create()</code> and <code>device_destroy()</code> are annotated here with the special calls for LeakCheck to track these operations.
+</para>
+
+<para>
+See <ulink url="http://kedr.googlecode.com/hg/sources/examples/leak_check/annotations/Readme.txt">Readme.txt</ulink> for the example as well as the comments in its source code for details.
+</para>
+
+</section>
+<!-- ============================================================== -->
+
+</section> <!-- leak_check.examples -->
 <!-- ============================================================== -->
 
 <section id="leak_check.caveats">
@@ -225,9 +409,17 @@ target module more than once while LeakCheck is loaded.
 
 <para>
 As usual with debugfs, the output files live only as long as 
-LeakCheck.ko module is loaded. In particular, after unloading the 
+LeakCheck is loaded. In particular, after unloading the 
 target, please collect the results first and only after that reload the 
 target or stop KEDR.
+</para>
+
+<para>
+For the present, the tool monitors the usage of several dozens kernel functions that allocate and deallocate memory (these are among the supported functions listed in <xref linkend='call_mon'/>). However, if the target module uses some other functions for this purpose,  LeakCheck will not notice this. It is possible to add support for more functions to LeakCheck or provide some other workaround based on <link linkend='leak_check.api'>LeakCheck API</link>.
+</para>
+
+<para>
+Besides that, if the target module allocates a memory block but it is another module (or the kernel proper) that frees it, this will also be reported as a memory leak by LeakCheck. That being said, possible leaks reported by LeakCheck should be further analyzed to find out whether they are actually leaks.
 </para>
 
 </section>
