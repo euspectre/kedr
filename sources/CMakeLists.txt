@@ -41,8 +41,16 @@ endif ()
 
 set (ENV{KEDR_ARCH} "${KEDR_ARCH}")
 set (ENV{KEDR_CROSS_COMPILE} "${KEDR_CROSS_COMPILE}")
-
 #######################################################################
+
+# [NB] Sparse is usually not installed by default. If you are going to
+# use it, make sure it is installed.
+option(KEDR_USE_SPARSE 
+	"Use Sparse analysis tool when building kernel modules." 
+	OFF
+)
+#######################################################################
+
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
 find_package(Kbuild)
 

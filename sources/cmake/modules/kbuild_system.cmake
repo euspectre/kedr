@@ -42,51 +42,58 @@ set(kbuild_cflags)
 # If no sources are specified, the module will be built from the only source
 # file, "${name}.c".
 function(kbuild_add_module name)
+    # Enable Sparse if requested
+    if (KEDR_USE_SPARSE)
+    	set(kedr_sparse_check "C=1")
+    else ()
+    	set(kedr_sparse_check "")
+    endif (KEDR_USE_SPARSE)
+    
     set(symvers_file ${CMAKE_CURRENT_BINARY_DIR}/Module.symvers)
-	#Global target
+	# Global target
 	add_custom_target(${name} ALL
 			DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${name}.ko ${symvers_file})
 	if(kbuild_dependencies_modules)
 		add_dependencies(${name} ${kbuild_dependencies_modules})
 	endif(kbuild_dependencies_modules)
-	#Sources
+	# Sources
 	if(ARGN)
 		set(sources ${ARGN})
 	else(ARGN)
 		set(sources "${CMAKE_CURRENT_BINARY_DIR}/${name}.c")
 	endif(ARGN)
-	#Sources with absolute paths
+	# Sources with absolute paths
 	to_abs_path(sources_abs ${sources})
-	#list of files from which module building is depended
+	# list of files from which module building is depended
 	set(depend_files)
-	#Sources of "c" type, but without extension
-	#(for clean files, 
-	#for out-of-source builds do not create files in source tree)
+	# Sources of "c" type, but without extension
+	# (for clean files, 
+	# for out-of-source builds do not create files in source tree)
 	set(c_sources_noext_abs)
-	#Sources of "o" type, but without extension
+	# Sources of "o" type, but without extension
 	set(o_sources_noext_abs)
 	foreach(c_source_noext_abs ${c_sources_noext_abs})
 		_kbuild_add_clean_files_c(${c_source_noext_abs} clean_files_list)
 		list(APPEND clean_files_list "${c_source_noext_abs}.o")
 	endforeach(c_source_noext_abs ${c_sources_noext_abs})
-	#sort sources
+	# sort sources
 	foreach(source_abs ${sources_abs})
 		string(REGEX MATCH "(.+)((\\.c)|(\\.o))$" is_obj_source ${source_abs})
 		if(is_obj_source)
-			#real sources
+			# real sources
 			set(obj_source_noext_abs ${CMAKE_MATCH_1})
 			if(CMAKE_MATCH_2 STREQUAL ".c")
 				is_path_inside_dir(is_in_source ${CMAKE_SOURCE_DIR} ${source_abs})
 				is_path_inside_dir(is_in_binary ${CMAKE_BINARY_DIR} ${source_abs})
 				if(is_in_source AND NOT is_in_binary)
-					#special process c-sources in source tree
+					# special process c-sources in source tree
 					file(RELATIVE_PATH c_source_rel ${CMAKE_SOURCE_DIR} ${source_abs})
 					set(c_source_abs_real ${CMAKE_BINARY_DIR}/${c_source_rel})
-					#add rule for create duplicate..
+					# add rule for create duplicate..
 					rule_copy_file(${c_source_abs_real} ${source_abs})
-					#..and forgot initial file
+					# ..and forgot initial file
 					set(source_abs ${c_source_abs_real})
-					#regenerate source without extension
+					# regenerate source without extension
 					string(REGEX REPLACE "(.+)\\.c" "\\1" 
 						obj_source_noext_abs
 						${source_abs})
@@ -96,12 +103,12 @@ function(kbuild_add_module name)
 				list(APPEND o_sources_noext_abs ${obj_source_noext_abs})
 			endif(CMAKE_MATCH_2 STREQUAL ".c")
 		else(is_obj_source)
-			#sources only for DEPENDS
+			# sources only for DEPENDS
 		endif(is_obj_source)
 		list(APPEND depend_files ${source_abs})
 	endforeach(source_abs ${sources_abs})
-	#Object sources relative to current dir
-	#(for $(module)-y :=)
+	# Object sources relative to current dir
+	# (for $(module)-y :=)
 	set(obj_sources_noext_rel)
 	foreach(obj_sources_noext_abs
 			${c_sources_noext_abs} ${o_sources_noext_abs})
@@ -113,12 +120,12 @@ function(kbuild_add_module name)
 	if(NOT obj_sources_noext_rel)
 		message(FATAL_ERROR "List of object files for module ${name} is empty.")
 	endif(NOT obj_sources_noext_rel)
-	#Detect, if build simple - source object name coincide with module name
+	# Detect, if build simple - source object name coincide with module name
 	if(obj_sources_noext_rel STREQUAL ${name})
 		set(is_build_simple "TRUE")
 	else(obj_sources_noext_rel STREQUAL ${name})
-		#Detect, if only one of source object names coincide with module name.
-		#This situation is incorrect for kbuild system.
+		# Detect, if only one of source object names coincide with module name.
+		# This situation is incorrect for kbuild system.
 		list(FIND obj_sources_noext_rel ${name} is_objects_contain_name)
 		if(is_objects_contain_name GREATER -1)
 			message(FATAL_ERROR "Module should be built "
@@ -127,7 +134,7 @@ function(kbuild_add_module name)
 		endif(is_objects_contain_name GREATER -1)
 		set(is_build_simple "FALSE")
 	endif(obj_sources_noext_rel STREQUAL ${name})
-	#List of files for deleting in 'make clean'
+	# List of files for deleting in 'make clean'
 	set(clean_files_list)
 	_kbuild_add_clean_files_common(clean_files_list)
 	_kbuild_add_clean_files_module(${name} clean_files_list)
@@ -135,9 +142,9 @@ function(kbuild_add_module name)
 		_kbuild_add_clean_files_c(${c_source_noext_abs} clean_files_list)
 		list(APPEND clean_files_list "${c_source_noext_abs}.o")
 	endforeach(c_source_noext_abs ${c_sources_noext_abs})
-	#Build kbuild file - module string
+	# Build kbuild file - module string
 	set(obj_string "obj-m := ${name}.o")
-	#Build kbuild file - object sources string
+	# Build kbuild file - object sources string
 	if(is_build_simple)
 		set(obj_src_string "")
 	else(is_build_simple)
@@ -171,13 +178,13 @@ function(kbuild_add_module name)
 	if(kbuild_symbol_files)
     	add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${name}.ko ${symvers_file}
 				COMMAND cat ${kbuild_symbol_files} >> ${symvers_file}
-    			COMMAND $(MAKE) ARCH=${KEDR_ARCH} CROSS_COMPILE=${KEDR_CROSS_COMPILE} 
+    			COMMAND $(MAKE) ${kedr_sparse_check} ARCH=${KEDR_ARCH} CROSS_COMPILE=${KEDR_CROSS_COMPILE} 
 					-C ${KBUILD_BUILD_DIR} M=${CMAKE_CURRENT_BINARY_DIR} modules
     			DEPENDS ${depend_files} ${kbuild_symbol_files}
                 )
 	else(kbuild_symbol_files)
     	add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${name}.ko ${symvers_file}
-    			COMMAND $(MAKE) ARCH=${KEDR_ARCH} CROSS_COMPILE=${KEDR_CROSS_COMPILE}
+    			COMMAND $(MAKE) ${kedr_sparse_check} ARCH=${KEDR_ARCH} CROSS_COMPILE=${KEDR_CROSS_COMPILE}
 					-C ${KBUILD_BUILD_DIR} M=${CMAKE_CURRENT_BINARY_DIR} modules
     			DEPENDS ${depend_files}
     			)
