@@ -22,27 +22,25 @@ set(kbuild_cflags)
 
 # kbuild_add_module(name [sources ..])
 #
-# Build kernel module from sources_files, analogue of add_executable.
+# Build the kernel module from the specified sources, similar to 
+# add_executable() for user-space applications.
 #
-# Sources files are divided into two categories:
-# -Object sources
-# -Other sourses
+# Source files are divided into two categories:
+# - object sources
+# - other sourses
 #
-# Object sources are thouse sources,
-# which may be used in building kernel module externally.
-# Follow types of object sources are supported now:
-# .o: object file, do not require additional preprocessing.
-# .c: c-file.
-# (.S files will be added if required)
+# "Object sources" are the files that can be used to build the out-of-tree. 
+# The following types of object sources are supported:
+# .o: object file, does not require additional preprocessing
+# .c: C source file
 # 
-# Other sources is treated as only prerequisite of building process.
+# Other source files are only treated as the prerequisites for the build.
 #
-# Only one call of kbuild_add_module or kbuild_add_objects
-# is allowed in the CMakeLists.txt.
+# Only one call to kbuild_add_module() is allowed in a given 
+# CMakeLists.txt file.
 #
-# In case when 'sources' omitted, module will be built 
-# from "${name}.c" source.
-
+# If no sources are specified, the module will be built from the only source
+# file, "${name}.c".
 function(kbuild_add_module name)
     set(symvers_file ${CMAKE_CURRENT_BINARY_DIR}/Module.symvers)
 	#Global target
@@ -187,58 +185,6 @@ function(kbuild_add_module name)
 
 	set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${clean_files_list}")
 endfunction(kbuild_add_module name)
-
-# kbuild_add_object(source [dependences..])
-#
-# Build kernel object file from source.
-# These objects may be used for build kernel module.
-
-# Source file- c-file(filename.c), from which object file should be built.
-# This file is treated as file in ${CMAKE_CURRENT_BINARY_DIR} directory.
-# Also, target with name of this file(without extension) is created.
-
-# Only one call of kbuild_add_module or kbuild_add_object
-# is allowed in the CMakeLists.txt.
-function(kbuild_add_object source)
-	# Extract name of file
-	string(REGEX MATCH "^([^/]+)\\.c$" is_correct_filename ${source})
-	if(NOT is_correct_filename)
-		message(FATAL_ERROR "kbuild_add_object: 'source' should be c-file without directory part.")
-	endif(NOT is_correct_filename)
-	set(name ${CMAKE_MATCH_1})
-	set(depend_files "${CMAKE_CURRENT_BINARY_DIR}/${source}" ${ARGN})
-	# Create global rule
-	add_custom_target(${name} ALL
-				DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${name}.o")
-	#Files for clean
-	set(clean_files_list)
-	_kbuild_add_clean_files_common(clean_files_list)
-	_kbuild_add_clean_files_object(clean_files_list)
-	_kbuild_add_clean_files_c(${CMAKE_CURRENT_BINARY_DIR}/${name} clean_files_list)
-	#Build object file - objects str
-	set(objects_string "obj-y := ${name}.o")
-	#Build kbuild file - compiler flags
-	set(cflags_string "ccflags-y := ")
-	#compiler flags - directories
-	if(kbuild_include_dirs)
-		foreach(dir ${kbuild_include_dirs})
-			set(cflags_string "${cflags_string} -I${dir}")
-		endforeach(dir ${kmodule_include_dirs})
-	endif(kbuild_include_dirs)
-	#Configure kbuild file
-	configure_file(${kbuild_this_module_dir}/kbuild_system_files/Kbuild_object.in
-					${CMAKE_CURRENT_BINARY_DIR}/Kbuild
-					)
-	#create rules
-	list(APPEND clean_files_list "${CMAKE_CURRENT_BINARY_DIR}/Module.symvers")
-	add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${name}.o"
-			COMMAND $(MAKE) ARCH=${KEDR_ARCH} CROSS_COMPILE=${KEDR_CROSS_COMPILE}
-				-C ${KBUILD_BUILD_DIR} M=${CMAKE_CURRENT_BINARY_DIR}
-			DEPENDS ${depend_files}
-			)
-
-	set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${clean_files_list}")
-endfunction(kbuild_add_object source)
 
 # kbuild_include_directories(dir1 .. dirn)
 macro(kbuild_include_directories)
