@@ -474,7 +474,7 @@ void kedr_calc_delete(kedr_calc_t* calc)
 }
 
 ////////////Implementation of auxiliary functions//////////////////////////////
-void*
+static void*
 calc_essence_alloc(size_t size)
 {
     void* essence;
@@ -491,7 +491,7 @@ calc_essence_alloc(size_t size)
     return essence;
 }
 //Create filled instance of calc_essence_val
-struct calc_essence*
+static struct calc_essence*
 calc_essence_val_create(kedr_calc_int_t value)
 {
     struct calc_essence_val* result = calc_essence_alloc(sizeof(*result));
@@ -501,7 +501,7 @@ calc_essence_val_create(kedr_calc_int_t value)
     return (struct calc_essence*)result;
 }
 //Create filled instance of calc_essence_var
-struct calc_essence*
+static struct calc_essence*
 calc_essence_var_create(unsigned int index)
 {
     struct calc_essence_var* result = calc_essence_alloc(sizeof(*result));
@@ -511,7 +511,7 @@ calc_essence_var_create(unsigned int index)
     return (struct calc_essence*)result;
 }
 //Create filled instance of calc_essence_var
-struct calc_essence*
+static struct calc_essence*
 calc_essence_weak_var_create(unsigned int index)
 {
     struct calc_essence_weak_var* result = calc_essence_alloc(sizeof(*result));
@@ -522,7 +522,7 @@ calc_essence_weak_var_create(unsigned int index)
 }
 
 //Create filled instance of calc_essence_1op
-struct calc_essence*
+static struct calc_essence*
 calc_essence_1op_create(enum calc_essence_type type, struct calc_essence* op)
 {
     struct calc_essence_1op* result;
@@ -545,7 +545,7 @@ calc_essence_1op_create(enum calc_essence_type type, struct calc_essence* op)
     return (struct calc_essence*)result;
 }
 //Create filled instance of calc_essence_2op
-struct calc_essence*
+static struct calc_essence*
 calc_essence_2op_create(enum calc_essence_type type, struct calc_essence* op1, struct calc_essence* op2)
 {
     struct calc_essence_2op* result;
@@ -589,7 +589,7 @@ calc_essence_2op_create(enum calc_essence_type type, struct calc_essence* op1, s
     return (struct calc_essence*)result;
 }
 //Create filled instance of calc_essence_3op
-struct calc_essence*
+static struct calc_essence*
 calc_essence_3op_create(enum calc_essence_type type,
     struct calc_essence* op1, struct calc_essence* op2, struct calc_essence* op3)
 {
@@ -612,7 +612,7 @@ calc_essence_3op_create(enum calc_essence_type type,
     return (struct calc_essence*)result;
 }
 //
-kedr_calc_int_t 
+static kedr_calc_int_t 
 calc_essence_evaluate(const struct calc_essence* essence, const struct evaluate_data* evaluate_data)
 {
     switch(essence->type)
@@ -698,7 +698,7 @@ calc_essence_evaluate(const struct calc_essence* essence, const struct evaluate_
     }
 }
 
-void
+static void
 calc_essence_free(struct calc_essence* essence)
 {
     WARN_ON(essence == NULL);
@@ -1103,7 +1103,7 @@ static int is_substr_equal(const char* str, int len, const char* orig)
     return (strncmp(str, orig, len) == 0) && (orig[len] == '\0');
 }
 
-int
+static int
 parse_data_search_const(const struct parse_data* data,
     const char* constant_name, int constant_name_len, kedr_calc_int_t* value)
 {
@@ -1124,7 +1124,7 @@ parse_data_search_const(const struct parse_data* data,
     }
     return 1;
 }
-int
+static int
 parse_data_search_variable(const struct parse_data* data,
     const char* variable_name, int variable_name_len, int* index)
 {
@@ -1139,7 +1139,7 @@ parse_data_search_variable(const struct parse_data* data,
     }
     return 1;
 }
-int
+static int
 parse_data_search_weak_variable(const struct parse_data* data,
     const char* variable_name, int variable_name_len, int* index)
 {
@@ -1155,7 +1155,7 @@ parse_data_search_weak_variable(const struct parse_data* data,
     return 1;
 }
 
-int
+static int
 parse_number10(const char* number,
     const char** number_end, kedr_calc_int_t* value)
 {
@@ -1180,7 +1180,8 @@ parse_number10(const char* number,
     return 0;
 }
 
-int parse_number16(const char* number,
+static int
+parse_number16(const char* number,
     const char** number_end, kedr_calc_int_t* value)
 {
     const char* number_end_real;

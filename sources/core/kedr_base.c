@@ -134,7 +134,7 @@ function_replacements_remove_payload(struct functions_map* replacement_map,
 /* ================= Global data =================== */
 
 /* operations which are passed when component is initialized. */
-struct kedr_base_operations* kedr_base_ops;
+static struct kedr_base_operations* kedr_base_ops;
 
 /* List of currently registered payloads */
 static struct list_head payload_list;
@@ -161,9 +161,8 @@ static struct functions_map replaced_functions_map;
 
 static struct kedr_base_interception_info* info_array_current;
 
-/* A mutex to protect access to the global data of kedr-base*/
-DEFINE_MUTEX(base_mutex);
-
+/* A mutex to protect access to the global data of kedr-base */
+static DEFINE_MUTEX(base_mutex);
 /* ================================================================ */
 
 /*
@@ -542,7 +541,7 @@ out:
 /* ======Implementation of auxiliary functions======== */
 
 /* Look for a given element in the list. */
-struct payload_elem* 
+static struct payload_elem* 
 payload_elem_find(struct kedr_payload *payload, struct list_head* payload_list)
 {
 	struct payload_elem *elem;
@@ -556,7 +555,8 @@ payload_elem_find(struct kedr_payload *payload, struct list_head* payload_list)
 }
 
 
-int payload_elem_fix(struct payload_elem* elem)
+static int 
+payload_elem_fix(struct payload_elem* elem)
 {
 	struct kedr_payload* payload = elem->payload;
 	BUG_ON(elem->is_used);
@@ -570,7 +570,8 @@ int payload_elem_fix(struct payload_elem* elem)
 	
 	return 0;
 }
-void payload_elem_release(struct payload_elem* elem)
+static void 
+payload_elem_release(struct payload_elem* elem)
 {
 	struct kedr_payload* payload = elem->payload;
 	BUG_ON(!elem->is_used);
@@ -583,7 +584,8 @@ void payload_elem_release(struct payload_elem* elem)
 	elem->is_used = 0;
 }
 
-int payload_elem_fix_all(struct list_head *elems)
+static int 
+payload_elem_fix_all(struct list_head *elems)
 {
 	struct payload_elem* elem;
 	list_for_each_entry(elem, elems, list)
@@ -612,7 +614,8 @@ int payload_elem_fix_all(struct list_head *elems)
 	}
 	return 0;
 }
-void payload_elem_release_all(struct list_head *elems)
+static void 
+payload_elem_release_all(struct list_head *elems)
 {
 	struct payload_elem* elem;
 	list_for_each_entry(elem, elems, list)
@@ -621,7 +624,8 @@ void payload_elem_release_all(struct list_head *elems)
 	}
 }
 
-void payload_elem_load_callback_all(struct list_head *elems, struct module* m)
+static void 
+payload_elem_load_callback_all(struct list_head *elems, struct module* m)
 {
 	struct payload_elem* elem;
 	list_for_each_entry(elem, elems, list)
@@ -631,7 +635,8 @@ void payload_elem_load_callback_all(struct list_head *elems, struct module* m)
 			payload->target_load_callback(m);
 	}
 }
-void payload_elem_unload_callback_all(struct list_head *elems, struct module* m)
+static void 
+payload_elem_unload_callback_all(struct list_head *elems, struct module* m)
 {
 	struct payload_elem* elem;
 	list_for_each_entry(elem, elems, list)
@@ -642,8 +647,7 @@ void payload_elem_unload_callback_all(struct list_head *elems, struct module* m)
 	}
 }
 
-
-int
+static int
 payload_functions_use(struct kedr_payload* payload)
 {
 	int result = 0;
@@ -748,7 +752,7 @@ err_pre:
 	BUG_ON(result == 0);
 	return result;
 }
-void
+static void
 payload_functions_unuse(struct kedr_payload* payload)
 {
 	if(kedr_base_ops == NULL) return;

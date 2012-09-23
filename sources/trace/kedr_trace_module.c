@@ -253,7 +253,7 @@ rb_test_init(void)
     return 0;
 }
 
-void __exit
+static void __exit
 rb_test_exit(void)
 {
     debugfs_remove(lost_messages_file);
@@ -272,14 +272,16 @@ MODULE_LICENSE("GPL");
 ////////////////////////////////////
 
 // Reset buffer file operations implementation
-ssize_t reset_file_write(struct file *filp,
+static ssize_t
+reset_file_write(struct file *filp,
     const char __user *buf, size_t count, loff_t * f_pos)
 {
     // Do nothing, trace reseting already performed while opening file
     return count;
 }
 
-int reset_file_open(struct inode *inode, struct file *filp)
+static int
+reset_file_open(struct inode *inode, struct file *filp)
 {
     if((filp->f_flags & O_ACCMODE) != O_RDONLY)
     {
@@ -291,7 +293,7 @@ int reset_file_open(struct inode *inode, struct file *filp)
 }
 
 // Buffer size file operations implementation
-int
+static int
 buffer_size_file_open(struct inode *inode, struct file *filp)
 {
     int result;
@@ -320,13 +322,15 @@ buffer_size_file_open(struct inode *inode, struct file *filp)
     }
     return result;
 }
-int
+static int
 buffer_size_file_release(struct inode *inode, struct file *filp)
 {
     kfree(filp->private_data);
     return 0;
 }
-ssize_t buffer_size_file_write(struct file *filp,
+
+static ssize_t
+buffer_size_file_write(struct file *filp,
     const char __user *buf, size_t count, loff_t * f_pos)
 {
     int error = 0;
@@ -356,7 +360,8 @@ ssize_t buffer_size_file_write(struct file *filp,
     error = trace_file_size_set(trace_file, size);
     return error ? error : count;
 }
-ssize_t buffer_size_file_read(struct file *filp,
+static ssize_t
+buffer_size_file_read(struct file *filp,
     char __user* buf, size_t count, loff_t *f_pos)
 {
     const char* size_str = filp->private_data;
@@ -366,7 +371,7 @@ ssize_t buffer_size_file_read(struct file *filp,
 }
 
 // Lost messages file operations implementation
-int
+static int
 lost_messages_file_open(struct inode *inode, struct file *filp)
 {
     int result;
@@ -395,14 +400,16 @@ lost_messages_file_open(struct inode *inode, struct file *filp)
     }
     return result;
 }
-int
+
+static int
 lost_messages_file_release(struct inode *inode, struct file *filp)
 {
     char* str = filp->private_data;
     kfree(str);
     return 0;
 }
-ssize_t
+
+static ssize_t
 lost_messages_file_read(struct file *filp,
     char __user* buf, size_t count, loff_t *f_pos)
 {

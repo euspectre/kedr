@@ -50,14 +50,14 @@ static struct module* target_module;
 
 /* Nonzero if the target module is initializing, 0 if it has completed 
  * initialization or if no target is loaded at the moment. */
-int target_in_init = 0;
+static int target_in_init = 0;
 
 /* A spinlock to protect target_in_init from concurrent access. 
  * A mutex would not do because target_in_init can be accessed from atomic
  * context too (kedr_target_module_in_init() can be called from a replacement
  * function executing in atomic context).
  */
-DEFINE_SPINLOCK(target_in_init_lock);
+static DEFINE_SPINLOCK(target_in_init_lock);
 
 /* ================================================================ */
 

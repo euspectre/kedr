@@ -64,14 +64,14 @@ MODULE_LICENSE("GPL");
  * in that case.
  */
 
-int is_target_detector_initialized = 0;
+static int is_target_detector_initialized = 0;
 
-char target_name_buffer[MODULE_NAME_LEN] = target_name_not_set;
+static char target_name_buffer[MODULE_NAME_LEN] = target_name_not_set;
 /* 
  * Protect target_name_buffer and is_target_detector_initialized
  * from concurrent access.
  */
-DEFINE_MUTEX(target_name_mutex);
+static DEFINE_MUTEX(target_name_mutex);
 
 static int
 target_name_param_get(char* buffer,

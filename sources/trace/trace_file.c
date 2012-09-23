@@ -75,7 +75,8 @@ static struct file_operations trace_file_ops =
 
 
 //Implementation of trace file operations
-int trace_file_open(struct inode *inode, struct file *filp)
+static int
+trace_file_open(struct inode *inode, struct file *filp)
 {
     struct trace_file* trace_file = (struct trace_file*)inode->i_private;
     if(!atomic_add_unless(&trace_file->readers, 1, 1))
@@ -87,14 +88,16 @@ int trace_file_open(struct inode *inode, struct file *filp)
     return nonseekable_open(inode, filp);
 }
 
-int trace_file_release(struct inode *inode, struct file *filp)
+static int
+trace_file_release(struct inode *inode, struct file *filp)
 {
     struct trace_file* trace_file = (struct trace_file*)inode->i_private;
     atomic_dec(&trace_file->readers);
     return 0;
 }
 
-ssize_t trace_file_read(struct file *filp,
+static ssize_t
+trace_file_read(struct file *filp,
     char __user* buf, size_t count, loff_t *f_pos)
 {
     struct trace_file* trace_file = (struct trace_file*)filp->private_data;

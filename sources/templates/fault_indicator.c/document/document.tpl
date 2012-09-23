@@ -41,7 +41,7 @@ struct indicator_real_state
 <$endif$>};
 
 <$endif$>//Protect from concurrent access in getters and setter of files
-DEFINE_MUTEX(indicator_mutex);
+static DEFINE_MUTEX(indicator_mutex);
 
 ////////////////Auxiliary functions///////////////////////////
 

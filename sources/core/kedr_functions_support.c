@@ -309,7 +309,7 @@ static struct function_info_table functions;
 static struct kedr_instrumentor_replace_pair* replace_pairs;
 
 /* A mutex to protect access to the global data of kedr-functions-support*/
-DEFINE_MUTEX(functions_support_mutex);
+static DEFINE_MUTEX(functions_support_mutex);
 
 /* ================================================================ */
 
@@ -524,7 +524,7 @@ out:
  * 
  * Should be executed with mutex locked.
  */
-int
+static int
 kedr_functions_support_prepare_internal(
     const struct kedr_base_interception_info* interception_info)
 {
@@ -674,7 +674,8 @@ void kedr_functions_support_release(void)
 
 /* ======Implementation of auxiliary functions======== */
 
-void disable_all_functionality(void)
+static void 
+disable_all_functionality(void)
 {
 	is_disabled = 1;
 	function_info_table_destroy_clean(&functions);
@@ -695,8 +696,7 @@ void disable_all_functionality(void)
 
 }
 
-
-struct functions_support_elem*
+static struct functions_support_elem*
 functions_support_elem_find(struct kedr_functions_support* functions_support,
 	struct list_head* functions_support_list)
 {

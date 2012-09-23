@@ -30,7 +30,7 @@ static struct kedr_replace_pair replace_pairs[] =
 };
 
 //Array of simulation points and its parameters for register
-struct sim_point_attributes
+static struct sim_point_attributes
 {
 	struct kedr_simulation_point** p_point;
 	const char* name;
