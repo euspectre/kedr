@@ -32,11 +32,11 @@
 <xsl:param name="suppress.navigation" select="1"/>
 
 <!-- Maximum number of levels in the auto-generated tables of contents. -->
-<xsl:param name="wiki.max_toc_depth" select="4"/>
+<xsl:param name="wiki.max_toc_depth" select="2"/>
 
 <!-- Create a heading with the given level for each entry in the glossary.
 	This is needed to establish links to these entries. -->
-<xsl:param name="wiki.glossentry_hlevel" select="3"/>
+<xsl:param name="wiki.glossentry_hlevel" select="2"/>
 
 <!-- Maximum length of the "anchor" part in the links (the one after '#').
 	If that part is longer, the link should be generated without it. -->
