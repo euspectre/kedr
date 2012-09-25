@@ -19,8 +19,9 @@ Starting from KEDR 0.3, LeakCheck can be used simultaneously with other kinds of
 </para>
 </note>
 
-<itemizedlist>
 <para>LeakCheck is now organized as follows.</para>
+
+<itemizedlist>
 	<listitem><para>
 The LeakCheck core (<filename>kedr_leak_check.ko</filename> module) analyzes the information about allocations and deallocations and provides API for other components. 
 	</para></listitem>
@@ -195,7 +196,7 @@ overcome this.
 <!-- ============================================================== -->
 
 <section id="leak_check.param">
-<title>Parameters of LeakCheck</title>
+<title>Parameters</title>
 
 <para>
 The parameters of the core LeakCheck module are described below. 
@@ -258,7 +259,7 @@ Default value: 8.
 <!-- ============================================================== -->
 
 <section id="leak_check.api">
-<title>LeakCheck API</title>
+<title>API</title>
 
 <section id="leak_check.api.common">
 <title>Common notes</title>
@@ -399,7 +400,7 @@ See <ulink url="http://kedr.googlecode.com/hg/sources/examples/leak_check/annota
 <!-- ============================================================== -->
 
 <section id="leak_check.caveats">
-<title>Caveats</title>
+<title>Notes</title>
 
 <para>
 When the target module is loaded, the output files are cleared, the results 
