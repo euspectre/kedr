@@ -1,14 +1,14 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><title>4. Using KEDR</title><link rel="stylesheet" href="kedr-doc.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.75.2"><link rel="home" href="index.html" title="KEDR 0.3 Reference Manual"><link rel="up" href="index.html" title="KEDR 0.3 Reference Manual"><link rel="prev" href="kedr_manual_getting_started.html" title="3. Getting Started"><link rel="next" href="kedr_manual_extend.html" title="5. Customizing and Extending KEDR"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">4. Using KEDR</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="kedr_manual_getting_started.html">Prev</a> </td><th width="60%" align="center"> </th><td width="20%" align="right"> <a accesskey="n" href="kedr_manual_extend.html">Next</a></td></tr></table><hr></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="kedr_manual_using_kedr"></a>4. Using KEDR</h2></div></div></div><div class="toc"><dl><dt><span class="section"><a href="kedr_manual_using_kedr.html#kedr_control">4.1. Controlling KEDR</a></span></dt><dd><dl><dt><span class="section"><a href="kedr_manual_using_kedr.html#kedr_control.general">4.1.1. General</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#kedr_control.syntax">4.1.2. Usage</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#kedr_control.options">4.1.3. Options</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#kedr_control.description">4.1.4. Description</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#kedr_control.caveats">4.1.5. Caveats</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#kedr_control.config_file">4.1.6. Configuration file</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#kedr_control.examples">4.1.7. Examples</a></span></dt></dl></dd><dt><span class="section"><a href="kedr_manual_using_kedr.html#capture_trace">4.2. Capturing the Trace</a></span></dt><dd><dl><dt><span class="section"><a href="kedr_manual_using_kedr.html#capture_trace.general">4.2.1. General</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#capture_trace.syntax">4.2.2. Usage</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#capture_trace.description">4.2.3. Description</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#kedr_capture_trace.options">4.2.4. Options</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#capture_trace.examples">4.2.5. Examples</a></span></dt></dl></dd><dt><span class="section"><a href="kedr_manual_using_kedr.html#how_kedr_works">4.3. How KEDR Works</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#call_mon">4.4. Call Monitoring (Call Tracing)</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#fault_sim">4.5. Fault Simulation</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#leak_check">4.6. Detecting Memory Leaks</a></span></dt><dd><dl><dt><span class="section"><a href="kedr_manual_using_kedr.html#leak_check.usage">4.6.1. Typical Usage</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#leak_check.reports">4.6.2. Reports</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#leak_check.analysis">4.6.3. Analyzing the Results</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#leak_check.stack_depth">4.6.4. Stack Depth</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#leak_check.caveats">4.6.5. Caveats</a></span></dt></dl></dd><dt><span class="section"><a href="kedr_manual_using_kedr.html#analyze_trace">4.7. Analyzing the Trace</a></span></dt><dd><dl><dt><span class="section"><a href="kedr_manual_using_kedr.html#analyze_trace.general">4.7.1. General</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#analyze_trace.addr2line">4.7.2. Locating the Calls in the Sources with Addr2line</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#analyze_trace.gdb">4.7.3. Locating the Calls in the Sources with GDB</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#analyze_trace.objdump">4.7.4. Locating the Calls in the Sources with Objdump</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#analyze_trace.stack">4.7.5. Obtaining the Call Stack</a></span></dt></dl></dd></dl></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="kedr_control"></a>4.1. Controlling KEDR</h3></div></div></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="kedr_control.general"></a>4.1.1. General</h4></div></div></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><title>4. Using KEDR</title><link rel="stylesheet" href="kedr-doc.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.75.2"><link rel="home" href="index.html" title="KEDR 0.4 Reference Manual"><link rel="up" href="index.html" title="KEDR 0.4 Reference Manual"><link rel="prev" href="kedr_manual_getting_started.html" title="3. Getting Started"><link rel="next" href="kedr_manual_extend.html" title="5. Customizing and Extending KEDR"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">4. Using KEDR</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="kedr_manual_getting_started.html">Prev</a> </td><th width="60%" align="center"> </th><td width="20%" align="right"> <a accesskey="n" href="kedr_manual_extend.html">Next</a></td></tr></table><hr></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="kedr_manual_using_kedr"></a>4. Using KEDR</h2></div></div></div><div class="toc"><dl><dt><span class="section"><a href="kedr_manual_using_kedr.html#kedr_control">4.1. Controlling KEDR</a></span></dt><dd><dl><dt><span class="section"><a href="kedr_manual_using_kedr.html#kedr_control.general">4.1.1. General</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#kedr_control.syntax">4.1.2. Usage</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#kedr_control.options">4.1.3. Options</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#kedr_control.description">4.1.4. Description</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#kedr_control.caveats">4.1.5. Caveats</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#kedr_control.config_file">4.1.6. Configuration file</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#kedr_control.examples">4.1.7. Examples</a></span></dt></dl></dd><dt><span class="section"><a href="kedr_manual_using_kedr.html#capture_trace">4.2. Capturing the Trace</a></span></dt><dd><dl><dt><span class="section"><a href="kedr_manual_using_kedr.html#capture_trace.general">4.2.1. General</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#capture_trace.syntax">4.2.2. Usage</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#capture_trace.description">4.2.3. Description</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#kedr_capture_trace.options">4.2.4. Options</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#capture_trace.examples">4.2.5. Examples</a></span></dt></dl></dd><dt><span class="section"><a href="kedr_manual_using_kedr.html#how_kedr_works">4.3. How KEDR Works</a></span></dt><dd><dl><dt><span class="section"><a href="kedr_manual_using_kedr.html#how_kedr_works.target">4.3.1. Setting the name of the target module</a></span></dt></dl></dd><dt><span class="section"><a href="kedr_manual_using_kedr.html#call_mon">4.4. Call Monitoring (Call Tracing)</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#fault_sim">4.5. Fault Simulation</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#leak_check">4.6. Detecting Memory Leaks</a></span></dt><dd><dl><dt><span class="section"><a href="kedr_manual_using_kedr.html#leak_check.usage">4.6.1. Typical Usage</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#leak_check.reports">4.6.2. Reports</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#leak_check.analysis">4.6.3. Analyzing the Results</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#leak_check.param">4.6.4. Parameters of LeakCheck</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#leak_check.api">4.6.5. LeakCheck API</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#leak_check.examples">4.6.6. Examples</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#leak_check.caveats">4.6.7. Caveats</a></span></dt></dl></dd><dt><span class="section"><a href="kedr_manual_using_kedr.html#analyze_trace">4.7. Analyzing the Call Location Information</a></span></dt><dd><dl><dt><span class="section"><a href="kedr_manual_using_kedr.html#analyze_trace.general">4.7.1. General</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#analyze_trace.addr2line">4.7.2. Locating the Calls in the Sources with Addr2line</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#analyze_trace.gdb">4.7.3. Locating the Calls in the Sources with GDB</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#analyze_trace.objdump">4.7.4. Locating the Calls in the Sources with Objdump</a></span></dt><dt><span class="section"><a href="kedr_manual_using_kedr.html#analyze_trace.stack">4.7.5. Obtaining the Call Stack</a></span></dt></dl></dd></dl></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="kedr_control"></a>4.1. Controlling KEDR</h3></div></div></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="kedr_control.general"></a>4.1.1. General</h4></div></div></div><p>
 <span class="command"><strong>kedr</strong></span> - a service-like tool to control KEDR.
 </p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="kedr_control.syntax"></a>4.1.2. Usage</h4></div></div></div><div class="cmdsynopsis"><p><code class="command">kedr start</code>   <em class="replaceable"><code>target_name</code></em>  [ -c <em class="replaceable"><code>conf_string</code></em>  |   -f <em class="replaceable"><code>conf_file</code></em> ...]</p></div><div class="cmdsynopsis"><p><code class="command">kedr stop</code> </p></div><div class="cmdsynopsis"><p><code class="command">kedr status</code> </p></div><div class="cmdsynopsis"><p><code class="command">kedr restart</code> </p></div></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="kedr_control.options"></a>4.1.3. Options</h4></div></div></div><div class="variablelist"><dl><dt><span class="term"><code class="option">-c</code> <em class="replaceable"><code>conf_string</code></em></span></dt><dd><p>
 <em class="replaceable"><code>conf_string</code></em> string provides configuration parameters that KEDR will use when loading and unloading.
             </p></dd><dt><span class="term">-f <em class="replaceable"><code>conf_file</code></em></span></dt><dd><p>
-<em class="replaceable"><code>conf_file</code></em> file provides configuration parameters that KEDR will use when loading and unloading. For the files in the default configuration directory (<code class="filename">/var/opt/kedr/configs</code>) or <code class="filename">&lt;install_prefix&gt;/var/configs</code> depending on where KEDR is installed), the directory part of the path may be omitted. In the current version, the default configuration directory contains the following files:
-                </p><div class="variablelist"><dl><dt><span class="term"><code class="filename">callm.conf</code></span></dt><dd><p>Configuration profile for call monitoring (call tracing).</p></dd><dt><span class="term"><code class="filename">fsim.conf</code></span></dt><dd><p>Configuration profile for fault simulation.</p></dd><dt><span class="term"><code class="filename">leak_check.conf</code></span></dt><dd><p>Configuration profile for memory leak detection.</p></dd><dt><span class="term"><code class="filename">default.conf</code></span></dt><dd><p>Default configuration profile is the profile for call monitoring too (the same as <code class="filename">callm.conf</code>).</p></dd></dl></div><p>
+<em class="replaceable"><code>conf_file</code></em> file provides configuration parameters that KEDR will use when loading and unloading. For the files in the default configuration directory (<code class="filename">/etc/kedr/</code>, <code class="filename">/etc/opt/kedr/</code> or <code class="filename">&lt;install_prefix&gt;/etc/kedr/</code> depending on where KEDR is installed), the directory part of the path may be omitted. In the current version, the default configuration directory contains the following files:
+                </p><div class="variablelist"><dl><dt><span class="term"><code class="filename">callm.conf</code></span></dt><dd><p>Configuration profile for call monitoring (call tracing).</p></dd><dt><span class="term"><code class="filename">fsim.conf</code></span></dt><dd><p>Configuration profile for fault simulation.</p></dd><dt><span class="term"><code class="filename">leak_check.conf</code></span></dt><dd><p>Configuration profile for memory leak detection.</p></dd><dt><span class="term"><code class="filename">default.conf</code></span></dt><dd><p>Default configuration profile (same as the profile for memory leak detection <code class="filename">leak_check.conf</code>).</p></dd></dl></div><p>
             </p></dd></dl></div><p>
 All <em class="replaceable"><code>conf_string</code></em> and <em class="replaceable"><code>conf_file</code></em> arguments of the command will actually be combined into one configuration file by KEDR control tool, in the same order as they are listed. The resulting profile will be used when loading and unloading KEDR.
             </p><p>
-If no <em class="replaceable"><code>conf_string</code></em> and <em class="replaceable"><code>conf_file</code></em> options are given, the command will use the default configuration file (<code class="filename">/var/opt/kedr/configs/default.conf</code> or <code class="filename">&lt;install_prefix&gt;/var/configs/default.conf</code>, depending on where KEDR is installed).
+If no <em class="replaceable"><code>conf_string</code></em> and <em class="replaceable"><code>conf_file</code></em> options are given, the command will use the default configuration file (<code class="filename">default.conf</code>).
             </p><p>
 If necessary, several <code class="code">-f</code> and <code class="code">-c</code> options can be specified.
 			</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="kedr_control.description"></a>4.1.4. Description</h4></div></div></div><div class="section"><div class="titlepage"><div><div><h5 class="title"><a name="kedr_control.description.start"></a>4.1.4.1. kedr start</h5></div></div></div><p>
@@ -170,7 +170,7 @@ pid=$!
 wait $pid
 kedr stop
 </pre><p>
-See also <a class="xref" href="kedr_manual_getting_started.html#getting_started.call_monitoring">Section 3.3, “Call Monitoring (Call Tracing)”</a>.
+See also <a class="xref" href="kedr_manual_getting_started.html#getting_started.call_monitoring">Section 3.5, “Call Monitoring (Call Tracing)”</a>.
     </p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="how_kedr_works"></a>4.3. How KEDR Works</h3></div></div></div><p>
 KEDR has a plugin-based architecture similar to the architecture of <a class="ulink" href="http://valgrind.org/" target="_top">Valgrind</a> and other binary analysis frameworks for user-space applications and libraries.
 </p><p>
@@ -195,29 +195,29 @@ example, to make it look like the target function has failed.
 </p><p>
 Payload modules can do various things:
 </p><div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem"><p>
+Check various requirements for the operation of the module 
+(<em class="firstterm"><span class="quote">“<span class="quote">Base Checker</span>”</span></em> on the figure): whether it 
+creates memory leaks, etc. 
+</p></li><li class="listitem"><p>
+Simulate the situations when the kernel seems to fail to satisfy some of 
+the requests made by the target module 
+(<em class="firstterm"><span class="quote">“<span class="quote">Fault Similator</span>”</span></em> on the 
+figure). That is, simulate low memory conditions, etc. 
+    </p></li><li class="listitem"><p>
 Collect data about which function was called when, with what arguments, and
 what it returned (<em class="firstterm"><span class="quote">“<span class="quote">Call Monitor</span>”</span></em> 
 on the figure). The data are output to a trace 
 (via <em class="firstterm"><span class="quote">“<span class="quote">Data Collector</span>”</span></em> facilities) 
 and can then be analyzed by user-space applications.
 </p></li><li class="listitem"><p>
-Simulate the situations when the kernel seems to fail to satisfy some of 
-the requests made by the target module 
-(<em class="firstterm"><span class="quote">“<span class="quote">Fault Similator</span>”</span></em> on the 
-figure). That is, simulate low memory conditions, etc. Fault simulation is 
-performed according to the <em class="firstterm">scenarios</em> selected by the 
-user. It can be used to check if the module is still reliable in error 
-conditions, if possible failures of the called functions are properly 
-handled by the module, etc. 
-    </p></li><li class="listitem"><p>
-Check various requirements for the operation of the module 
-(<em class="firstterm"><span class="quote">“<span class="quote">Base Checker</span>”</span></em> on the figure): whether it 
-uses virtual memory facilities in a right way, etc. 
-</p></li><li class="listitem"><p>
 ...And much more (see <a class="xref" href="kedr_manual_extend.html#custom_analysis">Section 5.6, “Implementing Custom Types of Analysis”</a>).
 </p></li></ul></div><p>
 When loaded, payload modules register themselves with the KEDR core - see 
 <a class="xref" href="kedr_manual_reference.html#payload_api">Section 6.1, “API for Payload Modules”</a>.
+</p><p>
+KEDR core makes no assumptions about what 
+exactly the currently registered payload modules do. This allows to 
+implement different types of analysis with the help of KEDR.
 </p><p>
 The user controls the analysis process via convenience API and tools 
 (<em class="firstterm"><span class="quote">“<span class="quote">Kernel Module Analysis API + Tools</span>”</span></em> 
@@ -237,11 +237,13 @@ this moment, KEDR begins watching for the specified target module
 to load (see also <a class="xref" href="kedr_manual_getting_started.html">Section 3, “Getting Started”</a>).
 </p></li></ol></div><p>
 When the analysis is done, the <a class="link" href="kedr_manual_using_kedr.html#kedr_control">KEDR control tool</a> unloads the modules mentioned above, in appropriate order.
+</p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="how_kedr_works.target"></a>4.3.1. Setting the name of the target module</h4></div></div></div><p>
+As it was described above, the name of the target module is usually set as a parameter to <a class="link" href="kedr_manual_using_kedr.html#kedr_control">KEDR control tool</a>. You can also change the target name when KEDR is already loaded. To do this, write the new name to <code class="filename">/sys/module/kedr/parameters/target_name</code>. Note that this is only allowed when neither the previous target module nor the intended one are loaded.
+</p><p>
+You can also <span class="quote">“<span class="quote">clear</span>”</span> the target name specification by writing <span class="quote">“<span class="quote">none</span>”</span> to the file mentioned above. This would mean that no target module were specified for KEDR.
 </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
-Note that the KEDR core makes no assumptions about what 
-exactly the currently registered payload modules do. This allows to 
-implement different types of analysis with the help of KEDR.
-</p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="call_mon"></a>4.4. Call Monitoring (Call Tracing)</h3></div></div></div><p>
+Note that if the name of the target module contains dash characters (<code class="code">'-'</code>), KEDR will replace them with underscores in the value of its <span class="quote">“<span class="quote">target_name</span>”</span> parameter. This is similar to what <span class="command"><strong>insmod</strong></span> and <span class="command"><strong>modprobe</strong></span> do.
+</p></div></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="call_mon"></a>4.4. Call Monitoring (Call Tracing)</h3></div></div></div><p>
 Call monitoring facilities provided by KEDR allow to collect data about the calls to the functions of interest (target functions) made by a kernel module. In this case, <a class="link" href="kedr_manual_glossary.html#post_handler">post handlers</a> are registered for some set of kernel functions. Each post handler simply outputs the arguments and return value of the <a class="link" href="kedr_manual_glossary.html#target_function">target function</a> to a trace.
     </p><p>
 This is similar to what <a class="ulink" href="http://sourceforge.net/projects/strace/" target="_top">strace</a> 
@@ -251,12 +253,12 @@ For some functions, <a class="link" href="kedr_manual_glossary.html#post_handler
 </p></div><p>
 KEDR provides a set of payload modules that perform call monitoring. They collect information about which kernel functions were called by the target module and in what order, about the parameters passed to these functions and about the return values. This information is output to a trace and can then be used by user-space applications in runtime with the help of <a class="link" href="kedr_manual_using_kedr.html#capture_trace">kedr_capture_trace</a> tool.
     </p><p>
-The standard payload modules for call monitoring are built and installed with KEDR by default. If you would like to disable this, set CMake variable <code class="code">KEDR_STANDARD_CALLM_PAYLOADS</code> to <code class="code">OFF</code> when executing CMake before building KEDR:
+The standard payload modules for call monitoring are not built by default. If you would like to to build and install them, set CMake variable <code class="code">KEDR_STANDARD_CALLM_PAYLOADS</code> to <code class="code">ON</code> when executing CMake before building KEDR:
 </p><pre class="programlisting">
-cmake -DKEDR_STANDARD_CALLM_PAYLOADS=OFF &lt;other_options&gt; &lt;path_to_kedr_sources&gt;
+cmake -DKEDR_STANDARD_CALLM_PAYLOADS=ON &lt;other_options&gt; &lt;path_to_kedr_sources&gt;
 </pre><p>
 The format of the output data is similar to the trace format of the <span class="command"><strong>ftrace</strong></span> system.
-Here is an example of such trace (the header line is shown only for the purpose of description):
+Here is an example of such trace:
     </p><pre class="programlisting">
   TASK-PID  CPU#  TIMESTAMP   FUNCTION
 --------------------------------------------------------------------
@@ -286,17 +288,17 @@ called_&lt;function-name&gt;: (&lt;call_address&gt;) arguments(&lt;arguments-lis
 </pre><p>
 <code class="code">&lt;absolute_address&gt;</code> is the absolute address of the instruction immediately following the call in the memory image of the target module. <code class="code">&lt;area&gt;</code> can be <span class="quote">“<span class="quote">init</span>”</span> or <span class="quote">“<span class="quote">core</span>”</span>. It is the name of the area containing the executable code of the module (these terms are used by module loader in the Linux kernel). An area may contain one or more sections (ELF sections) of the module. <code class="code">&lt;offset&gt;</code> is the offset of the instruction from the beginning of the area. 
 </p><p>
-If you would like to find the lines in the source code of the target module corresponding to the addresses given in the trace records, see <a class="xref" href="kedr_manual_using_kedr.html#analyze_trace">Section 4.7, “Analyzing the Trace”</a> for details.
+If you would like to find the lines in the source code of the target module corresponding to the addresses given in the trace records, see <a class="xref" href="kedr_manual_using_kedr.html#analyze_trace">Section 4.7, “Analyzing the Call Location Information”</a> for details.
 </p><p>
 A different format is used for marker records indicating loading and unloading of the target module:
 </p><pre class="programlisting">
 target_session_&lt;begins|ends&gt;: target_module: "&lt;target-module-name&gt;"
 </pre><p>
-Only calls to the subset of all kernel functions are detected. This subset however can be extended easily by implementing your own modules (see <a class="xref" href="kedr_manual_extend.html#custom_callm_payloads">Section 5.2, “Writing Custom Payloads for Call Monitoring”</a>). The compete list of the default payload modules that currently can currently be used for call monitoring and the lists of the functions processed by each module are provided in <a class="xref" href="kedr_manual_reference.html#standard_callm_payloads.functions">Section 6.3.1, “List of Functions”</a>.
+Only calls to the subset of all kernel functions are detected. This subset however can be extended easily by implementing your own modules (see <a class="xref" href="kedr_manual_extend.html#custom_callm_payloads">Section 5.2, “Writing Custom Payloads for Call Monitoring”</a>). The complete list of the default payload modules that can currently be used for call monitoring and the lists of the functions processed by each module are provided in <a class="xref" href="kedr_manual_reference.html#standard_callm_payloads.functions">Section 6.3.1, “List of Functions”</a>.
     </p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="fault_sim"></a>4.5. Fault Simulation</h3></div></div></div><p>
 Fault simulation facilities provided by KEDR allow to put the target kernel module into the conditions that occur not very often during the normal operation of the module. For example, it is possible to simulate a situation when the system is short of memory or of another resource and consequently, at least some of the attempts to acquire the resource (e.g. allocate memory) fail. This allows to check if the target module handles such situations correctly.
     </p><p>
-The standard payloads modules for fault simulation are built and installed with KEDR by default. If you would like to disable this, set CMake variable <code class="code">KEDR_STANDARD_FSIM_PAYLOADS</code> to <code class="code">OFF</code> when executing CMake before building KEDR:
+The standard payload modules for fault simulation are built and installed with KEDR by default. If you would like to disable this, set CMake variable <code class="code">KEDR_STANDARD_FSIM_PAYLOADS</code> to <code class="code">OFF</code> when executing CMake before building KEDR:
 </p><pre class="programlisting">
 cmake -DKEDR_STANDARD_FSIM_PAYLOADS=OFF  &lt;other_options&gt; &lt;path_to_kedr_sources&gt;
 </pre><p>
@@ -328,7 +330,13 @@ cat /sys/kernel/debug/kedr_fault_simulation/points/vmalloc/current_indicator
 </pre><p>
 <code class="computeroutput"><span class="quote">“<span class="quote">common</span>”</span></code> will be printed as a result of the command above.
 </p><p>
-If you try to set a non-existent indicator, writing to <code class="filename">current_indicator</code> will return an error like <code class="computeroutput"><span class="quote">“<span class="quote">bash: echo: write error: Operation not permitted</span>”</span></code>. You can check this using the following command:
+If you try to set a non-existent indicator, writing to <code class="filename">current_indicator</code> will return an error like 
+
+</p><pre class="programlisting">
+bash: echo: write error: Operation not permitted. 
+</pre><p>
+
+You can check this using the following command:
 </p><pre class="programlisting">
 echo unknown_indicator_name &gt; \
     /sys/kernel/debug/kedr_fault_simulation/points/vmalloc/current_indicator
@@ -405,7 +413,7 @@ The indicator named <code class="filename">kmalloc</code> allows to use <code cl
 echo 'kmalloc (flags = GFP_ATOMIC) &amp;&amp; (size &gt; 100)' &gt; \
     /sys/kernel/debug/kedr_fault_simulation/points/kmalloc/current_indicator
 </pre><p>
-This will set the scenario for <code class="function">__kmalloc</code> function to <span class="pcite"><span class="quote">“<span class="quote">simulate faulure of each memory allocation request with flags equal to <code class="constant">GFP_ATOMIC</code> and size greater than <code class="constant">100</code></span>”</span></span>.
+This will set the scenario for <code class="function">__kmalloc</code> function to <span class="pcite"><span class="quote">“<span class="quote">simulate failure of each memory allocation request with flags equal to <code class="constant">GFP_ATOMIC</code> and size greater than <code class="constant">100</code></span>”</span></span>.
     </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
 In this example, the name of the fault simulation point (<code class="filename">kmalloc</code>) differs from the name of the target function (<code class="function">__kmalloc</code>). The reasons for this difference will be explained below.
     </p></div><p>
@@ -425,40 +433,44 @@ For example, the fault simulation point <code class="filename">kmalloc</code> is
 Full list of standard fault simulation scenarios is provided in <a class="xref" href="kedr_manual_reference.html#standard_fsim_indicators">Section 6.5, “Standard Fault Simulation Scenarios”</a>. If you would like to extend <span class="quote">“<span class="quote">common</span>”</span> indicator to support more types of functions, see <a class="xref" href="kedr_manual_extend.html#custom_fsim_scenarios">Section 5.5, “Writing Custom Scenarios for Fault Simulation”</a>.
     </p><p>
 List of all functions available for fault simulation by standard set of fault simulation payloads is provided in <a class="xref" href="kedr_manual_reference.html#standard_fsim_payloads.functions">Section 6.4.1, “List of Functions”</a>. If you would like to create a payload module to perform fault simulation for other functions, see <a class="xref" href="kedr_manual_extend.html#custom_fsim_payloads">Section 5.4, “Writing Custom Payloads for Fault Simulation”</a>.
-    </p><p>
-Message described last fault simulated may be readed from the file <code class="filename">/sys/kernel/debug/kedr_fault_simulation/last_fault</code>. It looks like
+    </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
+When the user loads KEDR with the standard fault simulation profile (<code class="filename">fsim.conf</code>), the kernel modules for the standard indicators are also loaded automatically. If it is needed to use a custom indicator, the relevant modules should be loaded manually.
+</p></div><p>
+The function call the last failure has been simulated for can be seen in <code class="filename">/sys/kernel/debug/kedr_fault_simulation/last_fault</code>. It looks like
 </p><pre class="programlisting">
 __kmalloc at [&lt;e17b938d&gt;] cfake_open+0x5d/0xa4 [kedr_sample_target]
 </pre><p>
 </p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="leak_check"></a>4.6. Detecting Memory Leaks</h3></div></div></div><p>
-<em class="firstterm">LeakCheck</em> (implemented as payload module <code class="filename">kedr_leak_check.ko</code>) allows, as its name implies, to check the target kernel module for memory leaks, that is to reveal which memory blocks were allocated but were not freed by that module. 
+<em class="firstterm">LeakCheck</em> allows, as its name implies, to check the target kernel module for resource leaks, for example, to reveal memory blocks that were allocated but were not freed by that module. 
 </p><p>
 LeakCheck is enabled in KEDR by default. If you would like to disable it, set CMake variable <code class="code">KEDR_LEAK_CHECK</code> to <code class="code">OFF</code> when executing CMake before building KEDR:
 </p><pre class="programlisting">
 cmake -DKEDR_LEAK_CHECK=OFF &lt;other_options&gt; &lt;path_to_kedr_sources&gt;
-</pre><p>
-Note that LeakCheck may not detect all memory leaks in the target module. For the present, the tool monitors the usage of more than 30 kernel functions that allocate and deallocate memory (these are among the supported functions listed in <a class="xref" href="kedr_manual_using_kedr.html#call_mon">Section 4.4, “Call Monitoring (Call Tracing)”</a>). Still, the target module can use some other functions for this purpose and LeakCheck will not notice this. Nevertheless, it is possible to add support for more functions to LeakCheck.
-</p><p>
-Besides that, if the target module allocates a memory block but it is another module (or the kernel proper) that frees it, this will also be reported as a memory leak by LeakCheck. That being said, possible leaks reported by LeakCheck should be further analyzed to find out whether they are actually leaks.
-</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
+</pre><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
 Starting from KEDR 0.3, LeakCheck can be used simultaneously with other kinds of payload modules provided by KEDR. In particular, you can use LeakCheck and fault simulation for memory-related functions at the same time. 
-</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="leak_check.usage"></a>4.6.1. Typical Usage</h4></div></div></div><p>
-LeakCheck can be used like any other payload module for KEDR. First you need to load KEDR core and the appropriate payload module:
+</p></div><div class="itemizedlist"><p>LeakCheck is now organized as follows.</p><ul class="itemizedlist" type="disc"><li class="listitem"><p>
+The LeakCheck core (<code class="filename">kedr_leak_check.ko</code> module) analyzes the information about allocations and deallocations and provides API for other components. 
+	</p></li><li class="listitem"><p>
+One or more components obtain such information and pass it to the LeakCheck core via the API. Some of these components may be payload modules for KEDR, they may collect information about the calls to allocation/deallocation routines. Some may be the kernel-mode components of other kinds, e.g., the tools to track the callback operations of the target module, etc. Even the target module itself can use LeakCheck API to inform the analyzer about some allocation/deallocation events which could be otherwise more difficult to detect (some kind of annotations could be used here).
+	</p></li></ul></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="leak_check.usage"></a>4.6.1. Typical Usage</h4></div></div></div><p>
+LeakCheck can be used like any other payload module for KEDR. First you need to load KEDR core and the appropriate plugins:
+</p><pre class="programlisting">
+kedr start &lt;target_name&gt;
+</pre><p>
+or, equivalently,
 </p><pre class="programlisting">
 kedr start &lt;target_name&gt; -f leak_check.conf
 </pre><p>
-<code class="filename">leak_check.conf</code> is placed to the main directory for config files when KEDR is installed (default: <code class="filename">/var/opt/kedr/configs</code>), so you usually do not need to specify the full path to the file.
-</p><p>
 Load the target module and do something with it as usual, then unload the 
 target. Do not stop KEDR yet.
 </p><p>
-Take a look at <code class="filename">/sys/kernel/debug/kedr_leak_check</code> directory. Here we 
+Take a look at <code class="filename">/sys/kernel/debug/kedr_leak_check/&lt;target_name&gt;</code> directory. Here we 
 assume that debugfs is mounted to <code class="filename">/sys/kernel/debug</code>. If it is not, you 
 should mount it: 
 </p><pre class="programlisting">
 mount debugfs -t debugfs /sys/kernel/debug
 </pre><p>
-There should be the following files in <code class="filename">kedr_leak_check</code> directory:
+There should be the following files in <code class="filename">kedr_leak_check/&lt;target_name&gt;</code> directory:
 	</p><div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem"><p>
 <code class="filename">info</code>:
   </p><div class="itemizedlist"><ul class="itemizedlist" type="circle"><li class="listitem"><p>information about the target module (its name, addresses of the <span class="quote">“<span class="quote">init</span>”</span> and <span class="quote">“<span class="quote">core</span>”</span> memory areas); </p></li><li class="listitem"><p>total number of memory allocations performed by the module;</p></li><li class="listitem"><p>number of possible memory leaks (allocations without matching frees);</p></li><li class="listitem"><p>number of free-like calls without matching allocation calls;</p></li></ul></div></li><li class="listitem"><p>
@@ -515,7 +527,7 @@ To be exact, each address corresponds to the instruction following the relevant 
 </p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="leak_check.analysis"></a>4.6.3. Analyzing the Results</h4></div></div></div><p>
 Addr2line, GDB, Objdump or some other tools of this kind can be used to locate the 
 places in the source code corresponding to the entries in the stack traces. 
-The detailed description can be found, for example, in <a class="xref" href="kedr_manual_using_kedr.html#analyze_trace">Section 4.7, “Analyzing the Trace”</a>.
+The detailed description can be found, for example, in <a class="xref" href="kedr_manual_using_kedr.html#analyze_trace">Section 4.7, “Analyzing the Call Location Information”</a>.
 </p><p>
 In the current version of LeakCheck, the names of the functions from 
 <span class="quote">“<span class="quote">init</span>”</span> area (those marked with <code class="code">__init</code> in 
@@ -524,40 +536,102 @@ stack trace entries contain only raw call addresses. This is because name
 resolution is done when "init" area has already been dropped from memory. 
 </p><p>
 Using the the start address of the <span class="quote">“<span class="quote">init</span>”</span> area that <code class="filename">info</code> file shows and 
-the technique described in <a class="xref" href="kedr_manual_using_kedr.html#analyze_trace">Section 4.7, “Analyzing the Trace”</a> referred to above, you can 
+the technique described in <a class="xref" href="kedr_manual_using_kedr.html#analyze_trace">Section 4.7, “Analyzing the Call Location Information”</a> referred to above, you can 
 overcome this.
-</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="leak_check.stack_depth"></a>4.6.4. Stack Depth</h4></div></div></div><p>
-The maximum number of stack frames displayed is controlled by <code class="code">stack_depth</code> 
-parameter of the module. That is, at most this many stack frames will be 
-shown.
+</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="leak_check.param"></a>4.6.4. Parameters of LeakCheck</h4></div></div></div><p>
+The parameters of the core LeakCheck module are described below. 
 </p><p>
+If you would like to change the values of these parameters, copy the default <a class="link" href="kedr_manual_using_kedr.html#kedr_control.config_file">configuration file</a>
+for LeakCheck to a directory of your choice and add <code class="code">&lt;parameter_name&gt;=&lt;value&gt;</code> to the line for <code class="filename">kedr_leak_check.ko</code> module there. Then you can specify the path to the resulting configuration file when starting KEDR.
+</p><div class="section"><div class="titlepage"><div><div><h5 class="title"><a name="leak_check.param.stack_depth"></a>4.6.4.1. Stack Depth</h5></div></div></div><p>
+The maximum number of stack frames shown in the reports is controlled by <code class="code">stack_depth</code> 
+parameter.</p><p>
 <code class="code">stack_depth</code> parameter is an unsigned integer, not greater than 16. 
-Default value: 12. 
+Default value: 16. 
+</p></div><div class="section"><div class="titlepage"><div><div><h5 class="title"><a name="leak_check.param.syslog_output"></a>4.6.4.2. Output to the System Log</h5></div></div></div><p>
+By default, LeakCheck outputs the results not only to its files in debugfs but also to the system log. If output to the system log is not desirable, you can disable it by setting <code class="code">syslog_output</code> parameter to 0. 
 </p><p>
-For example, to display at most 7 stack frames for each 
-allocation/deallocation, create a <a class="link" href="kedr_manual_using_kedr.html#kedr_control.config_file">configuration file</a>
-for LeakCheck as follows (and use it instead of the default one when starting KEDR):
-</p><pre class="programlisting">
-payload /usr/local/lib/modules/&lt;kernel_version&gt;/misc/kedr_leak_check.ko stack_depth=7
-</pre></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="leak_check.caveats"></a>4.6.5. Caveats</h4></div></div></div><p>
+<code class="code">syslog_output</code> parameter is an unsigned integer. Non-zero means <span class="quote">“<span class="quote">on</span>”</span>, zero means <span class="quote">“<span class="quote">off</span>”</span>.
+Default value: 1. 
+</p></div><div class="section"><div class="titlepage"><div><div><h5 class="title"><a name="leak_check.param.stack_depth"></a>4.6.4.3. Groups of Bad Frees</h5></div></div></div><p>
+In some cases, LeakCheck may produce many warnings about <span class="quote">“<span class="quote">unallocated frees</span>”</span>. This may happen, for example, when the resources were actually allocated but LeakCheck did not detect that.
+</p><p><code class="code">bad_free_groups_stored</code> parameter the maximum number of records (to be exact, groups of the records with the same call stack) for <span class="quote">“<span class="quote">unallocated frees</span>”</span> that can be shown in the detailed report. The greater the value of this parameter the more memory is needed to store the report, etc. Note that the summary always presents the complete number of the <span class="quote">“<span class="quote">unallocated frees</span>”</span> LeakCheck has detected and is not affected by this parameter.
+</p><p>
+<code class="code">bad_free_groups_stored</code> parameter is an unsigned integer. 
+Default value: 8. 
+</p></div></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="leak_check.api"></a>4.6.5. LeakCheck API</h4></div></div></div><div class="section"><div class="titlepage"><div><div><h5 class="title"><a name="leak_check.api.common"></a>4.6.5.1. Common notes</h5></div></div></div><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem"><p>
+Assuming the <code class="filename">include</code> directory of KEDR is in the search path for header files, the kernel module using the LeakCheck API should use the following <code class="code">#include</code> directive:
+	</p><pre class="programlisting">
+#include &lt;kedr/leak_check/leak_check.h&gt;
+</pre></li><li class="listitem"><p>
+As the module uses functions exported by another module (LeakCheck core), it also needs the <code class="filename">.symvers</code> file of the latter, namely
+	</p><pre class="programlisting">
+&lt;KEDR install prefix&gt;/lib/modules/`uname -r`/symvers/kedr_leak_check.symvers
+</pre></li><li class="listitem"><p>
+In the functions below, <code class="code">caller_address</code> is the return address of the call to the corresponding allocation or deallocation function. That is the address of the machine instruction immediately following the call (x86-specific). The pre- and post-handlers in the payload modules for KEDR have caller_address variable for this purpose, so you can just use it there. If LeakCheck API is used in some other component rather than a KEDR payload module, it is the job of that component to properly determine the value to be passed as caller_address (see also <span class="quote">“<span class="quote">Annotations</span>”</span> example).
+	</p></li><li class="listitem"><p>
+Currently, LeakCheck can analyze only one kernel module at a time. So, all the loaded components that use LeakCheck API should give LeakCheck the information only about that particular module.
+	</p></li></ol></div></div><div class="section"><div class="titlepage"><div><div><h5 class="title"><a name="leak_check.api.handle_alloc"></a>4.6.5.2. kedr_lc_handle_alloc()</h5></div></div></div><pre class="programlisting">
+void
+kedr_lc_handle_alloc(struct module *mod, const void *addr, size_t size, 
+        const void *caller_address);
+</pre><p>
+Call this function to inform LeakCheck core that the given kernel module, <code class="code">mod</code>, has allocated a resource (e.g. memory block, some object, etc.) at the address <code class="code">addr</code> in memory. <code class="code">addr</code> must be neither <code class="code">NULL</code> nor <code class="code">ZERO_SIZE_PTR</code>.
+</p><p>
+The size of the resource is passed as <code class="code">size</code> argument. If the resource is a memory block, <code class="code">size</code> should be the size of this block. For other types of resources, it is also recommended to provide a meaningful value of size argument. In some cases, the size of the structure corresponding to the resource could be convenient to use here.
+</p><p>
+If the size cannot be obtained, pass 0 as size. This will be interpreted as <span class="quote">“<span class="quote">unknown size</span>”</span> by LeakCheck.
+</p><p>
+<code class="code">size</code> must not be equal to <code class="code">(size_t)(-1)</code>, this value is reserved.
+</p><p>
+This function should be called <span class="emphasis"><em>after</em></span> the resource has actually been successfully allocated.
+</p></div><div class="section"><div class="titlepage"><div><div><h5 class="title"><a name="leak_check.api.handle_free"></a>4.6.5.3. kedr_lc_handle_free()</h5></div></div></div><pre class="programlisting">
+void
+kedr_lc_handle_free(struct module *mod, const void *addr, 
+        const void *caller_address);
+</pre><p>
+Call this function to inform LeakCheck core that the given kernel module, <code class="code">mod</code>, has freed (released, deallocated, ...) the resource that was located at the given address in memory (<code class="code">addr</code>). <code class="code">addr</code> must be neither <code class="code">NULL</code> nor <code class="code">ZERO_SIZE_PTR</code>.
+</p><p>
+This function should be called <span class="emphasis"><em>before</em></span> the resource is actually freed. This is because LeakCheck assumes that the calls to its API happen in exactly the same order as the corresponding allocation and deallocation calls in the code under analysis.
+</p><p>
+If <code class="code">kedr_lc_handle_free()</code> was called after the deallocation, some other part of the code under analysis could get in between the actual deallocation and that call and allocate the resource. The chances are, the new resource will have the same address as the old one. As a result, a call to <code class="code">kedr_lc_handle_alloc()</code> could also occur before the call to <code class="code">kedr_lc_handle_free()</code> with the same addr value, which could make a mess.
+</p></div></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="leak_check.examples"></a>4.6.6. Examples</h4></div></div></div><p>
+The following examples are provided to demonstrate how to use LeakCheck to build custom analysis tools. The examples are located in the following directory: <code class="filename">&lt;KEDR install prefix&gt;/share/kedr/examples/leak_check/</code>.
+</p><div class="section"><div class="titlepage"><div><div><h5 class="title"><a name="leak_check.examples.mempool"></a>4.6.6.1. Mempool Operations</h5></div></div></div><p>
+<span class="quote">“<span class="quote">Mempool_ops</span>”</span> example demonstrates how to create plugins to LeakCheck using the template-based generation system provided by KEDR and how to track custom allocation and deallocation operations.
+</p><p>
+The module built in this example tracks calls to <code class="code">mempool_alloc()</code> and <code class="code">mempool_free()</code> and uses LeakCheck to analyze consistency of these calls.
+</p><p>
+See <a class="ulink" href="http://kedr.googlecode.com/hg/sources/examples/leak_check/mempool_ops/Readme.txt" target="_top">Readme.txt</a> for the example for details.
+</p><p>
+If you would like to use LeakCheck to process allocation/deallocation events from the functions it currently does not track, the recommended way is to prepare a custom module like it is done in this example rather than to change the modules provided by KEDR framework.
+</p></div><div class="section"><div class="titlepage"><div><div><h5 class="title"><a name="leak_check.examples.annotations"></a>4.6.6.2. Annotations</h5></div></div></div><p>
+<span class="quote">“<span class="quote">Annotations</span>”</span> example demonstrates how to use LeakCheck API in a module that is not a plugin to KEDR by itself. One common use case is annotating custom resource allocation/deallocation operations in a module you develop or, at least, can change a bit and rebuild.
+</p><p>
+The module is almost the same in this example as in "sample_target" example. The difference is, <code class="code">device_create()</code> and <code class="code">device_destroy()</code> are annotated here with the special calls for LeakCheck to track these operations.
+</p><p>
+See <a class="ulink" href="http://kedr.googlecode.com/hg/sources/examples/leak_check/annotations/Readme.txt" target="_top">Readme.txt</a> for the example as well as the comments in its source code for details.
+</p></div></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="leak_check.caveats"></a>4.6.7. Caveats</h4></div></div></div><p>
 When the target module is loaded, the output files are cleared, the results 
 are reset. Please take this into account when loading and unloading the 
 target module more than once while LeakCheck is loaded.
 </p><p>
 As usual with debugfs, the output files live only as long as 
-LeakCheck.ko module is loaded. In particular, after unloading the 
+LeakCheck is loaded. In particular, after unloading the 
 target, please collect the results first and only after that reload the 
 target or stop KEDR.
-</p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="analyze_trace"></a>4.7. Analyzing the Trace</h3></div></div></div><p>
-This section describes a couple of techniques that can be used when analyzing the traces output by payload modules for call monitoring or fault simulation. In particular, it shows how to find out which place in the source code of the target module each particular trace record corresponds to and <a class="link" href="kedr_manual_using_kedr.html#analyze_trace.stack">how to obtain call stack</a> for a call of interest.
 </p><p>
-The techniques described here can also be used when analyzing the results of <a class="link" href="kedr_manual_using_kedr.html#leak_check">memory leak detection</a>.
+For the present, the tool monitors the usage of several dozens of kernel functions that allocate and deallocate memory. However, if the target module uses some other functions for this purpose,  LeakCheck will not notice that. It is possible to add support for more functions to LeakCheck or provide some other workaround based on <a class="link" href="kedr_manual_using_kedr.html#leak_check.api">LeakCheck API</a>.
+</p><p>
+Besides that, if the target module allocates a memory block but it is another module (or the kernel proper) that frees it, this will also be reported as a memory leak by LeakCheck. That being said, possible leaks reported by LeakCheck should be further analyzed to find out whether they are actually leaks.
+</p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="analyze_trace"></a>4.7. Analyzing the Call Location Information</h3></div></div></div><p>
+This section describes some techniques that can be useful when analyzing the call stack information as well as traces output by call monitoring plugins. The techniques can also be used when analyzing the results of <a class="link" href="kedr_manual_using_kedr.html#leak_check">memory leak detection</a>. In particular, it is shown below how to find out which place in the source code of the target module each particular trace record or address in the binary code corresponds to and <a class="link" href="kedr_manual_using_kedr.html#analyze_trace.stack">how to obtain call stack</a> for a call of interest.
 </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
 It is recommended that the kernel of your system should be built with <code class="code">CONFIG_FRAME_POINTER</code> or <code class="code">CONFIG_STACK_UNWIND</code> parameters set to <span class="quote">“<span class="quote">y</span>”</span>. This is not the case on some systems by default. If neither of these parameters are not defined, reliable stack trace information could probably be unavailable. KEDR will still work in this case but, for example, its reports concerning memory leaks may be less detailed. 
 </p><p>
 It is desirable to have the target module with debug information enabled. Note that it is only necessary if you would like to match the trace records to the appropriate fragments of the source code of the target module. KEDR itself <span class="emphasis"><em>does not</em></span> require the modules under analysis to have debug information.
 </p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="analyze_trace.general"></a>4.7.1. General</h4></div></div></div><p>
-Let us consider the trace from the example described in <a class="xref" href="kedr_manual_getting_started.html">Section 3, “Getting Started”</a> (the records are numbered just for convenience):
+Let us consider the following trace of events:
 </p><pre class="programlisting">
 [1] insmod-6416 [001] 805.997320: target_session_begins: target module: "kedr_sample_target"
 [2] insmod-6416 [001] 805.997615: called___kmalloc: ([&lt;ffffffffa00e70b9&gt;] init+0xb9) 
