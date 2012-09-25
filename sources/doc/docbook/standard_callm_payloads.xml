@@ -34,9 +34,10 @@ Here is a full list of the payload modules that currently may be used for call m
     <member><function>[alloc_pages_exact]</function></member>
     <member><function>[free_pages_exact]</function></member>
     <member><function>[alloc_pages_exact_nid]</function></member>
+    <member><function>[kmalloc_order_trace]</function></member>
 	</simplelist>
 </listitem>
-<listitem><phrase role="emphasized">kedr_cm_user_space_access.ko:</phrase>
+<listitem><phrase role="emphasized">kedr_cm_uaccess.ko:</phrase>
     <simplelist type='vert'>
     <member><function>copy_to_user/_copy_to_user</function></member>
     <member><function>copy_from_user/_copy_from_user</function></member>
@@ -112,6 +113,7 @@ Here is a full list of the payload modules that currently may be used for call m
     <member><function>kmemdup</function></member>
     <member><function>[call_rcu]</function></member>
     <member><function>[call_rcu_sched]</function></member>
+    <member><function>[kfree_call_rcu]</function></member>
     <member><function>[add_to_page_cache_lru]</function></member>
     <member><function>[add_to_page_cache_locked]</function></member>
     <member><function>[posix_acl_alloc]</function></member>
@@ -124,7 +126,7 @@ Here is a full list of the payload modules that currently may be used for call m
     </para>
 	
 	<note><para>
-Note that <code>call_rcu*</code> functions are currently processed only if the system provides <code>kfree_rcu</code>. This is because it can be necessary to track this way to free the target module's data too.
+Note that <code>*call_rcu*</code> functions are currently processed only if the system provides <code>kfree_rcu</code>. This is because it can be necessary to track this way to free the target module's data too.
 	</para></note>
 </section>
 </section>

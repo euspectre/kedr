@@ -2,11 +2,11 @@
 <title>Implementing Custom Types of Analysis</title>
 
 <para>
-KEDR is not only a system to perform call monitoring and fault simulation for the target kernel modules. It is a framework that allows to implement different kinds of analysis based on the information about the function calls made by the target module.
+KEDR framework also allows to implement custom analysis tools that process the information about the function calls made by the target module.
 </para>
 
 <para>
-In this section, we will show how to create a custom analysis system on top of KEDR. The system we are going to use as an example is rather simple: it maintains a set of counters accessible from user space that provide some information about the actions of the target module.
+This section shows how to create a custom analysis system on top of KEDR. The system we are going to use as an example is rather simple: it maintains a set of counters accessible from user space that provide some information about the actions of the target module.
 </para>
 
 <para>

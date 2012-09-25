@@ -20,7 +20,7 @@ Unless the opposite is stated explicitly, the name of the fault simulation point
     </simplelist>
 Fault simulation point for this function provides <varname>cap</varname> parameter of type <type>int</type> for a fault simulation scenario.
 </listitem>
-<listitem><phrase role="emphasized">kedr_fsim_user_space_access.ko</phrase>
+<listitem><phrase role="emphasized">kedr_fsim_uaccess.ko</phrase>
     <simplelist type='vert'>
     <member><function>copy_to_user</function>/<function>_copy_to_user</function>; no matter which of these functions is exported by the kernel, the name of the fault simulation point is <filename>copy_to_user</filename></member>
     <member><function>copy_from_user</function>/<function>_copy_from_user</function>; no matter which of these functions is exported by the kernel, the name of the fault simulation point is <filename>copy_from_user</filename></member>
@@ -47,6 +47,7 @@ Fault simulation points for these functions do not provide additional parameters
     <member><function>[alloc_pages_current]</function></member>
     <member><function>[alloc_pages_exact]</function></member>
     <member><function>[alloc_pages_exact_nid]</function></member>
+    <member><function>[kmalloc_order_trace]</function></member>
     </simplelist>
 All these functions use a shared fault simulation point named <filename>kmalloc</filename> that provides the following parameters for a fault simulation scenario: <varname>size</varname> (of type <type>size_t</type>) and <varname>flags</varname> (of type <type>gfp_t</type>).
 </listitem>

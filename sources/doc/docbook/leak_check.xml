@@ -243,7 +243,7 @@ Default value: 1.
 In some cases, LeakCheck may produce many warnings about <quote>unallocated frees</quote>. This may happen, for example, when the resources were actually allocated but LeakCheck did not detect that.
 </para>
 
-<para><code>bad_free_groups_stored</code> parameter controls how many records (grouped by call stack) are presented in the detailed report. The greater the value of this parameter the more memory is needed to store the report, etc. Note that the summary always presents the complete number of the <quote>unallocated frees</quote> LeakCheck has detected and is not affected by this parameter.
+<para><code>bad_free_groups_stored</code> parameter the maximum number of records (to be exact, groups of the records with the same call stack) for <quote>unallocated frees</quote> that can be shown in the detailed report. The greater the value of this parameter the more memory is needed to store the report, etc. Note that the summary always presents the complete number of the <quote>unallocated frees</quote> LeakCheck has detected and is not affected by this parameter.
 </para> 
 
 <para>
@@ -415,7 +415,7 @@ target or stop KEDR.
 </para>
 
 <para>
-For the present, the tool monitors the usage of several dozens kernel functions that allocate and deallocate memory (these are among the supported functions listed in <xref linkend='call_mon'/>). However, if the target module uses some other functions for this purpose,  LeakCheck will not notice this. It is possible to add support for more functions to LeakCheck or provide some other workaround based on <link linkend='leak_check.api'>LeakCheck API</link>.
+For the present, the tool monitors the usage of several dozens of kernel functions that allocate and deallocate memory. However, if the target module uses some other functions for this purpose,  LeakCheck will not notice that. It is possible to add support for more functions to LeakCheck or provide some other workaround based on <link linkend='leak_check.api'>LeakCheck API</link>.
 </para>
 
 <para>

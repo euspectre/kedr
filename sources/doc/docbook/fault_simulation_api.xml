@@ -416,7 +416,7 @@ Contains the information about the last simulated fault.
 </para>
 
 <para>
-Reading from this file returns a string that was written by the last <function linkend="fault_simulation_api.kedr_fsim_fault_message">kedr_fsim_fault_message</function> call or <constant>none</constant> if no calls of <function>kedr_fsim_fault_message</function> had been made since <filename>kedr_fault_simulation</filename> module was loaded.
+Reading from this file returns a string that was written by the last <function linkend="fault_simulation_api.kedr_fsim_fault_message">kedr_fsim_fault_message</function> call or <constant>none</constant> if no calls to <function>kedr_fsim_fault_message</function> had been made since <filename>kedr_fault_simulation</filename> module was loaded.
 </para>
 
 </section> <!-- "fault_simulation_api.last_fault_file" -->

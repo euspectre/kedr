@@ -2,7 +2,7 @@
 <title>Analyzing the Call Location Information</title>
 
 <para>
-This section describes some techniques that can be useful when analyzing the call stack information as well as traces output by call monitoring plugins. The techniques can also be used when analyzing the results of <link linkend="leak_check">memory leak detection</link>. In particular, it is shown below how to find out which place in the source code of the target module each particular trace record corresponds to and <link linkend="analyze_trace.stack">how to obtain call stack</link> for a call of interest.
+This section describes some techniques that can be useful when analyzing the call stack information as well as traces output by call monitoring plugins. The techniques can also be used when analyzing the results of <link linkend="leak_check">memory leak detection</link>. In particular, it is shown below how to find out which place in the source code of the target module each particular trace record or address in the binary code corresponds to and <link linkend="analyze_trace.stack">how to obtain call stack</link> for a call of interest.
 </para>
 
 <note>

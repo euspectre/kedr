@@ -235,7 +235,7 @@ The system log should now contain something like the following among other thing
 ]]></programlisting>
 
 <para>
-This means that LeakCheck has seen 3 memory allocations executed by the target module has found no memory leaks among these.
+This means that LeakCheck has seen 3 memory allocations executed by the target module and has found no memory leaks among these.
 </para>
 
 <para>
@@ -517,7 +517,7 @@ In this section, we will show how to use KEDR for call monitoring, that is, for 
 </para>
 
 <para>
-By default, the call monitoring facilities are disabled when you build KEDR (they are probably used only rarely). If you need them, you should reconfigure KEDR with <code>KEDR_STANDARD_CALLM_PAYLOADS=on</code>:
+By default, the standard plugins that implement call monitoring for many widely used kernel functions are disabled when you build KEDR. If you need them, you should reconfigure KEDR with <code>KEDR_STANDARD_CALLM_PAYLOADS=on</code>:
 </para>
 
 <programlisting><![CDATA[

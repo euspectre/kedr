@@ -9,13 +9,10 @@ This section describes how to create <firstterm><link linkend="trampoline">tramp
 <title>Why Trampolines Are Needed</title>
 
 <para>
-The main purpose of <link linkend="trampoline">trampolines</link> is to make it possible to use two or more payload modules simultaneuosly no matter whether some of the target functions they process are the same or not.
+The main purpose of <link linkend="trampoline">trampolines</link> is to make it possible to use two or more payload modules simultaneously no matter whether some of the target functions they process are the same or not.
 </para>
 <para>
 This allows to perform several kinds of operations on the target module at the same time. For example, while fault simulation is turned on, KEDR can also do call monitoring to obtain a trace of calls to the functions affected by fault simulation as well as any other calls of interest. In addition, KEDR can now perform memory leak detection and fault simulation simultaneously. You can also use the standard payload modules provided by KEDR in conjunction with almost any custom payload module (as long as no more than one of these modules defines a <link linkend="replacement_function">replacement function</link> for a given target function; <link linkend="pre_handler">pre handlers</link> and <link linkend="post_handler">post handlers</link> are not limited in this way though). Note that a payload module may not even know that other payload modules are working at the same time.
-</para>
-<para>
-The ability to use payload modules processing the same target functions is provided since version 0.3 of KEDR framework. Before that, the fault simulation payloads, for example, had to duplicate the trace output functionality that naturally belonged to call monitoring payloads, LeakCheck and fault simulation could not be used at the same time, etc.
 </para>
 
 </section> <!-- "functions_support.why" -->
