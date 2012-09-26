@@ -1,8 +1,30 @@
+2012-09-27
+KEDR 0.4 released
+
+The most significant changes:
+    * KEDR now works on the kernel versions 3.3-3.6 too.
+    * LeakCheck has been redesigned: the analysis engine has been separated 
+from data collection which makes the tool easier to maintain and extend. 
+The API it provides allows to use the memory leak detector in more cases 
+than before.
+    * Handling of the information about signatures of the processed 
+functions has been revisited to remove duplicate code and make the 
+components involved easier to configure and maintain.
+    * 12 more functions that allocate or deallocate memory are now 
+processed, so are the functions kfree_rcu() expands to.
+    * Many fixes have been made in LeakCheck, fault simulation and other 
+subsystems. 
+    * Support for kernel version 2.6.31 has been dropped. The minimum 
+supported kernel version is now 2.6.32.
+
+See ChangeLog for detailed information about the changes in this version. 
+-----------------------------------------------------------
+
 2011-06-17
 KEDR 0.3 released
 
 This release provides several enhancements and various fixes compared 
-to version 0.2.1. Most significant changes:
+to version 0.2.1. The most significant changes:
     * Handling of intercepted function calls has been revisited to allow 
 doing several kinds of analysis at the same time (e.g. performing fault 
 simulation and memory leak detection simultaneously).
@@ -39,7 +61,7 @@ See ChangeLog for detailed information about the changes in this version.
 KEDR 0.2 released
 
 This release provides several enhancements and various fixes compared 
-to version 0.1. Most significant changes:
+to version 0.1. The most significant changes:
     * Tracing subsystem has been completely rewritten to be more versatile 
 and reliable even on SMP systems.
     * A memory leak detector (LeakCheck) has been implemented.

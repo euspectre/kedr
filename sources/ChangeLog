@@ -1,4 +1,72 @@
 ---------------------------------------------------------------------------
+KEDR 0.4
+---------------------------------------------------------------------------
+
+    * Made several fixes to reflect the changes in the kernel versions 
+3.3 - 3.6 that prevented KEDR from working on such kernels.
+    
+    * LeakCheck: Redesigned it, separated the analysis engine from data 
+collection, provided a new API for external components. LeakCheck is now 
+modular with a clear interface between its components which simplifies 
+further enhancements and maintenance. The new API the core of LeakCheck 
+provides allows other kernel-mode software (not necessarily from KEDR 
+framework) to use memory leak detection facilities. Details:
+http://code.google.com/p/kedr/wiki/kedr_manual_using_kedr#Detecting_Memory_Leaks
+
+    * The information about the functions that can be processed by the tools
+from KEDR framework is now stored in a single place, namely, in
+"sources/functions/" tree. Logically, it can be considered a "function
+database" containing function names, return types, parameter names and
+types. This allowed to revisit several components of KEDR and make them 
+easier to maintain. Another useful consequence is that the tests for call 
+interception are no longer tied to call monitoring plugins and can be used 
+even if these plugins are disabled.
+
+    * Added handling of 12 more functions that allocate or deallocate 
+memory.
+
+    * Added handling of the functions kfree_rcu() expands to.
+LeakCheck is now able to detect the calls to *call_rcu*() and can treat 
+some of these calls similar to kfree().
+
+    * LeakCheck, Fault simulation: many fixes; several enhancements have 
+also been made to reduce memory overhead in special cases.
+
+    * Tools: Fixed: some of the the tools and tests assumed that lsmod, 
+insmod and rmmod are located in /sbin, which is not the case on some 
+systems.
+
+    * Core: Fixed: system headers (insn.h, etc.) were used for the 
+instruction decoder although KEDR contains a copy of these headers as well 
+as of the sources to avoid problems if the decoder API changes.
+
+    * The standard plugins for call monitoring are now disabled by default. 
+This does not affect the core call monitoring facilities of KEDR, they are 
+always enabled and the custom call monitoring plugins can still use them.
+
+    * If is not specified which tool plugins should be loaded when KEDR is 
+launched, LeakCheck will be used.
+
+    * LeakCheck: The results can now be output to the system log too.
+
+    * Fault simulation: the kernel modules providing the standard 
+indicators are now also loaded automatically when KEDR is loaded with the 
+default configuration profile for fault simulation specified.
+
+    * Fault simulation: 'last_fault' file is now maintained in debugfs. It 
+contains the information about the last function call a failure has been 
+simulated for. Can be helpful when analyzing errors revealed with the help 
+of fault simulation in the kernel modules.
+
+    * Install: The standard configuration files (*.conf) are now installed 
+to /etc tree rather than /var/opt tree. It seems to be more FHS-compliant 
+to store the configuration files of KEDR this way.
+
+    * Dropped support for kernel version 2.6.31. The minimum supported 
+kernel version is now 2.6.32. This has been done to ease the maintenance 
+burden a bit.
+
+---------------------------------------------------------------------------
 KEDR 0.3
 ---------------------------------------------------------------------------
 Eugene A. Shatokhin <spectre@ispras.ru>:
