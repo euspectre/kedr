@@ -7,6 +7,7 @@ header =>>
 #include <linux/rcupdate.h>
 #include <linux/fs.h>
 #include <linux/posix_acl.h>
+#include <linux/posix_acl_xattr.h>
 #include <linux/parser.h>
 #include <linux/pagemap.h>	/* __page_cache_alloc() */
 

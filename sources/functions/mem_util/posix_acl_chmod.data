@@ -1,0 +1,15 @@
+[group]
+	# Name and return type of the target function
+	function.name = posix_acl_chmod
+	returnType = int
+
+	# Names and types of the arguments of the target function
+	arg.type = struct posix_acl **
+	arg.name = acl
+
+	arg.type = gfp_t
+	arg.name = gfp
+
+	arg.type = umode_t
+	arg.name = mode
+#######################################################################

@@ -9,6 +9,7 @@
 #include <linux/init.h>
 #include <linux/kernel.h>
 #include <linux/errno.h>
+#include <linux/err.h>
 
 #include <kedr/core/kedr.h>
 #include <kedr/leak_check/leak_check.h>

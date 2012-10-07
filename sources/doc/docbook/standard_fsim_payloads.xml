@@ -59,6 +59,9 @@ All these functions use a shared fault simulation point named <filename>kmalloc<
     <member><function>[posix_acl_alloc]</function></member>
     <member><function>[posix_acl_clone]</function></member>
     <member><function>[posix_acl_from_mode]</function></member>
+    <member><function>[posix_acl_create]</function></member>
+    <member><function>[posix_acl_chmod]</function></member>
+    <member><function>[posix_acl_from_xattr]</function></member>
     <member><function>[match_strdup]</function></member>
     </simplelist>
 Fault simulation points for these functions do not provide additional parameters for a fault simulation scenario except for <function>posix_acl_*</function> functions similar to <function>__kmalloc</function> in this respect.

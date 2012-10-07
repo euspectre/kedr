@@ -1,9 +1,9 @@
 [group]
 	prologue =>>
-	/* Similar to posix_acl_alloc() with count == 3 
-	 * (USER, GROUP, OTHER) */
+	int count = posix_acl_xattr_count(buf_sz);
 	size_t size = sizeof(struct posix_acl) + 
-		3 * sizeof(struct posix_acl_entry);
+		count * sizeof(struct posix_acl_entry);
+	gfp_t flags = GFP_KERNEL;
 <<
 	
 	# Fault Simulation

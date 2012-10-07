@@ -10,6 +10,10 @@ func_db_configure_functions (
 	"posix_acl_alloc"
 	"posix_acl_clone"
 	"posix_acl_from_mode"
+	
+	"posix_acl_create"
+	"posix_acl_chmod"
+	"posix_acl_from_xattr"
 
 	"match_strdup"
 	

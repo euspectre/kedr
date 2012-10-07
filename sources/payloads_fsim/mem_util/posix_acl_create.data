@@ -1,9 +1,12 @@
 [group]
 	prologue =>>
-	/* Similar to posix_acl_alloc() with count == 3 
-	 * (USER, GROUP, OTHER) */
-	size_t size = sizeof(struct posix_acl) + 
-		3 * sizeof(struct posix_acl_entry);
+	size_t size = 0;
+	gfp_t flags = gfp;
+	if (acl) {
+		size = sizeof(struct posix_acl) + 
+			(size_t)(*acl)->a_count * 
+			sizeof(struct posix_acl_entry);
+	}
 <<
 	
 	# Fault Simulation
@@ -15,5 +18,9 @@
 	fpoint.param.type = gfp_t
 	fpoint.param.name = flags
 
-	fpoint.fault_code =	ret_val = ERR_PTR(-ENOMEM);
+	fpoint.fault_code =>>
+posix_acl_release(*acl);
+		*acl = NULL;
+		ret_val = -ENOMEM;
+<<
 #######################################################################

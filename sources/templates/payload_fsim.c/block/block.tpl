@@ -37,7 +37,7 @@ kedr_repl_<$function.name$>(<$if concat(arg.name)$><$argument : join(, )$>,
 	}
 <$if concat(epilogue)$><$epilogue: join(\n)$>
 
-<$endif$>    (void)caller_address;//for supress warnings about unused variable
+<$endif$>    (void)caller_address; /* suppress the warnings about an unused variable */
 
 <$if returnType$>	return ret_val;
 <$endif$>}

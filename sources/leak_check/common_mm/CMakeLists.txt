@@ -69,6 +69,9 @@ kmodule_configure_kernel_functions(functions
 	OPTIONAL "posix_acl_alloc"
 	"posix_acl_clone"
 	"posix_acl_from_mode"
+	"posix_acl_create"
+	"posix_acl_chmod"
+	"posix_acl_from_xattr"
 
 	OPTIONAL "match_strdup"
 )
