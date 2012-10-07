@@ -38,11 +38,16 @@ Represents information about a particular function call which is passed to <link
 struct kedr_function_call_info
 {
     void *return_address; 
+    void *data;
 };
 ]]></programlisting>
 
 <para>
-Currently this structure has only one field, <code>return_address</code>. This is the address of the location right after the call to target function (i.e. the address of the next machine instruction). This value should be used instead of __builtin_return_address(0) in the <link linkend="pre_handler">pre handlers</link>, <link linkend="replacement_function">replacement functions</link> and <link linkend="post_handler">post handlers</link>. This is because these functions are actually called by a trampoline function rather than directly from the place where the target is called. What is usually needed, however, is not the return address of a handler but rather the return address of the target function (to output call stack, etc.).
+<code>return_address</code> is the address of the location right after the call to target function (i.e. the address of the next machine instruction). This value should be used instead of __builtin_return_address(0) in the <link linkend="pre_handler">pre handlers</link>, <link linkend="replacement_function">replacement functions</link> and <link linkend="post_handler">post handlers</link>. This is because these functions are actually called by a trampoline function rather than directly from the place where the target is called. What is usually needed, however, is not the return address of a handler but rather the return address of the target function (to output call stack, etc.).
+</para>
+
+<para>
+The field <code>data</code> can be used to pass information between the handlers. Note that this field is shared by all handlers for a given target function. So you should design the handlers so as to avoid conflicts on this field.
 </para>
 
 </section> <!-- "payload_api.function_call_info" -->

@@ -12,82 +12,74 @@
  **********************************************************************/
 
 
-/*
- * Information about original function call,
- * which is passed to the functions, which intended to call
- * before, after or instead it.
- */
+/* Information about the original function call that is passed to the 
+ * functions to be called before, after or instead of it. */
 struct kedr_function_call_info
 {
-	// Returning address from the original function.
-	void* return_address;
+	/* Return address of the original function. */
+	void *return_address;
+
+	/* This field can be used if it is needed to pass some data 
+	 * from a pre handler to the corresponding post handler, etc. */
+	void *data;
 };
 
-/*
- * Pair of function which should be replaced and function,
- * which should replace it.
+/* Pair of the functions: a function to be replaced and a function to 
+ * replace it with.
  * 
- * If original function has signature
- * ret_type (*)(arg_type1,..., arg_typeN)
+ * If the original function has the signature
+ * ret_type (*)(arg_type1,..., arg_typeN),
  * 
- * then replacement one should have signature
+ * the replacement function should have the following signature:
  * 
- * ret_type (*)(arg_type1,..., arg_typeN, kedr_function_call_info*).
- */
+ * ret_type (*)(arg_type1,..., arg_typeN, kedr_function_call_info *).  */
 struct kedr_replace_pair
 {
-	// Address of the function to replace
-	void* orig;
-	// Address of the function which should be executed instead of original.
-	void* replace;
+	/* Address of the function to be replaced. */
+	void *orig;
+	
+	/* Address of the replacement function. */
+	void *replace;
 };
 
-/*
- * Pair of function which should be intercepet and function,
- * which should be called before it.
+/* Pair of the functions: the function to be intercepted and the function
+ * to be called before it.
  * 
- * If original function has signature
- * ret_type (*)(arg_type1,..., arg_typeN)
+ * If the original function has the signature
+ * ret_type (*)(arg_type1,..., arg_typeN),
  * 
- * then another one should have signature
- * 
- * void (*)(arg_type1,..., arg_typeN, kedr_function_call_info*).
- */
+ * the second function should have the following signature:
+ * void (*)(arg_type1,..., arg_typeN, kedr_function_call_info *).  */
 struct kedr_pre_pair
 {
-	// Address of the function to intercept
-	void* orig;
-	// Address of the function which should be executed before original.
-	void* pre;
+	/* Address of the function to be processed. */
+	void *orig;
+	/* Address of the function to be called before 'orig'. */
+	void *pre;
 };
 
-/*
- * Pair of function which should be intercepet and function,
- * which should be called after it.
+/* Pair of the functions: the function to be intercepted and the function
+ * to be called after it.
  *
- * If original function has signature('ret_type' is not 'void')
- * ret_type (*)(arg_type1,..., arg_typeN)
+ * If the original function has the signature ('ret_type' is not 'void')
+ * ret_type (*)(arg_type1,..., arg_typeN),
  * 
- * then another one should have signature
+ * the second function should have the following signature:
+ * void (*)(arg_type1,..., arg_typeN, ret_type, kedr_function_call_info *).
  * 
- * void (*)(arg_type1,..., arg_typeN, ret_type, kedr_function_call_info*).
- * 
- * If original function has signature
+ * If the original function has the signature 
  * void (*)(arg_type1,..., arg_typeN)
  * 
- * then another one should have signature
- * 
- * void (*)(arg_type1,..., arg_typeN, kedr_function_call_info*).
- */
-
+ * the second function should have the following signature:
+ * void (*)(arg_type1,..., arg_typeN, kedr_function_call_info *).  */
 struct kedr_post_pair
 {
-	// Address of the function to intercept
-	void* orig;
-	// Address of the function which should be executed before original.
-	void* post;
+	/* Address of the function to be processed. */
+	void *orig;
+	
+	/* Address of the function to be called after 'orig'. */
+	void *post;
 };
-
 
 /* This structure contains everything KEDR needs to properly 
  * operate on a payload module (the module that actually provides the 
@@ -98,7 +90,7 @@ struct kedr_post_pair
 struct kedr_payload
 {
 	/* payload module itself */
-	struct module* mod; 
+	struct module *mod; 
 	
 	/* 
 	 * Array of functions for replace.
@@ -108,7 +100,7 @@ struct kedr_payload
 	 * 
 	 * May be NULL.
 	 */
-	struct kedr_replace_pair* replace_pairs;
+	struct kedr_replace_pair *replace_pairs;
     
 	/* 
 	 * Array of functions for perform some actions before them.
@@ -118,7 +110,7 @@ struct kedr_payload
 	 * 
 	 * May be NULL.
 	 */
-	struct kedr_pre_pair* pre_pairs;
+	struct kedr_pre_pair *pre_pairs;
 
 	/* 
 	 * Array of functions for perform some actions after them.
@@ -128,7 +120,7 @@ struct kedr_payload
 	 * 
 	 * May be NULL.
 	 */
-	struct kedr_post_pair* post_pairs;
+	struct kedr_post_pair *post_pairs;
 
 
     /* If not NULL, these callbacks are called after the target module is
@@ -139,8 +131,8 @@ struct kedr_payload
      * 
      * If a callback is NULL, it is ignored.
      */
-    void (*target_load_callback)(struct module*);
-    void (*target_unload_callback)(struct module*);
+    void (*target_load_callback)(struct module *);
+    void (*target_unload_callback)(struct module *);
 };
 
 /* Registers a payload module with the KEDR core. 
@@ -188,11 +180,8 @@ kedr_payload_unregister(struct kedr_payload *payload);
 int
 kedr_target_module_in_init(void);
 
-
-/*
- * Use KEDR_MSG() instead of printk to output debug messages to the system
- * log.
- */
+/* Use KEDR_MSG() instead of printk to output debug messages to the system
+ * log. */
 #undef KEDR_MSG /* just in case */
 #ifdef KEDR_DEBUG
     # define KEDR_MSG(fmt, args...) printk(KERN_DEBUG "[KEDR] " fmt, ## args)
