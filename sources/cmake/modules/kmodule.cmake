@@ -468,7 +468,41 @@ macro(check_kfree_rcu)
 	endif (DEFINED HAVE_KFREE_RCU)
 	message(STATUS "${check_kfree_rcu_message}")
 endmacro(check_kfree_rcu)
+############################################################################
 
+# Check if posix_acl_from_xattr() accepts struct user_namespace as the
+# first argument.
+# The macro sets variable 'POSIX_ACL_XATTR_HAS_USER_NS'.
+macro(check_xattr_user_ns)
+	set(check_xattr_user_ns_message
+"Checking if posix_acl_from_xattr() has struct user_namespace * argument"
+	)
+	message(STATUS "${check_xattr_user_ns_message}")
+	if (DEFINED POSIX_ACL_XATTR_HAS_USER_NS)
+		set(check_xattr_user_ns_message
+"${check_xattr_user_ns_message} [cached] - ${POSIX_ACL_XATTR_HAS_USER_NS}"
+		)
+	else ()
+		kmodule_try_compile(have_xattr_user_ns_impl
+			"${CMAKE_BINARY_DIR}/check_xattr_user_ns"
+			"${kmodule_test_sources_dir}/check_xattr_user_ns/module.c"
+		)
+		if (have_xattr_user_ns_impl)
+			set(POSIX_ACL_XATTR_HAS_USER_NS "yes" CACHE INTERNAL
+	"Does posix_acl_from_xattr() have struct user_namespace argument?"
+			)
+		else (have_xattr_user_ns_impl)
+			set(POSIX_ACL_XATTR_HAS_USER_NS "no" CACHE INTERNAL
+	"Does posix_acl_from_xattr() have struct user_namespace argument?"
+			)
+		endif (have_xattr_user_ns_impl)
+
+		set(check_xattr_user_ns_message
+"${check_xattr_user_ns_message} - ${POSIX_ACL_XATTR_HAS_USER_NS}"
+		)
+	endif (DEFINED POSIX_ACL_XATTR_HAS_USER_NS)
+	message(STATUS "${check_xattr_user_ns_message}")
+endmacro(check_xattr_user_ns)
 ############################################################################
 
 # The payload modules should call kedr_find_function() for each kernel 

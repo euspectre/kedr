@@ -1,3 +1,19 @@
+# posix_acl_from_xattr() may or may not accept 'struct user_namespace *' as
+# the first argument depending on kernel version and configuration. 
+check_xattr_user_ns()
+
+if (POSIX_ACL_XATTR_HAS_USER_NS)
+	set(data_suffix "userns")
+else ()
+	set(data_suffix "plain")
+endif (POSIX_ACL_XATTR_HAS_USER_NS)
+
+configure_file(
+	"${CMAKE_CURRENT_SOURCE_DIR}/posix_acl_from_xattr.data.${data_suffix}"
+	"${CMAKE_CURRENT_BINARY_DIR}/posix_acl_from_xattr.data"
+	COPYONLY
+)
+
 func_db_configure_functions (
 	"kstrdup"
 	"kstrndup"
@@ -13,12 +29,14 @@ func_db_configure_functions (
 	
 	"posix_acl_create"
 	"posix_acl_chmod"
-	"posix_acl_from_xattr"
-
+	
 	"match_strdup"
 	
 	"call_rcu"
 	"call_rcu_sched"
-	"kfree_call_rcu" 
+	"kfree_call_rcu"
+
+	GENERATED
+	"posix_acl_from_xattr"
 )
 

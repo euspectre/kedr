@@ -3,9 +3,14 @@
 # 	 add_to_page_cache_lru
 #	 add_to_page_cache_locked
 #	 __page_cache_alloc
+#	posix_acl_from_xattr
 # The main problem here is how to create a reasonably simple code to use
 # these functions in the correct environment and how to properly clean up
-# after that. 
+# after that.
+#
+# As far as posix_acl_from_xattr() is concerned, it is currently not clear
+# how to obtain appropriate struct user_namespace instance needed for this
+# function, for example, in kernel 3.7.
 
 kedr_test_add_ci_test("mem_util"
 	# Functions:
@@ -23,7 +28,7 @@ kedr_test_add_ci_test("mem_util"
 
 	"posix_acl_create"
 	"posix_acl_chmod"
-	"posix_acl_from_xattr"
+#	"posix_acl_from_xattr"
 
 	"match_strdup"
 	
