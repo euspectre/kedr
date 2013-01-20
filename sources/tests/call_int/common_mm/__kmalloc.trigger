@@ -1,9 +1,12 @@
 [group]
+# Name of the target function
 function.name = __kmalloc
+	
+# The code to trigger a call to this function.
 trigger.code =>>
-    int size;
-    void* p;
-    size = 100;
-    p = __kmalloc(size, GFP_KERNEL);
-    kfree(p);
+	size_t size = 20;
+	void *p;
+	p = __kmalloc(size, GFP_KERNEL);
+	kfree(p);
 <<
+#######################################################################

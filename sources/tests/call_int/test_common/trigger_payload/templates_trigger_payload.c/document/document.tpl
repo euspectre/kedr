@@ -20,6 +20,8 @@
 
 #include <kedr/core/kedr.h>
 
+#include "config.h"
+
 char* function_name = NULL;
 module_param(function_name, charp, S_IRUGO);
 

@@ -143,8 +143,6 @@ set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wall")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0 -Wall -Wextra")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -g -Wall -Wextra")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall")
-
-
 #######################################################################
 
 # Perform basic checks
@@ -155,6 +153,18 @@ check_kernel_version(2 6 32)
 
 # Check if kernel modules can be built on this system
 check_module_build()
+
+# Find out which memory allocator is used by the kernel. It is needed
+# because, for example, the order of arguments to kmem_cache_alloc*_trace()
+# may be different depending on the allocator.
+check_allocator()
+
+if (${KERNEL_MEMORY_ALLOCATOR} STREQUAL "slab" AND
+	KERNEL_VERSION VERSION_LESS "3.7.0")
+	set (KMCA_TRACE_SIZE_FIRST 1)
+else ()
+	set (KMCA_TRACE_KMC_FIRST 1)
+endif ()
 
 # Check if stack trace information is reliable on this system.
 # STACK_TRACE_RELIABLE will hold the result.
@@ -169,7 +179,7 @@ option(KEDR_STANDARD_CALLM_PAYLOADS
 
 check_ring_buffer()
 
-set(KEDR_TRACE ${RING_BUFFER_IMPLEMENTED} CACHE INTERNAL "Whether KEDR trace mechanism is builded")
+set(KEDR_TRACE ${RING_BUFFER_IMPLEMENTED} CACHE INTERNAL "Whether KEDR trace mechanism is built")
 set(KEDR_CALLM_PAYLOADS ${RING_BUFFER_IMPLEMENTED} CACHE INTERNAL "Whether call monitor payloads is supported")
 
 if(KEDR_STANDARD_CALLM_PAYLOADS AND NOT RING_BUFFER_IMPLEMENTED)

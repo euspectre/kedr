@@ -34,11 +34,16 @@ do_something(void)
 	if(mem_cache != NULL)
 	{
 #if defined(CONFIG_SLAB)
+#  if LINUX_VERSION_CODE < KERNEL_VERSION(3, 7, 0)
 		p = kmem_cache_alloc_node_trace(32, mem_cache, GFP_KERNEL, numa_node_id());
+#  else
+		p = kmem_cache_alloc_node_trace(mem_cache, GFP_KERNEL, numa_node_id(), 32);
+#  endif /* LINUX_VERSION_CODE < KERNEL_VERSION(3, 7, 0) */
+
 #elif defined(CONFIG_SLUB)
 		p = kmem_cache_alloc_node_trace(mem_cache, GFP_KERNEL, numa_node_id(), 32);
 #else
-#error "kmem_cache_alloc_node_trace() should not be defined"
+#  error "kmem_cache_alloc_node_trace() should not be defined"
 #endif
 		if(p != NULL)
 		{

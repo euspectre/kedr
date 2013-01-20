@@ -18,6 +18,8 @@
 #include <linux/kernel.h>	/* printk() */
 #include <linux/string.h> /* strcmp() */
 
+#include "config.h"
+
 char* function_name;
 module_param(function_name, charp, S_IRUGO);
 

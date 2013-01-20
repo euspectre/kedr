@@ -1,7 +1,7 @@
 [group]
 function.name = alloc_pages_exact
 trigger.code =>>
-	int size;
+	size_t size;
 	void* p;
 	size = 100;
 	p = alloc_pages_exact(size, GFP_KERNEL);

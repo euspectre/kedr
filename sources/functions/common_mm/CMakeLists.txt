@@ -1,15 +1,20 @@
-# Some functions have different signatures depending on the memory
-# allocator used in the kernel.
-check_allocator()
+# [NB] Some functions have different signatures depending on the memory
+# allocator used in the kernel. Note that the difference no longer exists
+# in the kernel 3.7.0 and newer.
+set(KMCA_FLAVOUR "slub")
+if (DEFINED KMCA_TRACE_SIZE_FIRST)
+	# The order of arguments was different in SLAB allocator pre-3.7.
+	set(KMCA_FLAVOUR "slab")
+endif (DEFINED KMCA_TRACE_SIZE_FIRST)
 
 configure_file(
-	"${CMAKE_CURRENT_SOURCE_DIR}/kmem_cache_alloc_trace.data.${KERNEL_MEMORY_ALLOCATOR}"
+	"${CMAKE_CURRENT_SOURCE_DIR}/kmem_cache_alloc_trace.data.${KMCA_FLAVOUR}"
 	"${CMAKE_CURRENT_BINARY_DIR}/kmem_cache_alloc_trace.data"
 	COPYONLY
 )
 
 configure_file(
-	"${CMAKE_CURRENT_SOURCE_DIR}/kmem_cache_alloc_node_trace.data.${KERNEL_MEMORY_ALLOCATOR}"
+	"${CMAKE_CURRENT_SOURCE_DIR}/kmem_cache_alloc_node_trace.data.${KMCA_FLAVOUR}"
 	"${CMAKE_CURRENT_BINARY_DIR}/kmem_cache_alloc_node_trace.data"
 	COPYONLY
 )
