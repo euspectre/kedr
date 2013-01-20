@@ -5,6 +5,7 @@
 #include <stdlib.h> /* exit, strerror */
 
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 
@@ -215,7 +216,7 @@ struct trace_consumers
 /*
  * Initialize list of trace_consumers as empty and without barrier.
  */
-static int
+static void
 trace_consumers_init(struct trace_consumers* trace_consumers);
 
 /* Set barrier for consumers. */
@@ -911,7 +912,7 @@ int trace_consumer_is_writeable(struct trace_consumer* consumer)
     return consumer->fd_write != -1;
 }
 
-int trace_consumers_init(struct trace_consumers* trace_consumers)
+void trace_consumers_init(struct trace_consumers* trace_consumers)
 {
     trace_consumers->first_consumer = NULL;
     trace_consumers->last_consumer = NULL;
