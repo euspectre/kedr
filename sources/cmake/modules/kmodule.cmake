@@ -16,29 +16,34 @@ endif (CMAKE_CROSSCOMPILING)
 
 # kmodule_try_compile(RESULT_VAR bindir srcfile
 #           [COMPILE_DEFINITIONS flags]
-#           [OUTPUT_VARIABLE var])
+# 			[OUTPUT_VARIABLE var]
+#			[COPY_FILE filename])
 
 # Similar to try_module in simplified form, but compile srcfile as
 # kernel module, instead of user space program.
 
 function(kmodule_try_compile RESULT_VAR bindir srcfile)
-	set(is_compile_definitions_current "FALSE")
-	set(is_output_var_current "FALSE")
 	to_abs_path(src_abs_path "${srcfile}")
+	# State for parse argument list
+	set(state "None")
 	foreach(arg ${ARGN})
 		if(arg STREQUAL "COMPILE_DEFINITIONS")
-			set(is_compile_definitions_current "TRUE")
-			set(is_output_var_current "FALSE")
+			set(state "COMPILE_DEFINITIONS")
 		elseif(arg STREQUAL "OUTPUT_VARIABLE")
-			set(is_compile_definitions_current "FALSE")
-			set(is_output_var_current "TRUE")
-		elseif(is_compile_definitions_current)
+			set(state "OUTPUT_VARIABLE")
+		elseif(arg STREQUAL "COPY_FILE")
+			set(state "COPY_FILE")
+		elseif(state STREQUAL "COMPILE_DEFINITIONS")
 			set(kmodule_cflags "${kmodule_cflags} ${arg}")
-		elseif(is_output_var_current)
+		elseif(state STREQUAL "OUTPUT_VARIABLE")
 			set(output_variable "${arg}")
+			set(state "None")
+		elseif(state STREQUAL "COPY_FILE")
+			set(copy_file_variable "${arg}")
+			set(state "None")
 		else(arg STREQUAL "COMPILE_DEFINITIONS")
 			message(FATAL_ERROR 
-				"Unknown parameter passed to kmodule_try_compile: '${arg}'."
+				"Unexpected parameter passed to kmodule_try_compile: '${arg}'."
 			)
 		endif(arg STREQUAL "COMPILE_DEFINITIONS")
 	endforeach(arg ${ARGN})
@@ -51,6 +56,9 @@ function(kmodule_try_compile RESULT_VAR bindir srcfile)
 	if(DEFINED kmodule_cflags)
 		list(APPEND cmake_params "-Dkmodule_flags=${kmodule_cflags}")
 	endif(DEFINED kmodule_cflags)
+	if(copy_file_variable)
+		list(APPEND cmake_params "-DCOPY_FILE=${copy_file_variable}")
+	endif(copy_file_variable)
 
 	if(DEFINED output_variable)
 		try_compile(result_tmp "${bindir}"
@@ -68,9 +76,9 @@ function(kmodule_try_compile RESULT_VAR bindir srcfile)
 	set("${RESULT_VAR}" "${result_tmp}" PARENT_SCOPE)
 endfunction(kmodule_try_compile RESULT_VAR bindir srcfile)
 
-# The list of "unreliable" functions.
-# If such functions are listed in System.map and even exported, it doesn't 
-# mean they are available for the kernel modules.
+# List of unreliable functions, that is, the functions that may be
+# be exported and mentioned in System.map but still cannot be used
+# because no header provides their declarations.
 set(unreliable_functions_list
     "__kmalloc_node"
 	"kmem_cache_alloc_node"
@@ -256,6 +264,8 @@ endmacro(check_module_build)
 
 # Check if the version of the kernel is acceptable
 # The macro sets variable 'KERNEL_VERSION_OK'.
+# It also sets 'KERNEL_VERSION', which is the version of the kernel in the
+# form "major.minor.micro".
 macro(check_kernel_version kversion_major kversion_minor kversion_micro)
 	set(check_kernel_version_string 
 "${kversion_major}.${kversion_minor}.${kversion_micro}"
@@ -264,20 +274,21 @@ macro(check_kernel_version kversion_major kversion_minor kversion_micro)
 "Checking if the kernel version is ${check_kernel_version_string} or newer"
 	)
 	message(STATUS "${check_kernel_version_message}")
+
+	string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+"
+		KERNEL_VERSION
+		"${KBUILD_VERSION_STRING}"
+	)
+	
 	if (DEFINED KERNEL_VERSION_OK)
 		set(check_kernel_version_message 
 "${check_kernel_version_message} [cached] - ${KERNEL_VERSION_OK}"
 		)
 	else (DEFINED KERNEL_VERSION_OK)
-		string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" 
-			real_kernel_version_string
-			"${KBUILD_VERSION_STRING}"
-		)
-
-		if (real_kernel_version_string VERSION_LESS check_kernel_version_string)
+		if (KERNEL_VERSION VERSION_LESS check_kernel_version_string)
 			set(KERNEL_VERSION_OK "no")
 			message(FATAL_ERROR 
-"Kernel version is ${real_kernel_version_string} but ${check_kernel_version_string} or newer is required."
+"Kernel version is ${KERNEL_VERSION} but ${check_kernel_version_string} or newer is required."
 			)
 		else ()
 			set(KERNEL_VERSION_OK "yes" CACHE INTERNAL
@@ -341,7 +352,7 @@ endmacro(check_stack_trace)
 # Set cache variable RING_BUFFER_IMPLEMENTED according to this checking.
 function(check_ring_buffer)
 	set(check_ring_buffer_message 
-		"Checking if ring buffer is implemented by the kernel"
+		"Checking if ring buffer is implemented in the kernel"
 	)
 	message(STATUS "${check_ring_buffer_message}")
 	if (DEFINED RING_BUFFER_IMPLEMENTED)
@@ -355,11 +366,11 @@ function(check_ring_buffer)
 		)
 		if (ring_buffer_implemented_impl)
 			set(RING_BUFFER_IMPLEMENTED "yes" CACHE INTERNAL
-				"Whether ring buffer is implemented by the kernel"
+				"Whether ring buffer is implemented in the kernel"
 			)
 		else (ring_buffer_implemented_impl)
 			set(RING_BUFFER_IMPLEMENTED "no" CACHE INTERNAL
-				"Whether ring buffer is implemented by the kernel"
+				"Whether ring buffer is implemented in the kernel"
 			)
 		endif (ring_buffer_implemented_impl)
 				

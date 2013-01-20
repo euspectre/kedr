@@ -89,7 +89,6 @@ endmacro (kedr_test_add_target target_name)
 # directory (the source directory is searched first).
 function (kedr_test_add_script test_name script_file)
 	if (NOT CMAKE_CROSSCOMPILING)
-	    set (TEST_SCRIPT_FILE)
 	    to_abs_path (TEST_SCRIPT_FILE ${script_file})
 	        
 	    add_test (${test_name}
@@ -97,6 +96,14 @@ function (kedr_test_add_script test_name script_file)
 	    )
 	endif (NOT CMAKE_CROSSCOMPILING)
 endfunction (kedr_test_add_script)
+
+function (kedr_test_add test_name app_file)
+	if (NOT CMAKE_CROSSCOMPILING)
+	    to_abs_path (TEST_APP_FILE ${app_file})
+	        
+	    add_test (${test_name} ${TEST_APP_FILE} ${ARGN})
+	endif (NOT CMAKE_CROSSCOMPILING)
+endfunction (kedr_test_add)
 
 # Use this macro instead of add_subdirectory() for the subtrees related to 
 # testing of the package.

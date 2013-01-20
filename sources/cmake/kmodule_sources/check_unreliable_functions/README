@@ -1,7 +1,7 @@
 This directory contains source files with names having the following format:
 ${f}.c. Each of the files is used in try-compile procedure to determine 
 whether function 'f' exists in the kernel. Usually such kernel module 
-contains the code using thing function directly or indirectly.
+contains the code using this function directly or indirectly.
 
 The list of these files is hard-coded in the cmake module as 
 'unreliable_functions_list'.

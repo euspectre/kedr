@@ -107,13 +107,11 @@ add_dependencies (uninstall_dirs uninstall_files)
 add_dependencies (uninstall uninstall_dirs)
 
 #######################################################################
-#${CMAKE_SOURCE_DIR}/include - root of the include tree (see conventions).
-#include_directories("${CMAKE_SOURCE_DIR}/include")
-#kbuild_include_directories("${CMAKE_SOURCE_DIR}/include")
 include_directories("${CMAKE_BINARY_DIR}/include")
 kbuild_include_directories("${CMAKE_BINARY_DIR}/include")
 
-#For configuration file
+# For the configuration file (config.h)
+include_directories("${CMAKE_BINARY_DIR}")
 kbuild_include_directories("${CMAKE_BINARY_DIR}")
 #######################################################################
 # Make "Release" the default build type
@@ -136,11 +134,23 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
 else(CMAKE_BUILD_TYPE STREQUAL "Debug")
 	message(FATAL_ERROR "Unknown type of build: ${CMAKE_BUILD_TYPE}.")
 endif()
+
+# Flags to compiler when build user-space programs
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g -O0 -Wall -Wextra")
+set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -g -Wall -Wextra")
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wall")
+
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0 -Wall -Wextra")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -g -Wall -Wextra")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall")
+
+
 #######################################################################
 
 # Perform basic checks
 
-# Check if we use kernel version 2.6.32 or newer
+# Check if we use kernel version 2.6.32 or newer.
+# This macro also set KERNEL_VERSION.
 check_kernel_version(2 6 32)
 
 # Check if kernel modules can be built on this system
@@ -255,7 +265,7 @@ else (KEDR_GEN)
 # It may happen that 'mkdir' will finish before 'rm' will begin removing
 # "some_dir". This is probably not what you expect here.
 
-#Do not destroy previously installed generator
+#Do not destroy the previously installed generator
 #execute_process (
 #    COMMAND rm -rf "${KEDR_GEN_TEMP_BUILD}" 
 #    COMMAND rm -rf "${KEDR_GEN_INSTALL_PREFIX}" 
@@ -442,6 +452,7 @@ kedr_test_add_subdirectory(tests)
 #######################################################################
 
 configure_file("${CMAKE_SOURCE_DIR}/config.h.in" "${CMAKE_BINARY_DIR}/config.h")
+
 message(STATUS "Creating config.h - done")
 #######################################################################
 
