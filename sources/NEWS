@@ -1,3 +1,12 @@
+2013-02-26
+KEDR 0.4.1 released
+
+The most significant enhancement in this version is the support for kernel
+versions 3.7 and 3.8. Several bug fixes have also been made.
+
+See ChangeLog for detailed information about the changes in this version.
+-----------------------------------------------------------
+
 2012-09-27
 KEDR 0.4 released
 

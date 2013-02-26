@@ -1,4 +1,18 @@
 ---------------------------------------------------------------------------
+KEDR 0.4.1
+---------------------------------------------------------------------------
+    * KEDR now supports kernel versions 3.7 and 3.8 too.
+
+    * Added support for processing of 3 more posix_acl_* functions.
+
+    * Provided a way to pass arbitrary data from pre- to post handlers. This
+may come in handy if the data a post handler needs are easier to obtain in
+the pre handler rather than in the post handler itself. Handling of
+posix_acl_create() in LeakCheck is one of the examples.
+
+    * Several bug fixes have also been made.
+
+---------------------------------------------------------------------------
 KEDR 0.4
 ---------------------------------------------------------------------------
 
