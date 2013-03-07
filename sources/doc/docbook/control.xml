@@ -234,7 +234,7 @@ kedr start module1
 ]]></programlisting>
 
     <para>
-This command will start KEDR with the default payloads for call monitoring. When module named <literal>module1</literal> will be loaded, it will be processed by KEDR.
+This command will start KEDR with the default payloads for leak checking. When module named <literal>module1</literal> will be loaded, it will be processed by KEDR.
     </para>
 
 <programlisting><![CDATA[

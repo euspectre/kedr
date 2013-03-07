@@ -10,7 +10,7 @@ Each data collection and analysis tool based on KEDR has at least the following 
 </para>
 
 <itemizedlist>
-<listitem><para><emphasis>KEDR core</emphasis> - the core components provided by the framework, their main responsibility it to instrument the target module when it is loaded. The core also provides utilities to simplify commonly used operations, for example, output of the collected data, etc.</para></listitem>
+<listitem><para><emphasis>KEDR core</emphasis> - the core components provided by the framework, their main responsibility is to instrument the target module when it is loaded. The core also provides utilities to simplify commonly used operations, for example, output of the collected data, etc.</para></listitem>
 
 <listitem><para>One or more <emphasis>tool plugins</emphasis> (<quote>payload modules</quote>) that actually collect and, if necessary, analyze the data about the target module.</para></listitem>
 </itemizedlist>
