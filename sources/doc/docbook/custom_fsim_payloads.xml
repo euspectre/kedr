@@ -90,7 +90,7 @@ Each group should contain definitions for the following parameters:
         <listitem>(multi-valued) names of the parameters of the target function, starting with the first one. If the function has no parameters, shouldn't be assigned at all. Parameters of the target function will be accessible via these names in the code.</listitem>
     </varlistentry>
     <varlistentry><term>fpoint.fault_code</term>
-        <listitem>code (may be multiline) which should be executed instead the call to the target function to simulate failure of the latter. Usually, this code simply sets <varname>ret_val</varname> variable to a value indicating that a failure has occured. For the caller of the target function, if will look like the target function has returned this value.</listitem>
+        <listitem>code (may be multiline) which should be executed instead the call to the target function to simulate failure of the latter. Usually, this code simply sets <varname>ret_val</varname> variable to a value indicating that a failure has occured. For the caller of the target function, it will look like the target function has returned this value.</listitem>
     </varlistentry>
     <varlistentry><term>fpoint.param.name</term>
         <listitem>(multi-valued) names of the variables which values will be passed to the indicator function and may be used to specify the scenario of fault simulation in it. The order of these variables is important, because they will be passed sequentially to the indicator function. Usually, only the parameters of the target function are passed to the indicator.</listitem>
