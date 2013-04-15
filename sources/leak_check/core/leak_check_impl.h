@@ -104,6 +104,9 @@ struct kedr_lc_resource_info
 	 * rather than allocated. */
 	const void *addr;
 	size_t size;
+
+	/* Number of events with the similar call stack. */
+	unsigned int num_similar;
 	
 	/* Call stack */
 	unsigned int num_entries;
@@ -125,5 +128,14 @@ struct kedr_lc_bad_free_group
 
 #define KEDR_LC_MSG_PREFIX "[leak_check] "
 extern unsigned int syslog_output;
+
+/* "Flush" the current results of memory leak detection to make them
+ * available in the files in debugfs. Note that the memory that was
+ * allocated but not freed before this function was called will be reported
+ * as leaked even if the target would free it later.
+ * 
+ * The function cannot be called from atomic context. */
+void
+kedr_lc_flush_results(struct kedr_leak_check *lc);
 
 #endif /* LEAK_CHECK_IMPL_H_1548_INCLUDED */

@@ -87,19 +87,18 @@ static DEFINE_SPINLOCK(lc_objects_lock);
 
 /* Number of LeakCheck objects that are currently live. Used, for example,
  * to provide unique names for the workqueues used by these objects. 
- * Should be accessed only with 'load_mutex' locked. */
+ * Should be accessed only with 'lc_mutex' locked. */
 static unsigned int obj_count = 0;
 
 /* A mutex to serialize the execution of the target load handler here. KEDR
  * core may have serialized that already but it is not guaranteed and is 
  * subject to change. 
  * 
- * Specifically, 'load_mutex' serializes the creation of LeakCheck objects.
+ * Specifically, 'lc_mutex' serializes the creation of LeakCheck objects.
  * Note that if a function also accesses the table of the objects, it should
- * lock 'lc_objects_lock' even if 'load_mutex' is already taken. */
-static DEFINE_MUTEX(load_mutex);
-
-/* A mutex to guarantee that the results for a given target module are 
+ * lock 'lc_objects_lock' even if 'lc_mutex' is already taken.
+ *
+ * This mutex also guarantees that the results for a given target module are 
  * output "atomically" w.r.t. the results for other target modules. This is
  * especially useful for the output to the system log. Note that other 
  * kernel messages may still go in between the lines output to the system
@@ -107,8 +106,8 @@ static DEFINE_MUTEX(load_mutex);
  * different targets do not get intermingled. 
  *
  * In particular, klc_print_*() functions must be called with this mutex 
- * locked.*/
-static DEFINE_MUTEX(output_mutex);
+ * locked. */
+static DEFINE_MUTEX(lc_mutex);
 
 /* Maximum length of the name to be given to a workqueue created by 
  * LeakCheck. */
@@ -119,7 +118,7 @@ static const char *wq_name_fmt = "kedr_lc%u";
 /* ====================================================================== */
 
 /* This structure represents a request to handle allocation or 
- * deallocation event. */
+ * deallocation event or a request to flush the current results. */
 struct klc_work {
 	struct work_struct work;
 	struct kedr_leak_check *lc;
@@ -143,9 +142,90 @@ struct klc_work {
 static DEFINE_SPINLOCK(top_half_lock);
 /* ====================================================================== */
 
+/* Creates and initializes kedr_lc_resource_info structure and returns
+ * a pointer to it (or NULL if there is not enough memory).
+ *
+ * 'addr' is the pointer to the resource that has been allocated or freed,
+ * 'size' is the size of that resource (should be -1 in case of free).
+ * 'caller_address' is the return address of the call that performs
+ * allocation or deallocation of the resource.
+ *
+ * This function can be used in atomic context too. */
+static struct kedr_lc_resource_info *
+resource_info_create(const void *addr, size_t size,
+	const void *caller_address)
+{
+	struct kedr_lc_resource_info *info;
+	info = kzalloc(sizeof(*info), GFP_ATOMIC);
+	if (info != NULL) {
+		info->addr = addr;
+		info->size  = size;
+		kedr_save_stack_trace(&(info->stack_entries[0]),
+			stack_depth,
+			&info->num_entries,
+			(unsigned long)caller_address);
+		INIT_HLIST_NODE(&info->hlist);
+	}
+	return info;
+}
+
+/* Destroys kedr_lc_resource_info instance pointed to by 'info'.
+ * No-op if 'info' is NULL.
+ * [NB] Before destroying the structure, make sure it is not on the work
+ * queue and you have removed it from the table if it was there. */
+static void
+resource_info_destroy(struct kedr_lc_resource_info *info)
+{
+	kfree(info);
+}
+/* ====================================================================== */
+
+/* klc_clear_* can be called only when noone can post work items to lc->wq
+ * to avoid messing with the alloc/dealloc tables. */
+static void
+klc_clear_allocs(struct kedr_leak_check *lc)
+{
+	struct kedr_lc_resource_info *ri = NULL;
+	struct hlist_head *head = NULL;
+	unsigned int i;
+
+	for (i = 0; i < KEDR_RI_TABLE_SIZE; ++i) {
+		head = &lc->allocs[i];
+		while (!hlist_empty(head)) {
+			ri = hlist_entry(head->first,
+				struct kedr_lc_resource_info, hlist);
+			hlist_del(&ri->hlist);
+			resource_info_destroy(ri);
+		}
+	}
+}
+
+static void
+klc_clear_deallocs(struct kedr_leak_check *lc)
+{
+	struct kedr_lc_resource_info *ri = NULL;
+	unsigned int i;
+
+	if (lc->total_bad_frees == 0) {
+		BUG_ON(lc->nr_bad_free_groups != 0);
+		return;
+	}
+	BUG_ON(lc->nr_bad_free_groups == 0);
+
+	/* No need to protect the storage because this function is called
+	 * from on_target_unload handler when no replacement function can
+	 * interfere and the workqueue has been flushed. */
+	for (i = 0; i < lc->nr_bad_free_groups; ++i) {
+		resource_info_destroy(ri);
+		lc->bad_free_groups[i].ri = NULL;
+	}
+	lc->nr_bad_free_groups = 0;
+}
+/* ====================================================================== */
+
 /* Creates a LeakCheck object for the specified target module. NULL is 
  * returned in case of failure. 
- * Should be called with 'load_mutex' locked but not 'lc_objects_lock' 
+ * Should be called with 'lc_mutex' locked but not 'lc_objects_lock'
  * because the function may sleep.
  * [NB] This function does not access the hash table of LeakCheck objects.*/
 static struct kedr_leak_check *
@@ -174,7 +254,7 @@ lc_object_create(struct module *target)
 		goto out;
 	}
 	
-	lc->output = kedr_lc_output_create(target);
+	lc->output = kedr_lc_output_create(target, lc);
 	BUG_ON(lc->output == NULL);
 	if (IS_ERR(lc->output)) {
 		pr_warning(KEDR_LC_MSG_PREFIX
@@ -237,9 +317,12 @@ lc_object_destroy(struct kedr_leak_check *lc)
 		flush_workqueue(lc->wq); /* just in case  */
 		destroy_workqueue(lc->wq);
 	}
+
+	klc_clear_allocs(lc);
+	klc_clear_deallocs(lc);
 	
-	/* The tables of resource leaks and bad frees should be already 
-	 * empty. Warn if they are not. */
+	/* The table of resource leaks should be already empty.
+	 * Warn if it is not. */
 	for (i = 0; i < KEDR_RI_TABLE_SIZE; ++i)
 		WARN_ON_ONCE(!hlist_empty(&lc->allocs[i]));
 	
@@ -256,15 +339,11 @@ lc_object_destroy(struct kedr_leak_check *lc)
 static void
 lc_object_reset(struct kedr_leak_check *lc)
 {
-	unsigned int i;
-	
-	/* The tables of resource leaks and bad frees should be already 
-	 * empty. Warn if they are not. */
-	for (i = 0; i < KEDR_RI_TABLE_SIZE; ++i)
-		WARN_ON_ONCE(!hlist_empty(&lc->allocs[i]));
-	
 	kedr_lc_output_clear(lc->output);
 	kedr_lc_print_target_info(lc->output, lc->target);
+
+	klc_clear_allocs(lc);
+	klc_clear_deallocs(lc);
 	
 	lc->nr_bad_free_groups = 0;
 	lc->total_allocs = 0;
@@ -381,44 +460,6 @@ delete_all_lc_objects(void)
 }
 /* ====================================================================== */
 
-/* Creates and initializes kedr_lc_resource_info structure and returns 
- * a pointer to it (or NULL if there is not enough memory). 
- * 
- * 'addr' is the pointer to the resource that has been allocated or freed, 
- * 'size' is the size of that resource (should be -1 in case of free). 
- * 'caller_address' is the return address of the call that performs 
- * allocation or deallocation of the resource.
- *
- * This function can be used in atomic context too. */
-static struct kedr_lc_resource_info *
-resource_info_create(const void *addr, size_t size, 
-	const void *caller_address)
-{
-	struct kedr_lc_resource_info *info;
-	info = kzalloc(sizeof(*info), GFP_ATOMIC);
-	if (info != NULL) {
-		info->addr = addr;
-		info->size  = size;
-		kedr_save_stack_trace(&(info->stack_entries[0]),
-			stack_depth,
-			&info->num_entries,
-			(unsigned long)caller_address);
-		INIT_HLIST_NODE(&info->hlist);
-	}
-	return info;
-}
-
-/* Destroys kedr_lc_resource_info instance pointed to by 'info'.
- * No-op if 'info' is NULL.
- * [NB] Before destroying the structure, make sure it is not on the work
- * queue and you have removed it from the table if it was there. */
-static void
-resource_info_destroy(struct kedr_lc_resource_info *info)
-{
-	kfree(info);
-}
-/* ====================================================================== */
-
 /* Non-zero for the addresses that may belong to the user space, 
  * 0 otherwise. If the address is valid and this function returns non-zero,
  * it is an address in the user space. */
@@ -511,31 +552,29 @@ ri_find_and_remove(const void *addr, struct hlist_head *ri_table)
 }
 
 /* Finds the items in the given table (starting from the bucket #start_index
- * and going until its end) that have the same call stack as 'ri', removes 
- * them from the table and destroys them. Returns the number of such items. 
- * 
- * [NB] 'ri' must not be in the table. */
-static u64
-ri_remove_similar(const struct kedr_lc_resource_info *ri, 
+ * and going until its end) that have the same call stack as 'ri' and marks
+ * them as such (sets their 'num_similar' fields to -1). Returns the number
+ * of such items in 'ri->num_similar'. */
+static void
+ri_count_similar(struct kedr_lc_resource_info *ri,
 	struct hlist_head *ri_table, unsigned int start_index)
 {
 	unsigned int i;
 	struct kedr_lc_resource_info *info = NULL;
 	struct hlist_node *node = NULL;
 	struct hlist_node *tmp = NULL;
-	u64 n = 0;
+
+	ri->num_similar = 0;
 	
 	for (i = start_index; i < KEDR_RI_TABLE_SIZE; ++i) {
 		hlist_for_each_entry_safe(info, node, tmp, &ri_table[i], 
 			hlist) {
-			if (call_stacks_equal(ri, info)) {
-				hlist_del(&info->hlist);
-				resource_info_destroy(info);
-				++n;
+			if (ri != info && call_stacks_equal(ri, info)) {
+				++ri->num_similar;
+				info->num_similar = (unsigned int)(-1);
 			}
 		}
 	}
-	return n;
 }
 
 /* This function is usually called from deallocation handlers.
@@ -565,36 +604,46 @@ find_and_remove_alloc(const void *addr, struct kedr_leak_check *lc)
 }
 /* ====================================================================== */
 
-/* [NB] Call these functions only after flushing the workqueue to make sure 
- * all pending operations have completed. */
+/* If klc_flush_* functions are called from the "target unload" handler 
+ * or from a work item in lc->wq, no locks are needed to protect
+ * the accesses to the tables of allocation and deallocation information.
+ * This is because the wq is ordered and it is flushed in the "target
+ * unload" handler before the functions are called. */
+
 static void
 klc_flush_allocs(struct kedr_leak_check *lc)
 {
 	struct kedr_lc_resource_info *ri = NULL;
+	struct hlist_node *node = NULL;
+	struct hlist_node *tmp = NULL;
 	struct hlist_head *head = NULL;
 	unsigned int i;
 	
 	if (syslog_output != 0 && lc->total_leaks != 0)
 		pr_warning(KEDR_LC_MSG_PREFIX 
 			"LeakCheck has detected possible memory leaks: \n");
-			
-	/* No need to protect the storage because this function is called
-	 * from on_target_unload handler when no replacement function can
-	 * interfere and the workqueue has been flushed. */
+
 	for (i = 0; i < KEDR_RI_TABLE_SIZE; ++i) {
 		head = &lc->allocs[i];
-		while (!hlist_empty(head)) {
-	/* We output only the most recent allocation with a given call stack 
+		hlist_for_each_entry_safe(ri, node, tmp, head, hlist) {
+			 ri->num_similar = 0;
+		}
+	} 
+		
+	for (i = 0; i < KEDR_RI_TABLE_SIZE; ++i) {
+		head = &lc->allocs[i];
+		hlist_for_each_entry_safe(ri, node, tmp, head, hlist) {
+			if (ri->num_similar == (unsigned int)(-1))
+				/* This entry is similar to some entry
+				 * processed before. Nothing more to do. */
+				continue;
+
+	/* We output only the most recent allocation with a given call stack
 	 * to reduce the needed size of the output buffer and to make the
 	 * report more readable. */
-			u64 similar;
-			ri = hlist_entry(head->first, 
-				struct kedr_lc_resource_info, hlist);
-			hlist_del(&ri->hlist);
-
-			similar = ri_remove_similar(ri, &lc->allocs[0], i);
-			kedr_lc_print_alloc_info(lc->output, ri, similar);
-			resource_info_destroy(ri);
+			ri_count_similar(ri, &lc->allocs[0], i);
+			kedr_lc_print_alloc_info(lc->output, ri,
+						 (u64)ri->num_similar);
 		}
 	} 
 }
@@ -607,32 +656,23 @@ klc_flush_deallocs(struct kedr_leak_check *lc)
 	u64 stored = 0;
 	
 	if (lc->total_bad_frees == 0) {
-		BUG_ON(lc->nr_bad_free_groups != 0);
 		return;
 	}
-	
-	BUG_ON(lc->nr_bad_free_groups == 0);
 		
 	if (syslog_output != 0) {
 		pr_warning(KEDR_LC_MSG_PREFIX 
 "LeakCheck has detected deallocations without matching allocations.\n");
 	}
 	
-	/* No need to protect the storage because this function is called
-	 * from on_target_unload handler when no replacement function can
-	 * interfere and the workqueue has been flushed. */
 	for (i = 0; i < lc->nr_bad_free_groups; ++i) {
 		u64 similar = (u64)(lc->bad_free_groups[i].nr_items - 1);
 		ri = lc->bad_free_groups[i].ri;
 		stored += lc->bad_free_groups[i].nr_items;
 		
 		kedr_lc_print_dealloc_info(lc->output, ri, similar);
-		resource_info_destroy(ri);
-		lc->bad_free_groups[i].ri = NULL;
 	}
 	
 	kedr_lc_print_dealloc_note(lc->output, stored, lc->total_bad_frees);	
-	lc->nr_bad_free_groups = 0;
 }
 
 static void
@@ -640,21 +680,67 @@ klc_flush_stats(struct kedr_leak_check *lc)
 {
 	kedr_lc_print_totals(lc->output, lc->total_allocs, lc->total_leaks,
 		lc->total_bad_frees);
+	/* If needed, the counters will be reset by lc_object_reset(). */
 	
 	if (syslog_output != 0)
 		pr_warning(KEDR_LC_MSG_PREFIX
 			"======== end of LeakCheck report ========\n");
-	
-	/* No need to protect these counters here as this function is called
-	 * from on_target_unload handler when no replacement function can
-	 * interfere and the workqueue has been flushed. */
-	lc->total_allocs = 0;
-	lc->total_leaks = 0;
-	lc->total_bad_frees = 0;
+}
+
+static void
+work_func_flush(struct work_struct *work)
+{
+	struct klc_work *klc_work =
+	    container_of(work, struct klc_work, work);
+	struct kedr_leak_check *lc = klc_work->lc;
+
+	kedr_lc_output_clear(lc->output);
+
+	klc_flush_allocs(lc);
+	klc_flush_deallocs(lc);
+	klc_flush_stats(lc);
+
+	kfree(klc_work);
+}
+
+/* [NB] May be called in atomic context. */
+static void
+klc_do_flush(struct kedr_leak_check *lc)
+{
+	struct klc_work *klc_work;
+
+	klc_work = kzalloc(sizeof(*klc_work), GFP_ATOMIC);
+	if (klc_work == NULL) {
+		pr_warning(KEDR_LC_MSG_PREFIX "klc_do_flush: "
+	"not enough memory to create 'struct klc_work'\n");
+		return;
+	}
+
+	klc_work->lc = lc;
+	INIT_WORK(&klc_work->work, work_func_flush);
+	queue_work(lc->wq, &klc_work->work);
+
+}
+
+void
+kedr_lc_flush_results(struct kedr_leak_check *lc)
+{
+	if (mutex_lock_killable(&lc_mutex) != 0) {
+		pr_warning(KEDR_LC_MSG_PREFIX
+		"kedr_lc_flush_results(): failed to lock mutex\n");
+		return;
+	}
+
+	klc_do_flush(lc);
+
+	/* Make sure all pending requests have been processed before
+	 * going on. */
+	flush_workqueue(lc->wq);
+	mutex_unlock(&lc_mutex);
 }
 /* ====================================================================== */
 
-/* The table of the objects can be changed only here. 'load_mutex' ensures 
+/* The table of the objects can be changed only here. 'lc_mutex' ensures
  * that each time on_target_load() is called, it sees the table in a 
  * consistent state. 
  * 'lc_objects_lock' is used to protect the table. For example, some 
@@ -669,7 +755,7 @@ on_target_load(struct module *m)
 	
 	BUG_ON(m == NULL);
 	
-	if (mutex_lock_killable(&load_mutex) != 0) {
+	if (mutex_lock_killable(&lc_mutex) != 0) {
 		pr_warning(KEDR_LC_MSG_PREFIX
 		"on_target_load(): failed to lock mutex\n");
 		return;
@@ -698,7 +784,7 @@ on_target_load(struct module *m)
 	spin_unlock_irqrestore(&lc_objects_lock, irq_flags);
 
 out:	
-	mutex_unlock(&load_mutex);
+	mutex_unlock(&lc_mutex);
 	return;
 }
 
@@ -710,22 +796,19 @@ on_target_unload(struct module *m)
 		WARN_ON_ONCE(1);
 		return;
 	}
-	
-	flush_workqueue(lc->wq);
-	/* All pending requests to handle alloc/free events should have 
-	 * been processed by now. */
-	 
-	if (mutex_lock_killable(&output_mutex) != 0) {
+
+	if (mutex_lock_killable(&lc_mutex) != 0) {
 		pr_warning(KEDR_LC_MSG_PREFIX
 		"on_target_unload(): failed to lock mutex\n");
 		return;
 	}
-	
-	klc_flush_allocs(lc);
-	klc_flush_deallocs(lc);
-	klc_flush_stats(lc);
-	
-	mutex_unlock(&output_mutex);
+
+	klc_do_flush(lc);
+
+	/* Make sure all pending requests have been processed before
+	 * going on. */
+	flush_workqueue(lc->wq);
+	mutex_unlock(&lc_mutex);
 }
 
 /* [NB] Both the LeakCheck core and the payloads need to be notified when

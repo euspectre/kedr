@@ -114,6 +114,10 @@ struct kedr_lc_output
 	struct dentry *file_leaks;
 	struct dentry *file_bad_frees;
 	struct dentry *file_stats;
+
+	/* The file to force LeakCheck to flush the results obtained so far
+	 * to make them available in the output files. */
+	struct dentry *file_flush;
 	
 	/* Output buffers for each type of output resource. */
 	struct klc_output_buffer ob_leaks;
@@ -293,6 +297,36 @@ static const struct file_operations klc_fops = {
 	.release    = klc_release_common,
 	.read       = klc_read_common,
 };
+
+static int
+klc_flush_open(struct inode *inode, struct file *filp)
+{
+	filp->private_data = inode->i_private;
+	return nonseekable_open(inode, filp);
+}
+
+static int
+klc_flush_release(struct inode *inode, struct file *filp)
+{
+	filp->private_data = NULL;
+	return 0;
+}
+
+static ssize_t
+klc_flush_write(struct file *filp, const char __user *buf, size_t count,
+	loff_t *f_pos)
+{
+	kedr_lc_flush_results(filp->private_data);
+	*f_pos += count; /* as if we have written something */
+	return count;
+}
+
+static const struct file_operations klc_flush_ops = {
+	.owner = THIS_MODULE,
+	.open = klc_flush_open,
+	.release = klc_flush_release,
+	.write = klc_flush_write,
+};
 /* ====================================================================== */
 
 static void
@@ -311,6 +345,10 @@ klc_remove_debugfs_files(struct kedr_lc_output *output)
 		debugfs_remove(output->file_stats);
 		output->file_stats = NULL;
 	}
+	if (output->file_flush != NULL) {
+		debugfs_remove(output->file_flush);
+		output->file_flush = NULL;
+	}
 	if (output->dir_klc != NULL) {
 		debugfs_remove(output->dir_klc);
 		output->dir_klc = NULL;
@@ -321,7 +359,7 @@ klc_remove_debugfs_files(struct kedr_lc_output *output)
  * when creating the directory for these files ('dir_klc_main'). */
 static int
 klc_create_debugfs_files(struct kedr_lc_output *output, 
-	struct module *target)
+	struct module *target, struct kedr_leak_check *lc)
 {
 	BUG_ON(output == NULL || target == NULL);
 	BUG_ON(dir_klc_main == NULL);
@@ -344,6 +382,11 @@ klc_create_debugfs_files(struct kedr_lc_output *output,
 	output->file_stats = debugfs_create_file("info", 
 		S_IRUGO, output->dir_klc, &output->ob_other, &klc_fops);
 	if (output->file_stats == NULL) 
+		goto fail;
+
+	output->file_flush = debugfs_create_file("flush",
+		S_IWUSR | S_IWGRP, output->dir_klc, lc, &klc_flush_ops);
+	if (output->file_flush == NULL)
 		goto fail;
 
 	return 0;
@@ -386,7 +429,7 @@ kedr_lc_output_fini(void)
 /* ====================================================================== */
 
 struct kedr_lc_output *
-kedr_lc_output_create(struct module *target)
+kedr_lc_output_create(struct module *target, struct kedr_leak_check *lc)
 {
 	int ret = 0;
 	struct kedr_lc_output *output = NULL;
@@ -406,7 +449,7 @@ kedr_lc_output_create(struct module *target)
 	if (ret != 0) 
 		goto out_ob;
 
-	ret = klc_create_debugfs_files(output, target);
+	ret = klc_create_debugfs_files(output, target, lc);
 	if (ret != 0) 
 		goto out_ob;
 	
