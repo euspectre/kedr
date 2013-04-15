@@ -79,5 +79,13 @@ configure_file(
 kedr_test_add_script(leak_check.alloc_impl.01
 	test_alloc_impl.sh
 )	
-
 add_subdirectory(alloc_impl_module)
+
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/test_flush.sh.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/test_flush.sh"
+    @ONLY
+)
+kedr_test_add_script(leak_check.flush.01
+    test_flush.sh
+)
