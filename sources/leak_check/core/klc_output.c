@@ -589,6 +589,7 @@ kedr_lc_print_target_info(struct kedr_lc_output *output,
 		"klc_print_target_info(): "
 		"not enough memory to prepare a message of size %d\n",
 			len);
+		return;
 	}
 	snprintf(buf, len + 1, fmt, name, 
 		target->module_init, target->module_core);
@@ -647,6 +648,7 @@ kedr_lc_print_alloc_info(struct kedr_lc_output *output,
 		pr_warning(KEDR_LC_MSG_PREFIX "klc_print_alloc_info(): "
 		"not enough memory to prepare a message of size %d\n",
 			len);
+		return;
 	}
 	
 	if (info->size != 0) {
@@ -687,6 +689,7 @@ kedr_lc_print_dealloc_info(struct kedr_lc_output *output,
 		"klc_print_dealloc_info(): "
 		"not enough memory to prepare a message of size %d\n",
 			len);
+		return;
 	}
 	snprintf(buf, len + 1, fmt, info->addr);
 	klc_print_string(output, KLC_BAD_FREE, buf);
