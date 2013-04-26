@@ -178,7 +178,14 @@ resource_info_create(const void *addr, size_t size,
 		if (!kedr_in_interrupt()) {
 			struct task_struct *task = current;
 			info->task_pid = task_pid_nr(task);
-			get_task_comm(info->task_comm, task);
+
+			/* An implementation of get_task_comm() is used here
+			 * because get_task_comm() itself was not exported
+			 * until kernel version 3.0. */
+			task_lock(task);
+			strncpy(info->task_comm, task->comm,
+				sizeof(task->comm));
+			task_unlock(task);
 		} else {
 			info->task_pid = -1;
 		}
