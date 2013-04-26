@@ -6,6 +6,7 @@
 
 #include <linux/list.h>
 #include <linux/spinlock.h>
+#include <linux/sched.h>
 #include <kedr/util/stack_trace.h>
 
 struct module;
@@ -111,6 +112,12 @@ struct kedr_lc_resource_info
 	/* Call stack */
 	unsigned int num_entries;
 	unsigned long stack_entries[KEDR_MAX_FRAMES];
+	
+	/* Caller process info.
+	 * Note that if an event happened in an interrupt handler, task_pid
+	 * will be -1 and the contents of task_comm[] will be undefined. */
+	char task_comm[TASK_COMM_LEN];
+	pid_t task_pid;
 };
 
 /* This structure is used to store the information about the bad 

@@ -26,6 +26,7 @@
 #include <linux/string.h>
 #include <linux/slab.h>
 #include <linux/sched.h>
+#include <linux/hardirq.h>
 
 #include <kedr/core/kedr.h>
 #include <kedr/leak_check/leak_check.h>
@@ -117,6 +118,22 @@ static DEFINE_MUTEX(lc_mutex);
 static const char *wq_name_fmt = "kedr_lc%u";
 /* ====================================================================== */
 
+/* Non-zero if we are in IRQ (harqirq or softirq) context, 0 otherwise.
+ * Equivalent to (in_irq() || in_serving_softirq()).
+ * Unlike in_interrupt(), the function returns 0 in process context with BH
+ * disabled (with spin_lock_bh(), etc.)
+ * NMIs are not taken into account as the kernel modules usually do not
+ * meddle with them.
+ *
+ * [NB] Some kernels prior to 2.6.37 may not define in_serving_softirq() but
+ * everything needed to define it should be available. */
+static inline unsigned long
+kedr_in_interrupt(void)
+{
+	return in_irq() || (softirq_count() & SOFTIRQ_OFFSET);
+}
+/* ====================================================================== */
+
 /* This structure represents a request to handle allocation or 
  * deallocation event or a request to flush the current results. */
 struct klc_work {
@@ -158,6 +175,14 @@ resource_info_create(const void *addr, size_t size,
 	struct kedr_lc_resource_info *info;
 	info = kzalloc(sizeof(*info), GFP_ATOMIC);
 	if (info != NULL) {
+		if (!kedr_in_interrupt()) {
+			struct task_struct *task = current;
+			info->task_pid = task_pid_nr(task);
+			get_task_comm(info->task_comm, task);
+		} else {
+			info->task_pid = -1;
+		}
+		
 		info->addr = addr;
 		info->size  = size;
 		kedr_save_stack_trace(&(info->stack_entries[0]),

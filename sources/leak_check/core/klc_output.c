@@ -664,6 +664,37 @@ klc_print_u64(struct kedr_lc_output *output,
 	kfree(buf);
 }
 
+static void
+klc_print_process_info(struct kedr_lc_output *output,
+	struct kedr_lc_resource_info *info,
+	enum klc_output_type output_type)
+{
+	static const char* fmt_process_info =
+		"Process: %s (PID: %d)";
+
+	char *buf = NULL;
+	int len;
+
+	if (info->task_pid == -1) {
+		klc_print_string(output, output_type, "<IRQ>");
+		return;
+	}
+	
+	len = snprintf(NULL, 0, fmt_process_info, info->task_comm,
+		       (int)info->task_pid);
+	buf = kmalloc(len + 1, GFP_KERNEL);
+	if (buf == NULL) {
+		pr_warning(KEDR_LC_MSG_PREFIX "klc_print_process_info(): "
+		"not enough memory to prepare a message of size %d\n",
+			len);
+		return;
+	}
+	snprintf(buf, len + 1, fmt_process_info, info->task_comm,
+		(int)info->task_pid);
+	klc_print_string(output, output_type, buf);
+	kfree(buf);
+}
+
 void 
 kedr_lc_print_alloc_info(struct kedr_lc_output *output, 
 	struct kedr_lc_resource_info *info, u64 similar_allocs)
@@ -678,6 +709,8 @@ kedr_lc_print_alloc_info(struct kedr_lc_output *output,
 	int len;
 	
 	BUG_ON(info == NULL);
+	
+	klc_print_process_info(output, info, KLC_UNFREED_ALLOC);
 	
 	if (info->size != 0) {
 		len = snprintf(NULL, 0, fmt_common, info->addr, 
@@ -724,6 +757,8 @@ kedr_lc_print_dealloc_info(struct kedr_lc_output *output,
 	int len;
  
 	BUG_ON(info == NULL);
+	
+	klc_print_process_info(output, info, KLC_BAD_FREE);
 	
 	len = snprintf(NULL, 0, fmt, info->addr);
 	buf = kmalloc(len + 1, GFP_KERNEL);
