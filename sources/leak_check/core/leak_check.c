@@ -180,8 +180,11 @@ resource_info_destroy(struct kedr_lc_resource_info *info)
 }
 /* ====================================================================== */
 
-/* klc_clear_* can be called only when noone can post work items to lc->wq
- * to avoid messing with the alloc/dealloc tables. */
+/* klc_clear_* can be called only in the following contexts to avoid messing
+ * up the alloc/dealloc tables:
+ * - when noone can post work items to lc->wq or
+ * - from a work function of lc->wq (because the wq is single-threaded and
+ *   ordered). */
 static void
 klc_clear_allocs(struct kedr_leak_check *lc)
 {
@@ -213,8 +216,8 @@ klc_clear_deallocs(struct kedr_leak_check *lc)
 	BUG_ON(lc->nr_bad_free_groups == 0);
 
 	/* No need to protect the storage because this function is called
-	 * from on_target_unload handler when no replacement function can
-	 * interfere and the workqueue has been flushed. */
+	 * when no other code (replacement functions, etc.) can interfere.
+	 */
 	for (i = 0; i < lc->nr_bad_free_groups; ++i) {
 		resource_info_destroy(ri);
 		lc->bad_free_groups[i].ri = NULL;
@@ -340,7 +343,8 @@ static void
 lc_object_reset(struct kedr_leak_check *lc)
 {
 	kedr_lc_output_clear(lc->output);
-	kedr_lc_print_target_info(lc->output, lc->target);
+	if (lc->target != NULL)
+		kedr_lc_print_target_info(lc->output, lc->target);
 
 	klc_clear_allocs(lc);
 	klc_clear_deallocs(lc);
@@ -695,6 +699,8 @@ work_func_flush(struct work_struct *work)
 	struct kedr_leak_check *lc = klc_work->lc;
 
 	kedr_lc_output_clear(lc->output);
+	if (lc->target != NULL)
+		kedr_lc_print_target_info(lc->output, lc->target);
 
 	klc_flush_allocs(lc);
 	klc_flush_deallocs(lc);
@@ -808,6 +814,8 @@ on_target_unload(struct module *m)
 	/* Make sure all pending requests have been processed before
 	 * going on. */
 	flush_workqueue(lc->wq);
+
+	lc->target = NULL;
 	mutex_unlock(&lc_mutex);
 }
 
