@@ -40,6 +40,10 @@ struct kedr_leak_check
 	
 	/* The target module. */
 	struct module *target;
+
+	/* Addresses of "init" and "core" areas of the target. */
+	void *init;
+	void *core;
 	
 	/* The name of the target. It is stored here to enable lookup of the 
 	 * LeakCheck objects after the target us unloaded and then loaded

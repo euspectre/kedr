@@ -615,7 +615,7 @@ klc_print_stack_trace(struct kedr_lc_output *output,
 
 void
 kedr_lc_print_target_info(struct kedr_lc_output *output, 
-	struct module *target)
+	struct module *target, void *init_area, void *core_area)
 {
 	static const char* fmt = 
 "Target module: \"%s\", init area at %p, core area at %p";
@@ -624,8 +624,7 @@ kedr_lc_print_target_info(struct kedr_lc_output *output,
 	const char *name;
 	
 	name = module_name(target);
-	len = snprintf(NULL, 0, fmt, name, 
-		target->module_init, target->module_core);
+	len = snprintf(NULL, 0, fmt, name, init_area, core_area);
 	buf = kmalloc(len + 1, GFP_KERNEL);
 	if (buf == NULL) {
 		pr_warning(KEDR_LC_MSG_PREFIX 
@@ -634,8 +633,7 @@ kedr_lc_print_target_info(struct kedr_lc_output *output,
 			len);
 		return;
 	}
-	snprintf(buf, len + 1, fmt, name, 
-		target->module_init, target->module_core);
+	snprintf(buf, len + 1, fmt, name, init_area, core_area);
 	klc_print_string(output, KLC_OTHER, buf);
 	kfree(buf);
 }

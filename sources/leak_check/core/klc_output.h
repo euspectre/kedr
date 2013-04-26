@@ -61,7 +61,7 @@ kedr_lc_output_clear(struct kedr_lc_output *output);
  * This function cannot be used in atomic context. */
 void
 kedr_lc_print_target_info(struct kedr_lc_output *output, 
-	struct module *target);
+	struct module *target, void *init_area, void *core_area);
 
 /* Helpers to output kedr_lc_resource_info structures corresponding to 
  * suspicious resource allocation and deallocation events.

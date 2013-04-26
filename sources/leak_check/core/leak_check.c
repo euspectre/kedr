@@ -274,6 +274,8 @@ lc_object_create(struct module *target)
 		
 	INIT_HLIST_NODE(&lc->hlist);
 	lc->target = target;
+	lc->init = target->module_init;
+	lc->core = target->module_core;
 	
 	lc->name = kstrdup(module_name(target), GFP_KERNEL);
 	if (lc->name == NULL) {
@@ -314,7 +316,7 @@ lc_object_create(struct module *target)
 		goto out_free_bad_frees;
 	}
 	
-	kedr_lc_print_target_info(lc->output, target);
+	kedr_lc_print_target_info(lc->output, target, lc->init, lc->core);
 
 	/* [NB] The totals are already zero due to kzalloc(). */
 	return lc;
@@ -369,7 +371,8 @@ lc_object_reset(struct kedr_leak_check *lc)
 {
 	kedr_lc_output_clear(lc->output);
 	if (lc->target != NULL)
-		kedr_lc_print_target_info(lc->output, lc->target);
+		kedr_lc_print_target_info(lc->output, lc->target, lc->init,
+					  lc->core);
 
 	klc_clear_allocs(lc);
 	klc_clear_deallocs(lc);
@@ -455,6 +458,8 @@ lc_object_for_target(struct module *target)
 			
 			lc = obj;
 			lc->target = target;
+			lc->init = target->module_init;
+			lc->core = target->module_core;
 			if (i != new_bucket) {
 				hlist_del(&lc->hlist);
 				hlist_add_head(&lc->hlist, 
@@ -725,7 +730,8 @@ work_func_flush(struct work_struct *work)
 
 	kedr_lc_output_clear(lc->output);
 	if (lc->target != NULL)
-		kedr_lc_print_target_info(lc->output, lc->target);
+		kedr_lc_print_target_info(lc->output, lc->target, lc->init,
+					  lc->core);
 
 	klc_flush_allocs(lc);
 	klc_flush_deallocs(lc);
