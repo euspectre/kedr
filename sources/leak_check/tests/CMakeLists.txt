@@ -89,3 +89,12 @@ configure_file(
 kedr_test_add_script(leak_check.flush.01
     test_flush.sh
 )
+
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/test_clear.sh.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/test_clear.sh"
+    @ONLY
+)
+kedr_test_add_script(leak_check.clear.01
+    test_clear.sh
+)

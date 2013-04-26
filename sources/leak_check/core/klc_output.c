@@ -118,6 +118,10 @@ struct kedr_lc_output
 	/* The file to force LeakCheck to flush the results obtained so far
 	 * to make them available in the output files. */
 	struct dentry *file_flush;
+
+	/* The file to force LeakCheck to clear the information about memory
+	 * allocations and deallocations collected so far. */
+	struct dentry *file_clear;
 	
 	/* Output buffers for each type of output resource. */
 	struct klc_output_buffer ob_leaks;
@@ -327,6 +331,36 @@ static const struct file_operations klc_flush_ops = {
 	.release = klc_flush_release,
 	.write = klc_flush_write,
 };
+
+static int
+klc_clear_open(struct inode *inode, struct file *filp)
+{
+	filp->private_data = inode->i_private;
+	return nonseekable_open(inode, filp);
+}
+
+static int
+klc_clear_release(struct inode *inode, struct file *filp)
+{
+	filp->private_data = NULL;
+	return 0;
+}
+
+static ssize_t
+klc_clear_write(struct file *filp, const char __user *buf, size_t count,
+	loff_t *f_pos)
+{
+	kedr_lc_clear(filp->private_data);
+	*f_pos += count; /* as if we have written something */
+	return count;
+}
+
+static const struct file_operations klc_clear_ops = {
+	.owner = THIS_MODULE,
+	.open = klc_clear_open,
+	.release = klc_clear_release,
+	.write = klc_clear_write,
+};
 /* ====================================================================== */
 
 static void
@@ -348,6 +382,10 @@ klc_remove_debugfs_files(struct kedr_lc_output *output)
 	if (output->file_flush != NULL) {
 		debugfs_remove(output->file_flush);
 		output->file_flush = NULL;
+	}
+	if (output->file_clear != NULL) {
+		debugfs_remove(output->file_clear);
+		output->file_clear = NULL;
 	}
 	if (output->dir_klc != NULL) {
 		debugfs_remove(output->dir_klc);
@@ -387,6 +425,11 @@ klc_create_debugfs_files(struct kedr_lc_output *output,
 	output->file_flush = debugfs_create_file("flush",
 		S_IWUSR | S_IWGRP, output->dir_klc, lc, &klc_flush_ops);
 	if (output->file_flush == NULL)
+		goto fail;
+
+	output->file_clear = debugfs_create_file("clear",
+		S_IWUSR | S_IWGRP, output->dir_klc, lc, &klc_clear_ops);
+	if (output->file_clear == NULL)
 		goto fail;
 
 	return 0;
@@ -575,7 +618,7 @@ kedr_lc_print_target_info(struct kedr_lc_output *output,
 	struct module *target)
 {
 	static const char* fmt = 
-"Target module: \"%s\", init area at 0x%p, core area at 0x%p";
+"Target module: \"%s\", init area at %p, core area at %p";
 	char *buf = NULL;
 	int len;
 	const char *name;

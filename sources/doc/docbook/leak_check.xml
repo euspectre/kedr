@@ -95,6 +95,20 @@ There should be the following files in <filename class="directory">kedr_leak_che
 	<itemizedlist>
 		<listitem><para>information about each free-like call without  matching allocation call: address of the memory block and a portion of the call stack of that deallocation call (the deallocations with the same call stack are grouped together)</para></listitem>
 	</itemizedlist></listitem>
+	<listitem>
+	<para>
+<filename>flush</filename>:
+	</para>
+	<itemizedlist>
+		<listitem><para>if the user writes anything to this file, the current information about memory allocations without deallocations and vise versa will be available immediately in the files listed above (as well as in the system log if that is enabled for LeakCheck); note that some of the memory blocks reported there may actually be freed later by the target module and therefore are not leaks</para></listitem>
+	</itemizedlist></listitem>
+	<listitem>
+	<para>
+<filename>clear</filename>:
+	</para>
+	<itemizedlist>
+		<listitem><para>if the user writes anything to this file, LeakCheck will <quot>forget</quot> the information about memory allocations and deallocations collected so far</para></listitem>
+	</itemizedlist></listitem>
 </itemizedlist>
 
 <para>

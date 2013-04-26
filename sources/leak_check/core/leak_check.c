@@ -746,6 +746,54 @@ kedr_lc_flush_results(struct kedr_leak_check *lc)
 }
 /* ====================================================================== */
 
+static void
+work_func_clear(struct work_struct *work)
+{
+	struct klc_work *klc_work =
+	    container_of(work, struct klc_work, work);
+	struct kedr_leak_check *lc = klc_work->lc;
+
+	lc_object_reset(lc);
+	kfree(klc_work);
+}
+
+/* [NB] May be called in atomic context. */
+static void
+klc_do_clear(struct kedr_leak_check *lc)
+{
+	struct klc_work *klc_work;
+
+	klc_work = kzalloc(sizeof(*klc_work), GFP_ATOMIC);
+	if (klc_work == NULL) {
+		pr_warning(KEDR_LC_MSG_PREFIX "klc_do_clear: "
+	"not enough memory to create 'struct klc_work'\n");
+		return;
+	}
+
+	klc_work->lc = lc;
+	INIT_WORK(&klc_work->work, work_func_clear);
+	queue_work(lc->wq, &klc_work->work);
+
+}
+
+void
+kedr_lc_clear(struct kedr_leak_check *lc)
+{
+	if (mutex_lock_killable(&lc_mutex) != 0) {
+		pr_warning(KEDR_LC_MSG_PREFIX
+		"kedr_lc_clear(): failed to lock mutex\n");
+		return;
+	}
+
+	klc_do_clear(lc);
+
+	/* Make sure all pending requests have been processed before
+	 * going on. */
+	flush_workqueue(lc->wq);
+	mutex_unlock(&lc_mutex);
+}
+/* ====================================================================== */
+
 /* The table of the objects can be changed only here. 'lc_mutex' ensures
  * that each time on_target_load() is called, it sees the table in a 
  * consistent state. 

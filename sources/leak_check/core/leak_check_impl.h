@@ -138,4 +138,12 @@ extern unsigned int syslog_output;
 void
 kedr_lc_flush_results(struct kedr_leak_check *lc);
 
+/* Clear the data about memory allocations and deallocations collected so
+ * far. This is done automatically when the target module is loaded but it
+ * may be necessary to do this explicitly in some cases.
+ * 
+ * The function cannot be called from atomic context. */
+void
+kedr_lc_clear(struct kedr_leak_check *lc);
+
 #endif /* LEAK_CHECK_IMPL_H_1548_INCLUDED */
