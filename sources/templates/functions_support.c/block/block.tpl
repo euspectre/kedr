@@ -3,7 +3,7 @@ static struct kedr_intermediate_info kedr_intermediate_info_<$function.name$>;
 static <$if returnType$><$returnType$><$else$>void<$endif$> kedr_intermediate_func_<$function.name$>(<$argumentSpec$>)
 {
 	struct kedr_function_call_info call_info;
-	<$if returnType$><$returnType$> result;
+	<$if returnType$><$returnType$> ret_val;
 	<$endif$>call_info.return_address = __builtin_return_address(0);
 	
 	// Call all pre-functions.
@@ -14,7 +14,10 @@ static <$if returnType$><$returnType$><$else$>void<$endif$> kedr_intermediate_fu
 			*pre_function != NULL;
 			++pre_function)
 		{
-			(*pre_function)(<$argumentList_comma$>&call_info);
+			<$if elipsis$>va_list args;
+			va_start(args, <$last_arg$>);
+			<$endif$>(*pre_function)(<$argumentList_comma$>&call_info);<$if elipsis$>
+			va_end(args);<$endif$>
 		}
 	}
 	// Call replacement function
@@ -23,12 +26,18 @@ static <$if returnType$><$returnType$><$else$>void<$endif$> kedr_intermediate_fu
 		<$if returnType$><$returnType$><$else$>void<$endif$> (*replace_function)(<$argumentSpec_comma$> struct kedr_function_call_info* call_info) =
 			(typeof(replace_function))kedr_intermediate_info_<$function.name$>.replace;
 		
-		<$if returnType$>result = <$endif$>replace_function(<$argumentList_comma$>&call_info);
+		<$if elipsis$>va_list args;
+		va_start(args, <$last_arg$>);
+		<$endif$><$if returnType$>ret_val = <$endif$>replace_function(<$argumentList_comma$>&call_info);<$if elipsis$>
+		va_end(args);<$endif$>
 	}
 	// .. or original one.
 	else
 	{
-		<$if returnType$>result = <$endif$><$function.name$>(<$argumentList$>);
+		<$if elipsis$>va_list args;
+		va_start(args, <$last_arg$>);
+		<$endif$><$originalCode$><$if elipsis$>
+		va_end(args);<$endif$>
 	}
 	// Call all post-functions.
 	if(kedr_intermediate_info_<$function.name$>.post != NULL)
@@ -38,9 +47,11 @@ static <$if returnType$><$returnType$><$else$>void<$endif$> kedr_intermediate_fu
 			*post_function != NULL;
 			++post_function)
 		{
-			(*post_function)(<$argumentList_comma$><$if returnType$>result, <$endif$>&call_info);
+			<$if elipsis$>va_list args;
+			va_start(args, <$last_arg$>);
+			<$endif$>(*post_function)(<$argumentList_comma$><$if returnType$>ret_val, <$endif$>&call_info);<$if elipsis$>
+			va_end(args);<$endif$>
 		}
-
 	}
-	<$if returnType$>return result;
+	<$if returnType$>return ret_val;
 <$endif$>}

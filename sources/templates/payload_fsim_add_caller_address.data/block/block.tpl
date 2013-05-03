@@ -7,6 +7,12 @@ function.name = <$function.name$>
 
 <$endif$><$if concat(arg.name)$><$argDefinition: join(\n)$>
 
+<$endif$><$if elipsis$>elipsis = <$elipsis$>
+
+last_arg = <$last_arg$>
+
+original_code = <$original_code$>
+
 <$endif$><$if fpoint.fault_code$>fpoint.fault_code =>>
 <$fpoint.fault_code$>
 <<

@@ -1,1 +1,1 @@
-<$if concat(arg.name)$><$arg : join(, )$><$else$>void<$endif$>
+<$if concat(arg.name)$><$arg : join(, )$><$if elipsis$>, ...<$endif$><$else$>void<$endif$>

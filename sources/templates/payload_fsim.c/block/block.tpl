@@ -12,8 +12,7 @@ static struct kedr_simulation_point* fsim_point_<$point_name$>;
 
 <$endif$><$endif$>// Replacement function itself
 static <$if returnType$><$returnType$><$else$>void<$endif$>
-kedr_repl_<$function.name$>(<$if concat(arg.name)$><$argument : join(, )$>,
-	<$endif$>struct kedr_function_call_info* call_info)
+kedr_repl_<$function.name$>(<$argumentSpec_comma$>struct kedr_function_call_info* call_info)
 {
 // Extract value of 'caller_address' from replacement function's parameters
 	void* caller_address = call_info->return_address;

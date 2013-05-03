@@ -74,6 +74,9 @@ kmodule_configure_kernel_functions(functions
 	"posix_acl_from_xattr"
 
 	OPTIONAL "match_strdup"
+	
+	OPTIONAL "kasprintf"
+	"kvasprintf"
 )
 
 # N.B. kfree_rcu() uses call_rcu/call_rcu_sched to call kfree() on an 
