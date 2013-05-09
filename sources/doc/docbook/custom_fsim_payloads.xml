@@ -184,6 +184,61 @@ Example of the group section for kstrdup() target function:
 Note the usage of <varname>len</varname> variable for fault simulation in the example above. This value is calculated in the prologue based on the target function parameter <varname>str</varname> and is then used as one of the parameters to be passed to the fault simulation indicator.
     </para>
     <para>
+If the target function takes variable number of arguments, then following parameters should be defined in the group:
+<variablelist>
+    <varlistentry><term>ellipsis</term>
+        <listitem>If function takes variable number of arguments, this parameter should be non-empty.</listitem>
+    </varlistentry>
+    <varlistentry><term>last_arg</term>
+        <listitem>If function takes variable number of arguments, this parameter should be set to the name of last named argument.</listitem>
+    </varlistentry>
+    <varlistentry><term>original_code</term>
+        <listitem>If function takes variable number of arguments, this parameter should be non-empty and contain code, which is equvalent to the function body and uses <varname>args</varname> variable of type <type>va_list</type> for iterate over variadic arguments. If function return value, it should be assigned to <varname>ret_val</varname> variable.</listitem>
+    </varlistentry>
+</variablelist>
+In that case code defined in <code>prologue</code>, <code>epilog</code> and  <code>fpoint.fault_code</code> parameters can use variable <varname>args</varname> of type <type>va_list</type> for iterate over variadic parameters of the target function. Note, that this variable is initialized only once and its instance used in <code>prologue</code> and <code>epilog</code> parameters, one used in <code>fpoint.fault_code</code> parameters and one used in <code>original_code</code> parameter are independent from each other.
+    </para>
+    <para>
+Example of the group section for kasprintf() target function:
+<programlisting>
+[group]
+    # Name and return type of the target function
+    function.name = kasprintf
+    returnType = char *
+
+    # Names and types of the arguments of the target function
+    arg.type = gfp_t
+    arg.name = flags
+
+    arg.type = const char *
+    arg.name = fmt
+
+    # Variable arguments indicator
+    ellipsis = true
+    
+    # Variable arguments-specific definitions
+    last_arg = fmt
+    original_code = ret_val = kvasprintf(flags, fmt, args);
+
+    # Calculate length of the allocated string
+    prologue = size_t len = vsnprintf(NULL, 0, fmt, args);
+
+    # Fault Simulation
+    fpoint.param.type = size_t
+    fpoint.param.name = len
+
+    fpoint.param.type = gfp_t
+    fpoint.param.name = flags
+
+    fpoint.fault_code = ret_val = NULL;
+
+# End of the group of definitions for kstrdup().
+</programlisting>
+    </para>
+    <para>
+Note the usage of kvasprintf() function in <code>original_code</code> parameter. This function is equivalent to the target functions but takes <type>va_list</type> argument as reference to variadic arguments. For compute length of resulted string in <code>prologue</code>, vsnprintf() function is used with zero length of the destination buffer.
+    </para>
+    <para>
 It is possible for different replacement functions to share the same indicator function (and, therefore, share the scenario). This is more than simply using the same indicator functions, this is using a single instance of an indicator. These functions may use some data private for each indicator instance. In case of sharing, the data will also be shared.
     </para>
     <para>

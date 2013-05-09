@@ -197,6 +197,58 @@ size_t size = kmem_cache_size(mc);
 As you can see, kmem_cache_alloc() function does not have <code>size</code> argument. If we still want to output the size of the requested memory block to the trace, we need to determine it for for use in output to the trace. This is exactly what is done in the prologue code above.
     </para>
     <para>
+If the target function takes variable number of arguments, then following parameters should be defined:
+<variablelist>
+    <varlistentry><term>ellipsis</term>
+        <listitem>If function takes variable number of arguments, this parameter should be non-empty.</listitem>
+    </varlistentry>
+    <varlistentry><term>last_arg</term>
+        <listitem>If function takes variable number of arguments, this parameter should be set to the name of last named argument.</listitem>
+    </varlistentry>
+    <varlistentry><term>original_code</term>
+        <listitem>If function takes variable number of arguments, this parameter should be non-empty and contain code, which is equvalent to the function body and uses <varname>args</varname> variable of type <type>va_list</type> for iterate over variadic arguments. If function return value, it should be assigned to <varname>ret_val</varname> variable.</listitem>
+    </varlistentry>
+</variablelist>
+In case of function with variable number of arguments, code defined in <code>prologue</code> and <code>epilog</code> parameters can use variable <varname>args</varname> of type <type>va_list</type> for iterate over variadic parameters of the function. Note, that this variable is initialized only once and doesn't depend from the one used in <code>original_code</code> parameter.
+    </para>
+    <para>
+Example of the group section for snprintf target function:
+<programlisting>
+[group]
+    # Name and return type of the target function
+    function.name = snprintf
+
+    # Names and types of the arguments of the target function
+    arg.type = char *
+    arg.name = buf
+    
+    arg.type = size_t
+    arg.name = size
+    
+    arg.type = const char *
+    arg.name = fmt
+
+    # Indicator of variable number of arguments
+    ellipsis = true
+    
+    # Variable arguments-specific definitions
+    last_arg = fmt
+    original_code = ret_val = vsnprintf(buf, size, fmt, args);
+    
+    prologue = size_t len = ret_val &lt; size ? ret_val + 1 : size;
+    
+    # The parameters to be output to the trace. 
+    trace.param.type = size_t
+    trace.param.name = len
+
+    # The format string to be used for trace output.
+    trace.formatString = "number of bytes written: (%zu)"
+
+# End of the group of definitions for snprintf.
+</programlisting>
+Note the usage of vsnprintf() function in <code>original_code</code> parameter. This function is equivalent to the target functions but takes <type>va_list</type> argument as reference to variadic arguments.
+    </para>
+    <para>
 After writing <filename>payload.data</filename> file, you can change the value of module_name variable in the <filename>makefile</filename> and <filename>Kbuild</filename> according to the one you use as value of <quote>module.name</quote> parameter. In the future, this step may be implemented in the <filename>makefile</filename> itself.
     </para>
     <para>

@@ -7,7 +7,7 @@ function.name = <$function.name$>
 
 <$endif$><$if concat(arg.name)$><$argDefinition: join(\n)$>
 
-<$endif$><$if elipsis$>elipsis = <$elipsis$>
+<$endif$><$if ellipsis$>ellipsis = <$ellipsis$>
 
 last_arg = <$last_arg$>
 

@@ -107,7 +107,7 @@ There should be the following files in <filename class="directory">kedr_leak_che
 <filename>clear</filename>:
 	</para>
 	<itemizedlist>
-		<listitem><para>if the user writes anything to this file, LeakCheck will <quot>forget</quot> the information about memory allocations and deallocations collected so far</para></listitem>
+		<listitem><para>if the user writes anything to this file, LeakCheck will <quote>forget</quote> the information about memory allocations and deallocations collected so far</para></listitem>
 	</itemizedlist></listitem>
 </itemizedlist>
 

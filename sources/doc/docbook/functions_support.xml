@@ -50,10 +50,31 @@ For each target function, a group should be prepared. Each group should contain 
     <varlistentry><term>arg.name</term>
         <listitem>(multi-valued) names of the arguments of the target function, starting with the first one. If the function has no arguments, do not define this parameter at all.</listitem>
     </varlistentry>
+    <varlistentry><term>ellipsis</term>
+        <listitem>If function takes variable number of arguments, this parameter should be non-empty. Otherwise, shouldn't be assigned at all.</listitem>
+    </varlistentry>
+    <varlistentry><term>last_arg</term>
+        <listitem>If function takes variable number of arguments, this parameter should be set to the name of last named argument. Otherwise, shouldn't be assigned at all.</listitem>
+    </varlistentry>
+    <varlistentry><term>original_code</term>
+        <listitem>If function takes variable number of arguments, this parameter should be non-empty and contain code, which is equvalent to the function body which use 'args' parameter of type va_list for iterate over variadic parameters. Otherwise, shouldn't be assigned at all.</listitem>
+    </varlistentry>
 </variablelist>
 </para>
 <para>
-
+If trampoline is created for target function with accept variable number of parameters(function signature ends with <code>, ...</code>), following parameters should be defined for the group:
+<variablelist>
+    <varlistentry><term>ellipsis</term>
+        <listitem>If function takes variable number of arguments, this parameter should be non-empty.</listitem>
+    </varlistentry>
+    <varlistentry><term>last_arg</term>
+        <listitem>If function takes variable number of arguments, this parameter should be set to the name of last named argument.</listitem>
+    </varlistentry>
+    <varlistentry><term>original_code</term>
+        <listitem>If function takes variable number of arguments, this parameter should be non-empty and contain code, which is equvalent to the function body and use <varname>args</varname> parameter of type <type>va_list</type> for iterate over variadic parameters.  If function return value, it should be assigned to <varname>ret_val</varname> variable.</listitem>
+    </varlistentry>
+</variablelist>
+Note, that trampoline for function with variable number of arguments expects <link linkend="pre_handler">pre handlers</link>, <link linkend="post_handler">post handlers</link> and <link linkend="replacement_function">replacement function</link> to use argument of type <type>va_list</type> for iterate over variadic arguments of the target functions. This argument is passed just after the last named target function's argument (before <code>call_info</code> parameter and parameter contained function result, if it is).
 </para>
 </section> <!-- "functions_support.define" -->
 

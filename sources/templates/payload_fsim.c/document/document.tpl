@@ -14,6 +14,8 @@ MODULE_LICENSE("<$module.license$>");
 
 <$if concat(header)$><$header: join(\n)$>
 
+<$endif$><$if concat(ellipsis)$>#include <stdarg.h>
+
 <$endif$>/*********************************************************************
  * Replacement functions
  *********************************************************************/
