@@ -634,9 +634,6 @@ endfunction(kedr_create_data_rules func)
 # to prepare the source code of the module from 'payload_data_file'.
 function(kedr_create_payload_module module_name payload_data_file 
 	template_dir)
-	set(payload_c_file "payload.c")
-	set(functions_support_file "functions_support.c")
-	
 	kbuild_use_symbols("${CMAKE_BINARY_DIR}/core/Module.symvers")
 	kbuild_add_dependencies("kedr")
 	
@@ -646,18 +643,8 @@ function(kedr_create_payload_module module_name payload_data_file
 		"functions_support.c")
 		
 	# Rules to obtain the source files of the module
-	to_abs_path(payload_data_file_abs ${payload_data_file})
-	add_custom_command(OUTPUT "${payload_c_file}"
-		COMMAND ${KEDR_GEN_TOOL} "${template_dir}"
-			${payload_data_file_abs} > "${payload_c_file}"
-		DEPENDS ${payload_data_file_abs}
-	)
-	add_custom_command(OUTPUT "${functions_support_file}"
-		COMMAND ${KEDR_GEN_TOOL} 
-			${KEDR_GEN_TEMPLATES_DIR}/functions_support.c/ 
-			${payload_data_file_abs} > "${functions_support_file}"
-		DEPENDS ${payload_data_file_abs}
-	)
+	kedr_generate("payload.c" ${payload_data_file} "${template_dir}")
+	kedr_generate("functions_support.c" ${payload_data_file} "${KEDR_GEN_TEMPLATES_DIR}/functions_support.c")
 endfunction(kedr_create_payload_module module_name payload_data_file 
 	template_dir)
 

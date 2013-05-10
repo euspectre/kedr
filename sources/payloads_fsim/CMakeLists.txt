@@ -15,14 +15,10 @@ function(create_payload_fsim module_name functions)
 	set(payload_data_file_impl ${payload_data_file})
 	
 	if (KEDR_ENABLE_CALLER_ADDRESS)
-		set(payload_data_file_impl 
-			"${CMAKE_CURRENT_BINARY_DIR}/payload_with_caller_address.data")
-		
-		add_custom_command(OUTPUT "${payload_data_file_impl}"
-			COMMAND ${KEDR_GEN_TOOL} 
-			"${KEDR_GEN_TEMPLATES_DIR}/payload_fsim_add_caller_address.data/" 
-			${payload_data_file} > "${payload_data_file_impl}"
-			DEPENDS ${payload_data_file})
+		kedr_generate("payload_with_caller_address.data" ${payload_data_file_impl}
+			"${KEDR_GEN_TEMPLATES_DIR}/payload_fsim_add_caller_address.data/")
+		set(payload_data_file_impl "payload_with_caller_address.data")
+
 	endif (KEDR_ENABLE_CALLER_ADDRESS)
 	
 	kedr_create_payload_module(${module_name} ${payload_data_file_impl} 

@@ -80,10 +80,9 @@ if (KEDR_STANDARD_FSIM_PAYLOADS)
 	add_custom_target(kedr_config_file_fsim ALL
 					DEPENDS "${kedr_conf_file_fsim}")
 
-	add_custom_command(OUTPUT "${kedr_conf_file_fsim}"
-					COMMAND "${KEDR_GEN_TOOL}" "${templates_dir}/kedr_fsim.conf" "${kedr_conf_file_data_fsim}" > "${kedr_conf_file_fsim}"
-					DEPENDS "${kedr_conf_file_data_fsim}")
-
+	kedr_generate("fsim.conf" "${kedr_conf_file_data_fsim}"
+		"${templates_dir}/kedr_fsim.conf")
+	
 	install(FILES "${kedr_conf_file_fsim}"
 			DESTINATION "${KEDR_DEFAULT_CONFIG_DIR}")
 endif (KEDR_STANDARD_FSIM_PAYLOADS)
@@ -95,9 +94,8 @@ if (KEDR_STANDARD_CALLM_PAYLOADS)
 	add_custom_target(kedr_config_file_callm ALL
 					DEPENDS "${kedr_conf_file_callm}")
 
-	add_custom_command(OUTPUT "${kedr_conf_file_callm}"
-					COMMAND "${KEDR_GEN_TOOL}" "${templates_dir}/kedr_callm.conf" "${kedr_conf_file_data_callm}" > "${kedr_conf_file_callm}"
-					DEPENDS "${kedr_conf_file_data_callm}")
+	kedr_generate("callm.conf" "${kedr_conf_file_data_callm}"
+		"${templates_dir}/kedr_callm.conf")
 
 	install(FILES "${kedr_conf_file_callm}"
 			DESTINATION "${KEDR_DEFAULT_CONFIG_DIR}")

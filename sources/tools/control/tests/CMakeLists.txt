@@ -20,9 +20,11 @@ if(KEDR_STANDARD_CALLM_PAYLOADS)
     add_custom_target(kedr_test_config_file_default ALL
                     DEPENDS "${kedr_test_conf_file_default}")
 
-    add_custom_command(OUTPUT "${kedr_test_conf_file_default}"
-                    COMMAND "${KEDR_GEN_TOOL}" "${templates_dir}/kedr_callm.conf" "${kedr_test_conf_file_data_callm}" > "${kedr_test_conf_file_default}"
-                    DEPENDS "${kedr_test_conf_file_data_callm}")
+    kedr_generate("default.conf" "${kedr_test_conf_file_data_callm}"
+        "${templates_dir}/kedr_callm.conf")
+    
+    rule_copy_file("${CMAKE_CURRENT_BINARY_DIR}/default.conf"
+        "${kedr_test_conf_file_default}")
 
     kedr_test_add_target("kedr_test_config_file_default")
 else(KEDR_STANDARD_CALLM_PAYLOADS)
