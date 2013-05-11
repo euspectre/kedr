@@ -23,8 +23,8 @@ if(KEDR_STANDARD_CALLM_PAYLOADS)
     kedr_generate("default.conf" "${kedr_test_conf_file_data_callm}"
         "${templates_dir}/kedr_callm.conf")
     
-    rule_copy_file("${CMAKE_CURRENT_BINARY_DIR}/default.conf"
-        "${kedr_test_conf_file_default}")
+    rule_copy_file("${kedr_test_conf_file_default}"
+        "${CMAKE_CURRENT_BINARY_DIR}/default.conf")
 
     kedr_test_add_target("kedr_test_config_file_default")
 else(KEDR_STANDARD_CALLM_PAYLOADS)

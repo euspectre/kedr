@@ -51,7 +51,7 @@ new_deps="SET(deps_list${nl}"\
 
 if test -f $deps_file; then
     old_deps=`cat $deps_file`"${nl}"
-    if test "${old_deps}" == "${new_deps}"; then
+    if test "${old_deps}" = "${new_deps}"; then
         # Already up-to-date
         exit 0
     #else
