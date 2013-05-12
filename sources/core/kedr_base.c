@@ -36,6 +36,7 @@
 #include <kedr/core/kedr.h>
 #include "kedr_base_internal.h"
 
+#include "config.h"
 
 /* ================================================================ */
 /* This string will be used in debug output to specify the name of 
@@ -841,12 +842,11 @@ int
 functions_map_add(struct functions_map* map, void* function)
 {
 	int i;
-	struct hlist_node* node_tmp;
 	struct functions_map_elem* map_elem;
 
 	i = hash_ptr(function, map->bits);
 
-	hlist_for_each_entry(map_elem, node_tmp, &map->heads[i], list)
+	kedr_hlist_for_each_entry(map_elem, &map->heads[i], list)
 	{
 		if(map_elem->function == function) return -EBUSY;
 	}
@@ -868,12 +868,11 @@ void
 functions_map_remove(struct functions_map* map, void* function)
 {
 	int i;
-	struct hlist_node* node_tmp;
 	struct functions_map_elem* map_elem;
 
 	i = hash_ptr(function, map->bits);
 
-	hlist_for_each_entry(map_elem, node_tmp, &map->heads[i], list)
+	kedr_hlist_for_each_entry(map_elem, &map->heads[i], list)
 	{
 		if(map_elem->function == function)
 		{
@@ -988,12 +987,11 @@ function_counters_table_get(struct function_counters_table* table,
 	void* function)
 {
 	int i;
-	struct hlist_node* node_tmp;
 	struct function_counters_elem* elem;
 
 	i = hash_ptr(function, table->bits);
 
-	hlist_for_each_entry(elem, node_tmp, &table->heads[i], list)
+	kedr_hlist_for_each_entry(elem, &table->heads[i], list)
 	{
 		if(elem->function == function) return elem;
 	}

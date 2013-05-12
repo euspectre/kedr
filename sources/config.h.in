@@ -1,3 +1,8 @@
+#ifndef CONFIG_H_1734_INCLUDED
+#define CONFIG_H_1734_INCLUDED
+
+#include <linux/list.h>
+	
 /* How many arguments ring_buffer_consume() takes */
 #cmakedefine RING_BUFFER_CONSUME_HAS_3_ARGS
 #cmakedefine RING_BUFFER_CONSUME_HAS_4_ARGS
@@ -21,3 +26,42 @@
 /* Specifies whether kmem_cache_alloc*_trace() functions get 'kmem_cache *'
  * pointer as their first argument. */
 #cmakedefine KMCA_TRACE_KMC_FIRST
+/* ====================================================================== */
+
+/* If hlist_for_each_entry*() macros accept only 'type *pos' as a loop 
+ * cursor, this symbol will be defined. */
+#cmakedefine HLIST_FOR_EACH_ENTRY_POS_ONLY
+
+/* Provide our own wrappers for hlist_for_each_entry*() API to hide the
+ * change in their interface.
+ *
+ * pos: 'type *' to use as a loop cursor.
+ * n: 'struct hlist_node *' to use as temporary storage
+ * head: the head of the list (struct hlist_head *).
+ * member: the name of the hlist_node within the struct.
+ */
+#if defined(HLIST_FOR_EACH_ENTRY_POS_ONLY)
+# define kedr_hlist_for_each_entry hlist_for_each_entry
+# define kedr_hlist_for_each_entry_safe hlist_for_each_entry_safe
+
+#else
+
+/* Based on the implementation of the changed API in kernel 3.9. */
+# define kedr_hlist_entry_safe(ptr, type, member) \
+	({ typeof(ptr) ____ptr = (ptr); \
+	   ____ptr ? hlist_entry(____ptr, type, member) : NULL; \
+	})
+	
+# define kedr_hlist_for_each_entry(pos, head, member) \
+	for (pos = kedr_hlist_entry_safe((head)->first, typeof(*(pos)), member);\
+	     pos;							\
+	     pos = kedr_hlist_entry_safe((pos)->member.next, typeof(*(pos)), member))
+
+# define kedr_hlist_for_each_entry_safe(pos, n, head, member) 		\
+	for (pos = kedr_hlist_entry_safe((head)->first, typeof(*(pos)), member);\
+	     pos && ({ n = (pos)->member.next; 1; });			\
+	     pos = kedr_hlist_entry_safe(n, typeof(*(pos)), member))
+#endif /* defined(HLIST_FOR_EACH_ENTRY_POS_ONLY) */
+/* ====================================================================== */
+
+#endif /* CONFIG_H_1734_INCLUDED */
