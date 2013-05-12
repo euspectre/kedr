@@ -11,7 +11,9 @@ function.name = <$function.name$>
 
 last_arg = <$last_arg$>
 
-original_code = <$original_code$>
+original_code =>>
+<$original_code$>
+<<
 
 <$endif$><$if fpoint.fault_code$>fpoint.fault_code =>>
 <$fpoint.fault_code$>
@@ -20,7 +22,15 @@ original_code = <$original_code$>
 fpoint.param.type = void*
 fpoint.param.name = caller_address
 
-<$if concat(fpoint.param.name)$><$fpointParam: join(\n)$>
+<$if args_copy_init$>args_copy_init =>>
+    <$args_copy_init$>
+<<
+
+<$endif$><$if args_copy_destroy$>args_copy_destroy =>>
+    <$args_copy_destroy$>
+<<
+
+<$endif$><$if concat(fpoint.param.name)$><$fpointParam: join(\n)$>
 
 <$endif$><$if concat(prologue)$><$prologueSection: join(\n)$>
 

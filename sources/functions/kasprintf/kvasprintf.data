@@ -12,4 +12,8 @@
 
 	arg.type = va_list
 	arg.name = ap
+	
+	# Copiing process of the parameter of 'va_list' type
+	args_copy_init = va_copy(ap_copy, ap);
+	args_copy_destroy = va_end(ap_copy);
 #######################################################################

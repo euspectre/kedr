@@ -36,6 +36,7 @@ struct dentry* __kmalloc_trigger_file = NULL;
 struct dentry* krealloc_trigger_file = NULL;
 struct dentry* __krealloc_trigger_file = NULL;
 struct dentry* kasprintf_trigger_file = NULL;
+struct dentry* kvasprintf_trigger_file = NULL;
 
 static void remove_dentries(void);
 
@@ -140,6 +141,75 @@ static struct file_operations kasprintf_trigger_file_operations = {
     .write = kasprintf_trigger_file_write
 };
 
+//Function which use kvasprintf, which takes 'va_list' argument.
+
+static char* my_kasprintf(gfp_t flags, const char* fmt, ...)
+{
+    char* result;
+    
+    va_list args;
+    va_start(args, fmt);
+
+    result = kvasprintf(flags, fmt, args);
+    
+    va_end(args);
+    return result;
+}
+
+static ssize_t
+kvasprintf_trigger_file_write(struct file* filp,
+    const char __user *buf, size_t count, loff_t* f_pos)
+{
+    char* str;
+    char* str1, *str2;
+    
+    size_t str1_len = count / 2;
+    size_t str2_len = (count -1) / 2;
+    /* Now str1_len + str2_len = count - 1 */
+    
+    str1 = kmalloc(str1_len + 1, GFP_KERNEL);
+    if(str1 == NULL) return -ENOMEM;
+    
+    str2 = kmalloc(str2_len + 1, GFP_KERNEL);
+    if(str2 == NULL)
+    {
+        kfree(str1);
+        return -ENOMEM;
+    }
+    
+    /* Fill str1 and str2 with some values*/
+    memset(str1, '1', str1_len);
+    str1[str1_len] = '\0';
+    
+    memset(str2, '2', str2_len);
+    str2[str2_len] = '\0';
+    
+    // Allocated size of str will be str1_len + str2_len + 1 = count.
+    str = my_kasprintf(GFP_KERNEL, "%s%s", str1, str2);
+    
+    if(str == NULL)
+    {
+        kfree(str1);
+        kfree(str2);
+
+        return -ENOMEM;
+    }
+    //Check that result is correct. So replacement function do right things.
+    BUG_ON(memcmp(str, str1, str1_len));
+    BUG_ON(strcmp(str + str1_len, str2));
+    
+    kfree(str1);
+    kfree(str2);
+    kfree(str);
+    
+    return count;
+}
+
+static struct file_operations kvasprintf_trigger_file_operations = {
+    .owner = THIS_MODULE,
+    .write = kvasprintf_trigger_file_write
+};
+
 ///
 static int __init
 this_module_init(void)
@@ -170,6 +240,7 @@ this_module_init(void)
     CREATE_TRIGGER_FILE(__krealloc)
     CREATE_TRIGGER_FILE(krealloc)
     CREATE_TRIGGER_FILE(kasprintf)
+    CREATE_TRIGGER_FILE(kvasprintf)
 
 #undef CREATE_TRIGGER_FILE
     
@@ -195,6 +266,7 @@ void remove_dentries(void)
 {
     if(module_dir)
     {
+        remove_dentry(kvasprintf_trigger_file);
         remove_dentry(kasprintf_trigger_file);
         remove_dentry(krealloc_trigger_file);
         remove_dentry(__krealloc_trigger_file);

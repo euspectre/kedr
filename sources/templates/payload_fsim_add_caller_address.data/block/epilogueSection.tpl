@@ -1,3 +1,3 @@
 epilogue =>>
-<$epilogue$>
+<$epilogue: join(\n)$>
 <<

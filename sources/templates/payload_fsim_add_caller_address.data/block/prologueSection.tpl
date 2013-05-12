@@ -1,3 +1,3 @@
 prologue =>>
-<$prologue$>
+<$prologue: join(\n)$>
 <<

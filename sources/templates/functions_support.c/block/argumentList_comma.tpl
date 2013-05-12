@@ -1,1 +1,1 @@
-<$if concat(arg.name)$><$arg.name : join(, )$>, <$if ellipsis$>args, <$endif$><$endif$>
+<$if concat(arg.name)$><$argCopy_name : join(, )$>, <$if ellipsis$>args_copy, <$endif$><$endif$>

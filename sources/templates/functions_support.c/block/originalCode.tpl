@@ -1,1 +1,0 @@
-<$if ellipsis$><$if original_code$><$original_code$><$else$>#error original_code parameter should be defined for function with variable number of arguments<$endif$><$else$><$if returnType$>ret_val = <$endif$><$function.name$>(<$argumentList$>);<$endif$>

@@ -1,0 +1,40 @@
+# Fault simulation for kvasprintf()
+
+module.name = payload_fsim_va_arg
+module.author = Tsyvarev
+module.license = GPL
+
+header =>>
+#include <linux/kernel.h>
+<<
+
+[group]
+    function.name = kvasprintf
+    returnType = char*
+
+    # Names and types of the arguments of the target function
+    arg.type = gfp_t
+    arg.name = flags
+    
+    arg.type = const char *
+    arg.name = fmt
+    
+    arg.type = va_list
+    arg.name = ap
+    
+    # Code for manage copies of 'va_list'-typed argument.
+    arg_copy_init = va_copy(ap_copy, ap);
+    arg_copy_destroy = va_end(ap_copy);
+    
+    prologue =>>
+	int size = vsnprintf(NULL, 0, fmt, ap) + 1;
+    <<
+
+    # Parameter for fault simulation point
+    fpoint.param.type = int
+    fpoint.param.name = size
+
+    fpoint.param.type = gfp_t
+    fpoint.param.name = flags
+
+    fpoint.fault_code = ret_val = NULL;
