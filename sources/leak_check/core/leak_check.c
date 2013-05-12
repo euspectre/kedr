@@ -34,6 +34,8 @@
 
 #include "leak_check_impl.h"
 #include "klc_output.h"
+
+#include "config.h"
 /* ====================================================================== */
 
 MODULE_AUTHOR("Eugene A. Shatokhin");
@@ -404,14 +406,13 @@ lc_object_lookup(struct module *target)
 	struct kedr_leak_check *lc = NULL;
 	struct kedr_leak_check *obj = NULL;
 	struct hlist_head *head = NULL;
-	struct hlist_node *node = NULL;
 	
 	if (target == NULL)
 		return NULL;
 	
 	spin_lock_irqsave(&lc_objects_lock, irq_flags);
 	head = &lc_objects[hash_ptr(target, KEDR_LC_HASH_BITS)];
-	hlist_for_each_entry(obj, node, head, hlist) {
+	kedr_hlist_for_each_entry(obj, head, hlist) {
 		if (obj->target == target) {
 			lc = obj;
 			break;
@@ -445,7 +446,6 @@ lc_object_for_target(struct module *target)
 	struct kedr_leak_check *lc = NULL;
 	struct kedr_leak_check *obj = NULL;
 	struct hlist_head *head = NULL;
-	struct hlist_node *node = NULL;
 	struct hlist_node *tmp = NULL;
 	unsigned int i;
 	unsigned int new_bucket;
@@ -459,7 +459,7 @@ lc_object_for_target(struct module *target)
 	spin_lock_irqsave(&lc_objects_lock, irq_flags);
 	for (i = 0; i < KEDR_LC_TABLE_SIZE; ++i) {
 		head = &lc_objects[i];
-		hlist_for_each_entry_safe(obj, node, tmp, head, hlist) {
+		kedr_hlist_for_each_entry_safe(obj, tmp, head, hlist) {
 			if (strcmp(name, obj->name) != 0)
 				continue;
 			
@@ -487,13 +487,12 @@ delete_all_lc_objects(void)
 {
 	struct hlist_head *head;
 	struct kedr_leak_check *lc;
-	struct hlist_node *node = NULL;
 	struct hlist_node *tmp = NULL;
 	unsigned int i;
 	
 	for (i = 0; i < KEDR_LC_TABLE_SIZE; ++i) {
 		head = &lc_objects[i];
-		hlist_for_each_entry_safe(lc, node, tmp, head, hlist) {
+		kedr_hlist_for_each_entry_safe(lc, tmp, head, hlist) {
 			hlist_del(&lc->hlist);
 			lc_object_destroy(lc);
 		}
@@ -578,11 +577,10 @@ ri_find_and_remove(const void *addr, struct hlist_head *ri_table)
 	struct hlist_head *head;
 	struct kedr_lc_resource_info *ri = NULL;
 	struct kedr_lc_resource_info *found = NULL;
-	struct hlist_node *node = NULL;
 	struct hlist_node *tmp = NULL;
 	
 	head = &ri_table[hash_ptr((void *)addr, KEDR_RI_HASH_BITS)];
-	hlist_for_each_entry_safe(ri, node, tmp, head, hlist) {
+	kedr_hlist_for_each_entry_safe(ri, tmp, head, hlist) {
 		if (ri->addr == addr) {
 			hlist_del(&ri->hlist);
 			found = ri;
@@ -602,13 +600,12 @@ ri_count_similar(struct kedr_lc_resource_info *ri,
 {
 	unsigned int i;
 	struct kedr_lc_resource_info *info = NULL;
-	struct hlist_node *node = NULL;
 	struct hlist_node *tmp = NULL;
 
 	ri->num_similar = 0;
 	
 	for (i = start_index; i < KEDR_RI_TABLE_SIZE; ++i) {
-		hlist_for_each_entry_safe(info, node, tmp, &ri_table[i], 
+		kedr_hlist_for_each_entry_safe(info, tmp, &ri_table[i], 
 			hlist) {
 			if (ri != info && call_stacks_equal(ri, info)) {
 				++ri->num_similar;
@@ -655,7 +652,6 @@ static void
 klc_flush_allocs(struct kedr_leak_check *lc)
 {
 	struct kedr_lc_resource_info *ri = NULL;
-	struct hlist_node *node = NULL;
 	struct hlist_node *tmp = NULL;
 	struct hlist_head *head = NULL;
 	unsigned int i;
@@ -666,14 +662,14 @@ klc_flush_allocs(struct kedr_leak_check *lc)
 
 	for (i = 0; i < KEDR_RI_TABLE_SIZE; ++i) {
 		head = &lc->allocs[i];
-		hlist_for_each_entry_safe(ri, node, tmp, head, hlist) {
+		kedr_hlist_for_each_entry_safe(ri, tmp, head, hlist) {
 			 ri->num_similar = 0;
 		}
 	} 
 		
 	for (i = 0; i < KEDR_RI_TABLE_SIZE; ++i) {
 		head = &lc->allocs[i];
-		hlist_for_each_entry_safe(ri, node, tmp, head, hlist) {
+		kedr_hlist_for_each_entry_safe(ri, tmp, head, hlist) {
 			if (ri->num_similar == (unsigned int)(-1))
 				/* This entry is similar to some entry
 				 * processed before. Nothing more to do. */
@@ -1045,6 +1041,7 @@ static int __init
 leak_check_init_module(void)
 {
 	int ret = 0;
+	int i;
 	
 	if (stack_depth == 0 || stack_depth > KEDR_MAX_FRAMES) {
 		pr_err(KEDR_LC_MSG_PREFIX
@@ -1062,6 +1059,9 @@ leak_check_init_module(void)
 		);
 		return -EINVAL;
 	}
+	
+	for (i = 0; i < KEDR_LC_TABLE_SIZE; ++i)
+		INIT_HLIST_HEAD(&lc_objects[i]);
 	
 	ret = kedr_lc_output_init();
 	if (ret != 0)

@@ -26,14 +26,14 @@
 #include <linux/string.h>
 #include <linux/spinlock.h>
 #include <linux/mutex.h>
-
-#include <kedr/asm/insn.h>       /* instruction decoder machinery */
-
-#include "kedr_instrumentor_internal.h"
-
 #include <linux/hash.h> /* hash_ptr definition */
 
 #include <kedr/core/kedr.h>
+#include <kedr/asm/insn.h>       /* instruction decoder machinery */
+
+#include "kedr_instrumentor_internal.h"
+#include "config.h"
+
 /* ================================================================ */
 /* This string will be used in debug output to specify the name of 
  * the current component of KEDR
@@ -87,11 +87,10 @@ repl_hash_table_destroy(struct repl_hash_table* table)
 	
 	for (i = 0; i < hash_table_size; i++)
 	{
-		struct hlist_node *node;
 		struct hlist_node *tmp;
 		struct repl_elem *elem;
 
-		hlist_for_each_entry_safe(elem, node, tmp, &heads[i], list) {
+		kedr_hlist_for_each_entry_safe(elem, tmp, &heads[i], list) {
 			hlist_del(&elem->list);
 			kfree(elem);
 		}
@@ -109,6 +108,7 @@ repl_hash_table_init_from_array(struct repl_hash_table* table,
 	int result;
 	
 	size_t hash_table_size;
+	size_t i;
 	unsigned int bits;
 	struct hlist_head *heads = NULL;
 	
@@ -135,18 +135,20 @@ repl_hash_table_init_from_array(struct repl_hash_table* table,
 		return -ENOMEM;
 	}
 	
+	for (i = 0; i < hash_table_size; ++i)
+		INIT_HLIST_HEAD(&heads[i]);
+	
 	table->heads = heads;
 	table->bits = bits;
 	
 	for (repl_pair = array; repl_pair->orig != NULL; repl_pair++)
 	{
 		struct hlist_head* head;
-		struct hlist_node* node_tmp;
 		struct repl_elem* elem;
 		
 		head = &heads[hash_ptr(repl_pair->orig, bits)];
 		
-		hlist_for_each_entry(elem, node_tmp, head, list)
+		kedr_hlist_for_each_entry(elem, head, list)
 		{
 			if(elem->orig == repl_pair->orig)
 			{
@@ -177,12 +179,11 @@ static void*
 repl_hash_table_get_repl(struct repl_hash_table* table, void* orig)
 {
 	struct hlist_head* head;
-	struct hlist_node* node_tmp;
 	struct repl_elem* elem;
 	
 	head = &table->heads[hash_ptr(orig, table->bits)];
 	
-	hlist_for_each_entry(elem, node_tmp, head, list)
+	kedr_hlist_for_each_entry(elem, head, list)
 	{
 		if(elem->orig == orig)
 		{

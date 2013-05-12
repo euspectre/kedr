@@ -516,6 +516,41 @@ macro(check_xattr_user_ns)
 endmacro(check_xattr_user_ns)
 ############################################################################
 
+# Check if hlist_for_each_entry*() macros accept only 'type *pos' argument
+# rather than both 'type *tpos' and 'hlist_node *pos' as the loop cursors.
+# The macro sets variable 'HLIST_FOR_EACH_ENTRY_POS_ONLY'.
+macro(check_hlist_for_each_entry)
+	set(check_hlist_for_each_entry_message
+"Checking the signatures of hlist_for_each_entry*() macros"
+	)
+	message(STATUS "${check_hlist_for_each_entry_message}")
+	if (DEFINED HLIST_FOR_EACH_ENTRY_POS_ONLY)
+		set(check_hlist_for_each_entry_message
+"${check_hlist_for_each_entry_message} [cached] - done"
+		)
+	else ()
+		kmodule_try_compile(pos_only_impl
+			"${CMAKE_BINARY_DIR}/check_hlist_for_each_entry"
+			"${kmodule_test_sources_dir}/check_hlist_for_each_entry/module.c"
+		)
+		if (pos_only_impl)
+			set(HLIST_FOR_EACH_ENTRY_POS_ONLY "yes" CACHE INTERNAL
+	"Do hlist_for_each_entry*() macros have only 'type *pos' to use as a loop cursor?"
+			)
+		else ()
+			set(HLIST_FOR_EACH_ENTRY_POS_ONLY "no" CACHE INTERNAL
+	"Do hlist_for_each_entry*() macros have only 'type *pos' to use as a loop cursor?"
+			)
+		endif (pos_only_impl)
+
+		set(check_hlist_for_each_entry_message
+			"${check_hlist_for_each_entry_message} - done"
+		)
+	endif (DEFINED HLIST_FOR_EACH_ENTRY_POS_ONLY)
+	message(STATUS "${check_hlist_for_each_entry_message}")
+endmacro(check_hlist_for_each_entry)
+############################################################################
+
 # The payload modules should call kedr_find_function() for each kernel 
 # function they would like to process. If the function is not known
 # to KEDR (absent from the "function database", see "functions/" directory), 

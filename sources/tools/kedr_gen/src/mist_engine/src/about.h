@@ -29,7 +29,7 @@
 // If, for any reason, config.h is not available or is incomplete, we 
 // provide reasonable default values for the parameters below.
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+#include "config.h"
 #endif
 
 // Short name of the tool

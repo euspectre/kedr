@@ -36,6 +36,7 @@
 #include <kedr/core/kedr.h>
 #include "kedr_base_internal.h"
 
+#include "config.h"
 
 /* ================================================================ */
 /* This string will be used in debug output to specify the name of 
@@ -797,6 +798,7 @@ functions_map_init(struct functions_map* map, int n_elems)
 {
 	struct hlist_head* heads;
 	size_t n_heads;
+	size_t i;
 	unsigned int bits;
 	
 	n_heads = (n_elems * 10 + 6)/ 7;
@@ -814,6 +816,9 @@ functions_map_init(struct functions_map* map, int n_elems)
 		pr_err("functions_map_init: Failed to allocate functions map.");
 		return -ENOMEM;
 	}
+	
+	for (i = 0; i < n_heads; ++i)
+		INIT_HLIST_HEAD(&heads[i]);
 	
 	map->heads = heads;
 	map->bits = bits;
@@ -841,12 +846,11 @@ int
 functions_map_add(struct functions_map* map, void* function)
 {
 	int i;
-	struct hlist_node* node_tmp;
 	struct functions_map_elem* map_elem;
 
 	i = hash_ptr(function, map->bits);
 
-	hlist_for_each_entry(map_elem, node_tmp, &map->heads[i], list)
+	kedr_hlist_for_each_entry(map_elem, &map->heads[i], list)
 	{
 		if(map_elem->function == function) return -EBUSY;
 	}
@@ -868,12 +872,11 @@ void
 functions_map_remove(struct functions_map* map, void* function)
 {
 	int i;
-	struct hlist_node* node_tmp;
 	struct functions_map_elem* map_elem;
 
 	i = hash_ptr(function, map->bits);
 
-	hlist_for_each_entry(map_elem, node_tmp, &map->heads[i], list)
+	kedr_hlist_for_each_entry(map_elem, &map->heads[i], list)
 	{
 		if(map_elem->function == function)
 		{
@@ -938,6 +941,7 @@ int function_counters_table_init(struct function_counters_table* table, size_t n
 {
 	struct hlist_head* heads;
 	size_t n_heads;
+	size_t i;
 	unsigned int bits;
 	
 	n_heads = (n_elems * 10 + 6)/ 7;
@@ -955,6 +959,9 @@ int function_counters_table_init(struct function_counters_table* table, size_t n
 		pr_err("function_counters_table_init: Failed to allocate functions table.");
 		return -ENOMEM;
 	}
+	
+	for (i = 0; i < n_heads; ++i)
+		INIT_HLIST_HEAD(&heads[i]);
 	
 	table->heads = heads;
 	table->bits = bits;
@@ -988,12 +995,11 @@ function_counters_table_get(struct function_counters_table* table,
 	void* function)
 {
 	int i;
-	struct hlist_node* node_tmp;
 	struct function_counters_elem* elem;
 
 	i = hash_ptr(function, table->bits);
 
-	hlist_for_each_entry(elem, node_tmp, &table->heads[i], list)
+	kedr_hlist_for_each_entry(elem, &table->heads[i], list)
 	{
 		if(elem->function == function) return elem;
 	}

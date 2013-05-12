@@ -40,7 +40,10 @@ endif ()
 add_definitions(-std=gnu99 -Wall)
 
 # Add the source and binary trees to the search path for include files.
-include_directories ("${CMAKE_CURRENT_BINARY_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}")
+include_directories (BEFORE 
+	"${CMAKE_CURRENT_BINARY_DIR}" 
+	"${CMAKE_CURRENT_SOURCE_DIR}"
+)
 
 # The base part of the names of target files.
 set (MIST_BASE_NAME ${PROJECT_NAME})

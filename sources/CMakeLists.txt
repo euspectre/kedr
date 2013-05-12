@@ -171,6 +171,10 @@ endif ()
 # STACK_TRACE_RELIABLE will hold the result.
 # This only checks relevant configuration parameters of kernel.
 check_stack_trace()
+
+# Check the signatures of hlist_for_each_entry*() macros, they changed 
+# in the kernel 3.9.
+check_hlist_for_each_entry()
 #######################################################################
 
 option(KEDR_STANDARD_CALLM_PAYLOADS 
