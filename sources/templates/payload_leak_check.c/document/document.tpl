@@ -3,7 +3,9 @@
 /* ====================================================================== */
 
 <$header : join(\n\n)$>
+<$if concat(ellipsis)$>#include <stdarg.h>
 
+<$endif$>
 #include <linux/module.h>
 #include <linux/moduleparam.h>
 #include <linux/init.h>

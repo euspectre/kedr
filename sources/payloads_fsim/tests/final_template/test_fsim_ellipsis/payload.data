@@ -1,0 +1,38 @@
+# Fault simulation for __kmalloc()
+
+module.name = payload_fsim_ellipsis
+module.author = Tsyvarev
+module.license = GPL
+
+header =>>
+#include <linux/kernel.h>
+<<
+
+[group]
+    function.name = kasprintf
+    returnType = char*
+
+    # Names and types of the arguments of the target function
+    arg.type = gfp_t
+    arg.name = flags
+    
+    arg.type = const char *
+    arg.name = fmt
+    
+    # Variable arguments-specific
+    ellipsis = yes
+    last_arg = fmt
+    original_code = ret_val = kvasprintf(flags, fmt, args);
+
+    prologue =>>
+	int size = vsnprintf(NULL, 0, fmt, args) + 1;
+    <<
+
+    # Parameter for fault simulation point
+    fpoint.param.type = int
+    fpoint.param.name = size
+
+    fpoint.param.type = gfp_t
+    fpoint.param.name = flags
+
+    fpoint.fault_code = ret_val = NULL;

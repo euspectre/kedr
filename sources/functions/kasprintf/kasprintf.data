@@ -11,7 +11,7 @@
 	arg.name = fmt
 
 	# Variable arguments
-	elipsis = true
+	ellipsis = true
 	last_arg = fmt
 	original_code = ret_val = kvasprintf(gfp, fmt, args);
 	#arg.type = 

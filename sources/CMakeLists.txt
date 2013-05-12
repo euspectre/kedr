@@ -54,6 +54,7 @@ option(KEDR_USE_SPARSE
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
 find_package(Kbuild)
 
+include(template_generation)
 include(cmake_useful)
 include(kbuild_system)
 include(kmodule)

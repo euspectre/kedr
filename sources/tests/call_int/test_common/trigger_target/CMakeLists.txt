@@ -10,11 +10,4 @@ kbuild_add_module(trigger_target_${trigger_name}
 )
 kedr_test_add_target(trigger_target_${trigger_name})
 
-add_custom_command(
-	OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/target.c"
-    COMMAND ${KEDR_GEN_TOOL} 
-    	"${trigger_target_templates_dir}"
-    	"${trigger_data_file}" > "${CMAKE_CURRENT_BINARY_DIR}/target.c"
-    DEPENDS 
-    	"${trigger_data_file}"
-)
+kedr_generate("target.c" "${trigger_data_file}" "${trigger_target_templates_dir}")

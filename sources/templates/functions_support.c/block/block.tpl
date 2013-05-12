@@ -14,9 +14,9 @@ static <$if returnType$><$returnType$><$else$>void<$endif$> kedr_intermediate_fu
 			*pre_function != NULL;
 			++pre_function)
 		{
-			<$if elipsis$>va_list args;
+			<$if ellipsis$>va_list args;
 			va_start(args, <$last_arg$>);
-			<$endif$>(*pre_function)(<$argumentList_comma$>&call_info);<$if elipsis$>
+			<$endif$>(*pre_function)(<$argumentList_comma$>&call_info);<$if ellipsis$>
 			va_end(args);<$endif$>
 		}
 	}
@@ -26,17 +26,17 @@ static <$if returnType$><$returnType$><$else$>void<$endif$> kedr_intermediate_fu
 		<$if returnType$><$returnType$><$else$>void<$endif$> (*replace_function)(<$argumentSpec_comma$> struct kedr_function_call_info* call_info) =
 			(typeof(replace_function))kedr_intermediate_info_<$function.name$>.replace;
 		
-		<$if elipsis$>va_list args;
+		<$if ellipsis$>va_list args;
 		va_start(args, <$last_arg$>);
-		<$endif$><$if returnType$>ret_val = <$endif$>replace_function(<$argumentList_comma$>&call_info);<$if elipsis$>
+		<$endif$><$if returnType$>ret_val = <$endif$>replace_function(<$argumentList_comma$>&call_info);<$if ellipsis$>
 		va_end(args);<$endif$>
 	}
 	// .. or original one.
 	else
 	{
-		<$if elipsis$>va_list args;
+		<$if ellipsis$>va_list args;
 		va_start(args, <$last_arg$>);
-		<$endif$><$originalCode$><$if elipsis$>
+		<$endif$><$originalCode$><$if ellipsis$>
 		va_end(args);<$endif$>
 	}
 	// Call all post-functions.
@@ -47,9 +47,9 @@ static <$if returnType$><$returnType$><$else$>void<$endif$> kedr_intermediate_fu
 			*post_function != NULL;
 			++post_function)
 		{
-			<$if elipsis$>va_list args;
+			<$if ellipsis$>va_list args;
 			va_start(args, <$last_arg$>);
-			<$endif$>(*post_function)(<$argumentList_comma$><$if returnType$>ret_val, <$endif$>&call_info);<$if elipsis$>
+			<$endif$>(*post_function)(<$argumentList_comma$><$if returnType$>ret_val, <$endif$>&call_info);<$if ellipsis$>
 			va_end(args);<$endif$>
 		}
 	}

@@ -5,9 +5,11 @@
 #include <kedr/core/kedr_functions_support.h>
 #include <kedr/core/kedr.h> /* only for types definition */
 
-<$if concat(header)$><$header: join(\n)$><$endif$>
+<$if concat(header)$><$header: join(\n)$>
 
-<$if concat(function.name)$><$block: join(\n\n)$><$endif$>
+<$endif$><$if concat(ellipsis)$>#include <stdarg.h>
+
+<$endif$><$if concat(function.name)$><$block: join(\n\n)$><$endif$>
 
 static struct kedr_intermediate_impl intermediate_impl[] =
 {
