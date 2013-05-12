@@ -1041,6 +1041,7 @@ static int __init
 leak_check_init_module(void)
 {
 	int ret = 0;
+	int i;
 	
 	if (stack_depth == 0 || stack_depth > KEDR_MAX_FRAMES) {
 		pr_err(KEDR_LC_MSG_PREFIX
@@ -1058,6 +1059,9 @@ leak_check_init_module(void)
 		);
 		return -EINVAL;
 	}
+	
+	for (i = 0; i < KEDR_LC_TABLE_SIZE; ++i)
+		INIT_HLIST_HEAD(&lc_objects[i]);
 	
 	ret = kedr_lc_output_init();
 	if (ret != 0)

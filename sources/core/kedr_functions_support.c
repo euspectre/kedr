@@ -1021,6 +1021,7 @@ function_info_table_init(struct function_info_table* table,
 {
 	struct hlist_head* heads;
 	size_t n_heads;
+	size_t i;
 	unsigned int bits;
 	
 	n_heads = (n_elems * 10 + 6)/ 7;
@@ -1038,6 +1039,9 @@ function_info_table_init(struct function_info_table* table,
 		pr_err("function_info_table_init: Failed to allocate functions info table.");
 		return -ENOMEM;
 	}
+	
+	for (i = 0; i < n_heads; ++i)
+		INIT_HLIST_HEAD(&heads[i]);
 	
 	table->heads = heads;
 	table->bits = bits;

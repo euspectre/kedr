@@ -108,6 +108,7 @@ repl_hash_table_init_from_array(struct repl_hash_table* table,
 	int result;
 	
 	size_t hash_table_size;
+	size_t i;
 	unsigned int bits;
 	struct hlist_head *heads = NULL;
 	
@@ -133,6 +134,9 @@ repl_hash_table_init_from_array(struct repl_hash_table* table,
 		pr_err("Failed to allocate hash table for replacement functions.");
 		return -ENOMEM;
 	}
+	
+	for (i = 0; i < hash_table_size; ++i)
+		INIT_HLIST_HEAD(&heads[i]);
 	
 	table->heads = heads;
 	table->bits = bits;
