@@ -14,7 +14,7 @@ header =>>
 
     # Names and types of the arguments of the target function
     arg.type = gfp_t
-    arg.name = flags
+    arg.name = gfp
     
     arg.type = const char *
     arg.name = fmt
@@ -22,8 +22,13 @@ header =>>
     arg.type = va_list
     arg.name = ap
     
-    # Code for manage copies of 'va_list'-typed argument.
-    arg_copy_init = va_copy(ap_copy, ap);
+    # Manage arguments copiing process.
+    args_copy_declare_and_init =>>
+		gfp_t gfp_copy = gfp;
+		const char* fmt_copy = fmt;
+		va_list ap_copy;
+		va_copy(ap_copy, ap);
+	<<
     arg_copy_destroy = va_end(ap_copy);
     
     prologue =>>
@@ -35,6 +40,6 @@ header =>>
     fpoint.param.name = size
 
     fpoint.param.type = gfp_t
-    fpoint.param.name = flags
+    fpoint.param.name = gfp
 
     fpoint.fault_code = ret_val = NULL;

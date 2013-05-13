@@ -13,7 +13,12 @@
 	arg.type = va_list
 	arg.name = ap
 	
-	# Copiing process of the parameter of 'va_list' type
-	args_copy_init = va_copy(ap_copy, ap);
+	# Copiing process of all arguments(special processing of 'ap' argument)
+	args_copy_declare_and_init =>>
+		gfp_t gfp_copy = gfp;
+		const char* fmt_copy = fmt;
+		va_list ap_copy;
+		va_copy(ap_copy, ap);
+	<<
 	args_copy_destroy = va_end(ap_copy);
 #######################################################################

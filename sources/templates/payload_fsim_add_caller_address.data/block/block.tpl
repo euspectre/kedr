@@ -22,8 +22,8 @@ original_code =>>
 fpoint.param.type = void*
 fpoint.param.name = caller_address
 
-<$if args_copy_init$>args_copy_init =>>
-    <$args_copy_init$>
+<$if args_copy_declare_and_init$>args_copy_declare_and_init =>>
+    <$args_copy_declare_and_init$>
 <<
 
 <$endif$><$if args_copy_destroy$>args_copy_destroy =>>
