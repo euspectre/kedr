@@ -599,7 +599,7 @@ err_function_use:
         BUG_ON(info_elem == NULL);
         
         // Clear intermediate info
-    info_elem->intermediate_info->pre = NULL;
+        info_elem->intermediate_info->pre = NULL;
         info_elem->intermediate_info->post = NULL;
         info_elem->intermediate_info->replace = NULL;
 
@@ -666,7 +666,11 @@ void kedr_functions_support_release(void)
             function_info_table_find(&functions, replace_pair->orig);
         BUG_ON(info_elem == NULL);
         
-        memset(info_elem->intermediate_info, 0, sizeof(info_elem->intermediate_info));
+        // Clear intermediate info
+        info_elem->intermediate_info->pre = NULL;
+        info_elem->intermediate_info->post = NULL;
+        info_elem->intermediate_info->replace = NULL;
+
         function_info_elem_unuse_support(info_elem);
     }
     
