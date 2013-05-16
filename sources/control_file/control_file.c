@@ -39,8 +39,16 @@ read_transform_str(const char* str)
     result = kmalloc(len_initial + 2, GFP_KERNEL);
     if(result == NULL) return result;
     memcpy(result, str, len_initial);
-    result[len_initial] = '\n';
-    result[len_initial + 1] = '\0';
+    if(len_initial > 0)
+    {
+        result[len_initial] = '\n';
+        result[len_initial + 1] = '\0';
+    }
+    else
+    {
+        /* Do not append newline symbol if initial string is empty. */
+        result[len_initial] = '\0';
+    }
     return result;
 }
 
@@ -109,7 +117,7 @@ ssize_t control_file_write_wrapper(struct file *filp,
      * Usually, writing to the control file is performed via 'echo' command,
      * which append new-line symbol to the writing string.
      *
-     * Because, this symbol is usually not needed, we trim it.
+     * Because this symbol is usually not needed, we trim it.
      */
     if(str[count - 1] == '\n') str[count - 1] = '\0';
 
