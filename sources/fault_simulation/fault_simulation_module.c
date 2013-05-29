@@ -580,9 +580,10 @@ CONTROL_FILE_OPS(point_format_string_file_operations,
 
 
 static char* last_fault_file_get_str(struct inode* inode);
+static int last_fault_file_set_str(const char* str, struct inode* inode);
 
 CONTROL_FILE_OPS(last_fault_file_operations,
-	last_fault_file_get_str, NULL);
+	last_fault_file_get_str, last_fault_file_set_str);
 
 
 static int
@@ -851,4 +852,12 @@ last_fault_file_get_str(struct inode* inode)
 	spin_unlock_irqrestore(&kedr_fsim_fault_message_lock, flags);
 	
 	return str;
+}
+
+static int
+last_fault_file_set_str(const char* str, struct inode* inode)
+{
+	kedr_fsim_fault_message("%s", str);
+	
+	return 0;
 }

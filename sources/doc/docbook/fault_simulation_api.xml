@@ -310,11 +310,11 @@ Write message described fault simulated. Should be called after <function linken
 </para>
 
 <programlisting><![CDATA[
-int kedr_fsim_fault_message(const char *fmt);
+int kedr_fsim_fault_message(const char *fmt, ...);
 ]]></programlisting>
 
 <para>
-Message is writed in the snprintf-like format. Function returns 1 if message was truncated while written, 0 otherwise.
+Message is written in the snprintf-like format. Function returns 1 if message was truncated while written, 0 otherwise.
 </para>
 
 <para>
@@ -416,7 +416,7 @@ Contains the information about the last simulated fault.
 </para>
 
 <para>
-Reading from this file returns a string that was written by the last <function linkend="fault_simulation_api.kedr_fsim_fault_message">kedr_fsim_fault_message</function> call or <constant>none</constant> if no calls to <function>kedr_fsim_fault_message</function> had been made since <filename>kedr_fault_simulation</filename> module was loaded.
+Reading from this file returns a string that was written by the last <function linkend="fault_simulation_api.kedr_fsim_fault_message">kedr_fsim_fault_message</function> call or <constant>none</constant> if no calls to <function>kedr_fsim_fault_message</function> had been made since <filename>kedr_fault_simulation</filename> module was loaded. One can reset information about last failure by simply writting <quote>none</quote> into this file. (Writting other message is also supported, but seems to have less sence.)
 </para>
 
 </section> <!-- "fault_simulation_api.last_fault_file" -->

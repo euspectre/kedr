@@ -309,5 +309,5 @@ The function call the last failure has been simulated for can be seen in <filena
 <programlisting><![CDATA[
 __kmalloc at [<e17b938d>] cfake_open+0x5d/0xa4 [kedr_sample_target]
 ]]></programlisting>
-</para>
+    </para>
 </section>
