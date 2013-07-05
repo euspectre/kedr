@@ -25,7 +25,7 @@ add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${module_name}.ko"
 
 kedr_load_test_prefixes()
 set(KEDR_INCLUDE_DIR "${KEDR_TEST_INCLUDE_DIR}")
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/../Kbuild.in"
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Kbuild.in"
     "${CMAKE_CURRENT_BINARY_DIR}/Kbuild"
     @ONLY
 )

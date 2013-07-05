@@ -18,7 +18,9 @@ global =>>
 #include <kedr/calculator/calculator.h>
 
 #include <kedr/core/kedr.h> /* in_init */
-#include <linux/random.h> /* random32() */
+#include <linux/random.h> /* random32(), prandom_u32() */
+
+#include "config.h"
 
 <$if expressionHasConstants$>// Constants in the expression
 static struct kedr_calc_const constants[] = {
@@ -45,12 +47,12 @@ static kedr_calc_int_t in_init_weak_var_compute(void)
 
 static kedr_calc_int_t rnd100_weak_var_compute(void)
 {
-	return random32() % 100;
+	return kedr_random32() % 100;
 }
 
 static kedr_calc_int_t rnd10000_weak_var_compute(void)
 {
-	return random32() % 10000;
+	return kedr_random32() % 10000;
 }
 
 static const struct kedr_calc_weak_var weak_vars[] = {

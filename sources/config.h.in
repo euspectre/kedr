@@ -64,4 +64,14 @@
 #endif /* defined(HLIST_FOR_EACH_ENTRY_POS_ONLY) */
 /* ====================================================================== */
 
+/* Specifies whether random32() is available. */
+#cmakedefine KEDR_HAVE_RANDOM32
+
+#if defined(KEDR_HAVE_RANDOM32)
+# define kedr_random32() random32()
+#else
+# define kedr_random32() prandom_u32()
+#endif
+/* ====================================================================== */
+
 #endif /* CONFIG_H_1734_INCLUDED */

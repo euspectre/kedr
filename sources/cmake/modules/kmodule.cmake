@@ -551,6 +551,40 @@ macro(check_hlist_for_each_entry)
 endmacro(check_hlist_for_each_entry)
 ############################################################################
 
+# Check if 'random32' is available in the kernel.
+# The macro sets variable 'KEDR_HAVE_RANDOM32'.
+macro(check_random32)
+	set(check_random32_message
+		"Checking if random32() is available"
+	)
+	message(STATUS "${check_random32_message}")
+	if (DEFINED KEDR_HAVE_RANDOM32)
+		set(check_random32_message
+"${check_random32_message} [cached] - ${KEDR_HAVE_RANDOM32}"
+		)
+	else (DEFINED KEDR_HAVE_RANDOM32)
+		kmodule_try_compile(have_random32_impl
+			"${CMAKE_BINARY_DIR}/check_random32"
+			"${kmodule_test_sources_dir}/check_random32/module.c"
+		)
+		if (have_random32_impl)
+			set(KEDR_HAVE_RANDOM32 "yes" CACHE INTERNAL
+				"Is random32() available?"
+			)
+		else (have_random32_impl)
+			set(KEDR_HAVE_RANDOM32 "no" CACHE INTERNAL
+				"Is random32() available?"
+			)
+		endif (have_random32_impl)
+
+		set(check_random32_message
+"${check_random32_message} - ${KEDR_HAVE_RANDOM32}"
+		)
+	endif (DEFINED KEDR_HAVE_RANDOM32)
+	message(STATUS "${check_random32_message}")
+endmacro(check_random32)
+############################################################################
+
 # The payload modules should call kedr_find_function() for each kernel 
 # function they would like to process. If the function is not known
 # to KEDR (absent from the "function database", see "functions/" directory), 

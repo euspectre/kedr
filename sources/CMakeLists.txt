@@ -175,6 +175,9 @@ check_stack_trace()
 # Check the signatures of hlist_for_each_entry*() macros, they changed 
 # in the kernel 3.9.
 check_hlist_for_each_entry()
+
+# Check if random32() is available.
+check_random32()
 #######################################################################
 
 option(KEDR_STANDARD_CALLM_PAYLOADS 
