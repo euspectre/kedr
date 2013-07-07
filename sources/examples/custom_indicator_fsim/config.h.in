@@ -1,0 +1,14 @@
+#ifndef CONFIG_H_1719_INCLUDED
+#define CONFIG_H_1719_INCLUDED
+
+/* Specifies whether random32() is available. */
+#cmakedefine KEDR_HAVE_RANDOM32
+
+#if defined(KEDR_HAVE_RANDOM32)
+# define kedr_random32() random32()
+#else
+# define kedr_random32() prandom_u32()
+#endif
+/* ====================================================================== */
+
+#endif /* CONFIG_H_1719_INCLUDED */

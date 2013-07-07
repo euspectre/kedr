@@ -22,6 +22,10 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/makefile.in"
     @ONLY
 )
 
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/config.h.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/config.h"
+)
+
 # Additional sources from which indicator module will compile
 set(additional_sources
 	"${CMAKE_SOURCE_DIR}/control_file/control_file.c"
@@ -43,4 +47,7 @@ install(FILES   "${CMAKE_CURRENT_BINARY_DIR}/Kbuild_installed"
         RENAME Kbuild
 )
 
+install(FILES   "${CMAKE_CURRENT_BINARY_DIR}/config.h"
+        DESTINATION "${example_install_dir}"
+)
 kedr_test_add_subdirectory(tests)

@@ -41,4 +41,8 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/../makefile.in"
     @ONLY
 )
 
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/../config.h.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/config.h"
+)
+
 kedr_test_add_target("custom_fsim_indicator")
