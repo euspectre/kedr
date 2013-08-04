@@ -93,6 +93,19 @@ struct indicator_instance
 // It only used in control files for read/write operations.
 static const char* indicator_name_not_set = "none";
 
+/* 
+ * Verbose level for output into system log.
+ * 
+ * 0 - output nothing
+ * 1 - output only one line per fault simulated
+ * 2 - output call trace per fault simulated
+ * 
+ * Default is 2.
+ * 
+ * NOTE: Meaning of that parameter is very similar to one in fault injection.
+ */
+u8 verbose = 2;
+
 //List of points
 static LIST_HEAD(points);
 //List of indicators
@@ -112,6 +125,8 @@ static struct dentry* indicators_root_directory;
 
 // File for access last fault.
 static struct dentry* last_fault_file;
+// File for access 'verbose' property.
+static struct dentry* verbose_file;
 
 static char kedr_fsim_fault_message_buf[KEDR_FSIM_FAULT_MESSAGE_LEN + 1] = "none";
 static DEFINE_SPINLOCK(kedr_fsim_fault_message_lock);
@@ -409,6 +424,18 @@ int kedr_fsim_point_simulate(struct kedr_simulation_point* point,
 
 	rcu_read_unlock();
 
+    if(result)
+    {
+        if(verbose >= 1)
+        {
+            printk(KERN_NOTICE "KEDR FAULT SIMULATION: forcing a failure\n");
+        }
+        if(verbose >= 2)
+        {
+            dump_stack();
+        }
+    }
+
 	return result;
 }
 EXPORT_SYMBOL(kedr_fsim_point_simulate);
@@ -698,8 +725,19 @@ kedr_fault_simulation_init(void)
 		goto err_last_fault_file;
 	}
 	
+    verbose_file = debugfs_create_u8("verbose", S_IRUGO | S_IWUSR | S_IWGRP,
+        root_directory, &verbose);
+	if(verbose_file == NULL)
+	{
+		print_error0("Cannot create 'verbose' file in debugfs.");
+		goto err_verbose_file;
+	}
+
+    
 	return 0;
 
+err_verbose_file:
+    debugfs_remove(last_fault_file);
 err_last_fault_file:
 	debugfs_remove(indicators_root_directory);
 err_indicators_dir:
@@ -716,10 +754,11 @@ kedr_fault_simulation_exit(void)
 	BUG_ON(!list_empty(&points));
 	BUG_ON(!list_empty(&indicators));
 
-	debugfs_remove(last_fault_file);
-	debugfs_remove(points_root_directory);
-	debugfs_remove(indicators_root_directory);
-	debugfs_remove(root_directory);
+    debugfs_remove(verbose_file);
+    debugfs_remove(last_fault_file);
+    debugfs_remove(points_root_directory);
+    debugfs_remove(indicators_root_directory);
+    debugfs_remove(root_directory);
 }
 module_init(kedr_fault_simulation_init);
 module_exit(kedr_fault_simulation_exit);

@@ -305,6 +305,46 @@ When the user loads KEDR with the standard fault simulation profile (<filename>f
 </para></note>
     
     <para>
+Every time failure is simulated, message is printed into the system log. One can control verbosity of that message via <filename>/sys/kernel/debug/kedr_fault_simulation/verbose</filename> file.
+    </para>
+    <para>
+Verbosity <constant>0</constant> means to print nothing.
+    </para>
+    <para>
+Verbosity <constant>1</constant> means to print single line per failure. Content of that line is constant:
+<programlisting><![CDATA[
+KEDR FAULT SIMULATION: forcing a failure
+]]></programlisting>
+    </para>
+    <para>
+Default verbosity <constant>2</constant> means to print also a call trace for every failure. Output looks like
+<programlisting><![CDATA[
+[ 6737.942142] KEDR FAULT SIMULATION: forcing a failure
+[ 6737.942198] Pid: 5699, comm: bash Tainted: G           O 3.4.33-2.10-fs #3
+[ 6737.942222] Call Trace:
+[ 6737.942277]  [<c020550e>] try_stack_unwind+0x17e/0x190
+[ 6737.942305]  [<c02042cf>] dump_trace+0x4f/0x170
+[ 6737.942329]  [<c0205567>] show_trace_log_lvl+0x47/0x60
+[ 6737.942351]  [<c020559a>] show_trace+0x1a/0x20
+[ 6737.942382]  [<c0650321>] dump_stack+0x6e/0x75
+[ 6737.942407]  [<f9940a78>] kedr_fsim_point_simulate+0xa8/0xb0 [kedr_fault_simulation]
+[ 6737.942438]  [<f9949023>] repl___kmalloc+0x23/0x50 [kedr_sample_fsim_payload]
+[ 6737.942459]  [<f99490c2>] kedr_intermediate_func___kmalloc+0x52/0xa0 [kedr_sample_fsim_payload]
+[ 6737.942480]  [<f995c2ad>] cfake_open+0x5d/0xa4 [kedr_sample_target]
+[ 6737.942508]  [<c0332cf8>] chrdev_open+0x78/0x1b0
+[ 6737.942537]  [<c032cd82>] __dentry_open+0x1c2/0x290
+[ 6737.942556]  [<c032de2e>] nameidata_to_filp+0x5e/0x70
+[ 6737.942574]  [<c033c4f7>] do_last+0x397/0x7a0
+[ 6737.942593]  [<c033c9d0>] path_openat+0xa0/0x360
+[ 6737.942609]  [<c033cd7c>] do_filp_open+0x2c/0x80
+[ 6737.942625]  [<c032df29>] do_sys_open+0xe9/0x1c0
+[ 6737.942640]  [<c032e02d>] sys_open+0x2d/0x40
+[ 6737.942655]  [<c06632dc>] sysenter_do_call+0x12/0x33
+[ 6737.942693]  [<b7771430>] 0xb777142f
+]]></programlisting>
+    </para>
+    
+    <para>
 The function call the last failure has been simulated for can be seen in <filename>/sys/kernel/debug/kedr_fault_simulation/last_fault</filename>. It looks like
 <programlisting><![CDATA[
 __kmalloc at [<e17b938d>] cfake_open+0x5d/0xa4 [kedr_sample_target]

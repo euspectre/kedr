@@ -486,6 +486,10 @@ Unload the target module:
 </programlisting>
 
 <para>
+Every time a failure is simulated, information about it is stored in the system log. This information include call trace of simulated failure.
+</para>
+
+<para>
 Note that you can see the last location where a failure has been simulated by KEDR in <filename>kedr_fault_simulation/last_fault</filename> in debugfs:
 </para>
 

@@ -421,4 +421,31 @@ Reading from this file returns a string that was written by the last <function l
 
 </section> <!-- "fault_simulation_api.last_fault_file" -->
 
+<section id="fault_simulation_api.verbose_file">
+<title>Control File <filename>verbose</filename></title>
+
+<para>
+Contains the current verbosity level of messages about simulated failures.
+</para>
+
+<para>
+Value <constant>0</constant> means to print none messages.
+</para>
+<para>
+Value <constant>1</constant> means to print single line per failure simulated.
+</para>
+<para>
+Value <constant>2</constant> means to print also a call trace for every failure simulated.
+</para>
+
+<para>
+<filename>&lt;debugfs-mount-point&gt;/kedr_fault_simulation/verbose</filename>
+</para>
+
+<para>
+One can set/request current verbosity level via writing to/reading from this file correspondingly.
+</para>
+
+</section> <!-- "fault_simulation_api.verbose_file" -->
+
 </section> <!-- "fault_simulation.api"-->
