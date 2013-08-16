@@ -240,7 +240,6 @@ klc_clear_allocs(struct kedr_leak_check *lc)
 static void
 klc_clear_deallocs(struct kedr_leak_check *lc)
 {
-	struct kedr_lc_resource_info *ri = NULL;
 	unsigned int i;
 
 	if (lc->total_bad_frees == 0) {
@@ -253,7 +252,7 @@ klc_clear_deallocs(struct kedr_leak_check *lc)
 	 * when no other code (replacement functions, etc.) can interfere.
 	 */
 	for (i = 0; i < lc->nr_bad_free_groups; ++i) {
-		resource_info_destroy(ri);
+		resource_info_destroy(lc->bad_free_groups[i].ri);
 		lc->bad_free_groups[i].ri = NULL;
 	}
 	lc->nr_bad_free_groups = 0;
