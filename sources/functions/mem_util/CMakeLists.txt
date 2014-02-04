@@ -26,9 +26,23 @@ func_db_configure_functions (
 	"posix_acl_alloc"
 	"posix_acl_clone"
 	"posix_acl_from_mode"
-	
+
+	# TODO
+	# Since kernel 3.14-rc1, semantics of posix_acl_create() and
+	# posix_acl_chmod() has changed. See these commits in the mainline:
+	# 37bc15392a2363ca822b2c2828e0ccafbea32f75
+	# 5bf3258fd2acd8515450ab8efcd97c9d3b69f7f9
+	# The old functions have been renamed with '__' prepended to their
+	# names.
+	#
+	# When this API stablilizes a bit, we may check the signatures of
+	# these functions and handle them appropriately. For now, the
+	# payload modules may just exclude these from handling if the
+	# '__*' functions exist.
 	"posix_acl_create"
 	"posix_acl_chmod"
+	"__posix_acl_create"
+	"__posix_acl_chmod"
 	
 	"match_strdup"
 	

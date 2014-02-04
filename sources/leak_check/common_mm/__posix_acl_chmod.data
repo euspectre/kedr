@@ -1,0 +1,51 @@
+[group]
+	# The body of the replacement function
+	handler.pre =>>
+		call_info->data = NULL;
+		
+		/* Save the pointer to the old ACL because the target 
+		 * function may overwrite it. The pointer will be
+		 * used in the post handler to actually release the ACL. */
+		if (acl != NULL && (*acl) != NULL) {
+			call_info->data = (*acl);
+			 
+			/* To simplify the handlers, make sure the target
+			 * function will not delete the old ACL. 
+			 * [NB] I doubt that some other code may legally call 
+			 * posix_acl_release() on the old ACL concurrently 
+			 * with the execution of the target function. If that
+			 * was possible, the target function could end up 
+			 * using the already freed ACL structure. */
+			atomic_inc(&(*acl)->a_refcount);
+		}
+		(void)caller_address;
+	<<
+	handler.post =>>
+		struct posix_acl *old_acl = call_info->data;
+		struct posix_acl *new_acl = (acl != NULL) ? (*acl) : NULL;
+		
+		if (ret_val >= 0 && new_acl != NULL) {
+			/* Allocation succeeded */
+			size_t size = sizeof(struct posix_acl) + 
+				new_acl->a_count * 
+				sizeof(struct posix_acl_entry);
+			kedr_lc_handle_alloc(target_module, new_acl, size,
+				caller_address); 
+		}
+		
+		/* The target function always calls posix_acl_release() for
+		 * the old ACL. Check if it would free the ACL if we did not
+		 * increase the reference count, report the events 
+		 * accordingly and free the ACL if needed.
+		 * The code below is based on the implementation of 
+		 * posix_acl_release(). */
+		if (old_acl && atomic_dec_and_test(&old_acl->a_refcount)) {
+			kedr_lc_handle_free(target_module, old_acl, 
+				caller_address);
+ 			kfree_rcu(old_acl, a_rcu);
+ 			/* [NB] posix_acl_{create,chmod} appeared first in
+ 			 * Linux kernel 3.1 when kfree_rcu() had already been
+ 			 * available. */
+ 		}
+	<<
+#######################################################################

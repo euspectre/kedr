@@ -1,0 +1,26 @@
+[group]
+	prologue =>>
+	size_t size = 0;
+	gfp_t flags = gfp;
+	if (acl) {
+		size = sizeof(struct posix_acl) + 
+			(size_t)(*acl)->a_count * 
+			sizeof(struct posix_acl_entry);
+	}
+<<
+	
+	# Fault Simulation
+	fpoint.reuse_point = posix_acl_alloc
+
+	fpoint.param.type = size_t
+	fpoint.param.name = size
+
+	fpoint.param.type = gfp_t
+	fpoint.param.name = flags
+
+	fpoint.fault_code =>>
+posix_acl_release(*acl);
+		*acl = NULL;
+		ret_val = -ENOMEM;
+<<
+#######################################################################

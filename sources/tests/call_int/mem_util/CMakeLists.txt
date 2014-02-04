@@ -4,6 +4,8 @@
 #	 add_to_page_cache_locked
 #	 __page_cache_alloc
 #	posix_acl_from_xattr
+#	posix_acl_create
+#	posix_acl_chmod
 # The main problem here is how to create a reasonably simple code to use
 # these functions in the correct environment and how to properly clean up
 # after that.
@@ -26,8 +28,8 @@ kedr_test_add_ci_test("mem_util"
 	"posix_acl_clone"
 	"posix_acl_from_mode"
 
-	"posix_acl_create"
-	"posix_acl_chmod"
+#	"posix_acl_create"
+#	"posix_acl_chmod"
 #	"posix_acl_from_xattr"
 
 	"match_strdup"
