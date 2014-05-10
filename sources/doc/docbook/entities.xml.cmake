@@ -4,9 +4,9 @@
 
 <!-- release- and version-related stuff -->
 <!ENTITY rel-version "@KEDR_VERSION_MAJOR@.@KEDR_VERSION_MINOR@">
-<!ENTITY rel-date    "February 26, 2013">
+<!ENTITY rel-date    "May 12, 2014">
 <!ENTITY kedr-lifespan-first   "2010-2012">
-<!ENTITY kedr-lifespan   "2012-2013">
+<!ENTITY kedr-lifespan   "2012-2014">
 
 <!-- various URLs  -->
 <!ENTITY kedr-url-berlios   "http://developer.berlios.de/projects/kedr/">

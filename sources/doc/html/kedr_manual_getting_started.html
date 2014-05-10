@@ -1,4 +1,4 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><title>3. Getting Started</title><link rel="stylesheet" type="text/css" href="kedr-doc.css"><meta name="generator" content="DocBook XSL Stylesheets V1.77.1"><link rel="home" href="index.html" title="KEDR 0.4 Reference Manual"><link rel="up" href="index.html" title="KEDR 0.4 Reference Manual"><link rel="prev" href="kedr_manual_overview.html" title="2. Overview"><link rel="next" href="kedr_manual_using_kedr.html" title="4. Using KEDR"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">3. Getting Started</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="kedr_manual_overview.html">Prev</a> </td><th width="60%" align="center"> </th><td width="20%" align="right"> <a accesskey="n" href="kedr_manual_using_kedr.html">Next</a></td></tr></table><hr></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="kedr_manual_getting_started"></a>3. Getting Started</h2></div></div></div><div class="toc"><dl><dt><span class="section"><a href="kedr_manual_getting_started.html#getting_started.install">3.1. Installation</a></span></dt><dt><span class="section"><a href="kedr_manual_getting_started.html#getting_started.use_case">3.2. Analyzing the Sample Module</a></span></dt><dt><span class="section"><a href="kedr_manual_getting_started.html#getting_started.leak_check">3.3. Detecting Memory Leaks</a></span></dt><dt><span class="section"><a href="kedr_manual_getting_started.html#getting_started.fault_simulation">3.4. Fault Simulation</a></span></dt><dt><span class="section"><a href="kedr_manual_getting_started.html#getting_started.call_monitoring">3.5. Call Monitoring (Call Tracing)</a></span></dt><dt><span class="section"><a href="kedr_manual_getting_started.html#getting_started.all_at_once">3.6. Doing It All at Once</a></span></dt></dl></div><p>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><title>3. Getting Started</title><link rel="stylesheet" type="text/css" href="kedr-doc.css"><meta name="generator" content="DocBook XSL Stylesheets V1.77.1"><link rel="home" href="index.html" title="KEDR 0.5 Reference Manual"><link rel="up" href="index.html" title="KEDR 0.5 Reference Manual"><link rel="prev" href="kedr_manual_overview.html" title="2. Overview"><link rel="next" href="kedr_manual_using_kedr.html" title="4. Using KEDR"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">3. Getting Started</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="kedr_manual_overview.html">Prev</a> </td><th width="60%" align="center"> </th><td width="20%" align="right"> <a accesskey="n" href="kedr_manual_using_kedr.html">Next</a></td></tr></table><hr></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="kedr_manual_getting_started"></a>3. Getting Started</h2></div></div></div><div class="toc"><dl><dt><span class="section"><a href="kedr_manual_getting_started.html#getting_started.install">3.1. Installation</a></span></dt><dt><span class="section"><a href="kedr_manual_getting_started.html#getting_started.use_case">3.2. Analyzing the Sample Module</a></span></dt><dt><span class="section"><a href="kedr_manual_getting_started.html#getting_started.leak_check">3.3. Detecting Memory Leaks</a></span></dt><dt><span class="section"><a href="kedr_manual_getting_started.html#getting_started.fault_simulation">3.4. Fault Simulation</a></span></dt><dt><span class="section"><a href="kedr_manual_getting_started.html#getting_started.call_monitoring">3.5. Call Monitoring (Call Tracing)</a></span></dt><dt><span class="section"><a href="kedr_manual_getting_started.html#getting_started.all_at_once">3.6. Doing It All at Once</a></span></dt></dl></div><p>
 This section shows how to install KEDR framework and how to use it to analyze a simple kernel module.
 </p><div class="warning" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Warning</h3><p>
 KEDR framework can do much harm if it gets out of control. USE IT ONLY IF YOU 
@@ -30,13 +30,13 @@ GNU Make
 </p></li><li class="listitem"><p>
 Other tools and packages necessary to build kernel modules: on some systems it can be <code class="filename">kernel-*-devel</code>, <code class="filename">kernel-*-source</code>, <code class="filename">kernel-*-syms</code>, <code class="filename">linux-headers-*</code> or other packages. On some systems you may also need to install <code class="filename">DKMS</code> package or something like that.
 </p></li></ul></div><p>
-After all the prerequisites have been met, unpack the archive with the sources (<code class="filename">kedr-0.4.tar.bz2</code>) and create another directory, say, <code class="filename">kedr-build</code> where KEDR will be built.
+After all the prerequisites have been met, unpack the archive with the sources (<code class="filename">kedr-0.5.tar.bz2</code>) and create another directory, say, <code class="filename">kedr-build</code> where KEDR will be built.
 </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
 It is highly recommended to use an out-of-source build, i.e. not to build KEDR from the directory containing its sources. With an out-of-source build, you leave the source tree of KEDR unchanged, which can be convenient. The source tree can even be read-only in this case. You can also configure and build the framework from different build directories with different options if you want to. An in-source build would make this impossible.
 </p></div><p>
 Change current directory to <code class="filename">kedr-build</code> and configure the package using the following command:
 </p><pre class="programlisting">
-cmake ../kedr-0.4/
+cmake ../kedr-0.5/
 </pre><p>
 During configuration phase, the information about the environment is analyzed and appropriate settings are prepared for KEDR to tune it properly to your system. This is done automatically.
 </p><p>
@@ -46,7 +46,7 @@ cmake -DCMAKE_INSTALL_PREFIX=&lt;install_directory&gt; &lt;path-to-kedr-sources&
 </pre><p>
 Example:
 </p><pre class="programlisting">
-cmake -DCMAKE_INSTALL_PREFIX=/opt/kedr/ ../kedr-0.4/
+cmake -DCMAKE_INSTALL_PREFIX=/opt/kedr/ ../kedr-0.5/
 </pre><p>
 The package will be configured to be installed to <code class="filename">/opt/kedr/</code>.
 </p><p>
@@ -293,7 +293,7 @@ In this section, we will show how to use KEDR for call monitoring, that is, for 
 </p><p>
 By default, the standard plugins that implement call monitoring for many widely used kernel functions are disabled when you build KEDR. If you need them, you should reconfigure KEDR with <code class="code">KEDR_STANDARD_CALLM_PAYLOADS=on</code>:
 </p><pre class="programlisting">
-cmake -DKEDR_STANDARD_CALLM_PAYLOADS=on ../kedr-0.4/
+cmake -DKEDR_STANDARD_CALLM_PAYLOADS=on ../kedr-0.5/
 </pre><p>
 Then you should build and install KEDR as described above.
 </p><p>
