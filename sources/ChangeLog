@@ -1,4 +1,39 @@
 ---------------------------------------------------------------------------
+KEDR 0.5
+---------------------------------------------------------------------------
+Eugene A. Shatokhin:
+    tests: Disabled the test for kmalloc_order_trace
+    func: Added a temporary workaround for semantic changes in posix_acl_*()
+    leak_check: Fixed: some resource_info structures were not destroyed
+    examples: Fixed: custom_indicator_fsim failed to build on kernel 3.10
+    Provided a workaround for missing random32()
+    Added missing initialization of hlist_head structures
+    Handle the change in hlist_for_each_entry*() in the kernel 3.9
+    build: Fixed: MiST Engine used wrong config.h
+    LeakCheck: Fixed: get_task_comm() was not exported until kernel version 3.0
+    LeakCheck: Fixed the output of "init" and "core" addresses
+    LeakCheck: Added output of process information
+    LeakCheck: Clear the collected data if requested
+    LeakCheck: Cosmetic fixes
+    LeakCheck: Fixed: returns were missing in some of the error paths
+    tests: Added a test for stat flushing in LeakCheck
+    LeakCheck: Allow flushing stats at any time
+
+Andrey Tsyvarev:
+    KEDR Fault Simulation: Output call trace for every faulure simulated.
+    KEDR Fault Simulation: Add support for reset message about last failure.
+    control_file.c: Do not append newline symbol to empty string for output.
+    kedr_functions_support.c: replace another incorrect memset call with NULL-assignments to structure fields.
+    Payload templates: 'args_copy_init' parameter is renamed to 'args_copy_declare_and_init' and should describe copiing of all arguments instead of only a special one.
+    Payload templates: Use va_copy in every template-generated function which call more than one other functions with va_list argument. kedr_function_support.c: replace incorrect memcpy() call with explicit NULL-assignments to structure fields.
+    update_deps.sh: Change operator '==' to '=' in test command. CMake: fix generation process of test variant of default.conf.
+    CMake: Add kedr_generate() function for generate files using kedr_gen. Change all usages of kedr_gen in build process to use that function instead.
+    Fix fault simulation payaload templates to work correctly with functions with variable number of arguments. Add test for that.
+    Templates: Add support for elipsis arguments in intercepted functions. LeakCheck: Update kasprintf interception to use new method. Move kasptintf and kvasprintf into common_mm group(as kstrdup).
+    Fix misprint in documentation(only in docbook variant).
+    Fix two misprints in documentation.
+
+---------------------------------------------------------------------------
 KEDR 0.4.1
 ---------------------------------------------------------------------------
     * KEDR now supports kernel versions 3.7 and 3.8 too.

@@ -1,5 +1,22 @@
+2014-05-12
+KEDR 0.5
+
+The most significant changes:
+    * KEDR now works on the kernel versions 3.10 - 3.15 (as of -rc4) too.
+    * It is now possible to make LeakCheck show the current set of allocated
+but not freed blocks at any time as well as discard the collected data (if
+requested).
+    * LeakCheck now also shows information about the processes that allocated
+the leaked memory blocks.
+    * Call stack is now output for each simulated failure to simplify the
+analysis.
+    * Many fixes in LeakCheck and Fault Simulation subsystem.
+
+See ChangeLog for detailed information about the changes in this version.
+-----------------------------------------------------------
+
 2013-02-26
-KEDR 0.4.1 released
+KEDR 0.4.1
 
 The most significant enhancement in this version is the support for kernel
 versions 3.7 and 3.8. Several bug fixes have also been made.
@@ -8,7 +25,7 @@ See ChangeLog for detailed information about the changes in this version.
 -----------------------------------------------------------
 
 2012-09-27
-KEDR 0.4 released
+KEDR 0.4
 
 The most significant changes:
     * KEDR now works on the kernel versions 3.3-3.6 too.
@@ -30,7 +47,7 @@ See ChangeLog for detailed information about the changes in this version.
 -----------------------------------------------------------
 
 2011-06-17
-KEDR 0.3 released
+KEDR 0.3
 
 This release provides several enhancements and various fixes compared 
 to version 0.2.1. The most significant changes:
@@ -53,7 +70,7 @@ See ChangeLog for detailed information about the changes in this version.
 -----------------------------------------------------------
 
 2011-04-12
-KEDR 0.2.1 released
+KEDR 0.2.1
 
 The most significant change in this release is the enhancement of build 
 system. It is now possible to build KEDR for a kernel different from the
@@ -67,7 +84,7 @@ See ChangeLog for detailed information about the changes in this version.
 -----------------------------------------------------------
 
 2011-03-02
-KEDR 0.2 released
+KEDR 0.2
 
 This release provides several enhancements and various fixes compared 
 to version 0.1. The most significant changes:
@@ -87,7 +104,7 @@ See ChangeLog for detailed information about the changes in this version.
 -----------------------------------------------------------
 
 2010-11-23
-KEDR 0.1 released
+KEDR 0.1
 
 This is the first public stable version of KEDR framework. 
 Main features of this version:
