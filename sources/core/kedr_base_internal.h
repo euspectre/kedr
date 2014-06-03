@@ -16,11 +16,11 @@ struct kedr_base_interception_info
     void* orig;
     
     // NULL-terminated array of pre-functions(may be NULL)
-	void** pre;
-	// NULL-terminated array of post-functions(may be NULL)
-	void** post;
-	// replacement function or NULL.
-	void* replace;
+    void** pre;
+    // NULL-terminated array of post-functions(may be NULL)
+    void** post;
+    // replacement function or NULL.
+    void* replace;
 };
 
 /*

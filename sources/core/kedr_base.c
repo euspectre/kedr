@@ -798,7 +798,6 @@ functions_map_init(struct functions_map* map, int n_elems)
 {
 	struct hlist_head* heads;
 	size_t n_heads;
-	size_t i;
 	unsigned int bits;
 	
 	n_heads = (n_elems * 10 + 6)/ 7;
@@ -817,9 +816,6 @@ functions_map_init(struct functions_map* map, int n_elems)
 		return -ENOMEM;
 	}
 	
-	for (i = 0; i < n_heads; ++i)
-		INIT_HLIST_HEAD(&heads[i]);
-	
 	map->heads = heads;
 	map->bits = bits;
 	
@@ -828,11 +824,13 @@ functions_map_init(struct functions_map* map, int n_elems)
 void
 functions_map_destroy(struct functions_map* map)
 {
+	struct hlist_head* heads = map->heads;
+	size_t n_heads = 1 << map->bits;
+
 	int i;
-	for(i = 0; i < map->bits; i++)
+	for(i = 0; i < (int)n_heads; i++)
 	{
-		struct hlist_head* head = &map->heads[i];
-		if(!hlist_empty(head))
+		if(!hlist_empty(heads + i))
 		{
 			pr_err("Destroying non-empty functions map");
 			BUG();
@@ -941,7 +939,6 @@ int function_counters_table_init(struct function_counters_table* table, size_t n
 {
 	struct hlist_head* heads;
 	size_t n_heads;
-	size_t i;
 	unsigned int bits;
 	
 	n_heads = (n_elems * 10 + 6)/ 7;
@@ -959,9 +956,6 @@ int function_counters_table_init(struct function_counters_table* table, size_t n
 		pr_err("function_counters_table_init: Failed to allocate functions table.");
 		return -ENOMEM;
 	}
-	
-	for (i = 0; i < n_heads; ++i)
-		INIT_HLIST_HEAD(&heads[i]);
 	
 	table->heads = heads;
 	table->bits = bits;
