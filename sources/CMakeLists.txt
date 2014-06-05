@@ -191,10 +191,9 @@ set(KEDR_TRACE ${RING_BUFFER_IMPLEMENTED} CACHE INTERNAL "Whether KEDR trace mec
 set(KEDR_CALLM_PAYLOADS ${RING_BUFFER_IMPLEMENTED} CACHE INTERNAL "Whether call monitor payloads is supported")
 
 if(KEDR_STANDARD_CALLM_PAYLOADS AND NOT RING_BUFFER_IMPLEMENTED)
-	message("\n[WARNING]\n"
-		"Tracing is not supported, so standard call monitoring functionality will be disabled too.\n"
-		"(KEDR_STANDARD_CALLM_PAYLOADS set to OFF)"\n)
-	set(KEDR_STANDARD_CALLM_PAYLOADS OFF)
+    message("[WARNING] Tracing is not supported, so standard call monitoring functionality will be disabled too.")
+    message("(KEDR_STANDARD_CALLM_PAYLOADS set to OFF)")
+    set(KEDR_STANDARD_CALLM_PAYLOADS OFF)
 endif(KEDR_STANDARD_CALLM_PAYLOADS AND NOT RING_BUFFER_IMPLEMENTED)
 
 option(KEDR_STANDARD_FSIM_PAYLOADS 
