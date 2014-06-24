@@ -25,9 +25,7 @@ See the documentation (doc/html/index.html) for the detailed information
 about KEDR framework.
 
 The latest stable version of KEDR as well as the development versions can 
-be found at KEDR project sites: 
- - (main site) at Google Code: http://code.google.com/p/kedr/
- - (mirror) at BerliOS Developer: http://developer.berlios.de/projects/kedr/
+be found at KEDR project site at Google Code: http://code.google.com/p/kedr/
 
 For bug reports, please use the issue tracker:
 http://code.google.com/p/kedr/issues/
