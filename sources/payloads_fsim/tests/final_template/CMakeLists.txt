@@ -1,5 +1,16 @@
 kedr_load_test_prefixes()
 
+# Add fault simulation payload module, used for tests.
+# Payload is generated from "payload.data" file, located in the 
+# current source or binary directory.
+function(add_test_fsim_payload kmodule_name)
+    kedr_create_payload_module(${kmodule_name} "payload.data"
+    "${KEDR_GEN_TEMPLATES_DIR}/payload_fsim.c")
+
+    kbuild_link_module(${kmodule_name} kedr_fault_simulation)
+    kedr_test_add_target(${kmodule_name})
+endfunction(add_test_fsim_payload kmodule_name)
+
 set(trigger_target_module_name "kedr_test_trigger_target")
 set(indicator_constant_module_name "kedr_indicator_constant")
 set(indicator_greater_than_module_name "kedr_indicator_greater_than")

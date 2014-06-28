@@ -14,68 +14,6 @@ if (CMAKE_CROSSCOMPILING)
 	endif (KEDR_SYSTEM_MAP_FILE)
 endif (CMAKE_CROSSCOMPILING)
 
-# kmodule_try_compile(RESULT_VAR bindir srcfile
-#           [COMPILE_DEFINITIONS flags]
-# 			[OUTPUT_VARIABLE var]
-#			[COPY_FILE filename])
-
-# Similar to try_module in simplified form, but compile srcfile as
-# kernel module, instead of user space program.
-
-function(kmodule_try_compile RESULT_VAR bindir srcfile)
-	to_abs_path(src_abs_path "${srcfile}")
-	# State for parse argument list
-	set(state "None")
-	foreach(arg ${ARGN})
-		if(arg STREQUAL "COMPILE_DEFINITIONS")
-			set(state "COMPILE_DEFINITIONS")
-		elseif(arg STREQUAL "OUTPUT_VARIABLE")
-			set(state "OUTPUT_VARIABLE")
-		elseif(arg STREQUAL "COPY_FILE")
-			set(state "COPY_FILE")
-		elseif(state STREQUAL "COMPILE_DEFINITIONS")
-			set(kmodule_cflags "${kmodule_cflags} ${arg}")
-		elseif(state STREQUAL "OUTPUT_VARIABLE")
-			set(output_variable "${arg}")
-			set(state "None")
-		elseif(state STREQUAL "COPY_FILE")
-			set(copy_file_variable "${arg}")
-			set(state "None")
-		else(arg STREQUAL "COMPILE_DEFINITIONS")
-			message(FATAL_ERROR 
-				"Unexpected parameter passed to kmodule_try_compile: '${arg}'."
-			)
-		endif(arg STREQUAL "COMPILE_DEFINITIONS")
-	endforeach(arg ${ARGN})
-	set(cmake_params 
-		"-DSRC_FILE:path=${src_abs_path}" 
-		"-DKERNELDIR=${KBUILD_BUILD_DIR}"
-		"-DKEDR_ARCH=${KEDR_ARCH}"
-		"-DKEDR_CROSS_COMPILE=${KEDR_CROSS_COMPILE}"
-	)
-	if(DEFINED kmodule_cflags)
-		list(APPEND cmake_params "-Dkmodule_flags=${kmodule_cflags}")
-	endif(DEFINED kmodule_cflags)
-	if(copy_file_variable)
-		list(APPEND cmake_params "-DCOPY_FILE=${copy_file_variable}")
-	endif(copy_file_variable)
-
-	if(DEFINED output_variable)
-		try_compile(result_tmp "${bindir}"
-                "${kmodule_this_module_dir}/kmodule_files"
-				"kmodule_try_compile_target"
-                CMAKE_FLAGS ${cmake_params}
-                OUTPUT_VARIABLE output_tmp)
-		set("${output_variable}" "${output_tmp}" PARENT_SCOPE)
-	else(DEFINED output_variable)
-		try_compile(result_tmp "${bindir}"
-                "${kmodule_this_module_dir}/kmodule_files"
-				"kmodule_try_compile_target"
-                CMAKE_FLAGS ${cmake_params})
-	endif(DEFINED output_variable)
-	set("${RESULT_VAR}" "${result_tmp}" PARENT_SCOPE)
-endfunction(kmodule_try_compile RESULT_VAR bindir srcfile)
-
 # List of unreliable functions, that is, the functions that may be
 # be exported and mentioned in System.map but still cannot be used
 # because no header provides their declarations.
@@ -108,7 +46,7 @@ function(kmodule_is_function_exist function_name RESULT_VAR)
             list(FIND unreliable_functions_list ${function_name} unreliable_function_index)
             if(unreliable_function_index GREATER -1)
                 # Additional verification for unreliable function
-                kmodule_try_compile(kmodule_function_is_exist_reliable
+                kbuild_try_compile(kmodule_function_is_exist_reliable
                     "${CMAKE_BINARY_DIR}/check_unreliable_functions/${function_name}"
                     "${kmodule_test_sources_dir}/check_unreliable_functions/${function_name}.c"
                 )
@@ -238,7 +176,7 @@ macro(check_module_build)
 "${check_module_build_message} [cached] - ${MODULE_BUILD_SUPPORTED}"
 		)
 	else (DEFINED MODULE_BUILD_SUPPORTED)
-		kmodule_try_compile(module_build_supported_impl 
+		kbuild_try_compile(module_build_supported_impl 
 			"${CMAKE_BINARY_DIR}/check_module_build"
 			"${kmodule_test_sources_dir}/check_module_build/module.c"
 		)
@@ -262,47 +200,6 @@ macro(check_module_build)
 	message(STATUS "${check_module_build_message}")
 endmacro(check_module_build)
 
-# Check if the version of the kernel is acceptable
-# The macro sets variable 'KERNEL_VERSION_OK'.
-# It also sets 'KERNEL_VERSION', which is the version of the kernel in the
-# form "major.minor.micro".
-macro(check_kernel_version kversion_major kversion_minor kversion_micro)
-	set(check_kernel_version_string 
-"${kversion_major}.${kversion_minor}.${kversion_micro}"
-	)
-	set(check_kernel_version_message 
-"Checking if the kernel version is ${check_kernel_version_string} or newer"
-	)
-	message(STATUS "${check_kernel_version_message}")
-
-	string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+"
-		KERNEL_VERSION
-		"${KBUILD_VERSION_STRING}"
-	)
-	
-	if (DEFINED KERNEL_VERSION_OK)
-		set(check_kernel_version_message 
-"${check_kernel_version_message} [cached] - ${KERNEL_VERSION_OK}"
-		)
-	else (DEFINED KERNEL_VERSION_OK)
-		if (KERNEL_VERSION VERSION_LESS check_kernel_version_string)
-			set(KERNEL_VERSION_OK "no")
-			message(FATAL_ERROR 
-"Kernel version is ${KERNEL_VERSION} but ${check_kernel_version_string} or newer is required."
-			)
-		else ()
-			set(KERNEL_VERSION_OK "yes" CACHE INTERNAL
-				"Is kernel version high enough?"
-			)
-		endif ()
-				
-		set(check_kernel_version_message 
-"${check_kernel_version_message} - ${KERNEL_VERSION_OK}"
-		)
-	endif (DEFINED KERNEL_VERSION_OK)
-	message(STATUS "${check_kernel_version_message}")
-endmacro(check_kernel_version kversion_major kversion_minor kversion_micro)
-
 # Check if reliable stack trace information can be obtained. 
 # This is the case, for example, if the kernel is compiled with support
 # for frame pointers and/or stack unwind on.
@@ -317,7 +214,7 @@ macro(check_stack_trace)
 "${check_stack_trace_message} [cached] - ${STACK_TRACE_RELIABLE}"
 		)
 	else (DEFINED STACK_TRACE_RELIABLE)
-		kmodule_try_compile(stack_trace_reliable_impl 
+		kbuild_try_compile(stack_trace_reliable_impl 
 			"${CMAKE_BINARY_DIR}/check_stack_trace"
 			"${kmodule_test_sources_dir}/check_stack_trace/module.c"
 		)
@@ -360,7 +257,7 @@ function(check_ring_buffer)
 "${check_ring_buffer_message} [cached] - ${RING_BUFFER_IMPLEMENTED}"
 		)
 	else (DEFINED RING_BUFFER_IMPLEMENTED)
-		kmodule_try_compile(ring_buffer_implemented_impl 
+		kbuild_try_compile(ring_buffer_implemented_impl 
 			"${CMAKE_BINARY_DIR}/check_ring_buffer"
 			"${kmodule_test_sources_dir}/check_ring_buffer/module.c"
 		)
@@ -403,26 +300,26 @@ function(check_allocator)
 "${check_allocator_message} [cached] - ${KERNEL_MEMORY_ALLOCATOR}"
 		)
 	else (DEFINED KERNEL_MEMORY_ALLOCATOR)
-		kmodule_try_compile(is_allocator_slab 
+		kbuild_try_compile(is_allocator_slab 
 			"${CMAKE_BINARY_DIR}/check_allocator_slab"
 			"${kmodule_test_sources_dir}/check_allocator/module.c"
-			COMPILE_DEFINITIONS "-DIS_ALLOCATOR_SLAB"
+			KBUILD_COMPILE_DEFINITIONS "-DIS_ALLOCATOR_SLAB"
 		)
 		if (is_allocator_slab)
 			set(allocator "slab")
 		else (is_allocator_slab)
-			kmodule_try_compile(is_allocator_slub 
+			kbuild_try_compile(is_allocator_slub 
 				"${CMAKE_BINARY_DIR}/check_allocator_slub"
 				"${kmodule_test_sources_dir}/check_allocator/module.c"
-				COMPILE_DEFINITIONS "-DIS_ALLOCATOR_SLUB"
+				KBUILD_COMPILE_DEFINITIONS "-DIS_ALLOCATOR_SLUB"
 			)
 			if (is_allocator_slub)
 				set(allocator "slub")
 			else (is_allocator_slub)
-				kmodule_try_compile(is_allocator_slob 
+				kbuild_try_compile(is_allocator_slob 
 					"${CMAKE_BINARY_DIR}/check_allocator_slob"
 					"${kmodule_test_sources_dir}/check_allocator/module.c"
-					COMPILE_DEFINITIONS "-DIS_ALLOCATOR_SLOB"
+					KBUILD_COMPILE_DEFINITIONS "-DIS_ALLOCATOR_SLOB"
 				)
 				if (is_allocator_slob)
 					set(allocator "slob")
@@ -459,7 +356,7 @@ macro(check_kfree_rcu)
 "${check_kfree_rcu_message} [cached] - ${HAVE_KFREE_RCU}"
 		)
 	else (DEFINED HAVE_KFREE_RCU)
-		kmodule_try_compile(have_kfree_rcu_impl 
+		kbuild_try_compile(have_kfree_rcu_impl 
 			"${CMAKE_BINARY_DIR}/check_kfree_rcu"
 			"${kmodule_test_sources_dir}/check_kfree_rcu/module.c"
 		)
@@ -494,7 +391,7 @@ macro(check_xattr_user_ns)
 "${check_xattr_user_ns_message} [cached] - ${POSIX_ACL_XATTR_HAS_USER_NS}"
 		)
 	else ()
-		kmodule_try_compile(have_xattr_user_ns_impl
+		kbuild_try_compile(have_xattr_user_ns_impl
 			"${CMAKE_BINARY_DIR}/check_xattr_user_ns"
 			"${kmodule_test_sources_dir}/check_xattr_user_ns/module.c"
 		)
@@ -529,7 +426,7 @@ macro(check_hlist_for_each_entry)
 "${check_hlist_for_each_entry_message} [cached] - done"
 		)
 	else ()
-		kmodule_try_compile(pos_only_impl
+		kbuild_try_compile(pos_only_impl
 			"${CMAKE_BINARY_DIR}/check_hlist_for_each_entry"
 			"${kmodule_test_sources_dir}/check_hlist_for_each_entry/module.c"
 		)
@@ -563,7 +460,7 @@ macro(check_random32)
 "${check_random32_message} [cached] - ${KEDR_HAVE_RANDOM32}"
 		)
 	else (DEFINED KEDR_HAVE_RANDOM32)
-		kmodule_try_compile(have_random32_impl
+		kbuild_try_compile(have_random32_impl
 			"${CMAKE_BINARY_DIR}/check_random32"
 			"${kmodule_test_sources_dir}/check_random32/module.c"
 		)
@@ -703,13 +600,13 @@ endfunction(kedr_create_data_rules func)
 # to prepare the source code of the module from 'payload_data_file'.
 function(kedr_create_payload_module module_name payload_data_file 
 	template_dir)
-	kbuild_use_symbols("${CMAKE_BINARY_DIR}/core/Module.symvers")
-	kbuild_add_dependencies("kedr")
 	
 	# Rules to build the module
 	kbuild_add_module(${module_name}
 		"payload.c"
-		"functions_support.c")
+		"functions_support.c"
+	)
+	kbuild_link_module(${module_name} kedr)
 		
 	# Rules to obtain the source files of the module
 	kedr_generate("payload.c" ${payload_data_file} "${template_dir}")

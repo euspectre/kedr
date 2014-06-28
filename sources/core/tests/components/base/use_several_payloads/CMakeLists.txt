@@ -34,10 +34,6 @@ rule_copy_file("${CMAKE_CURRENT_BINARY_DIR}/kedr_base.c"
 )
 
 add_subdirectory(payload1)
-add_dependencies(${payload_module1_name} ${base_module_name})
 add_subdirectory(payload2)
-add_dependencies(${payload_module2_name} ${base_module_name})
 add_subdirectory(payload3)
-add_dependencies(${payload_module3_name} ${base_module_name})
 add_subdirectory(interception_info_verificator)
-add_dependencies(${verificator_module_name} ${base_module_name})

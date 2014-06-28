@@ -34,4 +34,3 @@ rule_copy_file("${CMAKE_CURRENT_BINARY_DIR}/${arch_dir}/lib/insn.c"
     "${CORE_SOURCE_DIR}/${arch_dir}/lib/insn.c")
 
 add_subdirectory(test_module)
-add_dependencies(${test_module_name} ${instrumentor_module_name})

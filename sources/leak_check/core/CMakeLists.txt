@@ -1,9 +1,6 @@
 # Name of the kernel module for the LeakCheck core
 set(kmodule_name "kedr_leak_check")
 
-kbuild_use_symbols("${CMAKE_BINARY_DIR}/core/Module.symvers")
-kbuild_add_dependencies("kedr")
-
 rule_copy_file("stack_trace.c"
 	"${CMAKE_SOURCE_DIR}/util/stack_trace/stack_trace.c")
 
@@ -18,6 +15,7 @@ kbuild_add_module(${kmodule_name}
 	"leak_check_impl.h"
 	"klc_output.h"
 )
+kbuild_link_module(${kmodule_name} kedr)
 
 kedr_install_kmodule(${kmodule_name})
 kedr_install_symvers(${kmodule_name})

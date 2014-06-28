@@ -6,7 +6,7 @@ fault_simulation_symbols=@fault_simulation_symbols@
 kedr_gen_tool := @kedr_gen_tool@
 kedr_gen_templates_dir := @kedr_gen_templates_dir@
 
-KBUILD_DIR=@KBUILD_BUILD_DIR@
+KBUILD_DIR=@Kbuild_BUILD_DIR@
 PWD=`pwd`
 
 all: ${module_name}.ko

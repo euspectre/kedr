@@ -18,10 +18,10 @@ message(STATUS "${checking_message}")
 if(DEFINED INIT_WAITQUEUE_HEAD_SUFFIX)
 	set(checking_message "${checking_message} [cached] - done")
 else(DEFINED INIT_WAITQUEUE_HEAD_SUFFIX)
-	kmodule_try_compile(is___init_waitqueue_head_name # RESULT_VAR
+	kbuild_try_compile(is___init_waitqueue_head_name # RESULT_VAR
 		"${CMAKE_CURRENT_BINARY_DIR}/__init_waitqueue_head_name" # bindir
 		"__init_waitqueue_head_signature.c" # srcfile
-		COMPILE_DEFINITIONS "-DINIT_WAITQUEUE_HEAD_NAME"
+		KBUILD_COMPILE_DEFINITIONS "-DINIT_WAITQUEUE_HEAD_NAME"
 		OUTPUT_VARIABLE out_name)
 
 	if(is___init_waitqueue_head_name)
@@ -29,10 +29,10 @@ else(DEFINED INIT_WAITQUEUE_HEAD_SUFFIX)
 		set(INIT_WAITQUEUE_HEAD_SUFFIX "name" CACHE INTERNAL
 			"The suffix for __init_waitqueue_head() data file.")
 	else(is___init_waitqueue_head_name)
-		kmodule_try_compile(is___init_waitqueue_head_old # RESULT_VAR
+		kbuild_try_compile(is___init_waitqueue_head_old # RESULT_VAR
 			"${CMAKE_CURRENT_BINARY_DIR}/__init_waitqueue_head_old" # bindir
 			"__init_waitqueue_head_signature.c" # srcfile
-			COMPILE_DEFINITIONS "-DINIT_WAITQUEUE_HEAD_OLD"
+			KBUILD_COMPILE_DEFINITIONS "-DINIT_WAITQUEUE_HEAD_OLD"
 			OUTPUT_VARIABLE out_old)
 		if(is___init_waitqueue_head_old)
 			set(checking_message "${checking_message} - done")

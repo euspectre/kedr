@@ -7,10 +7,10 @@ message(STATUS "${checking_message}")
 if((DEFINED RING_BUFFER_CONSUME_HAS_4_ARGS) OR (DEFINED RING_BUFFER_CONSUME_HAS_3_ARGS))
 	set(checking_message "${checking_message} [cached] - done")
 else((DEFINED RING_BUFFER_CONSUME_HAS_4_ARGS) OR (DEFINED RING_BUFFER_CONSUME_HAS_3_ARGS))
-	kmodule_try_compile(is_ring_buffer_consume_has_4_args # RESULT_VAR
+	kbuild_try_compile(is_ring_buffer_consume_has_4_args # RESULT_VAR
 		"${CMAKE_CURRENT_BINARY_DIR}/ring_buffer_consume_4_args" # bindir
 		"ring_buffer_consume_signature.c" # srcfile
-		COMPILE_DEFINITIONS "-DRING_BUFFER_CONSUME_HAS_4_ARGS"
+		KBUILD_COMPILE_DEFINITIONS "-DRING_BUFFER_CONSUME_HAS_4_ARGS"
 		OUTPUT_VARIABLE out_4)
 
 	if(is_ring_buffer_consume_has_4_args)
@@ -18,10 +18,10 @@ else((DEFINED RING_BUFFER_CONSUME_HAS_4_ARGS) OR (DEFINED RING_BUFFER_CONSUME_HA
 		set(RING_BUFFER_CONSUME_HAS_4_ARGS "TRUE" CACHE INTERNAL
 			"Whether ring_buffer_consume accept 4 arguments")
 	else(is_ring_buffer_consume_has_4_args)
-		kmodule_try_compile(is_ring_buffer_consume_has_3_args # RESULT_VAR
+		kbuild_try_compile(is_ring_buffer_consume_has_3_args # RESULT_VAR
 			"${CMAKE_CURRENT_BINARY_DIR}/ring_buffer_consume_3_args" # bindir
 			"ring_buffer_consume_signature.c" # srcfile
-			COMPILE_DEFINITIONS "-DRING_BUFFER_CONSUME_HAS_3_ARGS"
+			KBUILD_COMPILE_DEFINITIONS "-DRING_BUFFER_CONSUME_HAS_3_ARGS"
 			OUTPUT_VARIABLE out_3)
 		if(is_ring_buffer_consume_has_3_args)
 			set(checking_message "${checking_message} - done")
@@ -47,10 +47,10 @@ message(STATUS "${checking_message}")
 if((DEFINED RING_BUFFER_SIZE_BUF) OR (DEFINED RING_BUFFER_SIZE_BUF_CPU))
 	set(checking_message "${checking_message} [cached] - done")
 else((DEFINED RING_BUFFER_SIZE_BUF) OR (DEFINED RING_BUFFER_SIZE_BUF_CPU))
-	kmodule_try_compile(is_ring_buffer_size_buf # RESULT_VAR
+	kbuild_try_compile(is_ring_buffer_size_buf # RESULT_VAR
 		"${CMAKE_CURRENT_BINARY_DIR}/ring_buffer_size_buf" # bindir
 		"ring_buffer_size_signature.c" # srcfile
-		COMPILE_DEFINITIONS "-DRING_BUFFER_SIZE_BUF"
+		KBUILD_COMPILE_DEFINITIONS "-DRING_BUFFER_SIZE_BUF"
 		OUTPUT_VARIABLE out_buf)
 
 	if(is_ring_buffer_size_buf)
@@ -58,10 +58,10 @@ else((DEFINED RING_BUFFER_SIZE_BUF) OR (DEFINED RING_BUFFER_SIZE_BUF_CPU))
 		set(RING_BUFFER_SIZE_BUF "TRUE" CACHE INTERNAL
 			"Whether ring_buffer_size() accepts only 'buf' argument")
 	else(is_ring_buffer_size_buf)
-		kmodule_try_compile(is_ring_buffer_size_buf_cpu # RESULT_VAR
+		kbuild_try_compile(is_ring_buffer_size_buf_cpu # RESULT_VAR
 			"${CMAKE_CURRENT_BINARY_DIR}/ring_buffer_size_buf_cpu" # bindir
 			"ring_buffer_size_signature.c" # srcfile
-			COMPILE_DEFINITIONS "-DRING_BUFFER_SIZE_BUF_CPU"
+			KBUILD_COMPILE_DEFINITIONS "-DRING_BUFFER_SIZE_BUF_CPU"
 			OUTPUT_VARIABLE out_buf_cpu)
 		if(is_ring_buffer_size_buf_cpu)
 			set(checking_message "${checking_message} - done")
@@ -88,10 +88,10 @@ message(STATUS "${checking_message}")
 if((DEFINED RING_BUFFER_RESIZE_BUF_SIZE) OR (DEFINED RING_BUFFER_RESIZE_BUF_SIZE_CPU))
 	set(checking_message "${checking_message} [cached] - done")
 else((DEFINED RING_BUFFER_RESIZE_BUF_SIZE) OR (DEFINED RING_BUFFER_RESIZE_BUF_SIZE_CPU))
-	kmodule_try_compile(is_ring_buffer_resize_buf_size # RESULT_VAR
+	kbuild_try_compile(is_ring_buffer_resize_buf_size # RESULT_VAR
 		"${CMAKE_CURRENT_BINARY_DIR}/ring_buffer_resize_buf_size" # bindir
 		"ring_buffer_resize_signature.c" # srcfile
-		COMPILE_DEFINITIONS "-DRING_BUFFER_RESIZE_BUF_SIZE"
+		KBUILD_COMPILE_DEFINITIONS "-DRING_BUFFER_RESIZE_BUF_SIZE"
 		OUTPUT_VARIABLE out_buf_size)
 
 	if(is_ring_buffer_resize_buf_size)
@@ -99,10 +99,10 @@ else((DEFINED RING_BUFFER_RESIZE_BUF_SIZE) OR (DEFINED RING_BUFFER_RESIZE_BUF_SI
 		set(RING_BUFFER_RESIZE_BUF_SIZE "TRUE" CACHE INTERNAL
 			"Whether ring_buffer_resize() accepts 'buf' and 'size' arguments")
 	else(is_ring_buffer_resize_buf_size)
-		kmodule_try_compile(is_ring_buffer_resize_buf_size_cpu # RESULT_VAR
+		kbuild_try_compile(is_ring_buffer_resize_buf_size_cpu # RESULT_VAR
 			"${CMAKE_CURRENT_BINARY_DIR}/ring_buffer_resize_buf_size_cpu" # bindir
 			"ring_buffer_resize_signature.c" # srcfile
-			COMPILE_DEFINITIONS "-DRING_BUFFER_RESIZE_BUF_SIZE_CPU"
+			KBUILD_COMPILE_DEFINITIONS "-DRING_BUFFER_RESIZE_BUF_SIZE_CPU"
 			OUTPUT_VARIABLE out_buf_size_cpu)
 		if(is_ring_buffer_resize_buf_size_cpu)
 			set(checking_message "${checking_message} - done")

@@ -2,7 +2,7 @@ module_name=kedr_sample_indicator
 
 fault_simulation_symbols := @fault_simulation_symbols@
 
-KBUILD_DIR=@KBUILD_BUILD_DIR@
+KBUILD_DIR=@Kbuild_BUILD_DIR@
 PWD=`pwd`
 
 all: $(module_name).ko

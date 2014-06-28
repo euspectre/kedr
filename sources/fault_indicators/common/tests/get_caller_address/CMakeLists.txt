@@ -5,6 +5,8 @@ kbuild_add_module(${kmodule_name}
     "functions_support.c"
 )
 
+kbuild_link_module(${kmodule_name} kedr)
+
 kedr_generate("functions_support.c" "functions_support.data"
     "${KEDR_GEN_TEMPLATES_DIR}/functions_support.c")
 

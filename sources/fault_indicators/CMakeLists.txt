@@ -1,8 +1,3 @@
-kbuild_use_symbols("${CMAKE_BINARY_DIR}/core/Module.symvers")
-kbuild_add_dependencies("kedr")
-kbuild_use_symbols("${CMAKE_BINARY_DIR}/fault_simulation/Module.symvers")
-kbuild_add_dependencies("kedr_fault_simulation")
-
 # Common name of data file
 set(indicator_data_file "indicator.data")
 
@@ -14,6 +9,8 @@ function(create_indicator module_name)
 		"calculator.c" 
 		"control_file.c")
 
+	kbuild_link_module(${module_name} kedr kedr_fault_simulation)
+	
 	rule_copy_file("${CMAKE_CURRENT_BINARY_DIR}/calculator.c"
 		"${CMAKE_SOURCE_DIR}/calculator/calculator.c")
 

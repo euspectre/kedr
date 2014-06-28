@@ -1,10 +1,3 @@
-# Additional symbols to use. Note that the symbols from KEDR Core are
-# made available to the payload modules automatically if 
-# kedr_create_payload_module() is used to create them.
-# The dependency on KEDR Core is also set automatically for such modules.
-kbuild_use_symbols("${CMAKE_BINARY_DIR}/trace/Module.symvers")
-kbuild_add_dependencies("kedr_trace")
-
 # The names of the main data file and of the file containing the 
 # payload-specific portion of its header.
 set(payload_data_file "payload.data")
@@ -14,7 +7,8 @@ set(header_data_file "header.data")
 function(create_payload_callm module_name functions)
 	kedr_create_payload_module(${module_name} ${payload_data_file} 
 		"${KEDR_GEN_TEMPLATES_DIR}/payload_callm.c/")
-		
+	# Link payload with kedr_trace module.
+	kbuild_link_module(${module_name} kedr_trace)
 	# Rules to prepare the full data file for the payload module
 	kedr_create_payload_data(${header_data_file} ${payload_data_file}
 		${functions} ${ARGN})

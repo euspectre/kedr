@@ -9,7 +9,7 @@ additional_functions_available := mutex_lock mutex_lock_interruptible mutex_lock
 additional_functions := $(shell sh ./configure_kernel_functions.sh $(additional_functions_available))
 additional_functions_data := $(addsuffix .data, $(additional_functions))
 
-KBUILD_DIR=@KBUILD_BUILD_DIR@
+KBUILD_DIR=@Kbuild_BUILD_DIR@
 PWD=`pwd`
 
 all: ${module_name}.ko

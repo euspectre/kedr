@@ -20,4 +20,3 @@ rule_copy_file("${CMAKE_CURRENT_BINARY_DIR}/kedr_target_detector.c"
     "${CORE_SOURCE_DIR}/kedr_target_detector.c")
 
 add_subdirectory(test_module)
-add_dependencies("${test_module_name}" "${target_detector_module_name}")

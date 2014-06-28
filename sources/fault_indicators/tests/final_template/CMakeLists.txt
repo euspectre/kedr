@@ -1,17 +1,24 @@
-kbuild_use_symbols("${CMAKE_BINARY_DIR}/core/Module.symvers")
-kbuild_use_symbols("${CMAKE_BINARY_DIR}/fault_simulation/Module.symvers")
-
 # Common name of data file
 set(indicator_data_file "indicator.data")
 
 set(KEDR_TEST_DIR "${KEDR_TEST_PREFIX_TEMP_SESSION}/fault_indicators/final_template")
 
-# Commands for generate indicator.c and place it into current directory
-# from ${indicator_data_file}, placed in the current source or binary directory.
-function(rules_generate_internal_indicator)
+# Create fault simulation indicator module for tests.
+# ${indicator_data_file}, placed in the current source or binary
+# directory, is used as data-file for indicator created.
+function(add_test_indicator kmodule_name)
+	kbuild_add_module(${kmodule_name} "indicator.c" "control_file.c")
+	
+	kbuild_link_module(${kmodule_name} kedr kedr_fault_simulation)
+
+	rule_copy_file("${CMAKE_CURRENT_BINARY_DIR}/control_file.c"
+		"${CMAKE_SOURCE_DIR}/control_file/control_file.c")
+
 	kedr_generate("indicator.c" "${indicator_data_file}"
 		"${KEDR_GEN_TEMPLATES_DIR}/fault_indicator.c")
-endfunction(rules_generate_internal_indicator)
+
+	kedr_test_add_target(${kmodule_name})
+endfunction(add_test_indicator kmodule_name)
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/test_common.sh.in"
 	"${CMAKE_CURRENT_BINARY_DIR}/test_common.sh"

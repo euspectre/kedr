@@ -24,7 +24,8 @@ set(header_data_file "header.data")
 function(create_payload_leak_check module_name functions)
 	kedr_create_payload_module(${module_name} ${payload_data_file} 
 		"${KEDR_GEN_TEMPLATES_DIR}/payload_leak_check.c/")
-		
+	# Link payload with leak check module.
+	kbuild_link_module(${module_name} kedr_leak_check)
 	# Rules to prepare the full data file for the payload module
 	kedr_create_payload_data(${header_data_file} ${payload_data_file}
 		${functions} ${ARGN})

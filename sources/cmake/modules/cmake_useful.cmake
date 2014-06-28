@@ -1,17 +1,40 @@
-#Create rule for obtain one file by copying another one
+# Create rule for obtain one file by copying another one
 function(rule_copy_file target_file source_file)
     add_custom_command(OUTPUT ${target_file}
-                    COMMAND cp -p ${source_file} ${target_file}
-                    DEPENDS ${source_file}
-                    )
+        COMMAND cp -p ${source_file} ${target_file}
+        DEPENDS ${source_file}
+    )
 endfunction(rule_copy_file target_file source_file)
 
-#Create rule for obtain file in binary tree by copiing it from source tree
-function(rule_copy_source rel_source_file)
-    rule_copy_file(${CMAKE_CURRENT_BINARY_DIR}/${rel_source_file} ${CMAKE_CURRENT_SOURCE_DIR}/${rel_source_file})
-endfunction(rule_copy_source rel_source_file)
+#  rule_copy_source([source_dir] file ...)
+#
+# Create rule for obtain file(s) in binary tree by copiing it from source tree.
+#
+# Files are given relative to ${source_dir}, if it is set, or
+# relative to ${CMAKE_CURRENT_SOURCE_DIR}.
+#
+# Files will be copied into ${CMAKE_CURRENT_BINARY_DIR} with same
+# relative paths.
+#
+# ${source_dir} should be absolute path(that is, starts from '/').
+# Otherwise first argument is treated as first file to copy.
+function(rule_copy_source file)
+    string(REGEX MATCH "^/" is_abs_path ${file})
+    if(is_abs_path)
+        set(source_dir ${file})
+        set(files ${ARGN})
+    else(is_abs_path)
+        set(source_dir ${CMAKE_CURRENT_SOURCE_DIR})
+        set(files ${file} ${ARGN})
+    endif(is_abs_path)
+    
+    foreach(file_real ${files})
+        rule_copy_file("${CMAKE_CURRENT_BINARY_DIR}/${file_real}"
+            ${source_dir}/${file_real})
+    endforeach(file_real ${files})
+endfunction(rule_copy_source file)
 
-# to_abs_path(output_var path [...])
+#  to_abs_path(output_var path [...])
 #
 # Convert relative path of file to absolute path:
 # use path in source tree, if file already exist there.
@@ -36,10 +59,10 @@ function(to_abs_path output_var)
     set("${output_var}" ${result} PARENT_SCOPE)
 endfunction(to_abs_path output_var path)
 
-#is_path_inside_dir(output_var dir path)
+#  is_path_inside_dir(output_var dir path)
 #
 # Set output_var to true if path is absolute path inside given directory.
-# (!) path should be absolute.
+# NOTE: Path should be absolute.
 macro(is_path_inside_dir output_var dir path)
     file(RELATIVE_PATH _rel_path ${dir} ${path})
     string(REGEX MATCH "^\\.\\." _is_not_inside_dir ${_rel_path})
@@ -50,71 +73,111 @@ macro(is_path_inside_dir output_var dir path)
     endif(_is_not_inside_dir)
 endmacro(is_path_inside_dir output_var dir path)
 
-########################################################################
-# Test-related macros
-########################################################################
 
-# When we are building KEDR for another system (cross-build), testing is
-# disabled. This is because the tests need the build tree.
-# In the future, the tests could be prepared that need only the installed 
-# components of KEDR. It could be a separate test suite.
+# Write given content to the file.
+#
+# If file is already exists and its content is same as written one, file
+# is not rewritten, so its write timestamp remains unchanged.
+function(file_update filename content)
+    if(EXISTS "${filename}")
+        file(READ "${filename}" old_content)
+        if(old_content STREQUAL "${content}")
+            return()
+        endif(old_content STREQUAL "${content}")
+    endif(EXISTS "${filename}")
+    # File doesn't exists or its content differ.
+    file(WRITE "${filename}" "${content}")
+endfunction(file_update filename content)
 
-# This macro enables testing support and performs other initialization tasks.
-# It should be used in the top-level CMakeLists.txt file before 
-# add_subdirectory () calls.
-macro (kedr_test_init)
-	if (NOT CMAKE_CROSSCOMPILING)
-	    enable_testing ()
-	    add_custom_target (check 
-	        COMMAND ${CMAKE_CTEST_COMMAND}
-	    )
-	    add_custom_target (build_tests)
-	    add_dependencies (check build_tests)
-	endif (NOT CMAKE_CROSSCOMPILING)
-endmacro (kedr_test_init)
 
-# Use this macro to specify an additional target to be built before the tests
-# are executed.
-macro (kedr_test_add_target target_name)
-	if (NOT CMAKE_CROSSCOMPILING)
-	    set_target_properties (${target_name}
-	        PROPERTIES EXCLUDE_FROM_ALL true
-	    )
-	    add_dependencies (build_tests ${target_name})
-	endif (NOT CMAKE_CROSSCOMPILING)
-endmacro (kedr_test_add_target target_name)
+# Write given content to the file in APPEND mode.
+#
+# For append we use position variable <pos> which should be initialized
+# to 0 for every new build process and which is updated every time when
+# this function is called.
+# If file is already exists and its content at given <pos> is same as
+# written one, file is not rewritten, so its write timestamp remains unchanged.
+#
+# Note, that file will not be rewritten if new build process issues less
+# APPEND actions than one which create file.
+# But similar problem exists for file_update() and even for built-in
+# configure_file() command: file will not be removed if new build process
+# do not call configure_file() for it.
+function(file_update_append filename content POS)
+    set(pos "${${POS}}")
+    string(LENGTH "${content}" len)
+    # Update output variable first.
+    # This allows to use return() when need not to do anything
+    math(EXPR pos_new "${pos}+${len}")
+    set(${POS} "${pos_new}" PARENT_SCOPE)
+    if(EXISTS "${filename}")
+        file(READ "${filename}" old_content LIMIT "${len}" OFFSET "${pos}")
+        if(old_content STREQUAL "${content}")
+            return()
+        elseif(old_content STREQUAL "")
+            file(APPEND "${filename}" "${content}")
+            return()
+        endif(old_content STREQUAL "${content}")
+    else(EXISTS "${filename}")
+        if(NOT pos EQUAL 0)
+            message(FATAL_ERROR "Appending to non-zero position to non-existent file.")
+        endif(NOT pos EQUAL 0)
+    endif(EXISTS "${filename}")
+    # File doesn't exists or its content differ.
+    if(NOT pos EQUAL 0)
+        file(READ "${filename}" prefix LIMIT "${pos}")
+    else(NOT pos EQUAL 0)
+        set(prefix)
+    endif(NOT pos EQUAL 0)
+    file(WRITE "${filename}" "${prefix}${content}")
+endfunction(file_update_append filename content POS)
 
-# This function adds a test script (a Bash script, actually) to the set of
-# tests for the package. The script may reside in current source or binary 
-# directory (the source directory is searched first).
-function (kedr_test_add_script test_name script_file)
-	if (NOT CMAKE_CROSSCOMPILING)
-	    to_abs_path (TEST_SCRIPT_FILE ${script_file})
-	        
-	    add_test (${test_name}
-	        /bin/bash ${TEST_SCRIPT_FILE} ${ARGN}
-	    )
-	endif (NOT CMAKE_CROSSCOMPILING)
-endfunction (kedr_test_add_script)
 
-function (kedr_test_add test_name app_file)
-	if (NOT CMAKE_CROSSCOMPILING)
-	    to_abs_path (TEST_APP_FILE ${app_file})
-	        
-	    add_test (${test_name} ${TEST_APP_FILE} ${ARGN})
-	endif (NOT CMAKE_CROSSCOMPILING)
-endfunction (kedr_test_add)
+# Common mechanism for output status message
+# when checking different aspects.
+#
+# Normal using:
+#
+#  check_begin("Checking <...>")
+#  if(NOT <check-already-has-been-done>)
+#     check_try() # Here message is printed
+#     # Perform check(try_compile(), etc.)
+#  endif(NOT <check-already-has-been-done>)
+#  check_end("<check-result>") # Here message is printed with result.
 
-# Use this macro instead of add_subdirectory() for the subtrees related to 
-# testing of the package.
+# Should be called (unconditionally) when new cheking is issued.
+# Note, that given @status_msg is not printed at that step.
+function(check_begin status_msg)
+    set(_check_status_msg ${status_msg} PARENT_SCOPE)
+    set(_check_has_tries PARENT_SCOPE)
+endfunction(check_begin status_msg)
 
-# We could use other kedr_*test* macros to disable the tests when 
-# cross-building, but the rules of Kbuild system (concerning .symvers,
-# etc.) still need to be disabled explicitly. So it is more reliable to 
-# just turn off each add_subdirectory(tests) in this case.
-macro (kedr_test_add_subdirectory subdir)
-	if (NOT CMAKE_CROSSCOMPILING)
-		add_subdirectory(${subdir})
-	endif (NOT CMAKE_CROSSCOMPILING)
-endmacro (kedr_test_add_subdirectory subdir)
-########################################################################
+# Should be called before every real checking, that is which is not come
+# from cache variables comparision.
+#
+# First call of that function is trigger printing of @status_msg,
+# passed to check_begin().
+function(check_try)
+    if(NOT _check_has_tries)
+        message(STATUS "${_check_status_msg}")
+        set(_check_has_tries "1" PARENT_SCOPE)
+    endif(NOT _check_has_tries)
+endfunction(check_try)
+
+# Should be called when cheking is end, and @result_msg should be short
+# description of check result.
+# If any check_try() has been issued before,
+#   "@status_msg - @result_msg"
+# will be printed.
+# Otherwise,
+#   "@status_msg - [cached] @result_msg"
+# will be printed, at it will be the only message for that check.
+function(check_end result_msg)
+    if(NOT _check_has_tries)
+        message(STATUS "${_check_status_msg} - [cached] ${result_msg}")
+    else(NOT _check_has_tries)
+        message(STATUS "${_check_status_msg} - ${result_msg}")
+    endif(NOT _check_has_tries)
+    set(_check_status_msg PARENT_SCOPE)
+    set(_check_has_tries PARENT_SCOPE)
+endfunction(check_end result_msg)

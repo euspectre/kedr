@@ -1,8 +1,40 @@
 cmake_minimum_required(VERSION 2.6)
 
+# Make "Release" the default build type
+if (NOT CMAKE_BUILD_TYPE)
+    set (CMAKE_BUILD_TYPE "Release" CACHE STRING
+      "Choose the type of build, options are: Debug Release RelWithDebInfo."
+      FORCE)
+endif ()
+message (STATUS "Build type is \"${CMAKE_BUILD_TYPE}\"")
+
+# Default flags to compiler when build user-space programs.
+#
+# Should come before enabling language.
+set(CMAKE_C_FLAGS_DEBUG "-g -O0 -Wall -Wextra"
+    CACHE STRING "Compiler flags for debug builds."
+)
+set(CMAKE_C_FLAGS_RELWITHDEBINFO "-g -Wall -Wextra"
+    CACHE STRING "Compiler flags for Release With Debug Info builds."
+)
+set(CMAKE_C_FLAGS_RELEASE "-Wall"
+    CACHE STRING "Compiler flags for release builds."
+)
+
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -Wall -Wextra"
+    CACHE STRING "C++ compiler flags for debug builds."
+)
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g -Wall -Wextra"
+    CACHE STRING "C++ compiler flags for Release with Debug Info builds."
+)
+set(CMAKE_CXX_FLAGS_RELEASE "-Wall"
+    CACHE STRING "C++ compiler flags for release builds."
+)
+
 enable_language(C)
 enable_language(CXX)
 
+project(kedr)
 #######################################################################
 # Prohibit a common type of an in-source build.
 # Note that building in a subdirectory in the source tree is still allowed 
@@ -32,34 +64,73 @@ set(KEDR_VERSION
 )
 
 #######################################################################
-# ARCH and CROSS_COMPILE variables that can be used when building 
-# kernel modules. It is convenient to have them as environment variables
-# because Makefiles will be able to use them directly.
-if (NOT KEDR_ARCH)
-	set (KEDR_ARCH "x86")
-endif ()
-
-set (ENV{KEDR_ARCH} "${KEDR_ARCH}")
-set (ENV{KEDR_CROSS_COMPILE} "${KEDR_CROSS_COMPILE}")
-#######################################################################
-
-# [NB] Sparse is usually not installed by default. If you are going to
-# use it, make sure it is installed.
-option(KEDR_USE_SPARSE 
-	"Use Sparse analysis tool when building kernel modules." 
-	OFF
-)
-#######################################################################
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
-find_package(Kbuild)
+include(CMakeParseArguments)
+
+find_package(Kbuild 2.6.32)
 
 include(template_generation)
 include(cmake_useful)
+include(kedr_testing)
+
+#######################################################################
+# Set default compiler flags for Kbuild.
+#
+# Like normal compiler flags, these definitions should come before
+# including corresponded infrustructure.
+set(KBUILD_C_FLAGS_DEBUG "-g -DKEDR_DEBUG"
+    CACHE STRING "Kbuild compiler flags for debug builds."
+)
+set(KBUILD_C_FLAGS_RELWITHDEBINFO "-g"
+    CACHE STRING "Kbuild compiler flags for debug builds."
+)
+
 include(kbuild_system)
+
 include(kmodule)
 
+#######################################################################
+# [NB] Sparse is usually not installed by default. If you are going to
+# use it, make sure it is installed.
+option(KEDR_USE_SPARSE 
+    "Use Sparse analysis tool when building kernel modules." 
+    OFF
+)
+
+if(KEDR_USE_SPARCE)
+    # Do not cache result, so user do not see C=1 flag appended.
+    # Otherwise we need to precheck, whether flag is already set for cache value.
+    set(KBUILD_MAKE_FLAGS "${KBUILD_MAKE_FLAGS} C=1")
+endif(KEDR_USE_SPARCE)
+
+#######################################################################
 include(path_prefixes)
+
+# Set common install prefixes for KEDR
+fill_install_prefixes(${KEDR_PACKAGE_NAME} # Package name
+	KEDR # Prefix for variable names
+	KERNEL # Set kernel-related prefixes also.
+)
+
+if(KEDR_INSTALL_TYPE STREQUAL "GLOBAL_OPT")
+    message("Global installation into /opt")
+elseif(KEDR_INSTALL_TYPE STREQUAL "GLOBAL")
+    message("Global installation")
+else(KEDR_INSTALL_TYPE STREQUAL "GLOBAL_OPT")
+    message("Local installation")
+endif(KEDR_INSTALL_TYPE STREQUAL "GLOBAL_OPT")
+   
+
+# Set additional(KEDR-specific) install prefixes
+set(KEDR_DEFAULT_CONFIG_DIR "${KEDR_INSTALL_PREFIX_GLOBAL_CONF}")
+set(KEDR_INSTALL_PREFIX_TEMPLATES "${KEDR_INSTALL_PREFIX_READONLY}/templates")
+
+# Adjust kernel-related prefixes to concrete kernel.
+kernel_path("${Kbuild_VERSION_STRING}" KEDR_INSTALL_PREFIX_KMODULE
+	"${KEDR_KERNEL_INSTALL_PREFIX_KMODULE}")
+kernel_path("${Kbuild_VERSION_STRING}" KEDR_INSTALL_PREFIX_KSYMVERS
+	"${KEDR_KERNEL_INSTALL_PREFIX_KSYMVERS}")
 #######################################################################
 #######################################################################
 # Initialize test-related stuff
@@ -76,37 +147,39 @@ function(kedr_install_headers install_subdir)
 	install(FILES ${header_file} ${ARGN}
 			DESTINATION ${KEDR_INSTALL_PREFIX_INCLUDE}/${install_subdir})
 endfunction(kedr_install_headers install_subdir)
-#kedr_install_kmodule(kmodule_name)
-function(kedr_install_kmodule kmodule_name)
-	install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${kmodule_name}.ko"
-			DESTINATION "${KEDR_INSTALL_PREFIX_KMODULE}")
-endfunction(kedr_install_kmodule kmodule_name)
-#kedr_install_symvers(kmodule_name)
-function(kedr_install_symvers kmodule_name)
-	install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Module.symvers"
-			DESTINATION "${KEDR_INSTALL_PREFIX_KSYMVERS}"
-			RENAME "${kmodule_name}.symvers")
-endfunction(kedr_install_symvers kmodule_name)
+#  kedr_install_kmodule(kmodule_target)
+function(kedr_install_kmodule kmodule_target)
+    kbuild_install(TARGETS ${kmodule_target}
+	MODULE DESTINATION "${KEDR_INSTALL_PREFIX_KMODULE}"
+    )
+endfunction(kedr_install_kmodule kmodule_target)
+#kedr_install_symvers(kmodule_target)
+function(kedr_install_symvers kmodule_target)
+    kbuild_install(TARGETS ${kmodule_target}
+	SYMVERS DESTINATION "${KEDR_INSTALL_PREFIX_KMODULE}"
+    )
+endfunction(kedr_install_symvers kmodule_target)
 
 #######################################################################
-configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
-    IMMEDIATE @ONLY
+include(uninstall_target)
+
+# [NB] All the "prefix" directories ending with ${KEDR_PACKAGE_NAME} or
+# ${KEDR_PACKAGE_NAME}/share should be removed when uninstalling the 
+# package.
+add_uninstall_dir(
+	"${KEDR_INSTALL_PREFIX_EXEC_AUX}"
+	"${KEDR_INSTALL_PREFIX_READONLY}"
+	"${KEDR_INSTALL_PREFIX_GLOBAL_CONF}"
+	"${KEDR_INSTALL_PREFIX_LIB_AUX}"
+	"${KEDR_INSTALL_PREFIX_INCLUDE}"
+	"${KEDR_INSTALL_PREFIX_TEMP_SESSION}"
+	"${KEDR_INSTALL_PREFIX_TEMP}"
+	"${KEDR_INSTALL_PREFIX_STATE}"
+	"${KEDR_INSTALL_PREFIX_CACHE}"
+	"${KEDR_INSTALL_PREFIX_VAR}"
+	"${KEDR_INSTALL_PREFIX_DOC}"
+	"${KEDR_TEST_COMMON_PREFIX}"
 )
-
-add_custom_target (uninstall_files
-    "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
-)
-
-add_custom_target (uninstall)
-
-# During uninstall process, the files should be removed first, then 
-# the directories.
-# 'uninstall_dirs' target is defined in cmake/modules/path_prefixes.cmake.
-add_dependencies (uninstall_dirs uninstall_files)
-add_dependencies (uninstall uninstall_dirs)
-
 #######################################################################
 include_directories("${CMAKE_BINARY_DIR}/include")
 kbuild_include_directories("${CMAKE_BINARY_DIR}/include")
@@ -115,42 +188,7 @@ kbuild_include_directories("${CMAKE_BINARY_DIR}/include")
 include_directories("${CMAKE_BINARY_DIR}")
 kbuild_include_directories("${CMAKE_BINARY_DIR}")
 #######################################################################
-# Make "Release" the default build type
-if (NOT CMAKE_BUILD_TYPE)
-    set (CMAKE_BUILD_TYPE "Release" CACHE STRING
-      "Choose the type of build, options are: Debug Release RelWithDebInfo."
-      FORCE)
-endif ()
-message (STATUS "Build type is \"${CMAKE_BUILD_TYPE}\"")
-
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    kbuild_add_definitions(
-        "-g -DKEDR_DEBUG"
-    )
-elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-    kbuild_add_definitions(
-        "-g"
-    )
-elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-else(CMAKE_BUILD_TYPE STREQUAL "Debug")
-	message(FATAL_ERROR "Unknown type of build: ${CMAKE_BUILD_TYPE}.")
-endif()
-
-# Flags to compiler when build user-space programs
-set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g -O0 -Wall -Wextra")
-set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -g -Wall -Wextra")
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wall")
-
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0 -Wall -Wextra")
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -g -Wall -Wextra")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall")
-#######################################################################
-
 # Perform basic checks
-
-# Check if we use kernel version 2.6.32 or newer.
-# This macro also set KERNEL_VERSION.
-check_kernel_version(2 6 32)
 
 # Check if kernel modules can be built on this system
 check_module_build()
@@ -161,7 +199,7 @@ check_module_build()
 check_allocator()
 
 if (${KERNEL_MEMORY_ALLOCATOR} STREQUAL "slab" AND
-	KERNEL_VERSION VERSION_LESS "3.7.0")
+	Kbuild_VERSION_STRING_CLASSIC VERSION_LESS "3.7.0")
 	set (KMCA_TRACE_SIZE_FIRST 1)
 else ()
 	set (KMCA_TRACE_KMC_FIRST 1)
@@ -466,6 +504,8 @@ configure_file(
 # the kernel functions involved must be collected first when processing 
 # the subdirectories for the payload modules.
 kedr_test_add_subdirectory(tests)
+#######################################################################
+kbuild_finalize_linking()
 #######################################################################
 
 configure_file("${CMAKE_SOURCE_DIR}/config.h.in" "${CMAKE_BINARY_DIR}/config.h")

@@ -1,3 +1,6 @@
-${cflags_string}
-${obj_string}
+ccflags-y := @ccflags@
+
+KBUILD_EXTRA_SYMBOLS := @CMAKE_CURRENT_BINARY_DIR@/@_kbuild_symvers_imported_near@ @CMAKE_CURRENT_BINARY_DIR@/@_kbuild_symvers_imported_far@
+
+obj-m := @module_name@.o
 ${obj_src_string}

@@ -1,0 +1,22 @@
+# Similar to cmake_uninstall.cmake, but remove user-provided dirs
+# instead of files in install_manifest.txt
+
+IF(NOT EXISTS "@CMAKE_BINARY_DIR@/uninstall_dirs.txt")
+  MESSAGE(FATAL_ERROR "Cannot find list of directories for uninstall: \"@CMAKE_BINARY_DIR@/uninstall_dirs.txt\"")
+ENDIF(NOT EXISTS "@CMAKE_BINARY_DIR@/uninstall_dirs.txt")
+
+FILE(READ "@CMAKE_BINARY_DIR@/uninstall_dirs.txt" dirs)
+STRING(REGEX REPLACE "\n" ";" dirs "${dirs}")
+FOREACH(dir ${dirs})
+  MESSAGE(STATUS "Uninstalling \"$ENV{DESTDIR}${dir}\"")
+  IF(EXISTS "$ENV{DESTDIR}${dir}")
+    EXEC_PROGRAM(
+      "@CMAKE_COMMAND@" ARGS "-E remove_directory \"$ENV{DESTDIR}${dir}\""
+      OUTPUT_VARIABLE rm_out
+      RETURN_VALUE rm_retval
+    )
+    IF(NOT "${rm_retval}" STREQUAL 0)
+      MESSAGE(FATAL_ERROR "Problem when removing \"$ENV{DESTDIR}${dir}\"")
+    ENDIF(NOT "${rm_retval}" STREQUAL 0)
+  ENDIF(EXISTS "$ENV{DESTDIR}${dir}")
+ENDFOREACH(dir)

@@ -13,7 +13,7 @@ set(update_dependencies_script "${template_generation_module_dir}/template_gener
 # datafile - file with template data
 # template_dir - directory with templates used for generation.
 #
-# If 'datafile' contains non-absolute path, it is assumed to be relative
+# IIf 'datafile' contains non-absolute path, it is assumed to be relative
 # to CMAKE_CURRENT_SOURCE_DIR if file exists, or to CMAKE_CURRENT_BINARY_DIR
 # (see to_abs_path() function).
 function(kedr_generate filename datafile template_dir)
@@ -56,15 +56,15 @@ function(kedr_generate filename datafile template_dir)
 	    COMMAND sh "${update_dependencies_script}" "${deps_file}" ${template_dir}
 	    DEPENDS ${datafile_abs} ${deps_list}
     )
-    # Add empty rules for generate dependencies files.
-    #
-    # It is useful when some template files will be removed:
-    # without these rules build process will be terminated with error
-    # (because of absent dependency file).
-    #
-    # Note, that output file will be rebuilt in that case, so dependencies
-    # will be recalculated.
-    foreach(dep ${deps_list})
-	add_custom_command(OUTPUT ${dep} COMMAND /bin/true)
-    endforeach(dep ${deps_list})
+
+# NOTE: If any template file, used by previous generation process,
+# will be removed(as unneeded) until deps list is regenerated,
+# 'make' will fail to build target file.
+#
+# You have 2 options in that case:
+# 1) recreate deleting template file(e.g., empty), run make,
+#    and, after it regenerate dependencies list, remove template file again.
+# 1) delete deps file and resulting file. Then, futher invocation of
+#    'make' runs cmake, which clears dependencies, then builds
+#    resulting file again and regenerates depencies file.
 endfunction(kedr_generate filename datafile template_dir)

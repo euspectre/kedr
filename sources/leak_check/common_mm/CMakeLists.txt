@@ -2,14 +2,6 @@
 set(kmodule_name "kedr_lc_common_mm")
 ########################################################################
 
-# Additional symbols to use. Note that the symbols from KEDR Core are
-# made available to the payload modules automatically if 
-# kedr_create_payload_module() is used to create them.
-# The dependency on KEDR Core is also set automatically for such modules.
-kbuild_use_symbols("${CMAKE_BINARY_DIR}/leak_check/core/Module.symvers")
-kbuild_add_dependencies("kedr_leak_check")
-########################################################################
-
 # Name of the header part of the data file
 configure_file(
 	"header.data.in"

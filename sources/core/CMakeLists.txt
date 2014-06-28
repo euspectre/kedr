@@ -1,9 +1,6 @@
 set(kmodule_name "kedr")
 
-# In the future, it should be configurable somehow
-set(arch "x86")
-
-set(arch_dir "arch/${arch}")
+set(arch_dir "arch/${Kbuild_ARCH}")
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${arch_dir}/lib)
 
@@ -12,7 +9,7 @@ message(STATUS "${checking_message}")
 if((DEFINED MODULE_PARAM_CREATE_USE_OPS_STRUCT) OR (DEFINED MODULE_PARAM_CREATE_USE_OPS))
 	set(checking_message "${checking_message} [cached] - done")
 else((DEFINED MODULE_PARAM_CREATE_USE_OPS_STRUCT) OR (DEFINED MODULE_PARAM_CREATE_USE_OPS))
-	kmodule_try_compile(is_module_param_create_use_ops_struct # RESULT_VAR
+	kbuild_try_compile(is_module_param_create_use_ops_struct # RESULT_VAR
 		"${CMAKE_CURRENT_BINARY_DIR}/module_param_create_use_ops_struct" # bindir
 		"module_param_create_use_ops_struct.c" # srcfile
 		OUTPUT_VARIABLE out_ops_struct)
@@ -22,7 +19,7 @@ else((DEFINED MODULE_PARAM_CREATE_USE_OPS_STRUCT) OR (DEFINED MODULE_PARAM_CREAT
 		set(MODULE_PARAM_CREATE_USE_OPS_STRUCT "TRUE" CACHE INTERNAL
 			"To create module parameters with callbacks, one needs to use struct ops")
 	else(is_module_param_create_use_ops_struct)
-		kmodule_try_compile(is_module_param_create_use_ops # RESULT_VAR
+		kbuild_try_compile(is_module_param_create_use_ops # RESULT_VAR
 			"${CMAKE_CURRENT_BINARY_DIR}/module_param_create_use_ops" # bindir
 			"module_param_create_use_ops.c" # srcfile
 			OUTPUT_VARIABLE out_ops)

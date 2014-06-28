@@ -4,7 +4,7 @@ module_name := @module_name@
 # .symvers file of LeakCheck.
 kedr_leak_check_symbols := @kedr_leak_check_symbols@
 
-KBUILD_DIR=@KBUILD_BUILD_DIR@
+KBUILD_DIR=@Kbuild_BUILD_DIR@
 PWD=`pwd`
 
 all: $(module_name).ko
