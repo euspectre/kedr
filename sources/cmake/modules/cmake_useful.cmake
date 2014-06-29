@@ -174,10 +174,56 @@ endfunction(check_try)
 # will be printed, at it will be the only message for that check.
 function(check_end result_msg)
     if(NOT _check_has_tries)
-        message(STATUS "${_check_status_msg} - [cached] ${result_msg}")
+        message(STATUS "${_check_status_msg} [cached] - ${result_msg}")
     else(NOT _check_has_tries)
         message(STATUS "${_check_status_msg} - ${result_msg}")
     endif(NOT _check_has_tries)
     set(_check_status_msg PARENT_SCOPE)
     set(_check_has_tries PARENT_SCOPE)
 endfunction(check_end result_msg)
+
+#  set_bool_string(var true_string false_string value [CACHE ... | PARENT_SCOPE])
+#
+# Set variable to one of two string according to true property of some value.
+#
+# If 'value' is true-evaluated, 'var' will be set to 'true_string',
+# otherwise to 'var' will be set to 'false_string'.
+# Like standard set(), macro accept CACHE and PARENT_SCOPE modifiers.
+#
+# Useful for form meaningful value for cache variables, contained result
+# of some operation.
+# Also may be used for form message for check_end().
+macro(set_bool_string var true_string false_string value)
+    # Macro parameters are not a variables, so them cannot be tested
+    # using 'if(value)'.
+    # Usage 'if(${value})' leads to warnings since 2.6.4 when ${val}
+    # is boolean constant
+    # (because until 2.6.4 'if(value)' always dereference val).
+    # So copy 'value' to local variable for test it.
+    set(_set_bool_string_value ${value})
+    if(_set_bool_string_value)
+        set(${var} "${true_string}" ${ARGN})
+    else()
+        set(${var} "${false_string}" ${ARGN})
+    endif()
+endmacro(set_bool_string)
+
+#  set_zero_string(var true_string false_string value [CACHE ... | PARENT_SCOPE])
+#
+# Set variable to one of two string according to zero property of some value.
+#
+# If 'value' is '0' (presizely), 'var' will be set to 'zero_string',
+# otherwise to 'var' will be set to 'nonzero_string'.
+# Like standard set(), macro accept CACHE and PARENT_SCOPE modifiers.
+#
+# Useful for form meaningful value for cache variables, contained result
+# of execute_process().
+# Also may be used for form message for check_end().
+macro(set_zero_string var zero_string nonzero_string value)
+    set(_set_zero_string_value ${value})
+    if(_set_zero_string_value EQUAL "0")
+        set(${var} ${zero_string} ${ARGN})
+    else()
+        set(${var} ${nonzero_string} ${ARGN})
+    endif()
+endmacro(set_zero_string)

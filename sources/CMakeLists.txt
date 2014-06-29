@@ -70,6 +70,11 @@ include(CMakeParseArguments)
 
 find_package(Kbuild 2.6.32)
 
+if(NOT Kbuild_ARCH STREQUAL "x86")
+    message("Only x86 architecture is supported (this includes x86_64 machines also).")
+    message(FATAL_ERROR "Unsupported architecture: ${Kbuild_ARCH}")
+endif(NOT Kbuild_ARCH STREQUAL "x86")
+
 include(template_generation)
 include(cmake_useful)
 include(kedr_testing)

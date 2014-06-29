@@ -30,11 +30,9 @@ set(unreliable_functions_list
 # RESULT_VAR is cached.
 
 function(kmodule_is_function_exist function_name RESULT_VAR)
-    set(kmodule_is_function_exist_message "Looking for ${function_name} in the kernel")
-
-    if(DEFINED ${RESULT_VAR})
-        set(kmodule_is_function_exist_message "${kmodule_is_function_exist_message} [cached]")
-    else(DEFINED ${RESULT_VAR})
+    check_begin("Looking for ${function_name} in the kernel")
+    if(NOT DEFINED ${RESULT_VAR})
+        check_try()
         execute_process(
             COMMAND sh "${kmodule_this_module_dir}/kmodule_files/scripts/lookup_kernel_function.sh"
 				${function_name} ${kmodule_function_map_file}
@@ -65,12 +63,9 @@ function(kmodule_is_function_exist function_name RESULT_VAR)
 "Cannot determine whether function '${function_name}' exists in the kernel"
 			)
         endif(kmodule_is_function_exist_result EQUAL 0)
-    endif(DEFINED ${RESULT_VAR})
-    if (${RESULT_VAR})
-        message(STATUS "${kmodule_is_function_exist_message} - found")
-    else(${RESULT_VAR})
-        message(STATUS "${kmodule_is_function_exist_message} - not found")
-    endif(${RESULT_VAR})
+    endif(NOT DEFINED ${RESULT_VAR})
+    set_bool_string(check_result "found" "not found" ${${RESULT_VAR}})
+    check_end(${check_result})
 endfunction(kmodule_is_function_exist function_name RESULT_VAR)
 
 # Creates the list of functions that actually exist on the 
@@ -167,37 +162,27 @@ endfunction(kmodule_configure_kernel_functions output_list)
 # kernel modules. 
 # The macro sets variable 'MODULE_BUILD_SUPPORTED'.
 macro(check_module_build)
-	set(check_module_build_message 
-		"Checking if kernel modules can be built on this system"
-	)
-	message(STATUS "${check_module_build_message}")
-	if (DEFINED MODULE_BUILD_SUPPORTED)
-		set(check_module_build_message 
-"${check_module_build_message} [cached] - ${MODULE_BUILD_SUPPORTED}"
-		)
-	else (DEFINED MODULE_BUILD_SUPPORTED)
+	check_begin("Checking if kernel modules can be built on this system")
+	if (NOT MODULE_BUILD_SUPPORTED)
+		check_try()
 		kbuild_try_compile(module_build_supported_impl 
 			"${CMAKE_BINARY_DIR}/check_module_build"
 			"${kmodule_test_sources_dir}/check_module_build/module.c"
 		)
-		if (module_build_supported_impl)
-			set(MODULE_BUILD_SUPPORTED "yes" CACHE INTERNAL
-				"Can kernel modules be built on this system?"
-			)
-		else (module_build_supported_impl)
-			set(MODULE_BUILD_SUPPORTED "no")
-			message(FATAL_ERROR 
+		set_bool_string(MODULE_BUILD_SUPPORTED "yes" "no" ${module_build_supported_impl}
+			CACHE INTERNAL "Can kernel modules be built on this system?"
+		)
+	endif (NOT MODULE_BUILD_SUPPORTED)
+	
+	check_end("${MODULE_BUILD_SUPPORTED}")
+	
+	if (NOT MODULE_BUILD_SUPPORTED)
+		message(FATAL_ERROR 
 "There are problems with building kernel modules on this system. "
 "Please check that the appropriate kernel headers and build tools "
 "are installed."
 			)
-		endif (module_build_supported_impl)
-				
-		set(check_module_build_message 
-"${check_module_build_message} - ${MODULE_BUILD_SUPPORTED}"
-		)
-	endif (DEFINED MODULE_BUILD_SUPPORTED)
-	message(STATUS "${check_module_build_message}")
+	endif (NOT MODULE_BUILD_SUPPORTED)
 endmacro(check_module_build)
 
 # Check if reliable stack trace information can be obtained. 
@@ -205,34 +190,17 @@ endmacro(check_module_build)
 # for frame pointers and/or stack unwind on.
 # The macro sets variable 'STACK_TRACE_RELIABLE'.
 macro(check_stack_trace)
-	set(check_stack_trace_message 
-		"Checking if stack trace information is reliable"
-	)
-	message(STATUS "${check_stack_trace_message}")
-	if (DEFINED STACK_TRACE_RELIABLE)
-		set(check_stack_trace_message 
-"${check_stack_trace_message} [cached] - ${STACK_TRACE_RELIABLE}"
-		)
-	else (DEFINED STACK_TRACE_RELIABLE)
+	check_begin("Checking if stack trace information is reliable")
+	if (NOT DEFINED STACK_TRACE_RELIABLE)
+		check_try()
 		kbuild_try_compile(stack_trace_reliable_impl 
 			"${CMAKE_BINARY_DIR}/check_stack_trace"
 			"${kmodule_test_sources_dir}/check_stack_trace/module.c"
 		)
-		if (stack_trace_reliable_impl)
-			set(STACK_TRACE_RELIABLE "yes" CACHE INTERNAL
-				"Are stack traces reliable on this system?"
-			)
-		else (stack_trace_reliable_impl)
-			set(STACK_TRACE_RELIABLE "no" CACHE INTERNAL
-				"Are stack traces reliable on this system?"
-			)
-		endif (stack_trace_reliable_impl)
-				
-		set(check_stack_trace_message 
-"${check_stack_trace_message} - ${STACK_TRACE_RELIABLE}"
-		)
-	endif (DEFINED STACK_TRACE_RELIABLE)
-	message(STATUS "${check_stack_trace_message}")
+		set_bool_string(STACK_TRACE_RELIABLE "yes" "no" ${stack_trace_reliable_impl}
+			CACHE INTERNAL "Are stack traces reliable on this system?")
+	endif (NOT DEFINED STACK_TRACE_RELIABLE)
+	check_end("${STACK_TRACE_RELIABLE}")
 
 	if (NOT STACK_TRACE_RELIABLE)
 		message ("\n[WARNING]\n"
@@ -248,34 +216,20 @@ endmacro(check_stack_trace)
 # Check whether ring buffer is implemented by the kernel.
 # Set cache variable RING_BUFFER_IMPLEMENTED according to this checking.
 function(check_ring_buffer)
-	set(check_ring_buffer_message 
-		"Checking if ring buffer is implemented in the kernel"
-	)
-	message(STATUS "${check_ring_buffer_message}")
-	if (DEFINED RING_BUFFER_IMPLEMENTED)
-		set(check_ring_buffer_message 
-"${check_ring_buffer_message} [cached] - ${RING_BUFFER_IMPLEMENTED}"
-		)
-	else (DEFINED RING_BUFFER_IMPLEMENTED)
+	check_begin("Checking if ring buffer is implemented in the kernel")
+
+	if (NOT DEFINED RING_BUFFER_IMPLEMENTED)
+		check_try()
 		kbuild_try_compile(ring_buffer_implemented_impl 
 			"${CMAKE_BINARY_DIR}/check_ring_buffer"
 			"${kmodule_test_sources_dir}/check_ring_buffer/module.c"
 		)
-		if (ring_buffer_implemented_impl)
-			set(RING_BUFFER_IMPLEMENTED "yes" CACHE INTERNAL
-				"Whether ring buffer is implemented in the kernel"
-			)
-		else (ring_buffer_implemented_impl)
-			set(RING_BUFFER_IMPLEMENTED "no" CACHE INTERNAL
-				"Whether ring buffer is implemented in the kernel"
-			)
-		endif (ring_buffer_implemented_impl)
-				
-		set(check_ring_buffer_message 
-"${check_ring_buffer_message} - ${RING_BUFFER_IMPLEMENTED}"
+		
+		set_bool_string(RING_BUFFER_IMPLEMENTED "yes" "no" "${ring_buffer_implemented_impl}"
+			CACHE INTERNAL "Whether ring buffer is implemented in the kernel"
 		)
-	endif (DEFINED RING_BUFFER_IMPLEMENTED)
-	message(STATUS "${check_ring_buffer_message}")
+	endif (NOT DEFINED RING_BUFFER_IMPLEMENTED)
+	check_end(${RING_BUFFER_IMPLEMENTED})
 	
 	if (NOT RING_BUFFER_IMPLEMENTED)
 		message("\n[WARNING]\nRing buffer is not supported by the system.\n"
@@ -283,7 +237,6 @@ function(check_ring_buffer)
 			"If this is not acceptable, you could rebuild the kernel with\n"
 			"CONFIG_RING_BUFFER set to \"y\" and then reconfigure and rebuild KEDR.\n")
 	endif (NOT RING_BUFFER_IMPLEMENTED)
-
 endfunction(check_ring_buffer)
 
 # Check which memory allocator is used by the kernel.
@@ -291,23 +244,24 @@ endfunction(check_ring_buffer)
 #
 # Some functions in that allocators may have same names, but different signatures.
 function(check_allocator)
-	set(check_allocator_message 
-		"Checking which memory allocator is used by the kernel"
-	)
-		message(STATUS "${check_allocator_message}")
-	if (DEFINED KERNEL_MEMORY_ALLOCATOR)
-		set(check_allocator_message 
-"${check_allocator_message} [cached] - ${KERNEL_MEMORY_ALLOCATOR}"
-		)
-	else (DEFINED KERNEL_MEMORY_ALLOCATOR)
-		kbuild_try_compile(is_allocator_slab 
-			"${CMAKE_BINARY_DIR}/check_allocator_slab"
-			"${kmodule_test_sources_dir}/check_allocator/module.c"
-			KBUILD_COMPILE_DEFINITIONS "-DIS_ALLOCATOR_SLAB"
-		)
-		if (is_allocator_slab)
-			set(allocator "slab")
-		else (is_allocator_slab)
+	check_begin("Checking which memory allocator is used by the kernel")
+	if(NOT DEFINED KERNEL_MEMORY_ALLOCATOR)
+		check_try()
+		# Use local variable for detect allocator,
+		# Cache one will be set at the end
+		set(allocator "")
+		if(allocator STREQUAL "")
+			kbuild_try_compile(is_allocator_slab 
+				"${CMAKE_BINARY_DIR}/check_allocator_slab"
+				"${kmodule_test_sources_dir}/check_allocator/module.c"
+				KBUILD_COMPILE_DEFINITIONS "-DIS_ALLOCATOR_SLAB"
+			)
+			if (is_allocator_slab)
+				set(allocator "slab")
+			endif (is_allocator_slab)
+		endif(allocator STREQUAL "")
+
+		if(allocator STREQUAL "")
 			kbuild_try_compile(is_allocator_slub 
 				"${CMAKE_BINARY_DIR}/check_allocator_slub"
 				"${kmodule_test_sources_dir}/check_allocator/module.c"
@@ -315,29 +269,29 @@ function(check_allocator)
 			)
 			if (is_allocator_slub)
 				set(allocator "slub")
-			else (is_allocator_slub)
-				kbuild_try_compile(is_allocator_slob 
-					"${CMAKE_BINARY_DIR}/check_allocator_slob"
-					"${kmodule_test_sources_dir}/check_allocator/module.c"
-					KBUILD_COMPILE_DEFINITIONS "-DIS_ALLOCATOR_SLOB"
-				)
-				if (is_allocator_slob)
-					set(allocator "slob")
-				else (is_allocator_slub)
-					set(allocator "other")
-				endif (is_allocator_slob)
 			endif (is_allocator_slub)
-		endif (is_allocator_slab)
+		endif(allocator STREQUAL "")
+		
+		if(allocator STREQUAL "")
+			kbuild_try_compile(is_allocator_slob 
+				"${CMAKE_BINARY_DIR}/check_allocator_slob"
+				"${kmodule_test_sources_dir}/check_allocator/module.c"
+				KBUILD_COMPILE_DEFINITIONS "-DIS_ALLOCATOR_SLOB"
+			)
+			if (is_allocator_slob)
+				set(allocator "slob")
+			endif (is_allocator_slub)
+		endif(allocator STREQUAL "")
+		
+		if(allocator STREQUAL "")
+			set(allocator "other")
+		endif(allocator STREQUAL "")
+
 		set(KERNEL_MEMORY_ALLOCATOR "${allocator}" CACHE INTERNAL
 			"Memory allocator which is used by the kernel"
 		)
-				
-		set(check_allocator_message 
-"${check_allocator_message} - ${KERNEL_MEMORY_ALLOCATOR}"
-		)
-	endif (DEFINED KERNEL_MEMORY_ALLOCATOR)
-	message(STATUS "${check_allocator_message}")
-
+	endif (NOT DEFINED KERNEL_MEMORY_ALLOCATOR)
+	check_end("${KERNEL_MEMORY_ALLOCATOR}")
 endfunction(check_allocator)
 
 # Check if 'kfree_rcu' is available in the kernel (it is likely to be 
@@ -347,34 +301,20 @@ endfunction(check_allocator)
 # arguments.
 # The macro sets variable 'HAVE_KFREE_RCU'.
 macro(check_kfree_rcu)
-	set(check_kfree_rcu_message 
-		"Checking if kfree_rcu() is available"
-	)
-	message(STATUS "${check_kfree_rcu_message}")
-	if (DEFINED HAVE_KFREE_RCU)
-		set(check_kfree_rcu_message 
-"${check_kfree_rcu_message} [cached] - ${HAVE_KFREE_RCU}"
-		)
-	else (DEFINED HAVE_KFREE_RCU)
+	check_begin("Checking if kfree_rcu() is available")
+
+	if (NOT DEFINED HAVE_KFREE_RCU)
+		check_try()
 		kbuild_try_compile(have_kfree_rcu_impl 
 			"${CMAKE_BINARY_DIR}/check_kfree_rcu"
 			"${kmodule_test_sources_dir}/check_kfree_rcu/module.c"
 		)
-		if (have_kfree_rcu_impl)
-			set(HAVE_KFREE_RCU "yes" CACHE INTERNAL
-				"Is kfree_rcu() available?"
-			)
-		else (have_kfree_rcu_impl)
-			set(HAVE_KFREE_RCU "no" CACHE INTERNAL
-				"Is kfree_rcu() available?"
-			)
-		endif (have_kfree_rcu_impl)
-				
-		set(check_kfree_rcu_message 
-"${check_kfree_rcu_message} - ${HAVE_KFREE_RCU}"
+		
+		set_bool_string(HAVE_KFREE_RCU "yes" "no" ${have_kfree_rcu_impl}
+			CACHE INTERNAL "Is kfree_rcu() available?"
 		)
-	endif (DEFINED HAVE_KFREE_RCU)
-	message(STATUS "${check_kfree_rcu_message}")
+	endif ()
+	check_end("${HAVE_KFREE_RCU}")
 endmacro(check_kfree_rcu)
 ############################################################################
 
@@ -382,34 +322,19 @@ endmacro(check_kfree_rcu)
 # first argument.
 # The macro sets variable 'POSIX_ACL_XATTR_HAS_USER_NS'.
 macro(check_xattr_user_ns)
-	set(check_xattr_user_ns_message
-"Checking if posix_acl_from_xattr() has struct user_namespace * argument"
-	)
-	message(STATUS "${check_xattr_user_ns_message}")
-	if (DEFINED POSIX_ACL_XATTR_HAS_USER_NS)
-		set(check_xattr_user_ns_message
-"${check_xattr_user_ns_message} [cached] - ${POSIX_ACL_XATTR_HAS_USER_NS}"
-		)
-	else ()
+	check_begin("Checking if posix_acl_from_xattr() has struct user_namespace * argument")
+	if (NOT DEFINED POSIX_ACL_XATTR_HAS_USER_NS)
+		check_try()
 		kbuild_try_compile(have_xattr_user_ns_impl
 			"${CMAKE_BINARY_DIR}/check_xattr_user_ns"
 			"${kmodule_test_sources_dir}/check_xattr_user_ns/module.c"
 		)
-		if (have_xattr_user_ns_impl)
-			set(POSIX_ACL_XATTR_HAS_USER_NS "yes" CACHE INTERNAL
-	"Does posix_acl_from_xattr() have struct user_namespace argument?"
-			)
-		else (have_xattr_user_ns_impl)
-			set(POSIX_ACL_XATTR_HAS_USER_NS "no" CACHE INTERNAL
-	"Does posix_acl_from_xattr() have struct user_namespace argument?"
-			)
-		endif (have_xattr_user_ns_impl)
 
-		set(check_xattr_user_ns_message
-"${check_xattr_user_ns_message} - ${POSIX_ACL_XATTR_HAS_USER_NS}"
-		)
-	endif (DEFINED POSIX_ACL_XATTR_HAS_USER_NS)
-	message(STATUS "${check_xattr_user_ns_message}")
+		set_bool_string(POSIX_ACL_XATTR_HAS_USER_NS "yes" "no" ${have_xattr_user_ns_impl}
+			CACHE INTERNAL "Does posix_acl_from_xattr() have struct user_namespace argument?"
+			)
+	endif ()
+	check_end("${POSIX_ACL_XATTR_HAS_USER_NS}")
 endmacro(check_xattr_user_ns)
 ############################################################################
 
@@ -417,68 +342,39 @@ endmacro(check_xattr_user_ns)
 # rather than both 'type *tpos' and 'hlist_node *pos' as the loop cursors.
 # The macro sets variable 'HLIST_FOR_EACH_ENTRY_POS_ONLY'.
 macro(check_hlist_for_each_entry)
-	set(check_hlist_for_each_entry_message
-"Checking the signatures of hlist_for_each_entry*() macros"
-	)
-	message(STATUS "${check_hlist_for_each_entry_message}")
-	if (DEFINED HLIST_FOR_EACH_ENTRY_POS_ONLY)
-		set(check_hlist_for_each_entry_message
-"${check_hlist_for_each_entry_message} [cached] - done"
-		)
-	else ()
+	check_begin("Checking the signatures of hlist_for_each_entry*() macros")
+	if (NOT DEFINED HLIST_FOR_EACH_ENTRY_POS_ONLY)
+		check_try()
 		kbuild_try_compile(pos_only_impl
 			"${CMAKE_BINARY_DIR}/check_hlist_for_each_entry"
 			"${kmodule_test_sources_dir}/check_hlist_for_each_entry/module.c"
 		)
-		if (pos_only_impl)
-			set(HLIST_FOR_EACH_ENTRY_POS_ONLY "yes" CACHE INTERNAL
+		set_bool_string(HLIST_FOR_EACH_ENTRY_POS_ONLY "yes" "no" ${pos_only_impl}
+			CACHE INTERNAL 
 	"Do hlist_for_each_entry*() macros have only 'type *pos' to use as a loop cursor?"
-			)
-		else ()
-			set(HLIST_FOR_EACH_ENTRY_POS_ONLY "no" CACHE INTERNAL
-	"Do hlist_for_each_entry*() macros have only 'type *pos' to use as a loop cursor?"
-			)
-		endif (pos_only_impl)
-
-		set(check_hlist_for_each_entry_message
-			"${check_hlist_for_each_entry_message} - done"
 		)
-	endif (DEFINED HLIST_FOR_EACH_ENTRY_POS_ONLY)
-	message(STATUS "${check_hlist_for_each_entry_message}")
+	endif ()
+	set_bool_string(check_result "do not use additional loop cursor" "use additional loop cursor"
+		${HLIST_FOR_EACH_ENTRY_POS_ONLY})
+	check_end(${check_result})
 endmacro(check_hlist_for_each_entry)
 ############################################################################
 
 # Check if 'random32' is available in the kernel.
 # The macro sets variable 'KEDR_HAVE_RANDOM32'.
 macro(check_random32)
-	set(check_random32_message
-		"Checking if random32() is available"
-	)
-	message(STATUS "${check_random32_message}")
-	if (DEFINED KEDR_HAVE_RANDOM32)
-		set(check_random32_message
-"${check_random32_message} [cached] - ${KEDR_HAVE_RANDOM32}"
-		)
-	else (DEFINED KEDR_HAVE_RANDOM32)
+	check_begin("Checking if random32() is available")
+	if (NOT DEFINED KEDR_HAVE_RANDOM32)
+		check_try()
 		kbuild_try_compile(have_random32_impl
 			"${CMAKE_BINARY_DIR}/check_random32"
 			"${kmodule_test_sources_dir}/check_random32/module.c"
 		)
-		if (have_random32_impl)
-			set(KEDR_HAVE_RANDOM32 "yes" CACHE INTERNAL
-				"Is random32() available?"
-			)
-		else (have_random32_impl)
-			set(KEDR_HAVE_RANDOM32 "no" CACHE INTERNAL
-				"Is random32() available?"
-			)
-		endif (have_random32_impl)
-
-		set(check_random32_message
-"${check_random32_message} - ${KEDR_HAVE_RANDOM32}"
+		set_bool_string(KEDR_HAVE_RANDOM32 "yes" "no" "${have_random32_impl}"
+			CACHE INTERNAL "Is random32() available?"
 		)
-	endif (DEFINED KEDR_HAVE_RANDOM32)
-	message(STATUS "${check_random32_message}")
+	endif ()
+	check_end("${KEDR_HAVE_RANDOM32}")
 endmacro(check_random32)
 ############################################################################
 

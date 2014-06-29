@@ -22,12 +22,13 @@ newline='
 #
 # 'restart' - stop KEDR and start it again with same configuration.
 #
-# 'status' - output the current state of KEDR.
+# 'status' - print the current state of KEDR.
 #
-# 'version' - output the version of KEDR installed.
+# '--version' - print the version of KEDR installed.
 
 usage()
 {
+    printf "KEDR service.\n"
     printf "Usage: \n"
     printf "\tkedr start <target_module_name> [ -c <conf_string> | -f <conf_file> ...]\n"
     printf "\t\tLoad KEDR components to operate on the target module.\n"
@@ -45,7 +46,7 @@ usage()
 
 version()
 {
-    printf "KEDR version @KEDR_VERSION@.\n"
+    printf "KEDR version @KEDR_VERSION@\n"
 }
 
 # default config directory and file
@@ -397,7 +398,6 @@ restart)
     printf "KEDR started.\n"
     ;;
 --help)
-    printf "KEDR service.\n"
     usage
     ;;
 --version)

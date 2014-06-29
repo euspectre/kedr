@@ -4,42 +4,54 @@ set(arch_dir "arch/${Kbuild_ARCH}")
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${arch_dir}/lib)
 
-set(checking_message "Checking the ways to create module parameters with callbacks")
-message(STATUS "${checking_message}")
-if((DEFINED MODULE_PARAM_CREATE_USE_OPS_STRUCT) OR (DEFINED MODULE_PARAM_CREATE_USE_OPS))
-	set(checking_message "${checking_message} [cached] - done")
-else((DEFINED MODULE_PARAM_CREATE_USE_OPS_STRUCT) OR (DEFINED MODULE_PARAM_CREATE_USE_OPS))
+check_begin("Checking the ways to create module parameters with callbacks")
+# It is simpler for scripting to have one entry in the cache per case.
+if(DEFINED MODULE_PARAM_CREATE_USE_OPS_STRUCT OR DEFINED MODULE_PARAM_CREATE_USE_OPS)
+	set(found "TRUE")
+else()
+	set(found)
+endif()
+if(NOT found)
+	check_try()
 	kbuild_try_compile(is_module_param_create_use_ops_struct # RESULT_VAR
 		"${CMAKE_CURRENT_BINARY_DIR}/module_param_create_use_ops_struct" # bindir
 		"module_param_create_use_ops_struct.c" # srcfile
-		OUTPUT_VARIABLE out_ops_struct)
+		OUTPUT_VARIABLE out_ops_struct
+	)
 
 	if(is_module_param_create_use_ops_struct)
-		set(checking_message "${checking_message} - done")
 		set(MODULE_PARAM_CREATE_USE_OPS_STRUCT "TRUE" CACHE INTERNAL
-			"To create module parameters with callbacks, one needs to use struct ops")
-	else(is_module_param_create_use_ops_struct)
-		kbuild_try_compile(is_module_param_create_use_ops # RESULT_VAR
-			"${CMAKE_CURRENT_BINARY_DIR}/module_param_create_use_ops" # bindir
-			"module_param_create_use_ops.c" # srcfile
-			OUTPUT_VARIABLE out_ops)
-		if(is_module_param_create_use_ops)
-			set(checking_message "${checking_message} - done")
-			set(MODULE_PARAM_CREATE_USE_OPS "TRUE" CACHE INTERNAL
-			"To create module parameters with callbacks, one needs to use ops")
-		else(is_module_param_create_use_ops)
-			set(checking_message "${checking_message} - error")
-			message("${checking_message}")
-			message("Unknown way to create module param with callbacks.")
-			message("Output of test compilation for operations structure:")
-			message("${out_ops_srtuct}")
-			message("Output of test compilation for operations:")
-			message("${out_ops}")
-			message(FATAL_ERROR "")
-		endif(is_module_param_create_use_ops)
-	endif(is_module_param_create_use_ops_struct)
-endif((DEFINED MODULE_PARAM_CREATE_USE_OPS_STRUCT) OR (DEFINED MODULE_PARAM_CREATE_USE_OPS))
-message(STATUS "${checking_message}")
+			"To create module parameters with callbacks, one needs to use struct ops"
+		)
+		set(found "TRUE")
+	endif()
+endif(NOT found)
+
+if(NOT found)
+	check_try()
+	kbuild_try_compile(is_module_param_create_use_ops # RESULT_VAR
+		"${CMAKE_CURRENT_BINARY_DIR}/module_param_create_use_ops" # bindir
+		"module_param_create_use_ops.c" # srcfile
+		OUTPUT_VARIABLE out_ops
+	)
+
+	if(is_module_param_create_use_ops)
+		set(MODULE_PARAM_CREATE_USE_OPS "TRUE" CACHE INTERNAL
+			"To create module parameters with callbacks, one needs to use ops"
+		)
+		set(found "TRUE")
+	endif()
+endif(NOT found)
+
+if(MODULE_PARAM_CREATE_USE_OPS_STRUCT)
+	check_end("use callbacks struct")
+elseif(MODULE_PARAM_CREATE_USE_OPS)
+	check_end("use callbacks themselves")
+else(MODULE_PARAM_CREATE_USE_OPS_STRUCT)
+	check_end("unknown")
+	message(FATAL_ERROR "Unknown way to create module param with callbacks.")
+endif(MODULE_PARAM_CREATE_USE_OPS_STRUCT)
+
 
 
 kbuild_include_directories(
