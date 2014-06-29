@@ -21,13 +21,13 @@ set(kbuild_aux_dir "${kbuild_this_module_dir}/kbuild_system_files")
 
 # _declare_per_build_vars(<variable> <doc-pattern>)
 #
-# Per-build type definitions for given <variable>.
+# [INTERNAL] Per-build type definitions for given <variable>.
 # 
 # Create CACHE STRING variables <variable>_{DEBUG|RELEASE|RELWITHDEBINFO|MINSIZEREL}
 # with documentation string <doc-pattern> where %build% is replaced
 # with corresponded build type description.
 #
-# Default value for variable <variable>_<type> is taken from <variable>_<type>_init.
+# Default value for variable <variable>_<type> is taken from <variable>_<type>_INIT.
 macro(_declare_per_build_vars variable doc_pattern)
     set(_build_type)
     foreach(t
@@ -92,88 +92,11 @@ mark_as_advanced(
     KBUILD_MAKE_FLAGS_MINSIZEREL
 )
 
-
-# Per-directory tracking for kbuild compiler flags.
-#
-# Unlike to standard COMPILE_FLAGS, these flags do not include values
-# set for parent directories.
-# (There is no generic "fill-with-parent's values" mechanism exists
-# in cmake).
-#
-# So, this property has a little sence for the user.
-# It exists only for make effect of kbuild_add_definitions() to 
-# cross "function", "foreach" and other non-directory scopes.
-define_property(DIRECTORY PROPERTY KBUILD_COMPILE_FLAGS
-    BRIEF_DOCS "Compiler flags used by Kbuild system added in this directory."
-    FULL_DOCS "Compiler flags used by Kbuild system added in this directory."
-)
-
-# Per-directory tracking for kbuild include directories.
-#
-# Unlike to standard INCLUDE_DIRECTORIES, these ones do not include values
-# set for parent directories.
-# (There is no generic "fill-with-parent's values" mechanism exists
-# in cmake).
-#
-# So, this property has a little sence for the user.
-# It exists only for make effect of kbuild_add_definitions() to 
-# cross "function", "foreach" and other non-directory scopes.
-define_property(DIRECTORY PROPERTY KBUILD_INCLUDE_DIRECTORIES
-    BRIEF_DOCS "Include directories used by Kbuild system; added in this directory."
-    FULL_DOCS "Include directories used by Kbuild system; added in this directory."
-)
-
-# Parameters below are set externally only in try_compile() for subproject,
-# which include this file.
-# No need to cache them as try_compile() project is not configured by the user.
-
-# Real top-level source directory.
-if(NOT KBUILD_REAL_SOURCE_DIR)
-    set(KBUILD_REAL_SOURCE_DIR ${CMAKE_SOURCE_DIR})
-endif(NOT KBUILD_REAL_SOURCE_DIR)
-# Real top-level binary directory.
-if(NOT KBUILD_REAL_BINARY_DIR)
-    set(KBUILD_REAL_BINARY_DIR ${CMAKE_BINARY_DIR})
-endif(NOT KBUILD_REAL_BINARY_DIR)
-
 set(CROSS_COMPILE "" CACHE STRING "Cross compilation prefix for build linux kernel objects.")
 mark_as_advanced(CROSS_COMPILE)
 
-# These flags are passed to the 'make' when compile kernel module.
-set(kbuild_additional_make_flags)
-# These CMake flags will be passed to try_compile() subproject.
-set(kbuild_try_compile_flags
-    "-DKBUILD_REAL_SOURCE_DIR=${KBUILD_REAL_SOURCE_DIR}"
-    "-DKBUILD_REAL_BINARY_DIR=${KBUILD_REAL_BINARY_DIR}"
-)
-
-# As ARCH and CROSS_COMPILE are passed to submake only when non-empty.
-if(ARCH)
-    list(APPEND kbuild_additional_make_flags "ARCH=${ARCH}")
-    list(APPEND kbuild_try_compile_flags "-DARCH=${ARCH}")
-endif(ARCH)
-if(CROSS_COMPILE)
-    list(APPEND kbuild_additional_make_flags "CROSS_COMPILE=${CROSS_COMPILE}")
-    list(APPEND kbuild_try_compile_flags "-DCROSS_COMPILE=${CROSS_COMPILE}")
-endif(CROSS_COMPILE)
-
-
 # Property prefixed with 'KMODULE_' is readonly for outer use,
 # unless explicitely noted in its description.
-
-# List of targets created with kmodule_add_module() without
-# 'IMPORTED' option.
-#
-# This list is traversed in kmodule_finalize_linking() for
-# add targets which generate imported symbols list.
-#
-# Note, that this list does not contain all defined kernel modules,
-# so property normally shouldn't be used by outer code.
-define_property(GLOBAL PROPERTY KMODULE_TARGETS
-    BRIEF_DOCS "List of kernel module targets configured for build"
-    FULL_DOCS "List of kernel module targets configured for build"
-)
-set_property(GLOBAL PROPERTY KMODULE_TARGETS)
 
 # Property is set for every target described kernel module.
 # Concrete property's value currently has no special meaning.
@@ -206,39 +129,6 @@ define_property(TARGET PROPERTY KMODULE_SYMVERS_LOCATION
     BRIEF_DOCS "Location of the symvers file of the kernel module."
     FULL_DOCS "Location of the symvers file of the kernel module."
 )
-
-# CMAKE_CURRENT_BINARY_DIR at the moment, when kbuild_add_module() is issued.
-#
-# This property is used for determine, whether kbuild_link_module()
-# command may be implemented as
-#   add_custom_command(... APPEND)
-# instead of
-#   add_custom_target()
-define_property(TARGET PROPERTY KMODULE_BINARY_DIR
-    BRIEF_DOCS "CMAKE_CURRENT_BINARY_DIR where module is built."
-    FULL_DOCS "CMAKE_CURRENT_BINARY_DIR where module is built."
-)
-
-# List of symvers files, added by kbuild_link_module(), when it is called
-# from directory differed from one where module is build.
-#
-# This is internal property for implement linking mechanism.
-define_property(TARGET PROPERTY KMODULE_FAR_SYMVERS
-    BRIEF_DOCS "'Far' symvers files this module depends on."
-    FULL_DOCS "'Far' symvers files this module depends on."
-)
-
-# List of targets, from which this module should indirectly depend on.
-# These targets are added by kbuild_link_module(), when it is called
-# from directory differed from one where module is build.
-#
-# This is internal property for implement linking mechanism.
-define_property(TARGET PROPERTY KMODULE_FAR_DEPEND_TARGETS
-    BRIEF_DOCS "'Far' targets this module depends on."
-    FULL_DOCS "'Far' targets this module depends on."
-)
-
-
 
 # Property is "TRUE" for every target described imported kernel module,
 # "FALSE" for other targets described kernel module.
@@ -273,8 +163,10 @@ define_property(TARGET PROPERTY KMODULE_IMPORTED_SYMVERS_LOCATION
     FULL_DOCS "Location of the symvers file for imported kernel module."
 )
 
-# Helpers for simple extract some kernel module properties
+# Helpers for simple extract some kernel module properties.
 
+#  kbuild_get_module_location(RESULT_VAR name)
+#
 # Return location of the module, determined by the property
 # KMODULE_MODULE_LOCATION or KMODULE_IMPORTED_MODULE_LOCATION for
 # imported target. In the last case the property is checked for being set.
@@ -298,6 +190,8 @@ function(kbuild_get_module_location RESULT_VAR name)
     set(${RESULT_VAR} ${module_location} PARENT_SCOPE)
 endfunction(kbuild_get_module_location RESULT_VAR module)
 
+#  kbuild_get_symvers_location(RESULT_VAR name)
+#
 # Return location of the symvers file for the module, determined by the
 # property KMODULE_SYMVERS_LOCATION or KMODULE_IMPORTED_SYMVERS_LOCATION
 # for imported target. In the last case the property is checked for being set.
@@ -321,59 +215,7 @@ function(kbuild_get_symvers_location RESULT_VAR name)
     set(${RESULT_VAR} ${symvers_location} PARENT_SCOPE)
 endfunction(kbuild_get_symvers_location RESULT_VAR module)
 
-
-# Constants for internal filenames.
-set(_kbuild_symvers "Module.symvers")
-set(_kbuild_symvers_imported_near "Module.symvers_imported_near")
-set(_kbuild_symvers_imported_far "Module.symvers_imported_far")
-
-
-# Helper for the building kernel module.
-#
-# copy_source_to_binary_dir(<source> <new_source_var>)
-#
-# Make sure that given source file is inside current binary dir.
-# That place is writable and has some "uniqeness" garantee for generate
-# auxiliary files during build process.
-#
-# If <source> already inside current binary dir, do nothing and
-# set <new_source_var> variable to <source> itself.
-#
-# Otherwise create rule for copy source into "nice" place inside
-# current binary dir and set <new_source_var> pointed to that place.
-function(copy_source_to_binary_dir source new_source_var)
-    is_path_inside_dir(is_in_current_binary ${CMAKE_CURRENT_BINARY_DIR} "${source}")
-    if(is_in_current_binary)
-        # Source is already placed where we want.
-        set(${new_source_var} "${source}" PARENT_SCOPE)
-    else(is_in_current_binary)
-        # Base directory from which count relative source path.
-        # By default, it is root directory.
-        set(base_dir "/")
-        # Try "nicer" base directories.
-        foreach(d
-            ${KBUILD_REAL_BINARY_DIR}
-            ${CMAKE_CURRENT_SOURCE_DIR}
-            ${KBUILD_REAL_SOURCE_DIR}
-            )
-            is_path_inside_dir(is_in_d ${d} "${source}")
-            if(is_in_d)
-                set(base_dir ${d})
-                break()
-            endif(is_in_d)
-        endforeach(d)
-		# Copy source into same relativ dir, but inside current binary one.
-        file(RELATIVE_PATH source_rel "${base_dir}" "${source}")
-		set(new_source "${CMAKE_CURRENT_BINARY_DIR}/${source_rel}")
-        get_filename_component(new_source_dir ${new_source} PATH)
-        file(MAKE_DIRECTORY "${new_source_dir}")
-		rule_copy_file("${new_source}" "${source}")
-        # Return path to the new source.
-        set(${new_source_var} "${new_source}" PARENT_SCOPE)
-    endif(is_in_current_binary)
-endfunction(copy_source_to_binary_dir source new_source_var)
-
-# kbuild_add_module(<name> [EXCLUDE_FROM_ALL] [MODULE_NAME <module_name>] [<sources> ...])
+#  kbuild_add_module(<name> [EXCLUDE_FROM_ALL] [MODULE_NAME <module_name>] [<sources> ...])
 #
 # Build kernel module from <sources>, analogue of add_library().
 #
@@ -483,47 +325,30 @@ function(kbuild_add_module name)
     endforeach(obj_sources_noext_abs)
 
     if(NOT obj_sources_noext_rel)
-        message(FATAL_ERROR "List of object files for module ${name} is empty.")
+        message(FATAL_ERROR "List of object files for building kernel module ${name} is empty.")
     endif(NOT obj_sources_noext_rel)
+
+    set(obj_sources_rel)
     # Detect, if build simple - source object name coincide with module name
-    if(obj_sources_noext_rel STREQUAL ${name})
-        set(is_build_simple "TRUE")
-    else(obj_sources_noext_rel STREQUAL ${name})
-        #Detect, if only one of source object names coincide with module name.
-        #This situation is incorrect for kbuild system.
+    
+    if(NOT obj_sources_noext_rel STREQUAL ${name})
+        # Check, whether only one of source object names coincide with module name.
+        # This situation is incorrect for kbuild system.
         list(FIND obj_sources_noext_rel ${name} is_objects_contain_name)
         if(is_objects_contain_name GREATER -1)
             message(FATAL_ERROR "Module should be built "
             "either from only one object with same name, "
             "or from objects with names different from the name of the module")
         endif(is_objects_contain_name GREATER -1)
-        set(is_build_simple "FALSE")
-    endif(obj_sources_noext_rel STREQUAL ${name})
+        
+        foreach(obj_source_noext_rel ${obj_sources_noext_rel})
+            list(APPEND obj_sources_rel "${obj_source_noext_rel}.o")
+        endforeach(obj_source_noext_rel ${obj_sources_noext_rel})
+    endif(NOT obj_sources_noext_rel STREQUAL ${name})
 
-    # Build 'kbuild' file - object sources string
-    if(is_build_simple)
-        set(obj_src_string "")
-    else(is_build_simple)
-        set(obj_src_string "${name}-y :=")
-        foreach(obj ${obj_sources_noext_rel})
-            set(obj_src_string "${obj_src_string} ${obj}.o")
-        endforeach(obj ${obj_sources_noext_rel})
-    endif(is_build_simple)
+    _get_directory_property_chained(ccflags KBUILD_COMPILE_DEFINITIONS " ")
+    _get_directory_property_chained(include_dirs KBUILD_INCLUDE_DIRECTORIES)
 
-    # Build kbuild file - compiler flags
-    _kbuild_get_compile_flags(ccflags)
-    # Append include directories definitions to the flags
-    _kbuild_get_include_directories(include_dirs)
-
-    foreach(dir ${include_dirs})
-        _string_join(" " ccflags "${ccflags}" "-I${dir}")
-    endforeach(dir ${include_dirs})
-
-    # Configure kbuild file
-    configure_file(${kbuild_this_module_dir}/kbuild_system_files/Kbuild.in
-                    ${CMAKE_CURRENT_BINARY_DIR}/Kbuild
-                    )
-    
     # Target for create module.
     add_custom_target(${name} ALL
         DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${module_name}.ko"
@@ -532,8 +357,8 @@ function(kbuild_add_module name)
 
 	# Create .cmd files for 'shipped' sources.
     # Gcc does not create them automatically for some reason.
-	if(shipped_sources_noext_abs)
-		set(cmd_create_command)
+	set(cmd_create_command)
+    if(shipped_sources_noext_abs)
 		foreach(shipped_source_noext_abs ${shipped_source_noext_abs})
 			get_filename_component(shipped_dir ${shipped_source_noext_abs} PATH)
             get_filename_component(shipped_name ${shipped_source_noext_abs} NAME)
@@ -555,6 +380,7 @@ function(kbuild_add_module name)
     add_custom_command(
         OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${module_name}.ko"
             "${CMAKE_CURRENT_BINARY_DIR}/${_kbuild_symvers}"
+        ${cmd_create_command}
         COMMAND $(MAKE) ${make_flags} ${kbuild_additional_make_flags} 
             -C ${Kbuild_BUILD_DIR} M=${CMAKE_CURRENT_BINARY_DIR} modules
 # Update timestamps for targets.
@@ -564,29 +390,15 @@ function(kbuild_add_module name)
         COMMAND touch "${CMAKE_CURRENT_BINARY_DIR}/${module_name}.ko"
             "${CMAKE_CURRENT_BINARY_DIR}/${_kbuild_symvers}"
         DEPENDS ${depend_files}
-            ${CMAKE_CURRENT_BINARY_DIR}/${_kbuild_symvers_imported_near}
-            ${CMAKE_CURRENT_BINARY_DIR}/${_kbuild_symvers_imported_far}
+            "${CMAKE_CURRENT_BINARY_DIR}/Kbuild"
         COMMENT "Building kernel module ${name}"
     )
     
-    # By default, empty 'symvers_imported_near' file is created.
-    # For every 'near' link additional depends and command are added
-    # via APPEND option for add_custom_command().
-    add_custom_command(
-        OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${_kbuild_symvers_imported_near}"
-        COMMAND truncate -s 0 "${CMAKE_CURRENT_BINARY_DIR}/${_kbuild_symvers_imported_near}"
-# Comment is not precise: not 'all' symvers files are collected here, only for 'near' links.
-# But 'far' links are rare, and they are processed in different target.
-        COMMENT "Collecting all symvers files which kernel module depends on"
-    )
-
     # Fill properties for the target.
     set_property(TARGET ${name} PROPERTY KMODULE_TYPE "kmodule")
     set_property(TARGET ${name} PROPERTY KMODULE_IMPORTED "FALSE")
     set_property(TARGET ${name} PROPERTY KMODULE_MODULE_NAME "${module_name}")
-    set_property(TARGET ${name} PROPERTY KMODULE_BINARY_DIR
-        "${CMAKE_CURRENT_BINARY_DIR}"
-    )
+
     set_property(TARGET ${name} PROPERTY KMODULE_MODULE_LOCATION
         "${CMAKE_CURRENT_BINARY_DIR}/${module_name}.ko"
     )
@@ -594,10 +406,16 @@ function(kbuild_add_module name)
         "${CMAKE_CURRENT_BINARY_DIR}/${_kbuild_symvers}"
     )
     
-    set_property(TARGET ${name} PROPERTY KMODULE_FAR_SYMVERS)
-    set_property(TARGET ${name} PROPERTY KMODULE_FAR_DEPEND_TARGETS)
+    # Internal properties
+    set_property(TARGET ${name} PROPERTY KMODULE_BINARY_DIR
+        "${CMAKE_CURRENT_BINARY_DIR}"
+    )
+    set_property(TARGET ${name} PROPERTY KMODULE_OBJ_SOURCES ${obj_sources_rel})
+    set_property(TARGET ${name} PROPERTY KMODULE_COMPILE_FLAGS ${ccflags})
+    set_property(TARGET ${name} PROPERTY KMODULE_INCLUDE_DIRECTORIES ${include_dirs})
 
-    # Add target to the list for later linking.
+
+    # Add target to the list of modules for built.
     set_property(GLOBAL APPEND PROPERTY KMODULE_TARGETS "${name}")
     
     # The rule to clean files
@@ -607,48 +425,59 @@ function(kbuild_add_module name)
 		SHIPPED_SOURCE ${shipped_sources_noext_abs})
 endfunction(kbuild_add_module name)
 
-# kbuild_include_directories(dir1 .. dirn)
+#  kbuild_include_directories(dirs ...)
+#
+# Add include directories for Kbuild process.
 macro(kbuild_include_directories)
     set_property(DIRECTORY APPEND PROPERTY KBUILD_INCLUDE_DIRECTORIES ${ARGN})
 endmacro(kbuild_include_directories)
 
-# kbuild_add_definitions (flags)
+#  kbuild_add_definitions (flags)
 #
-# Specify additional compiler flags for the module.
+# Specify additional flags for compile kernel module.
+#
+# Note that multiple flags should be specified as single string,
+# delimited with ' '.
 function(kbuild_add_definitions flags)
     get_property(current_flags DIRECTORY PROPERTY KBUILD_COMPILE_DEFINITIONS)
     _string_join(" " current_flags "${current_flags}" "${flags}")
     set_property(DIRECTORY PROPERTY KBUILD_COMPILE_DEFINITIONS "${current_flags}")
 endfunction(kbuild_add_definitions flags)
 
-# Flags for make has no control except default values.
+# There is no control for kbuild make flags except default values.
 # Support for kbuild_add_make_definitions may be added if needed.
 
 
-# kbuild_module_link(<name> [<link> ...])
+#  kbuild_link_module(<name> [<link> ...])
 #
 # Link kernel module with other modules, that allows to use symbols from
 # other modules.
 #
-# <link> may be target name for other compiled kernel module or
-# absolute path to symvers file of other kernel module.
+# <link> may be:
+#  1) target name for other kernel module intended for build
+#  2) target name for imported kernel module with
+#     KMODULE_IMPORTED_SYMVERS_LOCATION property set
+#  3) absolute path to symvers file of other kernel module.
+#
+# In any case, file-level dependency will be created for symvers file to link with.
+# In the first case, also target-level dependency will be added
 #
 # Analogue for target_link_library().
 #
-# TODO: if module is linked within same directory, where it is created,
-# process link with add_custom_command(...APPEND) instead of adding target.
+# May be used only from the same directory, where module target is created.
 function(kbuild_link_module name)
-    # Check that @name corresponds to kernel module target.
-    get_property(kmodules_list GLOBAL PROPERTY KMODULE_TARGETS)
-    list(FIND kmodules_list kmodule_index "${name}")
-    if(kmodule_index EQUAL "-1")
-        message(FATAL_ERROR "kbuild_module_link: passed <name>\n\t\"${name}\"\n which is not target name for compiled kernel module.")
-    endif(kmodule_index EQUAL "-1")
+    # Check that @name corresponds to kernel module target for build.
+    get_property(is_module TARGET ${name} PROPERTY KMODULE_TYPE SET)
+    if(NOT is_module)
+        message(FATAL_ERROR "kbuild_module_link: passed <name>\n\t\"${name}\"\n which is not kernel module target.")
+    endif(NOT is_module)
+    get_property(module_imported TARGET ${name} PROPERTY KMODULE_IMPORTED)
+    if(kmodule_imported)
+        message(FATAL_ERROR "Imported kernel module target \"${name}\" may not be linked.")
+    endif(kmodule_imported)
     
-    # List of imported symvers files
-    set(symvers_locations)
-    # Optional target dependencies
-    set(depend_targets)
+    get_property(module_name TARGET ${name} PROPERTY KMODULE_MODULE_NAME)
+    
     foreach(l ${ARGN})
         string(REGEX MATCH "/" link_is_file ${l})
         if(link_is_file)
@@ -675,72 +504,59 @@ function(kbuild_link_module name)
             else(kmodule_imported)
                 get_property(symvers_location TARGET ${l} PROPERTY KMODULE_SYMVERS_LOCATION)
                 # Target dependency is added only for non-imported target.
-                list(APPEND depend_targets ${l})
+                add_dependencies(${name} ${l})
             endif(kmodule_imported)
         endif(link_is_file)
-        list(APPEND symvers_locations ${symvers_location})
-    endforeach(l ${ARGN})
-
-    # No links at all? Return immediately.
-    if(NOT symvers_locations)
-        return()
-    endif(NOT symvers_locations)
-
-    # Concrete actions depends on whether linking is 'near' or 'far'
-    get_property(module_binary_dir TARGET ${name} PROPERTY KMODULE_BINARY_DIR)
-
-    if(CMAKE_CURRENT_BINARY_DIR STREQUAL "${module_binary_dir}")
-        # 'Near' linking. Create(append) new command immediately.
-        add_custom_command(
-            OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${_kbuild_symvers_imported_near}"
-            COMMAND cat ${symvers_locations} >> "${CMAKE_CURRENT_BINARY_DIR}/${_kbuild_symvers_imported_near}"
-            DEPENDS ${symvers_locations}
+        add_custom_command(OUTPUT
+            "${CMAKE_CURRENT_BINARY_DIR}/${module_name}.ko"
+            "${CMAKE_CURRENT_BINARY_DIR}/${_kbuild_symvers}"
+            DEPENDS ${symvers_location}
             APPEND
         )
-        if(depend_targets)
-            add_dependencies(${name} ${depend_targets})
-        endif(depend_targets)
-
-    else(CMAKE_CURRENT_BINARY_DIR STREQUAL "${module_binary_dir}")
-        # 'Far' linking. Postpone new target creation to kbuild_finalize_linking().
-        set_property(TARGET ${name} APPEND PROPERTY KMODULE_FAR_SYMVERS ${symvers_locations})
-        if(depend_targets)
-            set_property(TARGET ${name} APPEND PROPERTY KMODULE_FAR_DEPEND_TARGETS ${depend_targets})
-        endif(depend_targets)
-    endif(CMAKE_CURRENT_BINARY_DIR STREQUAL "${module_binary_dir}")
-
+        set_property(TARGET ${name} APPEND PROPERTY KMODULE_DEPEND_SYMVERS ${symvers_location})
+    endforeach(l ${ARGN})
 endfunction(kbuild_link_module name)
 
+# kbuild_finalize_linking()
+#
 # Should be called after all kernel modules and their links defined.
+# Usually this is the end of main CMakeLists.txt file.
 function(kbuild_finalize_linking)
+    _get_per_build_var(ccflags_per_build KBUILD_C_FLAGS)
+    
     get_property(kmodule_targets GLOBAL PROPERTY KMODULE_TARGETS)
     foreach(m ${kmodule_targets})
         get_property(module_binary_dir TARGET ${m} PROPERTY KMODULE_BINARY_DIR)
-        get_property(far_symvers TARGET ${m} PROPERTY KMODULE_FAR_SYMVERS)
-
-        if(far_symvers)
-            # Name of the target which should fill 'far' imported symvers file.
-            set(intermediate_target "_kmodule_far_link_${m}")
-            
-            add_custom_target("${intermediate_target}"
-                DEPENDS "${module_binary_dir}/${_kbuild_symvers_imported_far}"
-            )
-
-            add_custom_command(OUTPUT "${module_binary_dir}/${_kbuild_symvers_imported_far}"
-                COMMAND cat ${far_symvers} > "${module_binary_dir}/${_kbuild_symvers_imported_far}"
-                DEPENDS ${far_symvers}
-            )
-
-            add_dependencies(${m} ${intermediate_target})
-            
-            get_property(far_depend_targets TARGET ${m} PROPERTY KMODULE_FAR_DEPEND_TARGETS)
-            if(far_depend_targets)
-                add_dependencies(${intermediate_target} ${far_depend_targets})
-            endif(far_depend_targets)
-        else(far_symvers)
-            # Nor 'far' links? Just precreate empty file.
-            file_update("${module_binary_dir}/${_kbuild_symvers_imported_far}" "")
-        endif(far_symvers)
+        get_property(module_name TARGET ${m} PROPERTY KMODULE_MODULE_NAME)
+        get_property(module_symvers_cmake TARGET ${m} PROPERTY KMODULE_DEPEND_SYMVERS)
+        
+        get_property(obj_sources TARGET ${m} PROPERTY KMODULE_OBJ_SOURCES)
+        get_property(ccflags_local TARGET ${m} PROPERTY KMODULE_COMPILE_FLAGS)
+        get_property(include_dirs TARGET ${m} PROPERTY KMODULE_INCLUDE_DIRECTORIES)
+        
+        # Combine all compiler flags together
+        _string_join(" " ccflags "${KBUILD_C_FLAGS}" "${ccflags_local}")
+        foreach(dir ${include_dirs})
+            _string_join(" " ccflags "${ccflags}" "-I${dir}")
+        endforeach(dir ${include_dirs})
+        _string_join(" " ccflags "${ccflags}" "${ccflags_per_build}")
+        
+        string(REPLACE ";" " " module_symvers "${module_symvers_cmake}")
+        
+        if(obj_sources)
+            set(obj_src_string "${module_name}-y := ")
+            foreach(obj ${obj_sources})
+                set(obj_src_string "${obj_src_string} ${obj}")
+            endforeach(obj ${obj_sources})
+        else(obj_sources)
+            # Simple building process - module name is same as the name
+            # of the only source.
+            set(obj_src_string "")
+        endif(obj_sources)
+        # Configure kbuild file
+        configure_file(${kbuild_this_module_dir}/kbuild_system_files/Kbuild.in
+            ${module_binary_dir}/Kbuild
+        )
     endforeach(m ${kmodule_targets})
 endfunction(kbuild_finalize_linking)
 
@@ -902,8 +718,174 @@ function(kbuild_try_compile RESULT_VAR bindir srcfile)
 endfunction(kbuild_try_compile RESULT_VAR bindir srcfile)
 
 ########### Auxiliary functions for internal use #######################
+# Per-directory tracking for kbuild compiler flags.
+#
+# Unlike to standard COMPILE_FLAGS, these flags do not include values
+# set for parent directories.
+# (There is no generic "fill-with-parent's values" mechanism exists
+# in cmake).
+#
+# So, this property has a little sence for the user.
+# It exists only for make effect of kbuild_add_definitions() to 
+# cross "function" scope.
+define_property(DIRECTORY PROPERTY KBUILD_COMPILE_FLAGS
+    BRIEF_DOCS "Compiler flags used by Kbuild system added in this directory."
+    FULL_DOCS "Compiler flags used by Kbuild system added in this directory."
+)
 
-# _get_per_build_var(RESULT_VAR variable)
+# Per-directory tracking for kbuild include directories.
+#
+# Unlike to standard INCLUDE_DIRECTORIES, these ones do not include values
+# set for parent directories.
+# (There is no generic "fill-with-parent's values" mechanism exists
+# in cmake).
+#
+# So, this property has a little sence for the user.
+# It exists only for make effect of kbuild_include_directories() to 
+# cross "function" scope.
+define_property(DIRECTORY PROPERTY KBUILD_INCLUDE_DIRECTORIES
+    BRIEF_DOCS "Include directories used by Kbuild system; added in this directory."
+    FULL_DOCS "Include directories used by Kbuild system; added in this directory."
+)
+
+
+# Parameters below are set externally only in try_compile() for subproject,
+# which include this file.
+# No need to cache them as try_compile() project is not configured by the user.
+
+# Real top-level source directory.
+if(NOT KBUILD_REAL_SOURCE_DIR)
+    set(KBUILD_REAL_SOURCE_DIR ${CMAKE_SOURCE_DIR})
+endif(NOT KBUILD_REAL_SOURCE_DIR)
+# Real top-level binary directory.
+if(NOT KBUILD_REAL_BINARY_DIR)
+    set(KBUILD_REAL_BINARY_DIR ${CMAKE_BINARY_DIR})
+endif(NOT KBUILD_REAL_BINARY_DIR)
+
+# These flags are passed to the 'make' when compile kernel module.
+set(kbuild_additional_make_flags)
+# These CMake flags will be passed to try_compile() subproject.
+set(kbuild_try_compile_flags
+    "-DKBUILD_REAL_SOURCE_DIR=${KBUILD_REAL_SOURCE_DIR}"
+    "-DKBUILD_REAL_BINARY_DIR=${KBUILD_REAL_BINARY_DIR}"
+)
+
+# ARCH and CROSS_COMPILE are passed to submake only when non-empty.
+if(ARCH)
+    list(APPEND kbuild_additional_make_flags "ARCH=${ARCH}")
+    list(APPEND kbuild_try_compile_flags "-DARCH=${ARCH}")
+endif(ARCH)
+if(CROSS_COMPILE)
+    list(APPEND kbuild_additional_make_flags "CROSS_COMPILE=${CROSS_COMPILE}")
+    list(APPEND kbuild_try_compile_flags "-DCROSS_COMPILE=${CROSS_COMPILE}")
+endif(CROSS_COMPILE)
+
+# List of targets created with kmodule_add_module() without
+# 'IMPORTED' option.
+#
+# This list is traversed in kmodule_finalize_linking() for
+# create 'Kbuild' files.
+#
+# Note, that this list does not contain all defined kernel modules,
+# so property normally shouldn't be used by outer code.
+define_property(GLOBAL PROPERTY KMODULE_TARGETS
+    BRIEF_DOCS "List of kernel module targets configured for build"
+    FULL_DOCS "List of kernel module targets configured for build"
+)
+
+# CMAKE_CURRENT_BINARY_DIR at the moment, when kbuild_add_module() is issued.
+define_property(TARGET PROPERTY KMODULE_BINARY_DIR
+    BRIEF_DOCS "CMAKE_CURRENT_BINARY_DIR where module is built."
+    FULL_DOCS "CMAKE_CURRENT_BINARY_DIR where module is built."
+)
+
+# List of object files, used for build kernel module.
+#
+# List may be empty in case of simple build, when target module has same
+# name as its only source.
+#
+# This is internal property for configure 'Kbuild' file.
+define_property(TARGET PROPERTY KMODULE_OBJ_SOURCES
+    BRIEF_DOCS "Object source files for build kernel module."
+    FULL_DOCS "Object source files for build kernel module."
+)
+
+# Compiler flags, added with kbuild_add_definitions()
+#
+# Note, that KBUILD_C_FLAGS* are not included here.
+#
+# This is internal property for configure 'Kbuild' file.
+define_property(TARGET PROPERTY KMODULE_COMPILE_FLAGS
+    BRIEF_DOCS "Additional compile flags for build kernel module."
+    FULL_DOCS "Additional compile flags for build kernel module."
+)
+
+# Include directories, added with kbuild_include_directories().
+#
+# This is internal property for configure 'Kbuild' file.
+define_property(TARGET PROPERTY KMODULE_COMPILE_FLAGS
+    BRIEF_DOCS "Additional compile flags for build kernel module."
+    FULL_DOCS "Additional compile flags for build kernel module."
+)
+
+
+# List of symvers files, added by kbuild_link_module().
+#
+# This is internal property for configure 'Kbuild' file.
+define_property(TARGET PROPERTY KMODULE_DEPEND_SYMVERS
+    BRIEF_DOCS "Symvers files this module depends on."
+    FULL_DOCS "Symvers files this module depends on."
+)
+
+# Constants for internal filenames.
+set(_kbuild_symvers "Module.symvers")
+
+#  copy_source_to_binary_dir(<source> <new_source_var>)
+#
+# Helper for the building kernel module.
+#
+# Make sure that given source file is inside current binary dir.
+# That place is writable and has some "uniqeness" garantee for generate
+# auxiliary files during build process.
+#
+# If <source> already inside current binary dir, do nothing and
+# set <new_source_var> variable to <source> itself.
+#
+# Otherwise create rule for copy source into "nice" place inside
+# current binary dir and set <new_source_var> pointed to that place.
+function(copy_source_to_binary_dir source new_source_var)
+    is_path_inside_dir(is_in_current_binary ${CMAKE_CURRENT_BINARY_DIR} "${source}")
+    if(is_in_current_binary)
+        # Source is already placed where we want.
+        set(${new_source_var} "${source}" PARENT_SCOPE)
+    else(is_in_current_binary)
+        # Base directory from which count relative source path.
+        # By default, it is root directory.
+        set(base_dir "/")
+        # Try "nicer" base directories.
+        foreach(d
+            ${KBUILD_REAL_BINARY_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${KBUILD_REAL_SOURCE_DIR}
+            )
+            is_path_inside_dir(is_in_d ${d} "${source}")
+            if(is_in_d)
+                set(base_dir ${d})
+                break()
+            endif(is_in_d)
+        endforeach(d)
+		# Copy source into same relativ dir, but inside current binary one.
+        file(RELATIVE_PATH source_rel "${base_dir}" "${source}")
+		set(new_source "${CMAKE_CURRENT_BINARY_DIR}/${source_rel}")
+        get_filename_component(new_source_dir ${new_source} PATH)
+        file(MAKE_DIRECTORY "${new_source_dir}")
+		rule_copy_file("${new_source}" "${source}")
+        # Return path to the new source.
+        set(${new_source_var} "${new_source}" PARENT_SCOPE)
+    endif(is_in_current_binary)
+endfunction(copy_source_to_binary_dir source new_source_var)
+
+#  _get_per_build_var(RESULT_VAR variable)
 #
 # Return value of per-build variable.
 macro(_get_per_build_var RESULT_VAR variable)
@@ -915,8 +897,8 @@ macro(_get_per_build_var RESULT_VAR variable)
     endif(CMAKE_BUILD_TYPE)
 endmacro(_get_per_build_var RESULT_VAR variable)
 
+#  _string_join(sep RESULT_VAR str1 str2)
 #
-# _string_join(sep RESULT_VAR str1 str2)
 # Join strings <str1> and <str2> using <sep> as glue.
 #
 # Note, that precisely 2 string are joined, not a list of strings.
@@ -930,7 +912,7 @@ macro(_string_join sep RESULT_VAR str1 str2)
         set("${RESULT_VAR}" "${str1}${sep}${str2}")
     endif("${str1}" STREQUAL "")
 endmacro(_string_join sep RESULT_VAR str1 str2)
-# _build_get_directory_property_chained(RESULT_VAR <propert_name> [<separator>])
+#  _build_get_directory_property_chained(RESULT_VAR <propert_name> [<separator>])
 #
 # Return list of all values for given property in the current directory
 # and all parent directories.
@@ -955,27 +937,7 @@ function(_get_directory_property_chained RESULT_VAR property_name)
     set("${RESULT_VAR}" "${result}" PARENT_SCOPE)
 endfunction(_get_directory_property_chained RESULT_VAR property_name)
 
-# Collect all compile flags for given scope.
-function(_kbuild_get_compile_flags RESULT_VAR)
-    _get_directory_property_chained(compile_flags KBUILD_COMPILE_DEFINITIONS " ")
-    # Common flags comes first.
-    _string_join(" " compile_flags "${KBUILD_C_FLAGS}" "${compile_flags}")
-    # But per-build flags are appended after all.
-    _get_per_build_var(compile_flags_per_build KBUILD_C_FLAGS)
-    _string_join(" " compile_flags "${compile_flags}" "${compile_flags_per_build}")
-
-    set("${RESULT_VAR}" "${compile_flags}" PARENT_SCOPE)
-endfunction(_kbuild_get_compile_flags RESULT_VAR)
-
-# Collect all include directories for given scope
-function(_kbuild_get_include_directories RESULT_VAR)
-    _get_directory_property_chained(dirs KBUILD_INCLUDE_DIRECTORIES)
-    # debug
-    # message("dirs: '${dirs}'")
-    set("${RESULT_VAR}" "${dirs}" PARENT_SCOPE)
-endfunction(_kbuild_get_include_directories RESULT_VAR)
-
-# _kbuild_module_clean_files(module_name
+#  _kbuild_module_clean_files(module_name
 # 	[C_SOURCE c_source_noext_abs ...]
 # 	[ASM_SOURCE asm_source_noext_abs ...]
 #	[SHIPPED_SOURCE shipped_source_noext_abs ...])
