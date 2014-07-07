@@ -1,116 +1,129 @@
 ########################################################################
 # Test-related macros
 ########################################################################
+include(install_testing)
+include(install_testing_ctest)
 
-# When we are building KEDR for another system (cross-build), testing is
-# disabled. This is because the tests need the build tree.
-# In the future, the tests could be prepared that need only the installed 
-# components of KEDR. It could be a separate test suite.
-
-# This macro enables testing support and performs other initialization tasks.
-# It should be used in the top-level CMakeLists.txt file before 
-# add_subdirectory () calls.
+#  kedr_test_init()
+#
+# Enables testing support and performs other initialization tasks.
+#
+# Binary directory, where this function is called, below is reffered as
+# "binary testing tree".
 macro (kedr_test_init)
-    if (NOT CMAKE_CROSSCOMPILING)
-        enable_testing ()
-        add_custom_target (check 
-            COMMAND ${CMAKE_CTEST_COMMAND}
-        )
-        add_custom_target (build_tests)
-        add_dependencies (check build_tests)
-    endif (NOT CMAKE_CROSSCOMPILING)
+    set(test_directory "${KEDR_INSTALL_PREFIX_VAR}/tests")
+    itesting_init(${test_directory})
+    ictest_enable_testing(${test_directory})
 endmacro (kedr_test_init)
 
-# Use this macro to specify an additional target to be built before the tests
-# are executed.
-macro (kedr_test_add_target target_name)
-    if (NOT CMAKE_CROSSCOMPILING)
-        set_target_properties (${target_name}
-            PROPERTIES EXCLUDE_FROM_ALL true
-        )
-        add_dependencies (build_tests ${target_name})
-    endif (NOT CMAKE_CROSSCOMPILING)
-endmacro (kedr_test_add_target target_name)
-
-# This function adds a test script (a Bash script, actually) to the set of
-# tests for the package. The script may reside in current source or binary 
-# directory (the source directory is searched first).
-function (kedr_test_add_script test_name script_file)
-    if (NOT CMAKE_CROSSCOMPILING)
-        to_abs_path (TEST_SCRIPT_FILE ${script_file})
-            
-        add_test (${test_name}
-            /bin/bash ${TEST_SCRIPT_FILE} ${ARGN}
-        )
-    endif (NOT CMAKE_CROSSCOMPILING)
-endfunction (kedr_test_add_script)
-
+#  kedr_test_add(<test_name> <app_file> [args ...])
+#
+# Add test with name <test_name>, which executes <app_file> with given
+# arguments.
+#
+# Directory, obtained with itesting_path(), is used as current directory
+# when test is executed.
 function (kedr_test_add test_name app_file)
-    if (NOT CMAKE_CROSSCOMPILING)
-        to_abs_path (TEST_APP_FILE ${app_file})
-            
-        add_test (${test_name} ${TEST_APP_FILE} ${ARGN})
-    endif (NOT CMAKE_CROSSCOMPILING)
+    ictest_add_test(${test_name} ${app_file} ${ARGN})
 endfunction (kedr_test_add)
 
-# Use this macro instead of add_subdirectory() for the subtrees related to 
-# testing of the package.
-
-# We could use other kedr_*test* macros to disable the tests when 
-# cross-building, but the rules of Kbuild system (concerning .symvers,
-# etc.) still need to be disabled explicitly. So it is more reliable to 
-# just turn off each add_subdirectory(tests) in this case.
-macro (kedr_test_add_subdirectory subdir)
-    if (NOT CMAKE_CROSSCOMPILING)
-        add_subdirectory(${subdir})
-    endif (NOT CMAKE_CROSSCOMPILING)
-endmacro (kedr_test_add_subdirectory subdir)
-
-########################################################################
-# Swithing variables values for install variant and for tests.
+#  kedr_test_install(FILES|PROGRAMS files ... [PERMISSIONS permissions])
 #
-# Delivarables should use KEDR_PREFX_* variables for being configurable
-# both for install and for testing.
+# Install files for testing purposes.
 #
-# When configured for install, these variables take values from
-# KEDR_INSTALL_PREFIX_* variables.
-# When configured for testing, value of KEDR_TEST_PREFIX_* is used.
-# 
-# List of all variables(suffixes only), which value will be switch
-# kedr_load_{install|test}_prefixes().
-set (KEDR_ALL_PATH_SUFFIXES EXEC READONLY GLOBAL_CONF LIB INCLUDE 
-	TEMP_SESSION TEMP STATE CACHE VAR DOC 
-	KMODULE KSYMVERS KINCLUDE EXAMPLES TEMPLATES)
+# Every <file> may refer to file inside:
+#  1) binary testing tree (where kedr_test_init() was called)
+#  2) current source dir
+#
+# Relative path is transformed into absolute using to_abs_path()
+# mechanism.
+#
+# Install location for each file is determine using itesting_path()
+# mechanism.
+#
+# Permissions are determined in the same way as for command
+#  install(FILES|PROGRAMS)
+function(kedr_test_install mode)
+    if(NOT mode STREQUAL "FILES" AND NOT mode STREQUAL "PROGRAMS")
+	message(FATAL_ERROR "Unknown mode \"${mode}\". Should be either FILES or PROGRAMS.")
+    endif()
+    cmake_parse_arguments(kedr_test_install "" "" "PERMISSIONS" ${ARGN})
+    if(kedr_test_install_PERMISSIONS)
+	set(permissions_param PERMISSIONS ${kedr_test_install_PERMISSIONS})
+    else(kedr_test_install_PERMISSIONS)
+	set(permissions_param)
+    endif(kedr_test_install_PERMISSIONS)
+    foreach(f ${kedr_test_install_UNPARSED_ARGUMENTS})
+	to_abs_path(f_abs ${f})
+	itesting_path(f_install_path ${f_abs})
+	get_filename_component(f_install_dir ${f_install_path} PATH)
+	install(${mode} ${f_abs}
+	    DESTINATION ${f_install_dir}
+	    ${permissions_param}
+	)
+    endforeach(f)
+endfunction(kedr_test_install)
 
-########################################################################
-# Path prefixes for tests
-# Normally, them same as for install, but with additional directory prefix.
-set(KEDR_TEST_COMMON_PREFIX "/var/tmp/${KEDR_PACKAGE_NAME}/test")
 
-foreach(var_suffix ${KEDR_ALL_PATH_SUFFIXES})
-	set(KEDR_TEST_PREFIX_${var_suffix} "${KEDR_TEST_COMMON_PREFIX}${KEDR_INSTALL_PREFIX_${var_suffix}}")
-endforeach(var_suffix ${KEDR_ALL_PATH_SUFFIXES})
-# But some path prefixes for tests are special:
-# Root of include tree in building package
-set(KEDR_TEST_PREFIX_INCLUDE "${CMAKE_BINARY_DIR}/include")
-
-set(KEDR_TEST_PREFIX_TEMPLATES "${CMAKE_SOURCE_DIR}/templates")
+#  kedr_test_add_script_shared(<test_name> <script_file> [args ...])
+#
+# Add test with name <test_name>, which executes script
+# (a Bash script, actually) <script_file> with given
+# arguments.
+#
+# Script file is expected to be already installed.
+function (kedr_test_add_script_shared test_name script_file)
+    kedr_test_add(${test_name} /bin/bash ${script_file} ${ARGN})
+endfunction (kedr_test_add_script_shared)
 
 
-# kedr_load_install_prefixes()
-# Set common prefixes variables equal to ones in install mode (should be 
-# called before configure files, which use prefixes)
-macro(kedr_load_install_prefixes)
-	foreach(var_suffix ${KEDR_ALL_PATH_SUFFIXES})
-		set(KEDR_PREFIX_${var_suffix} ${KEDR_INSTALL_PREFIX_${var_suffix}})
-	endforeach(var_suffix ${KEDR_ALL_PATH_SUFFIXES})
-endmacro(kedr_load_install_prefixes)
+#  kedr_test_add_script_shared(<test_name> <script_file> [args ...])
+#
+# Add test with name <test_name>, which executes script
+# (a Bash script, actually) <script_file> with given
+# arguments.
+#
+# <script_file> may refer to file inside:
+#  1) binary testing tree (where kedr_test_init() was called)
+#  2) current source dir
+#
+# Relative path is transformed into absolute using to_abs_path()
+# mechanism.
+#
+# In any case, script file is automatically installed as with
+#  kedr_test_install(PROGRAMS ${script_file})
+# and test actually executes installed script file.
+function (kedr_test_add_script test_name script_file)
+    to_abs_path(script_file_abs ${script_file})
+    itesting_path(script_install_file ${script_file_abs})
+    get_filename_component(script_install_dir ${script_install_file} PATH)
+    install(PROGRAMS ${script_file_abs} DESTINATION ${script_install_dir})
+    
+    # For execute script, use its relative path
+    itesting_path(this_install_dir)
+    file(RELATIVE_PATH script_file_relative ${this_install_dir} ${script_install_file})
+    
+    kedr_test_add_script_shared(${test_name} ${script_file_relative} ${ARGN})
+endfunction (kedr_test_add_script)
 
-# kedr_load_test_prefixes()
-# Set common prefixes variables equal to ones in test mode(should be called 
-# before configure files, which use prefixes)
-macro(kedr_load_test_prefixes)
-	foreach(var_suffix ${KEDR_ALL_PATH_SUFFIXES})
-		set(KEDR_PREFIX_${var_suffix} ${KEDR_TEST_PREFIX_${var_suffix}})
-	endforeach(var_suffix ${KEDR_ALL_PATH_SUFFIXES})
-endmacro(kedr_load_test_prefixes)
+
+#  kedr_test_install_module(module_name ...)
+#
+# Install kernel module(s) for testing purposes.
+#
+# Install location is selected according to build location of the module.
+function (kedr_test_install_module module_name)
+    get_property(is_module TARGET ${module_name} PROPERTY KMODULE_TYPE SET)
+    if(NOT is_module)
+	message(FATAL_ERROR "${module_name} is not a kernel module target")
+    endif(NOT is_module)
+    get_property(module_location TARGET ${module_name} PROPERTY KMODULE_MODULE_LOCATION)
+    if(NOT module_location)
+	message(FATAL_ERROR "kedr_test_install_module: Do not process imported kernel module target ${module_name}")
+    endif(NOT module_location)
+    get_filename_component(module_build_dir ${module_location} PATH)
+    itesting_path(module_install_dir ${module_build_dir})
+    kbuild_install(TARGETS ${module_name}
+	MODULE DESTINATION ${module_install_dir}
+    )
+endfunction (kedr_test_install_module)

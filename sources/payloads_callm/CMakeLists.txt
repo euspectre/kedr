@@ -23,5 +23,3 @@ add_subdirectory(waitqueue)
 add_subdirectory(capable)
 add_subdirectory(virtual_mm)
 add_subdirectory(mem_util)
-
-kedr_test_add_subdirectory(tests)

@@ -1,0 +1,91 @@
+#!/bin/sh
+
+########################################################################
+# This test checks if kedr_save_stack_trace() allows to obtain at least
+# one reliable stack frame. Actually, it just allows to see if the 
+# underlying mechanism crashes or not. 'addr_foo' parameter and the like 
+# are currently not used.
+# 
+# Usage: 
+#   sh test.sh
+########################################################################
+
+# Just in case the tools like lsmod are not in their usual location.
+export PATH=$PATH:/sbin:/bin:/usr/bin
+
+########################################################################
+# A function to check prerequisites: whether the necessary files exist,
+# etc.
+########################################################################
+checkPrereqs()
+{
+    if test ! -f "${TEST_MODULE}.ko"; then
+        printf "Stack trace module is missing: ${WORK_DIR}/${TEST_MODULE}.ko\n"
+        exit 1
+    fi
+}
+
+########################################################################
+# Cleanup function
+########################################################################
+cleanupAll()
+{
+    rmmod "${TEST_MODULE}" || true
+}
+
+########################################################################
+# doTest() - preform the actual testing
+########################################################################
+doTest()
+{
+    insmod "${TEST_MODULE}.ko"
+    if test $? -ne 0; then
+        printf "Failed to load ${TEST_MODULE}\n"
+        cleanupAll
+        exit 1
+    fi
+    
+    OUT_PARAM_FILE="/sys/module/${TEST_MODULE}/parameters/stack_frames"
+    if test ! -e "${OUT_PARAM_FILE}"; then
+        printf "Parameter file does not exist: ${OUT_PARAM_FILE}\n"
+        cleanupAll
+        exit 1
+    fi
+
+    # Save and analyze the result.
+    stack_frames=$(cat "${OUT_PARAM_FILE}")
+
+    cleanupAll
+    
+    if test ${stack_frames} -eq 0; then
+        printf "Unspecified error: no stack frames have been obtained."
+        exit 1
+    fi
+
+#    if test ${stack_frames} -eq 1; then
+#        printf "Only one stack frame has been obtained. "
+#        printf "save_stack_trace() failed to provide reliable stack trace.\n"
+#        exit 1
+#    fi
+# Even if the system dies not support obtaining reliable stack traces, 
+# kedr_save_stack_trace() must provide at least one reliable frame. 
+# This is enough in many cases.
+
+    printf "Number of reliable stack frames obtained: ${stack_frames}\n"
+}
+
+########################################################################
+# main
+########################################################################
+if test $# -ne 0; then
+    printf "Usage: sh test.sh\n"
+    exit 1
+fi
+
+TEST_MODULE=@KMODULE_NAME@
+
+checkPrereqs
+doTest
+
+# test passed
+exit 0

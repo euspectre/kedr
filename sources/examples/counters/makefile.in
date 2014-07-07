@@ -2,7 +2,7 @@ module_name=kedr_counters
 
 kedr_symbols=@kedr_symbols@
 
-kedr_gen_templates_dir := @KEDR_PREFIX_TEMPLATES@
+kedr_gen_templates_dir := @KEDR_INSTALL_PREFIX_TEMPLATES@
 kedr_gen_tool := @kedr_gen_tool@
 
 additional_functions_available := mutex_lock mutex_lock_interruptible mutex_lock_killable

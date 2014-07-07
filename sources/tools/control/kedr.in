@@ -65,7 +65,7 @@ rmmod_only_one()
 }
 
 # directory for temporary files
-tmp_dir=@KEDR_PREFIX_TEMP_SESSION@/control
+tmp_dir=@KEDR_INSTALL_PREFIX_TEMP_SESSION@/control
 
 # commands(in format of config file), used for last start KEDR
 start_conf_file=${tmp_dir}/start.conf

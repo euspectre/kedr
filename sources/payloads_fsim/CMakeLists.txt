@@ -29,5 +29,3 @@ add_subdirectory(uaccess)
 add_subdirectory(capable)
 add_subdirectory(mem_util)
 add_subdirectory(virtual_mm)
-
-kedr_test_add_subdirectory(tests)

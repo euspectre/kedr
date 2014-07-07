@@ -34,7 +34,3 @@ endfunction(create_payload_leak_check module_name functions)
 
 add_subdirectory(core)
 add_subdirectory(common_mm)
-########################################################################
-
-kedr_test_add_subdirectory(tests)
-########################################################################

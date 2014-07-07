@@ -1,2 +1,0 @@
-add_subdirectory(simple_ordering)
-add_subdirectory(cross_cpu_ordering)

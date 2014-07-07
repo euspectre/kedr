@@ -1,7 +1,6 @@
 set(module_name "kedr_sample_indicator")
 set(install_dir "${KEDR_EXAMPLE_PATH}/sample_indicator")
 
-set(KEDR_INCLUDE_DIR "${KEDR_INSTALL_INCLUDE_DIR}")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Kbuild.in"
     "${CMAKE_CURRENT_BINARY_DIR}/Kbuild_installed"
     @ONLY
@@ -26,5 +25,3 @@ install(FILES   "${CMAKE_CURRENT_BINARY_DIR}/Kbuild_installed"
         DESTINATION "${install_dir}"
         RENAME Kbuild
 )
-
-kedr_test_add_subdirectory(tests)

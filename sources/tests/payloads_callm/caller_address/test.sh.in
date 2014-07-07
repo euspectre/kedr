@@ -1,0 +1,70 @@
+#!/bin/sh
+
+control_script="sh @KEDR_INSTALL_PREFIX_EXEC@/kedr"
+
+capture_trace_script="@KEDR_INSTALL_PREFIX_EXEC@/kedr_capture_trace"
+
+tmpdir="@KEDR_TEST_PREFIX_TEMP_SESSION@/payloads_callm/caller_address"
+trace_file="${tmpdir}/trace"
+debugfs_mount_point="${tmpdir}/debugfs"
+
+if ! mkdir -p ${tmpdir}; then
+	printf "Cannot create directory for tests.\n"
+	exit 1
+fi
+
+target_module_script="sh @TEST_MODULES_DIR@/sample_target/kedr_sample_target"
+
+commands_file="${tmpdir}/commands"
+do_commands_script="sh @TEST_SCRIPTS_DIR@/do_commands.sh"
+
+
+
+cat > "$commands_file" << eof
+
+on_load ${control_script} start kedr_sample_target -f callm.conf || ! printf "Cannot start KEDR.\n"
+on_unload ${control_script} stop || ! printf "Cannot stop KEDR.\n"
+
+on_load mkdir -p ${debugfs_mount_point}
+on_load mount -t debugfs debugfs "${debugfs_mount_point}" || ! printf "Cannot mount debugfs to '${debugfs_mount_point}'.\n"
+on_unload umount "${debugfs_mount_point}" || ! printf "Error occured while umounting debugfs.\n"
+
+# Clear trace collected previously
+on_load rm -f ${trace_file}
+
+eof
+
+if ! ${do_commands_script} "$commands_file" load; then
+	printf "Cannot initialize test.\n"
+	exit 1
+fi
+
+if ! ${target_module_script} load; then
+	printf "Cannot load target module for testing.\n"
+	${do_commands_script} "$commands_file" unload
+	exit 1
+fi
+
+# Do something with target_module for collect trace.
+echo 1 > /dev/cfake0
+
+${target_module_script} unload
+
+${capture_trace_script} -s -d "${debugfs_mount_point}" -f "${trace_file}"
+
+if ! ${do_commands_script} "$commands_file" unload; then
+	printf "Error occured while finalizing the test.\n"
+	exit 1
+fi
+
+# Verification of the trace
+if ! test -e "${trace_file}"; then
+    printf "Trace file does not exist: ${trace_file}\n"
+    exit 1
+fi 
+
+cat "${trace_file}" | grep -F "unknown+0x"
+if test $? -eq 0; then
+	printf "Failed to resolve some of the caller addresses. See ${trace_file}.\n"
+	exit 1
+fi

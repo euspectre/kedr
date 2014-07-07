@@ -6,7 +6,6 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/payload.data.in"
 	@ONLY)
 
 
-kedr_load_install_prefixes()
 set(KEDR_INCLUDE_DIR "${KEDR_INSTALL_INCLUDE_DIR}")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Kbuild.in"
     "${CMAKE_CURRENT_BINARY_DIR}/Kbuild_installed"
@@ -34,5 +33,3 @@ install(FILES   "${CMAKE_CURRENT_BINARY_DIR}/Kbuild_installed"
         DESTINATION "${example_install_dir}"
         RENAME Kbuild
 )
-
-kedr_test_add_subdirectory(tests)

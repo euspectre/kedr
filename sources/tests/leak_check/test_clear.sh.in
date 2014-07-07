@@ -1,0 +1,266 @@
+#!/bin/sh
+########################################################################
+# This script checks if LeakCheck clears the results properly when
+# requested to.
+########################################################################
+
+########################################################################
+# Checks prerequisites: whether the necessary files exist, etc.
+########################################################################
+checkPrereqs()
+{
+    if test ! -f "${TARGET_MODULE}"; then
+        printf "Target module is missing: ${TARGET_MODULE}\n"
+        exit 1
+    fi
+    
+    if test ! -f "${CONF_FILE}"; then
+        printf "KEDR configuration file is missing: ${CONF_FILE}\n"
+        exit 1
+    fi
+}
+
+########################################################################
+# Cleanup function (use it if errors occur)
+########################################################################
+cleanupAll()
+{
+    lsmod | grep "${TARGET_NAME}" > /dev/null 2>&1
+    if test $? -eq 0; then
+        rmmod ${TARGET_NAME}
+    fi
+
+    lsmod | grep "kedr" > /dev/null 2>&1
+    if test $? -eq 0; then
+        sh ${CONTROL_SCRIPT} stop
+    fi
+}
+
+##########################################################################
+# Save LeakCheck's summary report files to the file specified in $1.
+##########################################################################
+saveSummary()
+{
+    dest="$1"
+    if test -z "$1"; then
+        printf "saveSummary(): too few arguments.\n"
+        cleanupAll
+        exit 1
+    fi
+    
+# It is probably more reliable to use 'cat ... > some_file' than copy the
+# file directly from debugfs.
+    cat "${DEBUGFS_LC_DIR}/info" > "${dest}"
+    if test $? -ne 0; then
+        printf "Failed to copy 'info' file to ${dest}.\n"
+        cleanupAll
+        exit 1
+    fi
+}
+
+##########################################################################
+# Check the summary report file specified in $1. The expected number of
+# allocations, leaks and bad frees should be in $2, $3 and $4, respectively.
+##########################################################################
+checkSummary()
+{
+    if test -z "$1" || test -z "$2" || test -z "$3" || test -z "$4"; then
+        printf "checkSummary(): invalid arguments: "
+        printf "file=$1, allocs=$2, leaks=$3, bad_frees=$4\n"
+        cleanupAll
+        exit 1
+    fi
+
+    if test ! -f "$1"; then
+        printf "checkSummary(): the file is missing: $1\n"
+        cleanupAll
+        exit 1
+    fi
+
+    # Check the report files
+    LC_ALL=C awk -f "check_summary.awk" \
+        -v expectedAllocs=$2 \
+        -v expectedLeaks=$3 \
+        -v expectedBadFrees=$4 \
+        "$1"
+    if test $? -ne 0; then
+        printf "The data in $1 differs from what has been expected "
+        printf "(expected: allocs=$2, leaks=$3, bad_frees=$4)\n"
+        cleanupAll
+        exit 1
+    fi
+}
+
+##########################################################################
+# Requests LeakCheck to flush the results and saves the summary in $1.
+##########################################################################
+flushResults()
+{
+    if test -z "$1"; then
+        printf "flushResults(): invalid argument\n"
+        cleanupAll
+        exit 1
+    fi
+
+    echo 1 > "${DEBUGFS_LC_DIR}/flush"
+    if test $? -ne 0; then
+        printf "Failed to write to ${DEBUGFS_LC_DIR}/flush\n"
+        cleanupAll
+        exit 1
+    fi
+
+    saveSummary "$1"
+}
+
+##########################################################################
+# Requests LeakCheck to clear the results.
+##########################################################################
+clearResults()
+{
+    echo 1 > "${DEBUGFS_LC_DIR}/clear"
+    if test $? -ne 0; then
+        printf "Failed to write to ${DEBUGFS_LC_DIR}/clear\n"
+        cleanupAll
+        exit 1
+    fi
+}
+########################################################################
+
+doTest()
+{
+    reportDir="report_clear"
+    rm -rf "${reportDir}"
+    mkdir -p "${reportDir}"
+    if test $? -ne 0; then
+        printf "Failed to create ${reportDir}/\n"
+        exit 1
+    fi
+    
+    # Load KEDR core and the payload module, mount debugfs
+    sh ${CONTROL_SCRIPT} start ${TARGET_NAME} -f "${CONF_FILE}" || exit 1
+    
+    insmod "${TARGET_MODULE}"
+    if test $? -ne 0; then
+        printf "Failed to load the target module\n"
+        cleanupAll
+        exit 1
+    fi
+
+    # Check if the necessary files have been created in debugfs
+    if test ! -d "${DEBUGFS_LC_DIR}"; then
+        printf "Directory for LeakCheck files was not created in debugfs.\n"
+        cleanupAll
+        exit 1
+    fi
+
+    printf "Loaded the target.\n"
+    report="${reportDir}/01_target_loaded.log"
+
+    clearResults
+    flushResults "${report}"
+    checkSummary "${report}" 0 0 0
+
+    printf "Writing to /dev/cfake0.\n"
+    echo "Abracadabra" > /dev/cfake0
+    if test $? -ne 0; then
+        printf "Failed to write to /dev/cfake0.\n"
+        cleanupAll
+        exit 1
+    fi
+
+    report="${reportDir}/02_write1.log"
+    flushResults "${report}"
+    checkSummary "${report}" 1 1 0
+    clearResults
+    flushResults "${report}"
+    checkSummary "${report}" 0 0 0
+
+    # Check double clear.
+    report="${reportDir}/02_write2.log"
+    clearResults
+    flushResults "${report}"
+    checkSummary "${report}" 0 0 0
+
+    printf "Writing to /dev/cfake1.\n"
+    echo "Abracadabra" > /dev/cfake1
+    if test $? -ne 0; then
+        printf "Failed to write to /dev/cfake1.\n"
+        cleanupAll
+        exit 1
+    fi
+
+    report="${reportDir}/03_write.log"
+    flushResults "${report}"
+    checkSummary "${report}" 1 1 0
+
+    printf "Unloading the target.\n"
+    rmmod ${TARGET_NAME}
+    if test $? -ne 0; then
+        printf "Errors occured while trying to unload the target module\n"
+        cleanupAll
+        exit 1
+    fi
+
+    report="${reportDir}/04_target_unloaded.log"
+    saveSummary "${report}"
+    checkSummary "${report}" 1 0 2
+
+    report="${reportDir}/05_flush_after_unload.log"
+    clearResults
+    flushResults "${report}"
+    checkSummary "${report}" 0 0 0
+
+    printf "Loading the target again.\n"
+    insmod "${TARGET_MODULE}"
+    if test $? -ne 0; then
+        printf "Failed to load the target module\n"
+        cleanupAll
+        exit 1
+    fi
+
+    printf "Writing to /dev/cfake1.\n"
+    echo "Abracadabra" > /dev/cfake1
+    if test $? -ne 0; then
+        printf "Failed to write to /dev/cfake1.\n"
+        cleanupAll
+        exit 1
+    fi
+
+    report="${reportDir}/06_second_session.log"
+    flushResults "${report}"
+    checkSummary "${report}" 2 2 0
+    clearResults
+    saveSummary "${report}"
+    checkSummary "${report}" 0 0 0
+
+    printf "Unloading the target.\n"
+    rmmod ${TARGET_NAME}
+    if test $? -ne 0; then
+        printf "Errors occured while trying to unload the target module\n"
+        cleanupAll
+        exit 1
+    fi
+    
+    sh ${CONTROL_SCRIPT} stop
+    if test $? -ne 0; then
+        printf "Failed to stop KEDR properly.\n"
+        exit 1
+    fi
+}
+
+########################################################################
+# main
+########################################################################
+TARGET_NAME="kedr_sample_target"
+TARGET_MODULE="@TEST_MODULES_DIR@/sample_target/${TARGET_NAME}.ko"
+
+CONTROL_SCRIPT="@KEDR_INSTALL_PREFIX_EXEC@/kedr"
+CONF_FILE="./leak_check_test.conf"
+
+DEBUGFS_LC_DIR="@KEDR_TEST_DIR@/debugfs/kedr_leak_check/${TARGET_NAME}"
+
+checkPrereqs
+doTest
+
+# test passed
+exit 0

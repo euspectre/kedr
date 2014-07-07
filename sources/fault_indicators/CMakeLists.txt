@@ -35,5 +35,4 @@ add_subdirectory(kmalloc)
 add_subdirectory(capable)
 add_subdirectory(common)
 
-kedr_test_add_subdirectory(tests)
 

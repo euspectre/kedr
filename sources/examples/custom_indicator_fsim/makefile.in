@@ -10,7 +10,7 @@ indicator_internal_data_file := indicator_internal.data
 
 additional_sources = calculator.c control_file.c
 
-kedr_gen_templates_dir := @KEDR_PREFIX_TEMPLATES@
+kedr_gen_templates_dir := @KEDR_INSTALL_PREFIX_TEMPLATES@
 kedr_gen_tool := @kedr_gen_tool@
 
 kedr_symbols := @kedr_symbols@

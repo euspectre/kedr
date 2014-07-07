@@ -1,6 +1,5 @@
 set(module_name "kedr_counters")
 
-kedr_load_install_prefixes()
 set(KEDR_INCLUDE_DIR "${KEDR_INSTALL_INCLUDE_DIR}")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Kbuild.in"
     "${CMAKE_CURRENT_BINARY_DIR}/Kbuild_installed"
@@ -23,9 +22,8 @@ install(FILES   "${CMAKE_CURRENT_SOURCE_DIR}/counters.h"
         DESTINATION "${KEDR_EXAMPLE_PATH}/counters"
 )
 
-install(FILES   "${CMAKE_CURRENT_SOURCE_DIR}/configure_kernel_functions.sh"
+install(PROGRAMS   "${CMAKE_CURRENT_SOURCE_DIR}/configure_kernel_functions.sh"
         DESTINATION "${KEDR_EXAMPLE_PATH}/counters"
-        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
 )
 
 install(FILES   "${CMAKE_CURRENT_SOURCE_DIR}/functions_common.data"
@@ -49,5 +47,3 @@ install(FILES   "${CMAKE_CURRENT_BINARY_DIR}/Kbuild_installed"
         DESTINATION "${KEDR_EXAMPLE_PATH}/counters"
         RENAME Kbuild
 )
-
-kedr_test_add_subdirectory(tests)

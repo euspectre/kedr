@@ -1,0 +1,25 @@
+# Common declaration for tests
+# debugfs_mount_point should be declared at this stage
+
+fault_simulation_module="@KEDR_INSTALL_PREFIX_KMODULE@/kedr_fault_simulation.ko"
+fault_simulation_points_dir="${debugfs_mount_point}/kedr_fault_simulation/points"
+
+trigger_target_module_name="@trigger_target_module_name@"
+trigger_target="@this_install_dir@/trigger_target/${trigger_target_module_name}.ko"
+trigger_target_control_dir="${debugfs_mount_point}/function_triggers"
+
+indicator_constant="@this_install_dir@/indicator_constant/@indicator_constant_module_name@.ko"
+indicator_constant_name="constant"
+
+indicator_greater_than="@this_install_dir@/indicator_greater_than/@indicator_greater_than_module_name@.ko"
+indicator_greater_than_name="greater_than"
+
+kedr_core_module="@KEDR_INSTALL_PREFIX_KMODULE@/kedr.ko"
+
+do_commands_script="sh @TEST_SCRIPTS_DIR@/do_commands.sh"
+
+# trigger_function <function_name> <arg>
+trigger_function()
+{
+	dd "bs=$2" count=1 if=/dev/zero "of=${trigger_target_control_dir}/$1"
+}

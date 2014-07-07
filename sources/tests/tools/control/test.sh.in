@@ -1,0 +1,122 @@
+#! /bin/sh
+
+# Just in case the tools like lsmod are not in their usual location.
+export PATH=$PATH:/sbin:/bin:/usr/bin
+
+control_script="sh @KEDR_INSTALL_PREFIX_EXEC@/kedr"
+kedr_name="kedr"
+# Name of any payload (empty if shouldn't be tested)
+payload_name="@NAME_OF_PAYLOAD_LOADED@"
+# Whether module is currently loading
+is_module_loading()
+{
+    lsmod | grep "^$1[[:blank:]]\{1,\}" > /dev/null
+}
+
+output_file="`dirname $0`/tmp_output"
+
+${control_script} start target1
+if test $? -ne 0; then
+    printf "Error occured when 'start' command was executed\n"
+    exit 1
+fi
+
+if ! is_module_loading ${kedr_name}; then
+    printf "KEDR core module is not loaded after 'start' command\n"
+    exit 1
+fi
+
+if test "${payload_name}"; then
+    if ! is_module_loading ${payload_name}; then
+    printf "Payload module is not loaded after 'start' command\n"
+        ${control_script} stop
+    exit 1
+    fi
+fi
+
+${control_script} status > ${output_file}
+if test $? -ne 0; then
+    printf "Error occured when 'status' command was executed after 'start' command\n"
+    ${control_script} stop
+    exit 1
+fi
+
+grep "KEDR is running" ${output_file}
+if test $? -ne 0; then
+    printf "'status' command does not output '%s' string but it should\n" "KEDR is running"
+    ${control_script} stop
+    exit 1
+fi
+
+grep "target1" ${output_file}
+if test $? -ne 0; then
+    printf "'status' command does not output name of target for KEDR ('%s') but it should\n" "target1"
+    ${control_script} stop
+    exit 1
+fi
+
+grep "Target is running" ${output_file}
+if test $? -eq 0; then
+    printf "'status' command outputs '%s' string but it shouldn't\n" "Target is running"
+    ${control_script} stop
+    exit 1
+fi
+
+${control_script} stop
+if test $? -ne 0; then
+    printf "Error occured when 'stop' command was executed\n"
+    exit 1
+fi
+
+${control_script} status > ${output_file}
+if test $? -ne 0; then
+    printf "Error occured when 'status' command was executed after 'stop' command\n"
+    exit 1
+fi
+
+grep "KEDR is running" ${output_file}
+if test $? -eq 0; then
+    printf "'status' command outputs '%s' string but it shouldn't\n" "KEDR is running"
+    exit 1
+fi
+
+${control_script} start target2
+if test $? -ne 0; then
+    printf "Error occured when 'start' command was executed again\n"
+    exit 1
+fi
+
+${control_script} restart
+if test $? -ne 0; then
+    printf "Error occured when 'restart' command was executed\n"
+    exit 1
+fi
+
+if ! is_module_loading ${kedr_name}; then
+    printf "KEDR module is not loaded after 'restart' command\n"
+    exit 1
+fi
+
+if test "${payload_name}"; then
+    if ! is_module_loading ${payload_name}; then
+    printf "Payload module is not loaded after 'restart' command\n"
+        ${control_script} stop
+    exit 1
+    fi
+fi
+
+${control_script} stop
+if test $? -ne 0; then
+    printf "Error occured when 'stop' command was executed after restart\n"
+    exit 1
+fi
+
+if is_module_loading ${kedr_name}; then
+    printf "KEDR core module is loaded after 'stop' command\n"
+    exit 1
+fi
+
+if is_module_loading ${payload_name}; then
+    printf "Payload module is loaded after 'stop' command\n"
+    exit 1
+fi

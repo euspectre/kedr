@@ -1,0 +1,295 @@
+#!/bin/sh
+
+fault_simulation_module="@KEDR_INSTALL_PREFIX_KMODULE@/kedr_fault_simulation.ko"
+
+read_point_name="kedr-read-point"
+write_point_name="kedr-write-point"
+read_indicator_name="indicator_for_read"
+write_indicator_name="indicator_for_write"
+
+module_a_name="fsim_test_module_a"
+module_a="module_a/${module_a_name}.ko"
+module_b="module_b/fsim_test_module_b.ko"
+indicators_simple="indicators_simple/fsim_test_indicators_simple.ko"
+current_value_file="/sys/module/${module_a_name}/parameters/current_value"
+
+device=kedr_test_device
+
+debugfs_mount_point="@KEDR_TEST_DIR@/debugfs"
+control_root="$debugfs_mount_point/kedr_fault_simulation"
+last_fault_file="$control_root/last_fault"
+
+# set_indicator point_name indicator_name
+#
+# Set indicator for the point.
+set_indicator()
+{
+    printf "$2" > "$control_root/points/$1/current_indicator"
+}
+# clear_indicator point_name
+#
+# Clear indicator for the point.
+clear_indicator()
+{
+    printf "%s" "none" > "$control_root/points/$1/current_indicator"
+}
+# get_indicator point_name
+#
+# Print current indicator of the point.
+get_indicator()
+{
+    cat "$control_root/points/$1/current_indicator"
+}
+# check_last_fault fault_message
+#
+# Check that last fault message is an expected one.
+# Otherwise print error message and return 1.
+check_last_fault()
+{
+if test "$last_fault" != "$1"; then
+    printf "'Last fault' file contains '%s', but should contain '%s'.\n" "$last_fault" "$1"
+    return 1
+fi
+return 0
+}
+
+# simulate_point (read_point_name) | (write_point_name size)
+#
+# Call simulate for the point.
+# Also update 'current_value' and 'last_fault'.
+simulate_point()
+{
+if test "$1" == "$read_point_name"; then
+    dd "if=/dev/$device" of=/dev/null bs=1 count=1
+elif test "$1" == "$write_point_name"; then
+    dd "of=/dev/$device" if=/dev/zero bs=$2 count=1
+fi
+local result=$?
+current_value=`cat "$current_value_file"`
+last_fault=`cat "$last_fault_file"`
+return $result
+}
+
+commands_file="commands"
+do_commands_script="@TEST_SCRIPTS_DIR@/do_commands.sh"
+
+cat > "$commands_file" << eof
+
+on_load insmod "$fault_simulation_module" || ! printf "Cannot load fault simulation module into kernel.\n"
+on_unload rmmod "$fault_simulation_module" || ! printf "Cannot unload fault simulation module.\n"
+on_load mkdir -p "$debugfs_mount_point" || ! printf "Cannot create mount point for debugfs.\n"
+on_load mount -t debugfs debugfs "$debugfs_mount_point" || ! printf "Cannot mount debufs.\n"
+on_unload umount "$debugfs_mount_point" || ! printf "Error occured while umounting debufs.\n"
+on_load insmod "$module_a" || ! printf "Cannot load module 'a' into kernel.\n"
+on_unload rmmod "$module_a" || ! printf "Failed to unload module 'a'.\n"
+
+eof
+
+if ! $do_commands_script "$commands_file" load; then
+    printf "Cannot initialize test.\n"
+    exit 1
+fi
+
+#Verify, that indicators isn't set
+current_indicator=`get_indicator "$read_point_name"`
+if test "$current_indicator" != "none"; then
+    printf "'current_indicator' file for read point contains '%s', but should be 'none'\n" "$current_indicator"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+# Test without indicator set
+
+simulate_point "$read_point_name"
+if test "$current_value" != "0"; then
+    printf "The simulation of read point was expected to return '0' (no indicator was set) but it returned '%s'.\n" "$current_value"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+if ! check_last_fault "none"; then
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+if ! insmod "$module_b"; then
+    printf "Cannot load module 'b' into kernel.\n"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+# Try to set indicator for point
+
+if ! set_indicator "$read_point_name" "$read_indicator_name"; then
+    printf "Cannot set indicator for read point.\n"
+    rmmod "$module_b"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+# Simulate with indicator set
+simulate_point "$read_point_name"
+
+if test "$current_value" != "9"; then
+    printf "The simulation of read point was expected to return '9' but it returned '%s'.\n" "$current_value"
+    rmmod "$module_b"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+if ! check_last_fault "Read: 9"; then
+    rmmod "$module_b"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+
+if ! set_indicator "$write_point_name" "$write_indicator_name"; then
+    printf "Cannot set indicator for write point.\n"
+    rmmod "$module_b"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+# Simulate with indicator set for write point
+simulate_point "$write_point_name" 25
+
+if test "$current_value" != "25"; then
+    printf "The simulation of write point was expected to return '25'(size) but it returned '%s'.\n" "$current_value"
+    rmmod "$module_b"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+if ! check_last_fault "Write for 25: 25"; then
+    rmmod "$module_b"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+
+#Rewrite indicator for write point
+if ! set_indicator "$write_point_name" "$read_indicator_name"; then
+    printf "Cannot set read indicator for write point.\n"
+    rmmod "$module_b"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+#Simulate write point with read indicator
+simulate_point "$write_point_name" 25
+
+if test "$current_value" != "9"; then
+    printf "The simulation of write point with read indicator was expected to return '9' but it returned '%s'.\n" "$current_value"
+    rmmod "$module_b"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+if ! check_last_fault "Write for 25: 9"; then
+    $do_commands_script "$commands_file" unload
+    rmmod "$module_b"
+    exit 1
+fi
+
+
+#Clear indicator for read point
+if ! clear_indicator "$read_point_name"; then
+    printf "Cannot clear indicator for the read point.\n"
+    rmmod "$module_b"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+#Verify, that indicator is cleared
+current_indicator=`get_indicator "$read_point_name"`
+if test "$current_indicator" != "none"; then
+    printf "'current_indicator' file for read point conatins '%s', but should be 'none'\n" "$current_indicator"
+    rmmod "$module_b"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+# Simulate with cleared indicator
+simulate_point "$read_point_name"
+
+if test "$current_value" != "0"; then
+    printf "The simulation of read point was expected to return '0' (indicator was cleared) but it returned '%s'.\n" "$current_value"
+    rmmod "$module_b"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+if ! rmmod "$module_b"; then
+    printf "Cannot unload module_b.\n"
+    exit 1
+fi
+
+#Indicator for write point should be automatically cleared
+
+# Simulate with cleared indicator
+simulate_point "$write_point_name" 25
+
+if test "$current_value" != "0"; then
+    printf "The simulation of write point was expected to return '0' (indicator was automatically cleared) but it returned '%s'.\n" "$current_value"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+if ! check_last_fault "Write for 25: 9"; then
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+
+# Set "never" and "always" scenarious
+
+if ! insmod "$indicators_simple"; then
+    printf "Cannot load module with simple indicators into kernel.\n"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+
+if ! set_indicator "$read_point_name" "never"; then
+    printf "Cannot set "never" scenario for read point.\n"
+    rmmod "$indicators_simple"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+simulate_point "$read_point_name"
+
+if test "$current_value" != 0 ; then
+    printf "The simulation for read point was expected to return '0' (scenario is 'never') but it returned '%s'.\n" "$current_value"
+	rmmod "$indicators_simple"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+if ! set_indicator "$read_point_name" "always"; then
+    printf "Cannot set \"always\" scenario for read point.\n"
+    rmmod "$indicators_simple"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+simulate_point "$read_point_name"
+
+if test "$current_value" != 1 ; then
+    printf "The simulation for read point was expected to return '1' (scenario is 'always') but it returned '%s'.\n" "$current_value"
+	rmmod "$indicators_simple"
+    $do_commands_script "$commands_file" unload
+    exit 1
+fi
+
+if ! rmmod "$indicators_simple"; then
+    printf "Cannot unload module with simple indicators.\n"
+    exit 1
+fi
+
+
+if ! $do_commands_script "$commands_file" unload; then
+    printf "Errors occured while finalizing the test.\n"
+    exit 1
+fi

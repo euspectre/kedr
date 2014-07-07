@@ -1,0 +1,34 @@
+#!/bin/sh
+
+#./test.sh expr result_expected
+
+kmodule_name="kedr_calc_test_simple"
+kmodule="${kmodule_name}.ko"
+result_file="/sys/module/${kmodule_name}/parameters/result"
+
+if test $# -ne 2; then
+    printf "Usage: ./test.sh expr result_expected\n"
+    exit 1
+fi
+
+expr="$1"
+result_expected="$2"
+
+insmod "$kmodule" "expr=\"$expr\""
+if test $? -ne 0; then
+    printf "Failed to insert module into the kernel\n"
+    exit 1
+fi
+
+result=`cat "$result_file"`
+
+rmmod $kmodule
+if test $? -ne 0; then
+    printf "Failed to remove module from the kernel\n"
+    exit 1
+fi
+
+if test "$result_expected" != "$result"; then
+    printf "Expected result of evaluation of the expression is %s, but the module writes %s\n" "$result_expected" "$result"
+    exit 1
+fi

@@ -1,0 +1,2 @@
+add_subdirectory(final_template)
+add_subdirectory(common)

@@ -54,8 +54,7 @@ if (KEDR_STANDARD_FSIM_PAYLOADS)
 	endfunction(kedr_conf_fsim_add_indicator indicator_module_name)
 endif(KEDR_STANDARD_FSIM_PAYLOADS)
 
-# Configure KEDR control script (install mode)
-kedr_load_install_prefixes()
+# Configure KEDR control script.
 set(KEDR_DEFAULT_CONFIG_FILE 
 	"${KEDR_DEFAULT_CONFIG_DIR}/${kedr_conf_file_default_name}")
 
@@ -65,9 +64,9 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/kedr.in
 				${CMAKE_CURRENT_BINARY_DIR}/kedr
 				@ONLY)
 
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/kedr"
-			DESTINATION "${KEDR_INSTALL_PREFIX_EXEC}"
-			PERMISSIONS  OWNER_WRITE OWNER_READ GROUP_READ WORLD_READ OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE)
+install(PROGRAMS "${CMAKE_CURRENT_BINARY_DIR}/kedr"
+	DESTINATION "${KEDR_INSTALL_PREFIX_EXEC}"
+)
 
 # Create predefined configuration files(install mode)
 install(FILES "${kedr_conf_file_default}"
@@ -116,5 +115,3 @@ else ()
 	# Default config file will be empty
 	FILE(WRITE "${kedr_conf_file_default}" "# Empty configuration file\n")
 endif (KEDR_LEAK_CHECK)
-
-kedr_test_add_subdirectory(tests)

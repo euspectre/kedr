@@ -137,17 +137,12 @@ kernel_path("${Kbuild_VERSION_STRING}" KEDR_INSTALL_PREFIX_KMODULE
 kernel_path("${Kbuild_VERSION_STRING}" KEDR_INSTALL_PREFIX_KSYMVERS
 	"${KEDR_KERNEL_INSTALL_PREFIX_KSYMVERS}")
 #######################################################################
-#######################################################################
-# Initialize test-related stuff
-kedr_test_init()
-
-#######################################################################
-#kedr_install_library(library_name)
+#  kedr_install_library(library_name)
 function(kedr_install_library library_name)
 	install(TARGETS ${library_name} LIBRARY
 			DESTINATION ${KEDR_INSTALL_PREFIX_LIB})
 endfunction(kedr_install_library library_name)
-#kedr_install_headers(install_subdir header_file [..])
+#  kedr_install_headers(install_subdir header_file [..])
 function(kedr_install_headers install_subdir)
 	install(FILES ${header_file} ${ARGN}
 			DESTINATION ${KEDR_INSTALL_PREFIX_INCLUDE}/${install_subdir})
@@ -158,7 +153,7 @@ function(kedr_install_kmodule kmodule_target)
 	MODULE DESTINATION "${KEDR_INSTALL_PREFIX_KMODULE}"
     )
 endfunction(kedr_install_kmodule kmodule_target)
-#kedr_install_symvers(kmodule_target)
+#  kedr_install_symvers(kmodule_target)
 function(kedr_install_symvers kmodule_target)
     kbuild_install(TARGETS ${kmodule_target}
 	SYMVERS DESTINATION "${KEDR_INSTALL_PREFIX_KMODULE}"
@@ -502,13 +497,16 @@ configure_file(
 	"${CMAKE_BINARY_DIR}/func_def.h.in"
 	"${CMAKE_BINARY_DIR}/func_def.h")
 #######################################################################
-
-# "Global" tests 
+# Tests for package itself.
+#
 # Keep this after all other add_subdirectory() statements. One reason is
 # that to configure the call interception tests, the complete list of 
 # the kernel functions involved must be collected first when processing 
 # the subdirectories for the payload modules.
-kedr_test_add_subdirectory(tests)
+option(WITH_TESTING "Whether need to build tests" OFF)
+if(WITH_TESTING)
+    add_subdirectory(tests)
+endif(WITH_TESTING)
 #######################################################################
 kbuild_finalize_linking()
 #######################################################################

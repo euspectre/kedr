@@ -1,0 +1,38 @@
+#!/bin/sh
+
+indicator_module="@kmodule_name@.ko"
+indicator_name="fail_with_even_instances"
+
+. ../test_common.sh
+
+init_test
+
+echo "$indicator_name" > "${point_dir}/current_indicator"
+
+if test $? -ne 0; then
+	printf "Cannot set indicator for the point.\n"
+	finalize_test
+	exit 1
+fi
+
+if  ! simulate; then
+	printf "Simulate shouldn't fail for 1 instance of indicator.\n"
+	finalize_test
+	exit 1
+fi
+
+echo "$indicator_name" > "${point_with_params_dir}/current_indicator"
+
+if test $? -ne 0; then
+	printf "Cannot set indicator for the another point.\n"
+	finalize_test
+	exit 1
+fi
+
+if  simulate; then
+	printf "Simulate should fail for 2 instances of indicator.\n"
+	finalize_test
+	exit 1
+fi
+
+finalize_test

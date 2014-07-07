@@ -56,7 +56,7 @@ if(NOT ARCH)
         OUTPUT_VARIABLE ARCH_DEFAULT
     )
     if(NOT uname_m_result EQUAL 0)
-        message("'uname -r' failed:")
+        message("'uname -m' failed:")
         message("${ARCH_DEFAULT}")
         message(FATAL_ERROR "Failed to determine system architecture.")
     endif(NOT uname_m_result EQUAL 0)

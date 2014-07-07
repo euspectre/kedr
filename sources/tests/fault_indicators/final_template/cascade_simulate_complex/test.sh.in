@@ -1,0 +1,31 @@
+#!/bin/sh
+
+indicator_module="@kmodule_name@.ko"
+indicator_name="size_in_10_20"
+
+. ../test_common.sh
+
+init_test
+
+echo "$indicator_name" > "${point_with_params_dir}/current_indicator"
+
+if  simulate_with_params 15; then
+	printf "Simulate(15) should fail with \"size in [10,20]\" scenario.\n"
+	finalize_test
+	exit 1
+fi
+
+if ! simulate_with_params 9; then
+	printf "Simulate(9) shouldn't fail with \"size in [10,20]\" scenario.\n"
+	finalize_test
+	exit 1
+fi
+
+if ! simulate_with_params 21; then
+	printf "Simulate(21) shouldn't fail with \"size in [10,20]\" scenario.\n"
+	finalize_test
+	exit 1
+fi
+
+
+finalize_test

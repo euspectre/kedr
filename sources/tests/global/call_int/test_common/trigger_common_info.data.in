@@ -1,0 +1,3 @@
+trigger_name = @trigger_name@
+kedr_module=@KEDR_INSTALL_PREFIX_KMODULE@/kedr.ko
+test_current_install_dir = @this_install_dir@

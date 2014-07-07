@@ -1,0 +1,77 @@
+#!/bin/sh
+tmpdir="@KEDR_TEST_PREFIX_TEMP_SESSION@/kedr_fsim_final_template_ellipsis"
+debugfs_mount_point="${tmpdir}/debugfs"
+
+mkdir -p "${tmpdir}"
+
+. ../test_common.sh
+
+payload_fsim="@kmodule_name@.ko"
+
+commands_file="${tmpdir}/commands"
+
+cat > "$commands_file" << eof
+
+on_load insmod "${fault_simulation_module}" || ! printf "Cannot load fault simulation module into kernel.\n"
+on_unload rmmod "${fault_simulation_module}" || ! printf "Cannot unload fault simulation module.\n"
+
+on_load insmod "${kedr_core_module}" target_name="${trigger_target_module_name}" || ! printf "Cannot load KEDR core module.\n"
+on_unload rmmod "${kedr_core_module}" || ! printf "Cannot unload KEDR core module.\n"
+
+on_load insmod "${payload_fsim}" || ! printf "Cannot load generated fault simulation payload into kernel.\n"
+on_unload rmmod "${payload_fsim}" || ! printf "Cannot unload generated fault simulation payload.\n"
+
+on_load mkdir -p "$debugfs_mount_point" || ! printf "Cannot create mount point for debugfs.\n"
+on_load mount -t debugfs debugfs "$debugfs_mount_point" || ! printf "Cannot mount debugfs.\n"
+on_unload umount "$debugfs_mount_point" || ! printf "Error occured while umounting debugfs.\n"
+
+on_load insmod "${indicator_greater_than}" || ! printf "Cannot load indicator with comparision scenario into kernel.\n"
+on_unload rmmod "${indicator_greater_than}" || ! printf "Cannot unload indicator with comparision scenario.\n"
+
+on_load insmod "${trigger_target}" || ! printf "Cannot load target module for trigger functions into kernel.\n"
+on_unload rmmod "${trigger_target}" || ! printf "Cannot unload target module for trigger functions.\n"
+
+eof
+
+if ! $do_commands_script "$commands_file" load; then
+    printf "Cannot initialize test.\n"
+    exit 1
+fi
+
+# Whether fault simulation point is created
+if ! test -d "${fault_simulation_points_dir}/kasprintf"; then
+	printf "Fault simulation point 'kasprintf' is not created.\n"
+	
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+# Verify that parameters are passed correctly to the indicator.
+if ! echo "${indicator_greater_than_name}" "10" > "${fault_simulation_points_dir}/kasprintf/current_indicator"; then
+	printf "Fail to set indicator for fault simulation point 'kasprintf'.\n"
+	
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+if ! trigger_function "kasprintf" "10"; then
+	printf "Execution of kasprintf should succeed, but it doesn't.\n"
+	
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+
+if trigger_function "kasprintf" "11"; then
+	printf "Execution of kasprintf should fail(because of indicator), but it doesn't.\n"
+	
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+
+if ! $do_commands_script "$commands_file" unload; then
+	printf "Error occures while finalize test.\n"
+	
+	exit 1
+fi

@@ -1,0 +1,32 @@
+#!/bin/sh
+
+indicator_module="@kmodule_name@.ko"
+indicator_name="size_greater_10"
+
+. ../test_common.sh
+
+init_test
+
+echo "$indicator_name" > "${point_dir}/current_indicator"
+
+if test $? -eq 0; then
+	printf "Indicator with parameter was set for the point without parameters.\n"
+	finalize_test
+	exit 1
+fi
+
+echo "$indicator_name" > "${point_with_params_dir}/current_indicator"
+
+if  ! simulate_with_params 10; then
+	printf "Simulate(10) shouldn't fail with \"size_greater_10\" scenario.\n"
+	finalize_test
+	exit 1
+fi
+
+if  simulate_with_params 11; then
+	printf "Simulate(11) should fail with \"size_greater_10\" scenario.\n"
+	finalize_test
+	exit 1
+fi
+
+finalize_test

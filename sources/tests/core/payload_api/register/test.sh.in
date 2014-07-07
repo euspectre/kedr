@@ -1,0 +1,132 @@
+#!/bin/sh
+
+########################################################################
+# This test checks kedr_payload_register() and kedr_payload_unregister().
+#
+# [NB] The typical use case when these functions are called once and with 
+# correct arguments is implicitly checked, for example, in the tests for 
+# call interception, etc. We need to check some other scenarios here.
+# 
+# Usage: 
+#   sh test.sh <scenario_number>
+#
+# <scenario_number>:
+#   0 - register + unregister, then again register + unregister (with 
+# correct data each time)
+#   1 - attempt to register the same payload twice (the second call must 
+# fail)
+#   2 - register + attempt to unregister some other payload + unregister
+# correctly (must not crash, no explicit checks)
+#
+# Loading of the payload module must succeed in each scenario. The result of 
+# the test is output via "test_passed" parameter (see sysfs).
+########################################################################
+
+# Just in case the tools like lsmod are not in their usual location.
+export PATH=$PATH:/sbin:/bin:/usr/bin
+
+########################################################################
+# A function to check prerequisites: whether the necessary files exist,
+# etc.
+########################################################################
+checkPrereqs()
+{
+    if test ! -f "${KEDR_MODULE}"; then
+        printf "KEDR core module is missing: ${KEDR_MODULE}\n"
+        exit 1
+    fi
+    
+    if test ! -f "${PAYLOAD_MODULE}"; then
+        printf "Payload module is missing: ${PAYLOAD_MODULE}\n"
+        exit 1
+    fi
+}
+
+########################################################################
+# Cleanup function
+########################################################################
+cleanupAll()
+{
+    cd "${WORK_DIR}"
+    
+    lsmod | grep "${PAYLOAD_NAME}" > /dev/null 2>&1
+    if test $? -eq 0; then
+        rmmod "${PAYLOAD_NAME}"
+    fi
+    
+    lsmod | grep "@CORE_NAME@" > /dev/null 2>&1
+    if test $? -eq 0; then
+        rmmod "@CORE_NAME@"
+    fi
+}
+
+########################################################################
+# doTest() - preform the actual testing
+########################################################################
+doTest()
+{
+    insmod "${KEDR_MODULE}" || exit 1
+
+    insmod "${PAYLOAD_MODULE}" scenario_number=${SCEN_NO}
+    if test $? -ne 0; then
+        printf "Failed to load the payload module\n"
+        cleanupAll
+        exit 1
+    fi
+    
+    OUT_PARAM_FILE="/sys/module/${PAYLOAD_NAME}/parameters/test_passed"
+    if test ! -e "${OUT_PARAM_FILE}"; then
+        printf "Parameter file does not exist: ${OUT_PARAM_FILE}\n"
+        cleanupAll
+        exit 1
+    fi
+
+    # Save the result to be analyzed below
+    TEST_PASSED=$(cat "${OUT_PARAM_FILE}")
+
+    rmmod "${PAYLOAD_NAME}"
+    if test $? -ne 0; then
+        printf "Failed to unload the payload module: ${PAYLOAD_NAME}\n"
+        cleanupAll
+        exit 1
+    fi
+
+    rmmod "@CORE_NAME@" || exit 1
+    
+    # Check the saved result
+    printf "Test result (1 - passed, other value - failed): ${TEST_PASSED}\n"
+    if test "t${TEST_PASSED}" != "t1"; then
+        exit 1
+    fi
+}
+
+########################################################################
+# main
+########################################################################
+WORK_DIR=${PWD}
+
+if test $# -ne 1; then
+    printf "Usage: sh test.sh <scenario_number>\n"
+    exit 1
+fi
+
+SCEN_NO=$1
+printf "Scenario number is ${SCEN_NO}\n"
+
+KEDR_MODULE="@KEDR_INSTALL_PREFIX_KMODULE@/@CORE_NAME@.ko"
+
+PAYLOAD_NAME="test_reg_payload"
+PAYLOAD_MODULE="payload/${PAYLOAD_NAME}.ko"
+
+checkPrereqs
+
+printf "Kedr core module: ${KEDR_MODULE}\n"
+printf "Payload module: ${PAYLOAD_MODULE}\n"
+
+doTest
+
+# just in case
+cleanupAll
+
+# test passed
+exit 0

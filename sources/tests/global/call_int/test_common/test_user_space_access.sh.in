@@ -1,0 +1,84 @@
+#!/bin/sh
+#
+# Usage:
+#     test.sh function
+# where
+#	'function' - kernel function, call interception of which should be tested,
+
+kedr_module="@KEDR_INSTALL_PREFIX_KMODULE@/kedr.ko"
+
+payload_module_name="trigger_payload"
+payload_module="@CMAKE_BINARY_DIR@/core/tests/call_interception/trigger_payload/${payload_module_name}.ko"
+target_module_name="trigger_target_user_space_access"
+target_module="@CMAKE_BINARY_DIR@/core/tests/call_interception/trigger_target_user_space_access/${target_module_name}.ko"
+
+if test $# -ne 1; then
+	printf "Usage:\n\n\t%s function\n" "$0"
+	exit 1
+fi
+
+function_name="$1"
+shift
+
+case "${function_name}" in
+@copy_to_user_FUNCTION@)
+	is_copy_to_user=1
+;;
+@copy_from_user_FUNCTION@)
+;;
+@memdup_user_FUNCTION@)
+;;
+@strndup_user_FUNCTION@)
+;;
+*)
+	printf "Only *_user() functions may be tested with this script.\n"
+	exit 1
+;;
+esac
+
+if ! insmod ${kedr_module} "target_name=${target_module_name}"; then
+	printf "Failed to load kedr core module\n"
+	exit 1
+fi
+
+if ! insmod ${payload_module} "function_name=${function_name}"; then
+	printf "Failed to load payload module for testing call interception\n"
+	rmmod ${kedr_module}
+	exit 1
+fi
+
+if ! insmod ${target_module}; then
+	printf "Failed to load target module for testing call interception\n"
+	rmmod ${payload_module}
+	rmmod ${kedr_module}
+	exit 1
+fi
+
+if test ${is_copy_to_user}; then
+	dd bs=1 count=1 if=/dev/ttd of=/dev/null
+else
+	dd bs=1 count=1 if=/dev/zero of=/dev/ttd
+fi
+
+is_intercepted=`cat /sys/module/${payload_module_name}/parameters/is_intercepted`
+
+if ! rmmod ${target_module}; then
+	printf "Failed to unload target module.\n"
+	exit 1
+fi
+
+if ! rmmod ${payload_module}; then
+	printf "Failed to unload payload module.\n"
+	exit 1
+fi
+
+if ! rmmod ${kedr_module}; then
+	printf "Failed to unload kedr core module.\n"
+	exit 1
+fi
+
+
+if ! test "$is_intercepted" -ne 0; then
+	printf "Trigger program failed to trigger function call or KEDR failed to intercept this call.\n"
+	exit 1
+fi

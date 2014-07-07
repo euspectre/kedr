@@ -1,0 +1,132 @@
+#!/bin/sh
+tmpdir="@KEDR_TEST_PREFIX_TEMP_SESSION@/kedr_fsim_final_template_several_functions"
+debugfs_mount_point="${tmpdir}/debugfs"
+
+mkdir -p "${tmpdir}"
+
+. ../test_common.sh
+
+payload_fsim="@kmodule_name@.ko"
+
+commands_file="${tmpdir}/commands"
+
+cat > "$commands_file" << eof
+
+on_load insmod "${fault_simulation_module}" || ! printf "Cannot load fault simulation module into kernel.\n"
+on_unload rmmod "${fault_simulation_module}" || ! printf "Cannot unload fault simulation module.\n"
+
+on_load insmod "${kedr_core_module}" target_name="${trigger_target_module_name}" || ! printf "Cannot load KEDR core module.\n"
+on_unload rmmod "${kedr_core_module}" || ! printf "Cannot unload KEDR core module.\n"
+
+on_load insmod "${payload_fsim}" || ! printf "Cannot load generated fault simulation payload into kernel.\n"
+on_unload rmmod "${payload_fsim}" || ! printf "Cannot unload generated fault simulation payload.\n"
+
+on_load mkdir -p "$debugfs_mount_point" || ! printf "Cannot create mount point for debugfs.\n"
+on_load mount -t debugfs debugfs "$debugfs_mount_point" || ! printf "Cannot mount debugfs.\n"
+on_unload umount "$debugfs_mount_point" || ! printf "Error occured while umounting debugfs.\n"
+
+on_load insmod "${indicator_constant}" || ! printf "Cannot load indicator with constant-value scenario into kernel.\n"
+on_unload rmmod "${indicator_constant}" || ! printf "Cannot unload indicator with constant-value scenario.\n"
+
+on_load insmod "${indicator_greater_than}" || ! printf "Cannot load indicator with comparision scenario into kernel.\n"
+on_unload rmmod "${indicator_greater_than}" || ! printf "Cannot unload indicator with comparision scenario.\n"
+
+on_load insmod "${trigger_target}" || ! printf "Cannot load target module for trigger functions into kernel.\n"
+on_unload rmmod "${trigger_target}" || ! printf "Cannot unload target module for trigger functions.\n"
+
+eof
+
+if ! $do_commands_script "$commands_file" load; then
+    printf "Cannot initialize test.\n"
+    exit 1
+fi
+
+# Whether all needed fault simulation points are created
+if ! test -d "${fault_simulation_points_dir}/__kmalloc"; then
+	printf "Fault simulation point '__kmalloc' is not created.\n"
+	
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+if ! test -d "${fault_simulation_points_dir}/krealloc"; then
+	printf "Fault simulation point 'krealloc' is not created.\n"
+	
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+
+# Whether fault simulation points have correct format strings
+format_string=`cat "${fault_simulation_points_dir}/__kmalloc/format_string"`
+if test "${format_string}" != "int"; then
+	printf "Fault simulation point '__kmalloc' has format string '%s', but should has '%s'.\n" "${format_string}" "int"
+	
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+format_string=`cat "${fault_simulation_points_dir}/krealloc/format_string"`
+if test "${format_string}" != ""; then
+	printf "Fault simulation point 'krealloc' has format string '%s', but should has '%s'.\n" "${format_string}" ""
+	
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+
+# Verify that parameters are passed correctly to the indicator
+# for __kmalloc fault simulation point.
+
+if ! echo "${indicator_greater_than_name}" "10" > "${fault_simulation_points_dir}/__kmalloc/current_indicator"; then
+	printf "Fail to set indicator for fault simulation point '__kmalloc'.\n"
+	
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+if ! trigger_function "__kmalloc" "10"; then
+	printf "Execution of __kmalloc should succeed, but it doesn't.\n"
+	
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+
+if trigger_function "__kmalloc" "11"; then
+	printf "Execution of __kmalloc should fail(because of indicator), but it doesn't.\n"
+	
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+
+# Verify that "normal" execution of the krealloc is as expected.
+if ! trigger_function "krealloc" "10"; then
+	printf "Normal execution of krealloc fails, but should not.\n"
+	
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+# Verify that "fault" execution of the krealloc is as expected.
+if ! echo "${indicator_constant_name}" "1" > "${fault_simulation_points_dir}/krealloc/current_indicator"; then
+	printf "Fail to set indicator for fault simulation point 'krealloc'.\n"
+	
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+if trigger_function "krealloc" "10"; then
+	printf "Execution of krealloc should fail(because of indicator), but it doesn't.\n"
+	
+	$do_commands_script "$commands_file" unload
+	exit 1
+fi
+
+
+if ! $do_commands_script "$commands_file" unload; then
+	printf "Error occures while finalize test.\n"
+	
+	exit 1
+fi

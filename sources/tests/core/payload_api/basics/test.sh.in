@@ -1,0 +1,218 @@
+#!/bin/sh
+
+########################################################################
+# This test checks target load / unload notifications for payload modules.
+# Usage: 
+#   sh test.sh <target_dir> <set_load_fn> <set_unload_fn>
+#
+# Target module should be <target_dir>/test_<target_dir>.ko
+#
+# If <set_load_fn> is non-zero, the payload module should be notified 
+# when the target module has just loaded.
+#
+# If <set_unload_fn> is non-zero, the payload module should be notified 
+# when the target module is about to unload.
+########################################################################
+
+# Just in case the tools like lsmod are not in their usual location.
+export PATH=$PATH:/sbin:/bin:/usr/bin
+
+########################################################################
+# A function to check prerequisites: whether the necessary files exist,
+# etc.
+########################################################################
+checkPrereqs()
+{
+    if test ! -f "${KEDR_MODULE}"; then
+        printf "KEDR core module is missing: ${KEDR_MODULE}\n"
+        exit 1
+    fi
+    
+    if test ! -f "${TARGET_MODULE}"; then
+        printf "Target module is missing: ${TARGET_MODULE}\n"
+        exit 1
+    fi
+    
+    if test ! -f "${PAYLOAD_MODULE}"; then
+        printf "Payload module is missing: ${PAYLOAD_MODULE}\n"
+        exit 1
+    fi
+}
+
+########################################################################
+# Cleanup function
+########################################################################
+cleanupAll()
+{
+    cd "${WORK_DIR}"
+    
+    lsmod | grep "${TARGET_NAME_ACTUAL}" > /dev/null 2>&1
+    if test $? -eq 0; then
+        rmmod "${TARGET_NAME_ACTUAL}"
+    fi
+    
+    lsmod | grep "${PAYLOAD_NAME}" > /dev/null 2>&1
+    if test $? -eq 0; then
+        rmmod "${PAYLOAD_NAME}"
+    fi
+    
+    lsmod | grep "@CORE_NAME@" > /dev/null 2>&1
+    if test $? -eq 0; then
+        rmmod "@CORE_NAME@"
+    fi
+}
+
+########################################################################
+# Check if the string contents of the target_* parameters of the payload
+# match the expected ones.
+# Usage:
+#   checkOutputStrings <expectedLoad> <expectedUnload>
+########################################################################
+checkOutputStrings()
+{
+    if test $# -ne 2; then
+        printf "checkOutputStrings(): incorrect number of arguments\n"
+        cleanupAll
+        exit 1
+    fi
+
+    expectedLoad="$1"
+    expectedUnload="$2"
+
+    resultLoadString=$(cat "${OUT_LOAD_PARAM}")
+    resultUnloadString=$(cat "${OUT_UNLOAD_PARAM}")
+    if test "t${resultLoadString}" != "t${expectedLoad}"; then
+        printf "\"Load\" string should have been \"${expectedLoad}\" "
+        printf "but it is \"${resultLoadString}\".\n"
+        cleanupAll
+        exit 1
+    fi
+
+    if test "t${resultUnloadString}" != "t${expectedUnload}"; then
+        printf "\"Unload\" string should have been \"${expectedUnload}\" "
+        printf "but it is \"${resultUnloadString}\".\n"
+        cleanupAll
+        exit 1
+    fi
+}
+
+########################################################################
+# doTest() - preform the actual testing
+########################################################################
+doTest()
+{
+    insmod "${KEDR_MODULE}" target_name="${TARGET_NAME}" || exit 1
+
+    insmod "${PAYLOAD_MODULE}" \
+        set_load_fn=${SET_LOAD_FN} \
+        set_unload_fn=${SET_UNLOAD_FN}
+    if test $? -ne 0; then
+        printf "Failed to load the payload module\n"
+        cleanupAll
+        exit 1
+    fi
+
+    if test ${SET_LOAD_FN} -ne 0; then
+        EXPECTED_LOAD_STRING="${TARGET_NAME_ACTUAL}"
+    else
+        EXPECTED_LOAD_STRING="<none>"
+    fi
+
+    if test ${SET_UNLOAD_FN} -ne 0; then
+        EXPECTED_UNLOAD_STRING="${TARGET_NAME_ACTUAL}"
+    else
+        EXPECTED_UNLOAD_STRING="<none>"
+    fi
+
+    echo "${TARGET_NAME}" | grep "fail" > /dev/null 2>&1
+    if test $? -ne 0; then
+        LOAD_MUST_FAIL=""
+    else
+        LOAD_MUST_FAIL="yes"
+    fi    
+
+    OUT_LOAD_PARAM="/sys/module/${PAYLOAD_NAME}/parameters/target_load_name"
+    if test ! -e "${OUT_LOAD_PARAM}"; then
+        printf "Parameter file does not exist: ${OUT_LOAD_PARAM}\n"
+        cleanupAll
+        exit 1
+    fi
+
+    OUT_UNLOAD_PARAM="/sys/module/${PAYLOAD_NAME}/parameters/target_unload_name"
+    if test ! -e "${OUT_UNLOAD_PARAM}"; then
+        printf "Parameter file does not exist: ${OUT_UNLOAD_PARAM}\n"
+        cleanupAll
+        exit 1
+    fi
+
+    insmod "${TARGET_MODULE}"
+    RESULT_INSMOD=$?
+    if test "t${LOAD_MUST_FAIL}" = "tyes"; then
+        # The target must have reported a failure during initialization
+        if test ${RESULT_INSMOD} -eq 0; then
+            printf "Initialization of the target module was supposed to fail "
+            printf "but it did not.\n"
+            cleanupAll
+            exit 1
+        fi
+
+        checkOutputStrings "${EXPECTED_LOAD_STRING}" "${EXPECTED_UNLOAD_STRING}"
+        # Note that unload notification is issued even if the target module 
+        # has failed to load. So the "unload string" must be the name of the
+        # target module (if this notification is enabled) in this case too.
+
+    else
+        # "t${LOAD_MUST_FAIL}" != "tyes"
+        if test ${RESULT_INSMOD} -ne 0; then
+            printf "Initialization of the target module failed unexpectedly.\n"
+            cleanupAll
+            exit 1
+        fi
+
+        checkOutputStrings "${EXPECTED_LOAD_STRING}" "<none>"
+
+        rmmod "${TARGET_NAME_ACTUAL}"
+        if test $? -ne 0; then
+            printf "Failed to unload the target module: ${TARGET_NAME}\n"
+            cleanupAll
+            exit 1
+        fi
+        
+        checkOutputStrings "${EXPECTED_LOAD_STRING}" "${EXPECTED_UNLOAD_STRING}"
+        
+    fi
+}
+
+########################################################################
+# main
+########################################################################
+WORK_DIR=${PWD}
+
+if test $# -ne 3; then
+    printf "Usage: sh test.sh <target_dir> <set_load_fn> <set_unload_fn>\n"
+    exit 1
+fi
+
+TARGET_DIR=$1
+SET_LOAD_FN=$2
+SET_UNLOAD_FN=$3
+printf "Mode: set_load_fn=${SET_LOAD_FN}, set_unload_fn=${SET_UNLOAD_FN}\n"
+
+KEDR_MODULE="@KEDR_INSTALL_PREFIX_KMODULE@/@CORE_NAME@.ko"
+
+TARGET_NAME="test_${TARGET_DIR}"
+TARGET_NAME_ACTUAL=$(echo "${TARGET_NAME}" | tr '-' '_')
+
+TARGET_MODULE="${TARGET_DIR}/${TARGET_NAME}.ko"
+printf "Target module: ${TARGET_MODULE}\n"
+
+PAYLOAD_NAME="test_basics_payload"
+PAYLOAD_MODULE="payload/${PAYLOAD_NAME}.ko"
+
+################################
+checkPrereqs
+doTest
+cleanupAll
+
+# test passed
+exit 0

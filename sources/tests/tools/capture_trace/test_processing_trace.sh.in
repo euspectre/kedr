@@ -1,0 +1,118 @@
+#! /bin/sh
+
+# Test kedr_capture_trace functionality with trace processing programs.
+
+# Just in case the tools like lsmod are not in their usual location.
+export PATH=$PATH:/sbin:/bin:/usr/bin
+
+kedr_module_name="@CORE_MODULE_NAME@"
+kedr_module="@CORE_MODULE@"
+kedr_trace_module_name="@TRACE_MODULE_NAME@"
+kedr_trace_module="@TRACE_MODULE@"
+payload_module_name=kedr_payload
+payload_module="payload/${payload_module_name}.ko"
+target_module_name=kedr_target
+target_module="target/${target_module_name}.ko"
+
+
+tmpdir="@KEDR_TEST_PREFIX_TEMP_SESSION@/capture_trace"
+
+count_lines_file="${tmpdir}/count_lines"
+count_payloads_file="${tmpdir}/count_payloads"
+mkdir -p "${tmpdir}"
+
+debugfs_mount_point="${tmpdir}/debugfs"
+mkdir -p "${debugfs_mount_point}"
+
+capture_trace_program="@CAPTURE_TRACE_PROGRAM@"
+
+# Load KEDR core and payload modules
+insmod "${kedr_module}" "target_name=${target_module_name}"
+if test $? -ne 0; then
+	printf "Failed to load KEDR core module for tests\n"
+	exit 1
+fi
+
+insmod "${kedr_trace_module}"
+if test $? -ne 0; then
+	printf "Failed to load kedr tracing module for tests\n"
+    rmmod "${kedr_module_name}"
+	exit 1
+fi
+
+
+insmod "${payload_module}"
+if test $? -ne 0; then
+	printf "Failed to load payload module for tests\n"
+    rmmod "${kedr_trace_module_name}"
+    rmmod "${kedr_module_name}"
+	exit 1
+fi
+
+# Load target module
+insmod "${target_module}"
+
+if test $? -ne 0; then
+    printf "Failed to load target module\n"
+    kill $capture_pid
+    wait $capture_pid
+    umount "${debugfs_mount_point}"
+    rmmod "${payload_module_name}"
+    rmmod "${kedr_trace_module_name}"
+    rmmod "${kedr_module_name}"
+    exit 1
+fi
+
+
+# Unload target module
+rmmod "${target_module}"
+
+mkdir -p "${debugfs_mount_point}"
+mount debugfs -t debugfs "${debugfs_mount_point}"
+if test $? -ne 0; then
+    printf "Cannot mount debugfs.\n"
+    rmmod "${target_module}"
+    rmmod "${payload_module_name}"
+    rmmod "${kedr_trace_module_name}"
+    rmmod "${kedr_module_name}"
+    exit 1
+fi
+
+# Collect different statistic from the trace on the fly
+rm -f "${count_lines_file}"
+rm -f "${count_payloads_file}"
+${capture_trace_program} -d "${debugfs_mount_point}" \
+    -p "wc -l > ${count_lines_file}" \
+    -p "grep 'target_session_begins' | wc -l > ${count_payloads_file}"
+
+
+umount "${debugfs_mount_point}"
+
+#Unload payload and KEDR core and other modules
+rmmod "${payload_module}"
+rmmod "${kedr_trace_module_name}"
+rmmod "${kedr_module}"
+
+#Verify existance of both result files
+for result_file in "${count_lines_file}" "${count_payloads_file}"; do
+    if ! test -f "${result_file}"; then
+        printf "File %s should be created when process trace, but it wasn't.\n" "${result_file}"
+        exit 1
+    fi
+done
+
+count_lines=`cat "${count_lines_file}"`
+
+if test "${count_lines}" != 4; then
+    printf "Expected that trace contains 4 lines, but count result is %s.\n" "${count_lines}"
+    exit 1
+fi
+
+count_payloads=`cat "${count_payloads_file}"`
+
+if test "${count_payloads}" != 1; then
+    printf "Expected that only one payload was used for the target, but count result is %s.\n" "${count_payloads}"
+    exit 1
+fi
+
+exit 0

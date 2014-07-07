@@ -1,0 +1,15 @@
+# This script specifies the commands to prepare everything necessary to 
+# test LeakCheck and to clean up after the test is finished or if 
+# the initialization fails.
+
+# Mount debugfs 
+on_load mkdir -p "@KEDR_TEST_DIR@/debugfs"
+on_load mount debugfs -t debugfs "@KEDR_TEST_DIR@/debugfs"
+
+# Umount when KEDR is unloaded or on error
+on_unload umount "@KEDR_TEST_DIR@/debugfs"
+
+# Load payloads
+module @KEDR_INSTALL_PREFIX_KMODULE@/kedr_leak_check.ko
+payload @KEDR_INSTALL_PREFIX_KMODULE@/kedr_lc_common_mm.ko
+#payload @KEDR_INSTALL_PREFIX_KMODULE@/kedr_lc_kasprintf.ko
