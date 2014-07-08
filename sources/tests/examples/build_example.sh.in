@@ -1,0 +1,22 @@
+#!/bin/sh
+
+# Usage:
+# <script_name> [build_dir]
+
+example_location=@example_location@
+
+
+if test $# -eq 0; then
+    build_dir=build
+else
+    build_dir=$1
+fi
+
+mkdir -p $build_dir
+
+cp -pr -t $build_dir $example_location/*
+
+if ! make -C $build_dir; then
+    printf "Failed to build example\n"
+    exit 1
+fi

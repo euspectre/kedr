@@ -89,8 +89,6 @@ checkFinalCounters()
 ########################################################################
 doTest()
 {
-    cd "${WORK_DIR}"
-    
     # Load KEDR core and the payload module, mount debugfs
     sh ${CONTROL_SCRIPT} start ${TARGET_NAME} -f "${CONF_FILE}" || exit 1
     
@@ -176,15 +174,13 @@ doTest()
 ########################################################################
 # main
 ########################################################################
-WORK_DIR="@CMAKE_CURRENT_BINARY_DIR@"
-
 TARGET_NAME="kedr_sample_target"
-TARGET_DIR="${WORK_DIR}/../../sample_target/tests"
+TARGET_DIR="@TEST_MODULES_DIR@/sample_target"
 TARGET_MODULE="${TARGET_DIR}/${TARGET_NAME}.ko"
 TARGET_SCRIPT="${TARGET_DIR}/kedr_sample_target"
 
-CONTROL_SCRIPT="@KEDR_TOOLS_DIR@/control/tests/kedr"
-CONF_FILE="${WORK_DIR}/counters.conf"
+CONTROL_SCRIPT="@KEDR_INSTALL_PREFIX_EXEC@/kedr"
+CONF_FILE="./counters.conf"
 
 COUNTERS_DIR="@KEDR_TEST_DIR@/debugfs/kedr_counters_example"
 
@@ -200,6 +196,12 @@ EXP_ALLOC_FAILED=0
 EXP_ALLOC_MAX_SIZE=4000
 #EXP_MUTEX_LOCKS=16
 #EXP_MUTEX_BALANCE=0
+
+EXAMPLE_TEST_LOCATION=@EXAMPLE_TEST_LOCATION@
+
+if ! ./build_example.sh $EXAMPLE_TEST_LOCATION; then
+    exit 1
+fi
 
 checkPrereqs
 doTest

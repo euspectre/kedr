@@ -1,19 +1,21 @@
 set(module_name "kedr_sample_target")
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/makefile_installed.in"
-	"${CMAKE_CURRENT_BINARY_DIR}/makefile_installed"
+	"${CMAKE_CURRENT_BINARY_DIR}/example_makefile"
 	@ONLY)
 
-install(FILES   "${CMAKE_CURRENT_SOURCE_DIR}/cfake.h"
-                "${CMAKE_CURRENT_SOURCE_DIR}/cfake.c"
-                "${CMAKE_CURRENT_SOURCE_DIR}/Kbuild"
-        DESTINATION "${KEDR_EXAMPLE_PATH}/sample_target"
-)
-install(PROGRAMS   "${CMAKE_CURRENT_SOURCE_DIR}/kedr_sample_target"
-        DESTINATION "${KEDR_EXAMPLE_PATH}/sample_target"
-)
-install(FILES   "${CMAKE_CURRENT_BINARY_DIR}/makefile_installed"
-        DESTINATION "${KEDR_EXAMPLE_PATH}/sample_target"
-        RENAME makefile
+example_add(example_sample_target
+    "cfake.h"
+    "cfake.c"
+    "Kbuild"
+    "kedr_sample_target"
+    "makefile" SOURCE "example_makefile"
 )
 
+example_install(TARGETS example_sample_target EXPORT test_example_sample_target
+    DESTINATION "${KEDR_EXAMPLE_PATH}/sample_target"
+    REGEX "kedr_sample_target"
+	PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+		    GROUP_EXECUTE GROUP_READ
+		    WORLD_EXECUTE WORLD_READ
+)

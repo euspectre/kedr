@@ -156,7 +156,7 @@ endfunction(kedr_install_kmodule kmodule_target)
 #  kedr_install_symvers(kmodule_target)
 function(kedr_install_symvers kmodule_target)
     kbuild_install(TARGETS ${kmodule_target}
-	SYMVERS DESTINATION "${KEDR_INSTALL_PREFIX_KMODULE}"
+	SYMVERS DESTINATION "${KEDR_INSTALL_PREFIX_KSYMVERS}"
     )
 endfunction(kedr_install_symvers kmodule_target)
 
@@ -481,6 +481,7 @@ endif(KEDR_LEAK_CHECK)
 
 if (NOT CMAKE_CROSSCOMPILING)
 	# Examples
+	include(example_system) # This will be use in testing also.
 	add_subdirectory(examples)
 
 	# Documentation

@@ -1,9 +1,11 @@
-fault_simulation_module="@CMAKE_BINARY_DIR@/fault_simulation/kedr_fault_simulation.ko"
+EXAMPLE_TEST_LOCATION=@EXAMPLE_TEST_LOCATION@
 
-simulation_module="@CMAKE_CURRENT_BINARY_DIR@/module/kedr_sample_indicator_test_module.ko"
+fault_simulation_module="@KEDR_INSTALL_PREFIX_KMODULE@/kedr_fault_simulation.ko"
+
+simulation_module="module/kedr_sample_indicator_test_module.ko"
 point_name="common"
 
-indicator_module="@CMAKE_CURRENT_BINARY_DIR@/kedr_sample_indicator.ko"
+indicator_module="@EXAMPLE_TEST_LOCATION@/kedr_sample_indicator.ko"
 indicator_name="periodic"
 
 debugfs="@KEDR_TEST_DIR@/debugfs"
@@ -15,8 +17,8 @@ simulate()
 	echo 123 > "${debugfs}/kedr_indicator_internal_test_module/simulate"
 }
 
-do_commands_script="sh @CMAKE_BINARY_DIR@/tests/scripts/do_commands.sh"
-commands_file="@CMAKE_CURRENT_BINARY_DIR@/commands.txt"
+do_commands_script="sh @TEST_SCRIPTS_DIR@/do_commands.sh"
+commands_file="./commands.txt"
 
 cat > "$commands_file" << eof
 
@@ -32,6 +34,10 @@ on_load mount -t debugfs debugfs "${debugfs}"
 on_unload umount "${debugfs}"
 
 eof
+
+if ! ./build_example.sh $EXAMPLE_TEST_LOCATION; then
+    exit 1
+fi
 
 if ! $do_commands_script "$commands_file" load; then
 	printf "Cannot initialize test.\n"

@@ -75,8 +75,8 @@ function(kedr_test_add_ci_test name functions)
 		set(trigger_name "${name}")
 		# Add a test for each function
 		foreach(func ${used_functions})
-			kedr_test_add_script("kedr.call_int.${func}.01"
-				"${CMAKE_CURRENT_BINARY_DIR}/trigger_test/test_${trigger_name}.sh"
+			kedr_test_add_script_shared("kedr.call_int.${func}.01"
+				"trigger_test/test_${trigger_name}.sh"
 				"${func}"
 			)
 		endforeach(func ${used_functions})

@@ -6,19 +6,22 @@ indicator_name=periodic
 
 point_dir=${debugfs_mount_point}/kedr_fault_simulation/points/${point_name}
 
-fsim_payload_module="@CMAKE_BINARY_DIR@/examples/sample_fsim_payload/tests/kedr_sample_fsim_payload.ko"
-indicator_module="@CMAKE_BINARY_DIR@/examples/sample_indicator/tests/kedr_sample_indicator.ko"
-kedr_fault_simulation_module="@CMAKE_BINARY_DIR@/fault_simulation/kedr_fault_simulation.ko"
+sample_indicator_test_location=@sample_indicator_test_location@
+sample_fsim_payload_test_location=@sample_fsim_payload_test_location@
+
+fsim_payload_module="$sample_fsim_payload_test_location/kedr_sample_fsim_payload.ko"
+indicator_module="$sample_indicator_test_location/kedr_sample_indicator.ko"
+kedr_fault_simulation_module="@KEDR_INSTALL_PREFIX_KMODULE@/kedr_fault_simulation.ko"
 
 sample_target_module_name=kedr_sample_target
-sample_target_script="sh @CMAKE_BINARY_DIR@/examples/sample_target/tests/kedr_sample_target"
+sample_target_script="sh @TEST_MODULES_DIR@/sample_target/kedr_sample_target"
 sample_target_device="/dev/cfake0"
 
-kedr_conf_file="@CMAKE_CURRENT_BINARY_DIR@/kedr.conf"
-commands_file="@CMAKE_CURRENT_BINARY_DIR@/commands"
+kedr_conf_file="./kedr.conf"
+commands_file="./commands"
 
-kedr_control_script="sh @CMAKE_BINARY_DIR@/tools/control/tests/kedr"
-do_commands_script="sh @CMAKE_BINARY_DIR@/tests/scripts/do_commands.sh"
+kedr_control_script="sh @KEDR_INSTALL_PREFIX_EXEC@/kedr"
+do_commands_script="sh @TEST_SCRIPTS_DIR@/do_commands.sh"
 
 cat > "$kedr_conf_file" << eof
 module ${kedr_fault_simulation_module}
@@ -33,6 +36,15 @@ on_load mkdir -p "$debugfs_mount_point" || ! printf "Cannot create directory to 
 on_load mount -t debugfs debugfs "$debugfs_mount_point" || ! printf "Cannot mount debugfs.\n"
 on_unload umount "$debugfs_mount_point" || ! printf "Cannot unmount debugfs.\n"
 eof
+
+# Copy and build examples first.
+if ! ./build_indicator.sh $sample_indicator_test_location; then
+    exit 1
+fi
+
+if ! ./build_payload.sh $sample_fsim_payload_test_location; then
+    exit 1
+fi
 
 if ! $do_commands_script "$commands_file" load; then
 	printf "Cannot initialize test.\n"

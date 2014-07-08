@@ -6,7 +6,7 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/payload.data.in"
 	@ONLY)
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Kbuild.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/Kbuild_installed"
+    "${CMAKE_CURRENT_BINARY_DIR}/Kbuild"
     @ONLY
 )
 
@@ -14,24 +14,18 @@ set(kedr_symbols "${KEDR_INSTALL_PREFIX_KSYMVERS}/kedr.symvers")
 set(kedr_leak_check_symbols "${KEDR_INSTALL_PREFIX_KSYMVERS}/kedr_leak_check.symvers")
 set(kedr_gen_tool "${KEDR_INSTALL_PREFIX_EXEC_AUX}/kedr_gen")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/makefile.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/makefile_installed"
+    "${CMAKE_CURRENT_BINARY_DIR}/example_makefile"
     @ONLY
 )
 
-install(FILES   "${CMAKE_CURRENT_BINARY_DIR}/payload.data"
-        DESTINATION "${example_install_dir}"
+example_add(example_leak_check_mempool_ops
+    "payload.data"
+    "makefile" SOURCE "example_makefile"
+    "Kbuild"
+    "Readme.txt"
 )
 
-install(FILES   "${CMAKE_CURRENT_BINARY_DIR}/makefile_installed"
-        DESTINATION "${example_install_dir}"
-        RENAME makefile
-)
-
-install(FILES   "${CMAKE_CURRENT_BINARY_DIR}/Kbuild_installed"
-        DESTINATION "${example_install_dir}"
-        RENAME Kbuild
-)
-
-install(FILES   "${CMAKE_CURRENT_SOURCE_DIR}/Readme.txt"
-        DESTINATION "${example_install_dir}"
+example_install(TARGETS example_leak_check_mempool_ops
+    EXPORT test_example_leak_check_mempool_ops
+    DESTINATION ${example_install_dir}
 )

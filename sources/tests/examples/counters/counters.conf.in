@@ -10,4 +10,4 @@ on_load mount debugfs -t debugfs "@KEDR_TEST_DIR@/debugfs"
 on_unload mount | grep "@KEDR_TEST_DIR@/debugfs"; if test $? -eq 0; then umount "@KEDR_TEST_DIR@/debugfs"; fi
 
 # Load payloads
-payload @CMAKE_CURRENT_BINARY_DIR@/kedr_counters.ko
+payload @EXAMPLE_TEST_LOCATION@/kedr_counters.ko

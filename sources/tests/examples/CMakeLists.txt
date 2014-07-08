@@ -1,3 +1,31 @@
+#  example_create_build_script(imported_example_target script_file)
+#
+# Create shell script, which copy example files to temporary directory
+# and build it there. Directory for copy and build example
+# may be passed to the script itself. By default, 'build' directory is used.
+#
+# 'imported_example_target' should be IMPORTED target for example,
+# which contains install locations of the example.
+#
+# Created script may be used as simple test for example or be called
+# from other test script.
+function(example_create_build_script imported_example_target script_file)
+	get_property(is_example TARGET ${imported_example_target} SET PROPERTY EXAMPLE_TYPE)
+	if(NOT is_example)
+		message(FATAL_ERROR "Target is not example target: ${imported_example_target}")
+	endif(NOT is_example)
+
+	get_property(is_imported TARGET ${imported_example_target} PROPERTY EXAMPLE_IMPORTED)
+	if(NOT is_imported)
+		message(FATAL_ERROR "Example target is not imported: ${imported_example_target}")
+	endif(NOT is_imported)
+
+	get_property(example_location TARGET ${imported_example_target} PROPERTY EXAMPLE_IMPORTED_LOCATION)
+	configure_file("${CMAKE_SOURCE_DIR}/tests/examples/build_example.sh.in"
+		"${script_file}")
+endfunction(example_create_build_script)
+
+
 add_subdirectory(counters)
 add_subdirectory(custom_indicator_fsim)
 
@@ -14,15 +42,4 @@ endif(KEDR_LEAK_CHECK)
 add_subdirectory(sample_fsim_payload)
 add_subdirectory(sample_indicator)
 
-# Test which combine several examples together
-kedr_load_test_prefixes()
-
-set(KEDR_TEST_DIR "${KEDR_TEST_PREFIX_TEMP_SESSION}/examples/tests")
-
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/test_fault_simulation.sh.in"
-	"${CMAKE_CURRENT_BINARY_DIR}/test_fault_simulation.sh"
-	@ONLY
-)
-
-kedr_test_add_script("sample_fsim_payload.01" "test_fault_simulation.sh")
-
+add_subdirectory(sample_fsim)

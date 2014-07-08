@@ -1,6 +1,10 @@
 include(kedr_testing)
 kedr_test_init()
 
+# Tests configuration may take considerable amount of time.
+# So print status messages about tests configuration.
+message(STATUS "Configure tests")
+
 # This directory(and its subdirectories) should be used in tests for
 # temporary files and directories, especially for mount debugfs.
 #
@@ -41,11 +45,11 @@ endif(KEDR_STANDARD_FSIM_PAYLOADS)
 add_subdirectory(tools)
 add_subdirectory(util)
 
-#if (NOT CMAKE_CROSSCOMPILING)
-    #add_subdirectory(examples)
-#endif (NOT CMAKE_CROSSCOMPILING)
+if (NOT CMAKE_CROSSCOMPILING)
+    add_subdirectory(examples)
+endif (NOT CMAKE_CROSSCOMPILING)
 
 
 add_subdirectory(global)
 
-
+message(STATUS "Configure tests - done")
