@@ -3,22 +3,29 @@ kedr_test_init()
 
 # Tests configuration may take considerable amount of time.
 # So print status messages about tests configuration.
-message(STATUS "Configure tests")
+message(STATUS "Configuring tests")
 
 # This directory(and its subdirectories) should be used in tests for
 # temporary files and directories, especially for mount debugfs.
 #
 # See rdc57abf8b657 for details about why this is needed.
 set(KEDR_TEST_PREFIX_TEMP_SESSION "/var/tmp/kedr/test")
-# Do not forget to delete this dir on 'make uninstall'.
-add_uninstall_dir(${KEDR_TEST_PREFIX_TEMP_SESSION})
+
+if(USER_PART)
+    # Do not forget to delete this dir on 'make uninstall'.
+    add_uninstall_dir(${KEDR_TEST_PREFIX_TEMP_SESSION})
+endif(USER_PART)
 
 # Install auxiliary test scripts for common using.
-add_subdirectory(scripts)
+if(USER_PART)
+    add_subdirectory(scripts)
+endif(USER_PART)
 itesting_path(TEST_SCRIPTS_DIR "${CMAKE_CURRENT_BINARY_DIR}/scripts")
 
-# Install auxiliary test modules for common using.
-add_subdirectory(modules)
+if(KERNEL_PART)
+    # Install auxiliary test modules for common using.
+    add_subdirectory(modules)
+endif(KERNEL_PART)
 itesting_path(TEST_MODULES_DIR "${CMAKE_CURRENT_BINARY_DIR}/modules")
 
 add_subdirectory(core)
@@ -52,4 +59,4 @@ endif (NOT CMAKE_CROSSCOMPILING)
 
 add_subdirectory(global)
 
-message(STATUS "Configure tests - done")
+message(STATUS "Configuring tests - done")

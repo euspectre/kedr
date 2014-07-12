@@ -1,10 +1,14 @@
 #!/bin/sh
 
-#./test.sh expr x y result_expected
+#  ./test.sh expr x y result_expected
+#
 # Expression may contain reference to variables 'x' and 'y', and use constants TRUE=1, FALSE=0 and big_number=10000
 # 'x' and 'y' may be expressions of same type, as 'expr', but without use varibales(only above constans)
+
+@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
+
 kmodule_name="kedr_calc_test_vars"
-kmodule="${kmodule_name}.ko"
+kmodule="${KERNEL}/${kmodule_name}.ko"
 result_file="/sys/module/${kmodule_name}/parameters/result"
 
 if test $# -ne 4; then

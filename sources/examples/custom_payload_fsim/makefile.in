@@ -1,17 +1,19 @@
 # Name of the output fault simulation payload module
 module_name := @module_name@
 
+@multi_kernel_KERNEL_VAR_MAKE_DEFINITION@
+
 @SET_KEDR_ENABLE_CALLER_ADDRESS@
 
 payload_data_file := payload.data
 
 kedr_gen_templates_dir := @KEDR_INSTALL_PREFIX_TEMPLATES@
-kedr_gen_tool := @kedr_gen_tool@
+kedr_gen_tool := @kedr_gen_tool_installed@
 
-kedr_symbols := @kedr_symbols@
-fault_simulation_symbols := @fault_simulation_symbols@
+kedr_symbols := @KEDR_CORE_MAKE_SYMVERS@
+fault_simulation_symbols := @KEDR_FAULT_SIMULATION_MAKE_SYMVERS@
 
-KBUILD_DIR=@Kbuild_BUILD_DIR@
+KBUILD_DIR=@kbuild_dir_make_installed@
 PWD=`pwd`
 
 all: $(module_name).ko

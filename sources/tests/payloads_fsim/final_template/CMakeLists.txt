@@ -10,22 +10,48 @@ function(add_test_fsim_payload kmodule_name)
 endfunction(add_test_fsim_payload kmodule_name)
 
 set(trigger_target_module_name "kedr_test_trigger_target")
-set(indicator_constant_module_name "kedr_indicator_constant")
-set(indicator_greater_than_module_name "kedr_indicator_greater_than")
+set(indicators_module_name "payloads_fsim_test_indicators")
 
-# Build commmon modules
-add_subdirectory(trigger_target)
-add_subdirectory(indicator_constant)
-add_subdirectory(indicator_greater_than)
+if(KERNEL_PART)
+    # Build commmon modules
+    add_subdirectory(trigger_target)
+    add_subdirectory(indicators_module)
+endif(KERNEL_PART)
 
-itesting_path(this_install_dir)
+if(USER_PART)
+    itesting_path(this_install_dir)
 
-# Common declaration for test scripts
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/test_common.sh.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/test_common.sh"
-    @ONLY)
+    # Common declaration for test scripts
+    configure_file("${CMAKE_CURRENT_SOURCE_DIR}/test_common.sh.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/test_common.sh"
+        @ONLY)
 
-kedr_test_install(PROGRAMS "test_common.sh")
+    kedr_test_install(PROGRAMS "test_common.sh")
+    set(_test_common_install_path "${this_install_dir}/test_common.sh")
+    
+    # Add test for fault simulation payload.
+    #
+    # This is similar to kedr_test_add_script(), but given script
+    # is executed inside 'test_common.sh'.
+    #
+    # 'test_function_script' is installed and passed to test_common.sh
+    # as command line parameter.
+    function(add_test_payload_fsim test_name test_function_script)
+        kedr_test_install(FILES ${test_function_script})
+        
+        to_abs_path(path_abs ${test_function_script})
+        itesting_path(install_path ${path_abs})
+        
+        itesting_path(this_install_dir)
+        
+        file(RELATIVE_PATH path_relative ${this_install_dir} ${install_path})
+        file(RELATIVE_PATH test_common_path_relative ${this_install_dir}
+            ${_test_common_install_path}
+        )
+        
+        kedr_test_add_script_shared(${test_name} ${test_common_path_relative} ${path_relative})
+    endfunction(add_test_payload_fsim)
+endif(USER_PART)
 
 # Add tests themselves
 add_subdirectory(test_no_fpoint_params)

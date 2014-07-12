@@ -1,8 +1,10 @@
 module_name=kedr_sample_indicator
 
-fault_simulation_symbols := @fault_simulation_symbols@
+@multi_kernel_KERNEL_VAR_MAKE_DEFINITION@
 
-KBUILD_DIR=@Kbuild_BUILD_DIR@
+fault_simulation_symbols := @KEDR_FAULT_SIMULATION_MAKE_SYMVERS@
+
+KBUILD_DIR=@kbuild_dir_make_installed@
 PWD=`pwd`
 
 all: $(module_name).ko

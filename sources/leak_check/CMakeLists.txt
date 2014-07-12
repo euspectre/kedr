@@ -1,15 +1,19 @@
-# Configuration files: for installation and for testing
-set(leak_check_conf_file "leak_check.conf")
-set(leak_check_test_conf_file "leak_check_test.conf")
-set(leak_check_install_dir ${KEDR_INSTALL_PREFIX_KMODULE})
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/${leak_check_conf_file}.in"
-	"${CMAKE_CURRENT_BINARY_DIR}/${leak_check_conf_file}"
-	@ONLY)
-########################################################################
+# Payload modules.
+if(USER_PART)
+	# The only interest for USER_PART in that directory is to
+	# call kedr_conf_lc_add_payload() for every payload module installed.
+	function(kedr_conf_lc_add_payload module_name)
+		kedr_module_ref(module_ref ${module_name})
+		set_property(GLOBAL APPEND PROPERTY LC_PAYLOADS ${module_ref})
+	endfunction(kedr_conf_lc_add_payload)
+	# Use function immidiately.
+	kedr_conf_lc_add_payload(kedr_lc_common_mm)
+endif(USER_PART)
 
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${leak_check_conf_file}"
-	DESTINATION "${KEDR_DEFAULT_CONFIG_DIR}") 
-########################################################################
+# The rest is for kernel part only
+if(NOT KERNEL_PART)
+	return()
+endif(NOT KERNEL_PART)
 
 ######### Common stuff for the payload modules for LeakCheck ###########
 # Check if kfree_rcu() is present and set HAVE_KFREE_RCU accordingly

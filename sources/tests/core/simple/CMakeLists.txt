@@ -1,9 +1,14 @@
-set (TARGET_NAME "kedr_sample_target")
+if(KERNEL_PART)
+    # The stuff necessary for testing
+    add_subdirectory (simple_payload)
+endif(KERNEL_PART)
 
-set (TARGET_LOAD_CMD 
-    "sh ${TEST_MODULES_DIR}/sample_target/kedr_sample_target load")
-set (TARGET_UNLOAD_CMD 
-    "sh ${TEST_MODULES_DIR}/sample_target/kedr_sample_target unload")
+if(NOT USER_PART)
+    return()
+endif(NOT USER_PART)
+
+
+set (TARGET_NAME "kedr_sample_target")
 
 # '@ONLY' is essential when doing substitutions in the shell scripts. 
 # Without it, CMake would replace "${...}" too, which is usually not what 
@@ -38,7 +43,4 @@ kedr_test_add_script_shared (core.basics.02
 kedr_test_add_script_shared (core.basics.03
     ins_rm_with_target.sh 1
 )
-
-# The stuff necessary for testing
-add_subdirectory (simple_payload)
 

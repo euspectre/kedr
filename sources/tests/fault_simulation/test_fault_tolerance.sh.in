@@ -1,6 +1,6 @@
 #!/bin/sh
 
-fault_simulation_module="@KEDR_INSTALL_PREFIX_KMODULE@/kedr_fault_simulation.ko"
+@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
 
 read_point_name="kedr-read-point"
 write_point_name="kedr-write-point"
@@ -8,8 +8,9 @@ read_indicator_name="indicator_for_read"
 write_indicator_name="indicator_for_write"
 
 module_a_name="fsim_test_module_a"
-module_a="module_a/${module_a_name}.ko"
-module_b="module_b/fsim_test_module_b.ko"
+module_a="module_a/${KERNEL}/${module_a_name}.ko"
+module_b_name="fsim_test_module_b"
+module_b="module_b/${KERNEL}/${module_b_name}.ko"
 current_value_file="/sys/module/${module_a_name}/parameters/current_value"
 
 device=kedr_test_device
@@ -54,8 +55,8 @@ do_commands_script="sh @TEST_SCRIPTS_DIR@/do_commands.sh"
 
 cat > "$commands_file" << eof
 
-on_load insmod "$fault_simulation_module" || ! printf "Cannot load fault simulation module into kernel.\n"
-on_unload rmmod "$fault_simulation_module" || ! printf "Cannot unload fault simulation module.\n"
+on_load @KEDR_FAULT_SIMULATION_LOAD_COMMAND@ || ! printf "Cannot load fault simulation module into kernel.\n"
+on_unload @RMMOD@ "@KEDR_FAULT_SIMULATION_NAME@" || ! printf "Cannot unload fault simulation module.\n"
 on_load mkdir -p "$debugfs_mount_point" || ! printf "Cannot create mount point for debugfs.\n"
 on_load mount -t debugfs debugfs "$debugfs_mount_point" || ! printf "Cannot mount debugfs.\n"
 on_unload umount "$debugfs_mount_point" || ! printf "Error occured while umounting debugfs.\n"
@@ -63,8 +64,8 @@ eof
 
 cat > "$commands_file_module_a" << eof
 
-on_load insmod "$module_a" || ! printf "Cannot load module 'a' into the kernel.\n"
-on_unload rmmod "$module_a" || ! printf "Fail to unload module 'a'.\n"
+on_load @INSMOD@ "$module_a" || ! printf "Cannot load module 'a' into the kernel.\n"
+on_unload @RMMOD@ "$module_a_name" || ! printf "Fail to unload module 'a'.\n"
 
 eof
 
@@ -79,7 +80,7 @@ if ! $do_commands_script "$commands_file_module_a" load; then
 fi
 
 
-if ! insmod "$module_b"; then
+if ! @INSMOD@ "$module_b"; then
     printf "Cannot load module 'b' into the kernel.\n"
     $do_commands_script "$commands_file_module_a" unload && $do_commands_script "$commands_file" unload
     exit 1
@@ -89,7 +90,7 @@ fi
 
 if set_indicator "$read_point_name" "$write_indicator_name"; then
     printf "Indicator was set for a point which data it cannot process.\n"
-    rmmod "$module_b"
+    @RMMOD@ "$module_b_name"
     $do_commands_script "$commands_file_module_a" unload    
     $do_commands_script "$commands_file" unload
     
@@ -98,7 +99,7 @@ fi
 
 if ! set_indicator "$read_point_name" "$read_indicator_name"; then
     printf "Cannot set indicator for the point.\n"
-    rmmod "$module_b"
+    @RMMOD@ "$module_b_name"
     
     $do_commands_script "$commands_file" unload
     
@@ -110,7 +111,7 @@ fi
     # Module 'a' should correctly be unloaded even with file opened
     if ! $do_commands_script "$commands_file_module_a" unload; then
         printf "Cannot remove module 'a' with indicator control file opened.\n"
-        rmmod "$module_b"
+        @RMMOD@ "$module_b_name"
         $do_commands_script "$commands_file" unload
         exit 1
     fi
@@ -120,14 +121,14 @@ fi
     echo "$write_indicator_name"  >&8 
 
     if ! $do_commands_script "$commands_file_module_a" load; then
-	printf "Failed to load module 'a' again.\n"
-	rmmod "$module_b"
-	$do_commands_script "$commands_file" unload
-	exit 1
+        printf "Failed to load module 'a' again.\n"
+        @RMMOD@ "$module_b_name"
+        $do_commands_script "$commands_file" unload
+        exit 1
     fi
 
 } 9<"$control_root/points/${read_point_name}/current_indicator" 8>"$control_root/points/${read_point_name}/current_indicator"
 
-rmmod "$module_b" && \
+@RMMOD@ "$module_b_name" && \
     $do_commands_script "$commands_file_module_a" unload && \
     $do_commands_script "$commands_file" unload

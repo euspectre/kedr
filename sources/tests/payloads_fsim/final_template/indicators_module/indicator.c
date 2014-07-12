@@ -1,6 +1,6 @@
 /*
- * Fault simulation indicator which accepts one parameter of type int
- * and return 1 if this parameter is greater than value which is set from user-space.
+ * Fault simulation indicator which accepts no parameters
+ * and return value which is set from user-space.
  */
 
 /* ========================================================================
@@ -27,6 +27,77 @@
 MODULE_AUTHOR("Tsyvarev");
 MODULE_LICENSE("GPL");
 
+/********************* Constant indicator *****************************/
+
+/*
+ * Name of the indicator (it is not the name of the module!),
+ * using which one may set indicator for the particular fault simulation point.
+ */
+
+const char* indicator_constant_name = "constant";
+const char* indicator_constant_format_string = "";
+
+/*
+ * Describe parameters, which may be unique for every instance of indicator.
+ *
+ * These parameters are packed into structure, which is passed to the indicator at simulate stage
+ * and to the other callbacks.
+ */
+
+struct indicator_constant_state
+{
+    /*
+     * Result returned by the indicator.
+     */
+    int result;
+};
+
+static int indicator_constant_instance_init(void** indicator_state,
+    const char* params, struct dentry* control_directory)
+{
+    struct indicator_constant_state* state;
+    unsigned long indicator_result;
+    // Read 'params' and convert its to the value of the result
+    if((params == NULL) || (*params == '\0'))
+    {
+        //Without parameters, set result to the default value
+        indicator_result = 0;
+    }
+    else
+    {
+        int error = strict_strtoul(params, 10, &indicator_result);
+        if(error)
+        {
+            pr_err("Cannot convert '%s' to integer result of the scenario.", params);
+            return error;
+        }
+    }
+    // Allocate state instance.
+    state = kmalloc(sizeof(*state), GFP_KERNEL);
+    if(state == NULL)
+    {
+        pr_err("Cannot allocate indicator state instance.");
+        return -ENOMEM;
+    }
+    // Set state variables
+    state->result = (int)indicator_result;
+    // Store indicator state
+    *indicator_state = state;
+    return 0;
+}
+
+static int indicator_constant_simulate(void* indicator_state, void* user_data)
+{
+    struct indicator_constant_state* state = indicator_state;
+    return state->result;
+}
+
+static void indicator_constant_instance_destroy(void* indicator_state)
+{
+    kfree(indicator_state);
+}
+
+/******************** Indicator 'greater than' ************************/
 #define DEFAULT_BOUNDARY 10
 
 /*
@@ -104,15 +175,30 @@ static void indicator_greater_than_instance_destroy(void* indicator_state)
     kfree(indicator_state);
 }
 
+/******************** Global definitions ******************************/
 /* 
- * Reference to the indicator which will be registered.
+ * References to the indicators which will be registered.
  */
+struct kedr_simulation_indicator* indicator_constant;
 struct kedr_simulation_indicator* indicator_greater_than;
 
 static int __init
-indicator_greater_than_init(void)
+indicators_init(void)
 {
-    // Registering of the indicator.
+    // Register indicators
+    indicator_constant = kedr_fsim_indicator_register(
+        indicator_constant_name,
+        indicator_constant_simulate,
+        indicator_constant_format_string, 
+        indicator_constant_instance_init,
+        indicator_constant_instance_destroy);
+
+    if(indicator_constant == NULL)
+    {
+        pr_err("Cannot register indicator '%s'.\n", indicator_constant_name);
+        return -EINVAL;
+    }
+
     indicator_greater_than = kedr_fsim_indicator_register(
         indicator_greater_than_name,
         indicator_greater_than_simulate,
@@ -123,18 +209,20 @@ indicator_greater_than_init(void)
     if(indicator_greater_than == NULL)
     {
         pr_err("Cannot register indicator '%s'.\n", indicator_greater_than_name);
+        kedr_fsim_indicator_unregister(indicator_constant);
         return -EINVAL;
     }
     return 0;
 }
 
 static void
-indicator_greater_than_exit(void)
+indicators_exit(void)
 {
-	// Deregistration of the indicator
+	// Deregistration of the indicators
 	kedr_fsim_indicator_unregister(indicator_greater_than);
+    kedr_fsim_indicator_unregister(indicator_constant);
 	return;
 }
 
-module_init(indicator_greater_than_init);
-module_exit(indicator_greater_than_exit);
+module_init(indicators_init);
+module_exit(indicators_exit);

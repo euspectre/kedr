@@ -1,3 +1,15 @@
+if(KERNEL_PART)
+    # The following subdirectories contain the stuff necessary for the testing
+    add_subdirectory (payload)
+    add_subdirectory (target_normal)
+    add_subdirectory (target_init_fail)
+    add_subdirectory (target-with-dashes)
+endif(KERNEL_PART)
+
+if(NOT USER_PART)
+    return()
+endif(NOT USER_PART)
+
 # The tests for target load / unload notifications mechanism provided by 
 # KEDR core for payload modules.
 
@@ -67,8 +79,3 @@ kedr_test_add_script_shared (payload_api.change_target.01
     test_change_target.sh "target_normal" "target-with-dashes"
 )
 
-# The following subdirectories contain the stuff necessary for the testing
-add_subdirectory (payload)
-add_subdirectory (target_normal)
-add_subdirectory (target_init_fail)
-add_subdirectory (target-with-dashes)

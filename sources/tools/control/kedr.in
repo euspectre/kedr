@@ -1,8 +1,5 @@
 #!/bin/sh
 
-# Just in case the tools like lsmod are not in their usual location.
-export PATH=$PATH:/sbin:/bin:/usr/bin
-
 newline='
 '
 # Usage: 
@@ -54,9 +51,10 @@ default_config_dir=@KEDR_DEFAULT_CONFIG_DIR@
 default_config_file=@KEDR_DEFAULT_CONFIG_FILE@
 
 # commands for kernel module control
-MODPROBE=modprobe
-INSMOD=insmod
-RMMOD=rmmod
+MODPROBE=@MODPROBE@
+INSMOD=@INSMOD@
+RMMOD=@RMMOD@
+LSMOD=@LSMOD@
 
 RMMOD_ONLY_ONE=rmmod_only_one
 rmmod_only_one()
@@ -98,7 +96,7 @@ get_module_name()
 # Determine, whether module with given name (not from module file!), is currently running.
 is_module_running()
 {
-    lsmod | grep "^$1[[:blank:]]\{1,\}" > /dev/null
+    $LSMOD | grep "^$1[[:blank:]]\{1,\}" > /dev/null
 }
 
 # resolve_module_alias alias
@@ -163,7 +161,7 @@ parse_conf_on_unload()
 {
     { if test $2; then head -n $(($2 - 1)) "$1"; else cat "$1"; fi; } | sed '1!G;h;$!d' | \
     sed -n  -e "${regex_parse_conf}" -e ":module; :payload; ${regex_up_to_space}; ${regex_is_alias};" \
-            -e ":alias; s!^!${MODPROBE} -r !; b out; :notalias; s!^!${RMMOD} !; b out;" \
+            -e ":alias; s!^!${RMMOD} !; b out; :notalias; s!^!${RMMOD} !; b out;" \
             -e ":on_unload; b out; :on_load; d" \
             -e ":error; s/^/printf \"%s\\\\n\" \"Incorrect config line '/; s/$/'\"/; p; d;" \
             -e ":out; s/^\(.\{0,\}\)$/cat << \"EOF\"\n\\1\nEOF\n\\1/; p;"  
@@ -240,7 +238,7 @@ rollback()
 }
 
 
-kedr_name=`get_module_name @KEDR_FILE@`
+kedr_name=@KEDR_CORE_NAME@
 target_name=
 command=$1
 shift
@@ -277,7 +275,7 @@ start)
     mkdir -p ${tmp_dir} || (printf "Cannot create directory for temporary files\n" && exit 1)
     # Create config file for processing
     #Add loading of kedr module to the config file
-    printf "module %s target_name=%s\n" "@KEDR_FILE@" "$target_name"> "${start_conf_file}"
+    printf "module %s target_name=%s\n" "@KEDR_CORE_REF@" "$target_name"> "${start_conf_file}"
     if test $? -ne 0; then
         printf "Error: Cannot write to temporary file.\n"
         exit 1

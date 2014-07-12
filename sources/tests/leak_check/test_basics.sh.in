@@ -52,14 +52,14 @@ checkPrereqs()
 ########################################################################
 cleanupAll()
 {
-    lsmod | grep "${LEAKER_NAME}" > /dev/null 2>&1
+    @LSMOD@ | grep "${LEAKER_NAME}" > /dev/null 2>&1
     if test $? -eq 0; then
-        rmmod ${LEAKER_NAME}
+        @RMMOD@ ${LEAKER_NAME}
     fi
     
-    lsmod | grep "${CLEANER_NAME}" > /dev/null 2>&1
+    @LSMOD@ | grep "${CLEANER_NAME}" > /dev/null 2>&1
     if test $? -eq 0; then
-        rmmod ${CLEANER_NAME}
+        @RMMOD@ ${CLEANER_NAME}
     fi
     
     sh ${CONTROL_SCRIPT} stop
@@ -176,7 +176,7 @@ checkLeaker()
     printf "Executing checkLeaker() with <clean>=\"$1\"\n";
     leakerReportDir="report_leaker_mode_${TEST_MODE}"
     
-    insmod "${LEAKER_MODULE}"
+    @INSMOD@ "${LEAKER_MODULE}"
     if test $? -ne 0; then
         printf "Failed to load \"leaker\" module\n"
         cleanupAll
@@ -186,7 +186,7 @@ checkLeaker()
     # Save leak addresses, unload the "leaker" and save LeakCheck reports
     readLeakAddresses
     
-    rmmod ${LEAKER_NAME}
+    @RMMOD@ ${LEAKER_NAME}
     if test $? -ne 0; then
         printf "Errors occured while trying to unload \"leaker\" module\n"
         cleanupAll
@@ -228,7 +228,7 @@ checkLeaker()
     fi
     
     if test "t$1" = "tyes"; then
-        insmod "${CLEANER_MODULE}" \
+        @INSMOD@ "${CLEANER_MODULE}" \
             leak_kmalloc=${LEAK_KMALLOC} \
             leak_gfp=${LEAK_GFP} \
             leak_vmalloc=${LEAK_VMALLOC} \
@@ -239,7 +239,7 @@ checkLeaker()
             exit 1
         fi
         
-        rmmod ${CLEANER_NAME}
+        @RMMOD@ ${CLEANER_NAME}
         if test $? -ne 0; then
             printf "checkLeaker(): failed to unload \"cleaner\" module\n"
             cleanupAll
@@ -260,7 +260,7 @@ checkCleaner()
     cleanerReportDir="report_cleaner_mode_${TEST_MODE}"
     
     if test "t$1" = "tyes"; then
-        insmod "${LEAKER_MODULE}"
+        @INSMOD@ "${LEAKER_MODULE}"
         if test $? -ne 0; then
             printf "checkCleaner(): failed to load \"leaker\" module\n"
             cleanupAll
@@ -270,7 +270,7 @@ checkCleaner()
         # Save leak addresses, unload the "leaker"
         readLeakAddresses
         
-        rmmod ${LEAKER_NAME}
+        @RMMOD@ ${LEAKER_NAME}
         if test $? -ne 0; then
             printf "checkCleaner(): failed to unload \"leaker\" module\n"
             cleanupAll
@@ -278,7 +278,7 @@ checkCleaner()
         fi
     fi
     
-    insmod "${CLEANER_MODULE}" \
+    @INSMOD@ "${CLEANER_MODULE}" \
         leak_kmalloc=${LEAK_KMALLOC} \
         leak_gfp=${LEAK_GFP} \
         leak_vmalloc=${LEAK_VMALLOC} \
@@ -290,7 +290,7 @@ checkCleaner()
     fi
     
     # Unload the "cleaner", save LeakCheck reports and stop KEDR
-    rmmod ${CLEANER_NAME}
+    @RMMOD@ ${CLEANER_NAME}
     if test $? -ne 0; then
         printf "Errors occured while trying to unload \"cleaner\" module\n"
         cleanupAll
@@ -417,11 +417,13 @@ if test "t${TEST_MODE}" != "tboth"; then
     fi
 fi
 
+@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
+
 LEAKER_NAME="@KEDR_TEST_LEAKER_MODULE@"
-LEAKER_MODULE="leaker_module/${LEAKER_NAME}.ko"
+LEAKER_MODULE="leaker_module/${KERNEL}/${LEAKER_NAME}.ko"
 
 CLEANER_NAME="@KEDR_TEST_CLEANER_MODULE@"
-CLEANER_MODULE="cleaner_module/${CLEANER_NAME}.ko"
+CLEANER_MODULE="cleaner_module/${KERNEL}/${CLEANER_NAME}.ko"
 
 CONTROL_SCRIPT="@KEDR_INSTALL_PREFIX_EXEC@/kedr"
 CONF_FILE="./leak_check_test.conf"

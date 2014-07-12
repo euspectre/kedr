@@ -16,9 +16,10 @@
 ########################################################################
 
 
-# Paths to and the name of the KEDR core module
-set (CORE_DIR "${CMAKE_BINARY_DIR}/core")
-set (CORE_NAME "kedr")
+# Paths to directories(source and binary), where KEDR core module was built.
+set (CORE_SOURCE_DIR "${CMAKE_SOURCE_DIR}/core")
+set (CORE_BINARY_DIR "${CMAKE_BINARY_DIR}/core")
+
 
 add_subdirectory(simple)
 add_subdirectory(payload_api)

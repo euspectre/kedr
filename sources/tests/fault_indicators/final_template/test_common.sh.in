@@ -5,9 +5,7 @@
 #
 # Declare common variables and functions for the tests.
 
-fault_simulation_module="@KEDR_INSTALL_PREFIX_KMODULE@/kedr_fault_simulation.ko"
-
-simulation_module="@this_install_dir@/module/kedr_indicator_internal_test_module.ko"
+simulation_module="@this_install_dir@/module/${KERNEL}/kedr_indicator_internal_test_module.ko"
 point_name="common"
 point_with_params_name="size"
 
@@ -36,12 +34,12 @@ mkdir -p @KEDR_TEST_DIR@
 
 cat > "$commands_file" << eof
 
-on_load insmod "${fault_simulation_module}" || ! printf "Cannot load fault simulation module into kernel.\n"
-on_unload rmmod "${fault_simulation_module}" || ! printf "Cannot unload fault simulation module.\n"
-on_load insmod "${simulation_module}" || ! printf "Cannot load module with simulation point into kernel.\n"
-on_unload rmmod "${simulation_module}" || ! printf "Cannot unload module with simulation point.\n"
-on_load insmod "${indicator_module}" || ! printf "Cannot load indicator module into kernel.\n"
-on_unload rmmod "${indicator_module}" || ! printf "Cannot unload indicator module.\n"
+on_load @KEDR_FAULT_SIMULATION_LOAD_COMMAND@ || ! printf "Cannot load fault simulation module into kernel.\n"
+on_unload @RMMOD@ "@KEDR_FAULT_SIMULATION_NAME@" || ! printf "Cannot unload fault simulation module.\n"
+on_load @INSMOD@ "${simulation_module}" || ! printf "Cannot load module with simulation point into kernel.\n"
+on_unload @RMMOD@ "${simulation_module}" || ! printf "Cannot unload module with simulation point.\n"
+on_load @INSMOD@ "${indicator_module}" || ! printf "Cannot load indicator module into kernel.\n"
+on_unload @RMMOD@ "${indicator_module}" || ! printf "Cannot unload indicator module.\n"
 
 on_load mkdir -p "${debugfs}"
 on_load mount -t debugfs debugfs "${debugfs}"

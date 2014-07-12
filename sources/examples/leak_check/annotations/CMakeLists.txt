@@ -6,7 +6,6 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Kbuild.in"
     @ONLY
 )
 
-set(kedr_leak_check_symbols "${KEDR_INSTALL_PREFIX_KSYMVERS}/kedr_leak_check.symvers")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/makefile.in"
     "${CMAKE_CURRENT_BINARY_DIR}/example_makefile"
     @ONLY

@@ -8,6 +8,15 @@
 # Among the functions the tests are provided for, only the calls to the 
 # functions actually used by one or more payload modules are to be tested.
 
+# Because this set of tests depends, in particular, from functions'
+# existence in the kernel, we cannot form this testset in case of
+# multi-kernel build, when user part is built separately from kernel one.
+# Currently whole testset is disabled for such cases.
+if(NOT USER_PART OR NOT KERNEL_PART)
+	message("'call_int' tests are currently disabled in multi-kernel builds")
+	return()
+endif(NOT USER_PART OR NOT KERNEL_PART)
+
 # kedr_create_ci_payload_data(payload_data_file func1 [func2 ...])
 # Prepare the main .data file (${payload_data_file}) for the payload module 
 # to be used for testing from the data files and the header data files for 

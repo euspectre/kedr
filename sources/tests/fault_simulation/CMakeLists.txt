@@ -1,8 +1,14 @@
 set(KEDR_TEST_DIR "${KEDR_TEST_PREFIX_TEMP_SESSION}/fault_simulation")
 
-add_subdirectory(module_a)
-add_subdirectory(module_b)
-add_subdirectory(indicators_simple)
+if(KERNEL_PART)
+    add_subdirectory(module_a)
+    add_subdirectory(module_b)
+    add_subdirectory(indicators_simple)
+endif(KERNEL_PART)
+
+if(NOT USER_PART)
+    return()
+endif(NOT USER_PART)
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/test_simple.sh.in"
     "${CMAKE_CURRENT_BINARY_DIR}/test_simple.sh"

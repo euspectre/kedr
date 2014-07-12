@@ -1,3 +1,7 @@
 trigger_name = @trigger_name@
-kedr_module=@KEDR_INSTALL_PREFIX_KMODULE@/kedr.ko
+kedr_module_name=@KEDR_CORE_NAME@
+kedr_module_load_command=@KEDR_CORE_LOAD_COMMAND@
 test_current_install_dir = @this_install_dir@
+
+insmod_command=@INSMOD@
+rmmod_command=@RMMOD@

@@ -2,7 +2,8 @@
 #
 # Create shell script, which copy example files to temporary directory
 # and build it there. Directory for copy and build example
-# may be passed to the script itself. By default, 'build' directory is used.
+# may be passed to the script itself.
+# By default, 'build/`uname -r`' directory is used as build directory.
 #
 # 'imported_example_target' should be IMPORTED target for example,
 # which contains install locations of the example.

@@ -2,8 +2,10 @@
 
 #./test.sh expr result_expected
 
+@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
+
 kmodule_name="kedr_calc_test_simple"
-kmodule="${kmodule_name}.ko"
+kmodule="${KERNEL}/${kmodule_name}.ko"
 result_file="/sys/module/${kmodule_name}/parameters/result"
 
 if test $# -ne 2; then

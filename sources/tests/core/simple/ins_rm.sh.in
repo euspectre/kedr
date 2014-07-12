@@ -3,26 +3,23 @@
 ########################################################################
 # This test checks the basic operations with the KEDR core module.
 ########################################################################
-KEDR_MODULE="@KEDR_INSTALL_PREFIX_KMODULE@/@CORE_NAME@.ko"
-printf "KEDR core module: ${KEDR_MODULE}\n"
+printf "KEDR core module: @KEDR_CORE_REF@\n"
 
-# Just in case the tools like lsmod are not in their usual location.
-export PATH=$PATH:/sbin:/bin:/usr/bin
+# Cannot check existence of kernel module if it is given by name only.
+#if test ! -f "${KEDR_MODULE}"; then
+#    printf "KEDR core module is missing: ${KEDR_MODULE}\n"
+#    
+#    # test failed
+#    exit 1
+#fi
 
-if test ! -f "${KEDR_MODULE}"; then
-    printf "KEDR core module is missing: ${KEDR_MODULE}\n"
-    
-    # test failed
-    exit 1
-fi
-
-insmod "${KEDR_MODULE}"
+@KEDR_CORE_LOAD_COMMAND@
 if test $? -ne 0; then
     printf "Failed to load the KEDR core module\n"
     exit 1
 fi
 
-rmmod "@CORE_NAME@"
+@RMMOD@ "@KEDR_CORE_NAME@"
 if test $? -ne 0; then
     printf "Failed to unload the KEDR core module\n"
     exit 1

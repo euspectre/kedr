@@ -7,7 +7,7 @@ example_location=@example_location@
 
 
 if test $# -eq 0; then
-    build_dir=build
+    build_dir=build/`uname -r`
 else
     build_dir=$1
 fi

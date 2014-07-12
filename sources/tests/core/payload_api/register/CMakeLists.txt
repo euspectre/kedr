@@ -1,3 +1,11 @@
+if(KERNEL_PART)
+    add_subdirectory (payload)
+endif(KERNEL_PART)
+
+if(NOT USER_PART)
+    return()
+endif(NOT USER_PART)
+
 # '@ONLY' is essential when doing substitutions in the shell scripts. 
 # Without it, CMake would replace "${...}" too, which is usually not what 
 # you want.
@@ -33,5 +41,3 @@ kedr_test_add_script_shared (payload_api.register.02
 kedr_test_add_script_shared (payload_api.register.03 
     test.sh 2
 )
-
-add_subdirectory (payload)

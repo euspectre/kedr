@@ -15,7 +15,9 @@ kbuild_add_module("kedr_sample_target"
 
 kedr_test_install_module("kedr_sample_target")
 
+# Note that load/unload script is installed to per-kernel directory
+# in the kernel part.
 itesting_path(this_install_path)
 install(PROGRAMS "${source_dir}/kedr_sample_target"
-    DESTINATION ${this_install_path}
+    DESTINATION ${this_install_path}/${Kbuild_VERSION_STRING}
 )

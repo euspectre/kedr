@@ -1,1 +1,0 @@
-module <$indicator.path$>

@@ -1,17 +1,16 @@
 #! /bin/sh
 
+@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
+
 functions_support_module_name=@functions_support_module_name@
-functions_support_module="${functions_support_module_name}.ko"
+functions_support_module="${KERNEL}/${functions_support_module_name}.ko"
 
-# Just in case the tools like lsmod are not in their usual location.
-export PATH=$PATH:/sbin:/bin:/usr/bin
-
-if ! insmod "${functions_support_module}"; then
+if ! @INSMOD@ "${functions_support_module}"; then
     printf "Loading of functions support module was failed.\n"
     exit 1
 fi
 
-if ! rmmod "${functions_support_module}"; then
+if ! @RMMOD@ "${functions_support_module_name}"; then
     printf "Error occure while unload functions support module.\n"
     exit 1
 fi

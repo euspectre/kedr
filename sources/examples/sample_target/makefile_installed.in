@@ -1,6 +1,8 @@
+@multi_kernel_KERNEL_VAR_MAKE_DEFINITION@
+
 module_name=kedr_sample_target
 
-KBUILD_DIR=@Kbuild_BUILD_DIR@
+KBUILD_DIR=@kbuild_dir_make_installed@
 PWD=`pwd`
 
 all: ${module_name}.ko

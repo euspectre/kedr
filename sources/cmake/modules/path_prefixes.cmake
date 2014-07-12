@@ -191,12 +191,16 @@ function(fill_install_prefixes project_name project_prefix)
     
     if(fip_KERNEL)
 	# Set derivative install path and prefixes
-	# additional, 1
-	set(fip_KERNEL_INSTALL_PREFIX_KMODULE
-	    "${fip_INSTALL_PREFIX_LIB}/modules/%kernel%/misc")
-	# Another variants:
-	#"${fip_INSTALL_PREFIX_LIB}/modules/%kernel%/extra")
-	#"${fip_INSTALL_PREFIX_LIB}/modules/%kernel%/updates")
+	# additional, 1 [!!CHANGED!!]
+	if(fip_INSTALL_TYPE MATCHES GLOBAL)
+	    set(fip_KERNEL_INSTALL_PREFIX_KMODULE
+		"/lib/modules/%kernel%/extra")
+	else(fip_INSTALL_TYPE MATCHES GLOBAL)
+	    set(fip_KERNEL_INSTALL_PREFIX_KMODULE
+		"${fip_INSTALL_PREFIX_LIB}/modules/%kernel%/extra")
+	    # Another variants:
+	    #"${fip_INSTALL_PREFIX_LIB}/modules/%kernel%/updates")
+	endif(fip_INSTALL_TYPE MATCHES GLOBAL)
 
 	# additional, 2
 	set(fip_KERNEL_INSTALL_PREFIX_KSYMVERS

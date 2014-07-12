@@ -1,4 +1,8 @@
 # Test which combine several examples together
+if(NOT USER_PART)
+    return()
+endif(NOT USER_PART)
+
 set(KEDR_TEST_DIR "${KEDR_TEST_PREFIX_TEMP_SESSION}/examples/sample_fsim")
 
 # We need to exclusively build every example which we use, whenever

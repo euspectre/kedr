@@ -1,20 +1,54 @@
-# Common declaration for tests
-# debugfs_mount_point should be declared at this stage
+# Common test script.
+#
+# Usage:
+#
+#  test.common.sh <test_definition_script>
+#
+# Script <test_definition_script> should define next variables:
+#
+# - tmpdir: directory with temporary files for test. It will be created automatically.
+# - payload_fsim: fault simulation payload which is tested.
+#
+# Also <test_definition_script> should define function test_function(),
+# it wil be executed when all initialization is performed.
 
-fault_simulation_module="@KEDR_INSTALL_PREFIX_KMODULE@/kedr_fault_simulation.ko"
+
+if test $# -eq 0; then
+	printf "Test definition script should be given\n"
+	exit 1
+fi
+
+# Definitions which will be visible for common part of included script.
+@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
+
+indicator_constant_name="constant"
+indicator_greater_than_name="greater_than"
+
+
+. $1
+
+if test -z "$tmpdir"; then
+	printf "Test definition script did not define 'tmpdir' variable.\n"
+	exit 1
+fi
+
+if test -z "$payload_fsim"; then
+	printf "Test definition script did not define 'payload_fsim' variable.\n"
+	exit 1
+fi
+
+
+# These definitions may be used inside test_function() in included script.
+debugfs_mount_point="${tmpdir}/debugfs"
 fault_simulation_points_dir="${debugfs_mount_point}/kedr_fault_simulation/points"
 
 trigger_target_module_name="@trigger_target_module_name@"
-trigger_target="@this_install_dir@/trigger_target/${trigger_target_module_name}.ko"
+trigger_target="@this_install_dir@/trigger_target/${KERNEL}/${trigger_target_module_name}.ko"
 trigger_target_control_dir="${debugfs_mount_point}/function_triggers"
 
-indicator_constant="@this_install_dir@/indicator_constant/@indicator_constant_module_name@.ko"
-indicator_constant_name="constant"
+indicators_module_name=@indicators_module_name@
+indicators_module="@this_install_dir@/indicators_module/${KERNEL}/${indicators_module_name}.ko"
 
-indicator_greater_than="@this_install_dir@/indicator_greater_than/@indicator_greater_than_module_name@.ko"
-indicator_greater_than_name="greater_than"
-
-kedr_core_module="@KEDR_INSTALL_PREFIX_KMODULE@/kedr.ko"
 
 do_commands_script="sh @TEST_SCRIPTS_DIR@/do_commands.sh"
 
@@ -23,3 +57,52 @@ trigger_function()
 {
 	dd "bs=$2" count=1 if=/dev/zero "of=${trigger_target_control_dir}/$1"
 }
+
+
+############################## Initialization part #####################
+mkdir -p "${tmpdir}"
+
+commands_file="${tmpdir}/commands"
+
+cat > "$commands_file" << eof
+
+on_load @KEDR_FAULT_SIMULATION_LOAD_COMMAND@ || ! printf "Cannot load fault simulation module into kernel.\n"
+on_unload @RMMOD@ "@KEDR_FAULT_SIMULATION_NAME@" || ! printf "Cannot unload fault simulation module.\n"
+
+on_load @KEDR_CORE_LOAD_COMMAND@ target_name="${trigger_target_module_name}" || ! printf "Cannot load KEDR core module.\n"
+on_unload @RMMOD@ "@KEDR_CORE_NAME@" || ! printf "Cannot unload KEDR core module.\n"
+
+on_load @INSMOD@ "${payload_fsim}" || ! printf "Cannot load generated fault simulation payload into kernel.\n"
+on_unload @RMMOD@ "${payload_fsim}" || ! printf "Cannot unload generated fault simulation payload.\n"
+
+on_load mkdir -p "$debugfs_mount_point" || ! printf "Cannot create mount point for debugfs.\n"
+on_load mount -t debugfs debugfs "$debugfs_mount_point" || ! printf "Cannot mount debugfs.\n"
+on_unload umount "$debugfs_mount_point" || ! printf "Error occured while umounting debugfs.\n"
+
+on_load @INSMOD@ "${indicators_module}" || ! printf "Cannot load fault simulation indicators for test.\n"
+on_unload @RMMOD@ "${indicators_module}" || ! printf "Cannot unload fault simulation indicators.\n"
+
+on_load @INSMOD@ "${trigger_target}" || ! printf "Cannot load target module for trigger functions into kernel.\n"
+on_unload @RMMOD@ "${trigger_target}" || ! printf "Cannot unload target module for trigger functions.\n"
+
+eof
+
+if ! $do_commands_script "$commands_file" load; then
+    printf "Cannot initialize test.\n"
+    exit 1
+fi
+
+########################################################################
+test_function
+
+test_result=$?
+if test ${test_result} -ne 0; then
+	$do_commands_script "$commands_file" unload
+	exit ${test_result}
+fi
+##################### Finalization part ################################
+if ! $do_commands_script "$commands_file" unload; then
+	printf "Error occures while finalize test.\n"
+	
+	exit 1
+fi

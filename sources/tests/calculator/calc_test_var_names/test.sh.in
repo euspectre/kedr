@@ -1,11 +1,15 @@
 #!/bin/sh
 
-#./test.sh expr var_name1 var_name2 [result_expected]
+#  ./test.sh expr var_name1 var_name2 [result_expected]
+#
 # Expression may contain reference given variable names, which value is 1 and 2.
 # If result_expected is set, result of computation should be equal to it.
 # Otherwise expected, that module is failed to insert(parsing should fail)
+
+@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
+
 kmodule_name="kedr_calc_test_var_names"
-kmodule="${kmodule_name}.ko"
+kmodule="${KERNEL}/${kmodule_name}.ko"
 result_file="/sys/module/${kmodule_name}/parameters/result"
 
 if test $# -gt 4 || test $# -lt 3; then

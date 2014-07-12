@@ -5,8 +5,6 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Kbuild.in"
     @ONLY
 )
 
-set(kedr_symbols "${KEDR_INSTALL_PREFIX_KSYMVERS}/kedr.symvers")
-set(kedr_gen_tool "${KEDR_INSTALL_PREFIX_EXEC_AUX}/kedr_gen")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/makefile.in"
     "${CMAKE_CURRENT_BINARY_DIR}/example_makefile"
     @ONLY

@@ -9,19 +9,17 @@
 # latter reports error as it should.
 ########################################################################
 
-# Just in case the tools like lsmod are not in their usual location.
-export PATH=$PATH:/sbin:/bin:/usr/bin
-
 ########################################################################
 # A function to check prerequisites: whether the necessary files exist,
 # etc.
 ########################################################################
 checkPrereqs()
 {
-    if test ! -f "${KEDR_MODULE}"; then
-        printf "KEDR core module is missing: ${KEDR_MODULE}\n"
-        exit 1
-    fi
+    # 'test -f' cannot check existing of module if it is given by name.
+    #if test ! -f "${KEDR_MODULE}"; then
+    #    printf "KEDR core module is missing: ${KEDR_MODULE}\n"
+    #    exit 1
+    #fi
     
     if test ! -f "${PAYLOAD_MODULE}"; then
         printf "Payload module is missing: ${PAYLOAD_MODULE}\n"
@@ -34,22 +32,19 @@ checkPrereqs()
 ########################################################################
 cleanupAll()
 {
-    cd "${WORK_DIR}"
-    
-    lsmod | grep "${TARGET_NAME}" > /dev/null 2>&1
+    @LSMOD@ | grep "${TARGET_NAME}" > /dev/null 2>&1
     if test $? -eq 0; then
-        ${TARGET_UNLOAD_CMD}
-        cd "${WORK_DIR}"
+        sh @TEST_MODULES_DIR@/sample_target/${KERNEL}/kedr_sample_target unload
     fi
     
-    lsmod | grep "${PAYLOAD_NAME}" > /dev/null 2>&1
+    @LSMOD@ | grep "${PAYLOAD_NAME}" > /dev/null 2>&1
     if test $? -eq 0; then
-        rmmod "${PAYLOAD_NAME}"
+        @RMMOD@ "${PAYLOAD_NAME}"
     fi
     
-    lsmod | grep "@CORE_NAME@" > /dev/null 2>&1
+    @LSMOD@ | grep "@KEDR_CORE_NAME@" > /dev/null 2>&1
     if test $? -eq 0; then
-        rmmod "@CORE_NAME@"
+        @RMMOD@ "@KEDR_CORE_NAME@"
     fi
 }
 ########################################################################
@@ -66,16 +61,16 @@ checkCommonScenario()
 {
     printf "Executing checkCommonScenario()\n"
     
-    insmod "${KEDR_MODULE}" target_name="${TARGET_NAME}" || exit 1
+    @KEDR_CORE_LOAD_COMMAND@ target_name="${TARGET_NAME}" || exit 1
 
-    insmod "${PAYLOAD_MODULE}"
+    @INSMOD@ "${PAYLOAD_MODULE}"
     if test $? -ne 0; then
         printf "Failed to load the payload module\n"
         cleanupAll
         exit 1
     fi
 
-    ${TARGET_LOAD_CMD}
+    sh @TEST_MODULES_DIR@/sample_target/${KERNEL}/kedr_sample_target load
     if test $? -ne 0; then
         printf "Failed to load the target module: ${TARGET_NAME}.ko\n"
         cleanupAll
@@ -90,7 +85,7 @@ checkCommonScenario()
     fi
 
     printf "Trying to unload the KEDR core while the target is under analysis (must fail)\n"
-    rmmod "@CORE_NAME@"
+    @RMMOD@ "@KEDR_CORE_NAME@"
     if test $? -eq 0; then
         printf "The KEDR core module must have been locked "
         printf "as long as the target module is under analysis\n"
@@ -99,7 +94,7 @@ checkCommonScenario()
     fi
     printf "This error was expected, continuing.\n"
 
-    ${TARGET_UNLOAD_CMD}
+    sh @TEST_MODULES_DIR@/sample_target/${KERNEL}/kedr_sample_target unload
     if test $? -ne 0; then
         printf "Failed to unload the target module: ${TARGET_NAME}.ko\n"
         cleanupAll
@@ -107,14 +102,14 @@ checkCommonScenario()
     fi
     cd "${WORK_DIR}"
 
-    rmmod "${PAYLOAD_NAME}"
+    @RMMOD@ "${PAYLOAD_NAME}"
     if test $? -ne 0; then
         printf "Failed to unload the payload module: ${PAYLOAD_NAME}\n"
         cleanupAll
         exit 1
     fi
 
-    rmmod "@CORE_NAME@"
+    @RMMOD@ "@KEDR_CORE_NAME@"
     if test $? -ne 0; then
         printf "Failed to unload the KEDR core module\n"
         cleanupAll
@@ -132,7 +127,7 @@ checkTargetFirstScenario()
 {
     printf "Executing checkTargetFirstScenario()\n"
     
-    ${TARGET_LOAD_CMD}
+    sh @TEST_MODULES_DIR@/sample_target/${KERNEL}/kedr_sample_target load
     if test $? -ne 0; then
         printf "Failed to load the target module: ${TARGET_NAME}.ko\n"
         cleanupAll
@@ -141,7 +136,7 @@ checkTargetFirstScenario()
 
     printf "Trying to load the KEDR core when the target is already loaded "
     printf "(must fail)\n"
-    insmod "${KEDR_MODULE}" target_name="${TARGET_NAME}"
+    @KEDR_CORE_LOAD_COMMAND@ target_name="${TARGET_NAME}"
     if test $? -eq 0; then
         printf "KEDR core must have failed to load if the target "
         printf "was already loaded at that moment\n"
@@ -150,7 +145,7 @@ checkTargetFirstScenario()
     fi
     printf "This error was expected, continuing.\n"
 
-    ${TARGET_UNLOAD_CMD}
+    sh @TEST_MODULES_DIR@/sample_target/${KERNEL}/kedr_sample_target unload
     if test $? -ne 0; then
         printf "Failed to unload the target module: ${TARGET_NAME}.ko\n"
         cleanupAll
@@ -170,19 +165,17 @@ if test $# -ne 1; then
     exit 1
 fi
 
-KEDR_MODULE="@KEDR_INSTALL_PREFIX_KMODULE@/@CORE_NAME@.ko"
+@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
 
 TARGET_NAME="@TARGET_NAME@"
-TARGET_LOAD_CMD="@TARGET_LOAD_CMD@"
-TARGET_UNLOAD_CMD="@TARGET_UNLOAD_CMD@"
 
 PAYLOAD_NAME="simple_payload"
-PAYLOAD_MODULE="${PAYLOAD_NAME}/${PAYLOAD_NAME}.ko"
+PAYLOAD_MODULE="${PAYLOAD_NAME}/${KERNEL}/${PAYLOAD_NAME}.ko"
 
 checkPrereqs
 
-printf "KEDR core module: ${KEDR_MODULE}\n"
-printf "Target module: ${TARGET_NAME}.ko\n"
+printf "KEDR core module: @KEDR_CORE_NAME@\n"
+printf "Target module: @TEST_MODULES_DIR@/sample_target/${KERNEL}/${TARGET_NAME}.ko\n"
 printf "Payload module: ${PAYLOAD_MODULE}\n"
 
 # Select the test scenario

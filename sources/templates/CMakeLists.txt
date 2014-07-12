@@ -9,11 +9,12 @@ set(templates
     "fault_indicator.c"
     "fault_indicator.data"
     "fault_indicator_add_caller_address.data"
-    "payload_leak_check.c")
+    "payload_leak_check.c"
+)
 
-if(KEDR_CALLM_PAYLOADS)
+if(KEDR_STANDARD_CALLM_PAYLOADS)
     list(APPEND templates "payload_callm.c")
-endif(KEDR_CALLM_PAYLOADS)
+endif(KEDR_STANDARD_CALLM_PAYLOADS)
 
 install(DIRECTORY ${templates} 
         DESTINATION "${KEDR_TEMPLATES_PATH}"

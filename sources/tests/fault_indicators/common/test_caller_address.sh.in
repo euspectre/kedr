@@ -1,21 +1,15 @@
 #!/bin/sh
 
-# Just in case the tools like lsmod are not in their usual location.
-export PATH=$PATH:/sbin:/bin:/usr/bin
+@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
 
-fault_simulation_module="@KEDR_INSTALL_PREFIX_KMODULE@/kedr_fault_simulation.ko"
-
-indicator_module="@KEDR_INSTALL_PREFIX_KMODULE@/kedr_fsim_indicator_common.ko"
 indicator_name="common"
-
-payload_module="@KEDR_INSTALL_PREFIX_KMODULE@/kedr_fsim_cmm.ko"
 point_name="kmalloc"
 
 get_caller_address_payload_name="get_caller_address"
-get_caller_address_payload="get_caller_address/get_caller_address.ko"
+get_caller_address_payload="get_caller_address/${KERNEL}/get_caller_address.ko"
 
 target_name="target_caller_address"
-target_module="target_caller_address/target_caller_address.ko"
+target_module="target_caller_address/${KERNEL}/target_caller_address.ko"
 
 
 tmpdir="@KEDR_TEST_DIR@/kedr_caller_address"
@@ -37,10 +31,10 @@ kedr_config_file="${tmpdir}/kedr_test_caller_address.conf"
 mkdir -p "${tmpdir}"
 cat > "$kedr_config_file" << eof
 
-module "${fault_simulation_module}"
-payload "${payload_module}"
+module @KEDR_FAULT_SIMULATION_REF@
+payload @PAYLOAD_MODULE_REF@
 payload "${get_caller_address_payload}"
-module "${indicator_module}"
+module @INDICATOR_MODULE_REF@
 
 on_load mkdir -p "${debugfs}"
 on_load mount -t debugfs debugfs "${debugfs}"
@@ -55,7 +49,7 @@ if ! $kedr_control_script start "${target_name}" -f "$kedr_config_file"; then
 	exit 1
 fi
 
-if ! insmod "${target_module}"; then
+if ! @INSMOD@ "${target_module}"; then
 	printf "Cannot load target module for testing.\n"
 	$kedr_control_script stop
 	exit 1
@@ -65,7 +59,7 @@ echo 1 > "$point_dir/expression"
 
 if simulate; then
 	printf "It was expected that simulate would fail (expression is '%s') but it succeeded.\n" `cat "$point_dir/expression"`
-	rmmod "${target_module}"
+	@RMMOD@ "${target_name}"
 	$kedr_control_script stop
 	exit 1
 fi
@@ -74,7 +68,7 @@ caller_address=`cat /sys/module/${get_caller_address_payload_name}/parameters/__
 
 if test caller_address == "0"; then
 	printf "Fail to determine caller address of the __kmalloc()."
-	rmmod "${target_module}"
+	@RMMOD@ "${target_name}"
 	$kedr_control_script stop
 	
 	exit 1
@@ -83,7 +77,7 @@ fi
 expression="caller_address != ${caller_address}"
 if ! echo "$expression" > "$point_dir/expression"; then
 	printf "Cannot set expression \"%s\" for fault simulation indicator.\n" "$expression"
-	rmmod "${target_module}"
+	@RMMOD@ "${target_name}"
 	$kedr_control_script stop
 
 	exit 1
@@ -92,16 +86,15 @@ fi
 if ! simulate; then
 	printf "Fault simulation was not expected to be triggered for __kmalloc with expression \"%s\".\n" "$expression"
 
-	rmmod "${target_module}"
+	@RMMOD@ "${target_name}"
 	$kedr_control_script stop
 
 	exit 1
 fi
 
 
-if ! rmmod "${target_module}"; then
+if ! @RMMOD@ "${target_module}"; then
 	printf "Error occured while unloading the target module.\n"
-	$kedr_control_script stop
 	exit 1
 fi
 if ! $kedr_control_script stop; then

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-fault_simulation_module="@KEDR_INSTALL_PREFIX_KMODULE@/kedr_fault_simulation.ko"
+@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
 
 read_point_name="kedr-read-point"
 write_point_name="kedr-write-point"
@@ -8,9 +8,11 @@ read_indicator_name="indicator_for_read"
 write_indicator_name="indicator_for_write"
 
 module_a_name="fsim_test_module_a"
-module_a="module_a/${module_a_name}.ko"
-module_b="module_b/fsim_test_module_b.ko"
-indicators_simple="indicators_simple/fsim_test_indicators_simple.ko"
+module_a="module_a/${KERNEL}/${module_a_name}.ko"
+module_b_name="fsim_test_module_b"
+module_b="module_b/${KERNEL}/${module_b_name}.ko"
+indicators_simple_name=fsim_test_indicators_simple
+indicators_simple="indicators_simple/${KERNEL}/${indicators_simple_name}.ko"
 current_value_file="/sys/module/${module_a_name}/parameters/current_value"
 
 device=kedr_test_device
@@ -75,13 +77,13 @@ do_commands_script="@TEST_SCRIPTS_DIR@/do_commands.sh"
 
 cat > "$commands_file" << eof
 
-on_load insmod "$fault_simulation_module" || ! printf "Cannot load fault simulation module into kernel.\n"
-on_unload rmmod "$fault_simulation_module" || ! printf "Cannot unload fault simulation module.\n"
+on_load @KEDR_FAULT_SIMULATION_LOAD_COMMAND@ || ! printf "Cannot load fault simulation module into kernel.\n"
+on_unload @RMMOD@ @KEDR_FAULT_SIMULATION_NAME@ || ! printf "Cannot unload fault simulation module.\n"
 on_load mkdir -p "$debugfs_mount_point" || ! printf "Cannot create mount point for debugfs.\n"
 on_load mount -t debugfs debugfs "$debugfs_mount_point" || ! printf "Cannot mount debufs.\n"
 on_unload umount "$debugfs_mount_point" || ! printf "Error occured while umounting debufs.\n"
-on_load insmod "$module_a" || ! printf "Cannot load module 'a' into kernel.\n"
-on_unload rmmod "$module_a" || ! printf "Failed to unload module 'a'.\n"
+on_load @INSMOD@ "$module_a" || ! printf "Cannot load module 'a' into kernel.\n"
+on_unload @RMMOD@ "$module_a_name" || ! printf "Failed to unload module 'a'.\n"
 
 eof
 
@@ -112,7 +114,7 @@ if ! check_last_fault "none"; then
     exit 1
 fi
 
-if ! insmod "$module_b"; then
+if ! @INSMOD@ "$module_b"; then
     printf "Cannot load module 'b' into kernel.\n"
     $do_commands_script "$commands_file" unload
     exit 1
@@ -122,7 +124,7 @@ fi
 
 if ! set_indicator "$read_point_name" "$read_indicator_name"; then
     printf "Cannot set indicator for read point.\n"
-    rmmod "$module_b"
+    @RMMOD@ "$module_b_name"
     $do_commands_script "$commands_file" unload
     exit 1
 fi
@@ -132,13 +134,13 @@ simulate_point "$read_point_name"
 
 if test "$current_value" != "9"; then
     printf "The simulation of read point was expected to return '9' but it returned '%s'.\n" "$current_value"
-    rmmod "$module_b"
+    @RMMOD@ "$module_b_name"
     $do_commands_script "$commands_file" unload
     exit 1
 fi
 
 if ! check_last_fault "Read: 9"; then
-    rmmod "$module_b"
+    @RMMOD@ "$module_b"
     $do_commands_script "$commands_file" unload
     exit 1
 fi
@@ -146,7 +148,7 @@ fi
 
 if ! set_indicator "$write_point_name" "$write_indicator_name"; then
     printf "Cannot set indicator for write point.\n"
-    rmmod "$module_b"
+    @RMMOD@ "$module_b_name"
     $do_commands_script "$commands_file" unload
     exit 1
 fi
@@ -156,13 +158,13 @@ simulate_point "$write_point_name" 25
 
 if test "$current_value" != "25"; then
     printf "The simulation of write point was expected to return '25'(size) but it returned '%s'.\n" "$current_value"
-    rmmod "$module_b"
+    @RMMOD@ "$module_b_name"
     $do_commands_script "$commands_file" unload
     exit 1
 fi
 
 if ! check_last_fault "Write for 25: 25"; then
-    rmmod "$module_b"
+    @RMMOD@ "$module_b_name"
     $do_commands_script "$commands_file" unload
     exit 1
 fi
@@ -171,7 +173,7 @@ fi
 #Rewrite indicator for write point
 if ! set_indicator "$write_point_name" "$read_indicator_name"; then
     printf "Cannot set read indicator for write point.\n"
-    rmmod "$module_b"
+    @RMMOD@ "$module_b_name"
     $do_commands_script "$commands_file" unload
     exit 1
 fi
@@ -181,14 +183,14 @@ simulate_point "$write_point_name" 25
 
 if test "$current_value" != "9"; then
     printf "The simulation of write point with read indicator was expected to return '9' but it returned '%s'.\n" "$current_value"
-    rmmod "$module_b"
+    @RMMOD@ "$module_b_name"
     $do_commands_script "$commands_file" unload
     exit 1
 fi
 
 if ! check_last_fault "Write for 25: 9"; then
     $do_commands_script "$commands_file" unload
-    rmmod "$module_b"
+    @RMMOD@ "$module_b_name"
     exit 1
 fi
 
@@ -205,7 +207,7 @@ fi
 current_indicator=`get_indicator "$read_point_name"`
 if test "$current_indicator" != "none"; then
     printf "'current_indicator' file for read point conatins '%s', but should be 'none'\n" "$current_indicator"
-    rmmod "$module_b"
+    @RMMOD@ "$module_b_name"
     $do_commands_script "$commands_file" unload
     exit 1
 fi
@@ -215,12 +217,12 @@ simulate_point "$read_point_name"
 
 if test "$current_value" != "0"; then
     printf "The simulation of read point was expected to return '0' (indicator was cleared) but it returned '%s'.\n" "$current_value"
-    rmmod "$module_b"
+    @RMMOD@ "$module_b_name"
     $do_commands_script "$commands_file" unload
     exit 1
 fi
 
-if ! rmmod "$module_b"; then
+if ! @RMMOD@ "$module_b_name"; then
     printf "Cannot unload module_b.\n"
     exit 1
 fi
@@ -244,7 +246,7 @@ fi
 
 # Set "never" and "always" scenarious
 
-if ! insmod "$indicators_simple"; then
+if ! @INSMOD@ "$indicators_simple"; then
     printf "Cannot load module with simple indicators into kernel.\n"
     $do_commands_script "$commands_file" unload
     exit 1
@@ -252,8 +254,8 @@ fi
 
 
 if ! set_indicator "$read_point_name" "never"; then
-    printf "Cannot set "never" scenario for read point.\n"
-    rmmod "$indicators_simple"
+    printf "Cannot set \"never\" scenario for read point.\n"
+    @RMMOD@ "$indicators_simple_name"
     $do_commands_script "$commands_file" unload
     exit 1
 fi
@@ -262,14 +264,14 @@ simulate_point "$read_point_name"
 
 if test "$current_value" != 0 ; then
     printf "The simulation for read point was expected to return '0' (scenario is 'never') but it returned '%s'.\n" "$current_value"
-	rmmod "$indicators_simple"
+	@RMMOD@ "$indicators_simple_name"
     $do_commands_script "$commands_file" unload
     exit 1
 fi
 
 if ! set_indicator "$read_point_name" "always"; then
     printf "Cannot set \"always\" scenario for read point.\n"
-    rmmod "$indicators_simple"
+    @RMMOD@ "$indicators_simple_name"
     $do_commands_script "$commands_file" unload
     exit 1
 fi
@@ -278,12 +280,12 @@ simulate_point "$read_point_name"
 
 if test "$current_value" != 1 ; then
     printf "The simulation for read point was expected to return '1' (scenario is 'always') but it returned '%s'.\n" "$current_value"
-	rmmod "$indicators_simple"
+	@RMMOD@ "$indicators_simple_name"
     $do_commands_script "$commands_file" unload
     exit 1
 fi
 
-if ! rmmod "$indicators_simple"; then
+if ! @RMMOD@ "$indicators_simple_name"; then
     printf "Cannot unload module with simple indicators.\n"
     exit 1
 fi

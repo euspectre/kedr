@@ -14,19 +14,16 @@
 # when the target module is about to unload.
 ########################################################################
 
-# Just in case the tools like lsmod are not in their usual location.
-export PATH=$PATH:/sbin:/bin:/usr/bin
-
 ########################################################################
 # A function to check prerequisites: whether the necessary files exist,
 # etc.
 ########################################################################
 checkPrereqs()
 {
-    if test ! -f "${KEDR_MODULE}"; then
-        printf "KEDR core module is missing: ${KEDR_MODULE}\n"
-        exit 1
-    fi
+    #if test ! -f "${KEDR_MODULE}"; then
+    #    printf "KEDR core module is missing: ${KEDR_MODULE}\n"
+    #    exit 1
+    #fi
     
     if test ! -f "${TARGET_MODULE}"; then
         printf "Target module is missing: ${TARGET_MODULE}\n"
@@ -46,19 +43,19 @@ cleanupAll()
 {
     cd "${WORK_DIR}"
     
-    lsmod | grep "${TARGET_NAME_ACTUAL}" > /dev/null 2>&1
+    @LSMOD@ | grep "${TARGET_NAME_ACTUAL}" > /dev/null 2>&1
     if test $? -eq 0; then
-        rmmod "${TARGET_NAME_ACTUAL}"
+        @RMMOD@ "${TARGET_NAME_ACTUAL}"
     fi
     
-    lsmod | grep "${PAYLOAD_NAME}" > /dev/null 2>&1
+    @LSMOD@ | grep "${PAYLOAD_NAME}" > /dev/null 2>&1
     if test $? -eq 0; then
-        rmmod "${PAYLOAD_NAME}"
+        @RMMOD@ "${PAYLOAD_NAME}"
     fi
     
-    lsmod | grep "@CORE_NAME@" > /dev/null 2>&1
+    @LSMOD@ | grep "@KEDR_CORE_NAME@" > /dev/null 2>&1
     if test $? -eq 0; then
-        rmmod "@CORE_NAME@"
+        @RMMOD@ "@KEDR_CORE_NAME@"
     fi
 }
 
@@ -101,9 +98,9 @@ checkOutputStrings()
 ########################################################################
 doTest()
 {
-    insmod "${KEDR_MODULE}" target_name="${TARGET_NAME}" || exit 1
+    @KEDR_CORE_LOAD_COMMAND@ target_name="${TARGET_NAME}" || exit 1
 
-    insmod "${PAYLOAD_MODULE}" \
+    @INSMOD@ "${PAYLOAD_MODULE}" \
         set_load_fn=${SET_LOAD_FN} \
         set_unload_fn=${SET_UNLOAD_FN}
     if test $? -ne 0; then
@@ -145,7 +142,7 @@ doTest()
         exit 1
     fi
 
-    insmod "${TARGET_MODULE}"
+    @INSMOD@ "${TARGET_MODULE}"
     RESULT_INSMOD=$?
     if test "t${LOAD_MUST_FAIL}" = "tyes"; then
         # The target must have reported a failure during initialization
@@ -171,7 +168,7 @@ doTest()
 
         checkOutputStrings "${EXPECTED_LOAD_STRING}" "<none>"
 
-        rmmod "${TARGET_NAME_ACTUAL}"
+        @RMMOD@ "${TARGET_NAME_ACTUAL}"
         if test $? -ne 0; then
             printf "Failed to unload the target module: ${TARGET_NAME}\n"
             cleanupAll
@@ -193,21 +190,21 @@ if test $# -ne 3; then
     exit 1
 fi
 
+@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
+
 TARGET_DIR=$1
 SET_LOAD_FN=$2
 SET_UNLOAD_FN=$3
 printf "Mode: set_load_fn=${SET_LOAD_FN}, set_unload_fn=${SET_UNLOAD_FN}\n"
 
-KEDR_MODULE="@KEDR_INSTALL_PREFIX_KMODULE@/@CORE_NAME@.ko"
-
 TARGET_NAME="test_${TARGET_DIR}"
 TARGET_NAME_ACTUAL=$(echo "${TARGET_NAME}" | tr '-' '_')
 
-TARGET_MODULE="${TARGET_DIR}/${TARGET_NAME}.ko"
+TARGET_MODULE="${TARGET_DIR}/${KERNEL}/${TARGET_NAME}.ko"
 printf "Target module: ${TARGET_MODULE}\n"
 
 PAYLOAD_NAME="test_basics_payload"
-PAYLOAD_MODULE="payload/${PAYLOAD_NAME}.ko"
+PAYLOAD_MODULE="payload/${KERNEL}/${PAYLOAD_NAME}.ko"
 
 ################################
 checkPrereqs

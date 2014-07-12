@@ -1,62 +1,61 @@
 #!/bin/sh
 
+@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
+
 base_module_name=@base_module_name@
-base_module="${base_module_name}.ko"
+base_module="${KERNEL}/${base_module_name}.ko"
 payload_module1_name=@payload_module1_name@
-payload_module1="payload1/${payload_module1_name}.ko"
+payload_module1="payload1/${KERNEL}/${payload_module1_name}.ko"
 payload_module3_name=@payload_module3_name@
-payload_module3="payload3/${payload_module3_name}.ko"
+payload_module3="payload3/${KERNEL}/${payload_module3_name}.ko"
 verificator_module_name=@verificator_module_name@
-verificator_module="interception_info_verificator/${verificator_module_name}.ko"
+verificator_module="interception_info_verificator/${KERNEL}/${verificator_module_name}.ko"
 
-# Just in case the tools like lsmod are not in their usual location.
-export PATH=$PATH:/sbin:/bin:/usr/bin
-
-if ! insmod "$base_module"; then
+if ! @INSMOD@ "$base_module"; then
     printf "Failed to load base module.\n"
     exit 1
 fi
 
-if ! insmod "$payload_module1"; then
+if ! @INSMOD@ "$payload_module1"; then
     printf "Failed to load payload module 1.\n"
-    rmmod "$base_module"
+    @RMMOD@ "$base_module_name"
     exit 1
 fi
 
-if ! insmod "$payload_module3"; then
+if ! @INSMOD@ "$payload_module3"; then
     printf "Failed to load payload module 3.\n"
-    rmmod "$payload_module1"
-    rmmod "$base_module"
+    @RMMOD@ "$payload_module1_name"
+    @RMMOD@ "$base_module_name"
     exit 1
 fi
 
-if ! insmod "$verificator_module" "situation=2"; then
+if ! @INSMOD@ "$verificator_module" "situation=2"; then
     printf "Verification failed.\n"
-    rmmod "$payload_module3"
-    rmmod "$payload_module1"
-    rmmod "$base_module"
+    @RMMOD@ "$payload_module3_name"
+    @RMMOD@ "$payload_module1_name"
+    @RMMOD@ "$base_module_name"
     exit 1
 fi
 
-if ! rmmod "$verificator_module"; then
+if ! @RMMOD@ "$verificator_module_name"; then
     printf "Failed to unload verificator module."
-    rmmod "$payload_module3"
-    rmmod "$payload_module1"
-    rmmod "$base_module"
+    @RMMOD@ "$payload_module3_name"
+    @RMMOD@ "$payload_module1_name"
+    @RMMOD@ "$base_module_name"
     exit 1
 fi
 
-if ! rmmod "$payload_module1"; then
+if ! @RMMOD@ "$payload_module1_name"; then
     printf "Failed to unload payload module 1.\n"
     exit 1
 fi
 
-if ! rmmod "$payload_module3"; then
+if ! @RMMOD@ "$payload_module3_name"; then
     printf "Failed to unload payload module 3.\n"
     exit 1
 fi
 
-if ! rmmod "$base_module"; then
+if ! @RMMOD@ "$base_module_name"; then
     printf "Failed to unload base module."
     exit 1
 fi

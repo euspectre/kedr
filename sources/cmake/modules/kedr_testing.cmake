@@ -13,7 +13,9 @@ include(install_testing_ctest)
 macro (kedr_test_init)
     set(test_directory "${KEDR_INSTALL_PREFIX_VAR}/tests")
     itesting_init(${test_directory})
-    ictest_enable_testing(${test_directory})
+    if(USER_PART)
+	ictest_enable_testing(${test_directory})
+    endif(USER_PART)
 endmacro (kedr_test_init)
 
 #  kedr_test_add(<test_name> <app_file> [args ...])
@@ -24,6 +26,9 @@ endmacro (kedr_test_init)
 # Directory, obtained with itesting_path(), is used as current directory
 # when test is executed.
 function (kedr_test_add test_name app_file)
+    if(KERNEL_PART_ONLY)
+	message(FATAL_ERROR "[Developer error] Tests cannot be added in KERNEL_PART_ONLY builds")
+    endif(KERNEL_PART_ONLY)
     ictest_add_test(${test_name} ${app_file} ${ARGN})
 endfunction (kedr_test_add)
 
@@ -77,7 +82,7 @@ function (kedr_test_add_script_shared test_name script_file)
 endfunction (kedr_test_add_script_shared)
 
 
-#  kedr_test_add_script_shared(<test_name> <script_file> [args ...])
+#  kedr_test_add_script(<test_name> <script_file> [args ...])
 #
 # Add test with name <test_name>, which executes script
 # (a Bash script, actually) <script_file> with given
@@ -111,7 +116,8 @@ endfunction (kedr_test_add_script)
 #
 # Install kernel module(s) for testing purposes.
 #
-# Install location is selected according to build location of the module.
+# Install location is selected according to build location of the module
+# plus %kernel%/ sudirectory, which is evaluated to kernel version.
 function (kedr_test_install_module module_name)
     get_property(is_module TARGET ${module_name} PROPERTY KMODULE_TYPE SET)
     if(NOT is_module)
@@ -124,6 +130,6 @@ function (kedr_test_install_module module_name)
     get_filename_component(module_build_dir ${module_location} PATH)
     itesting_path(module_install_dir ${module_build_dir})
     kbuild_install(TARGETS ${module_name}
-	MODULE DESTINATION ${module_install_dir}
+	MODULE DESTINATION ${module_install_dir}/${Kbuild_VERSION_STRING}
     )
 endfunction (kedr_test_install_module)

@@ -2,17 +2,14 @@
 
 # Test kedr_capture_trace functionality in the blocking mode.
 
-# Just in case the tools like lsmod are not in their usual location.
-export PATH=$PATH:/sbin:/bin:/usr/bin
+@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
 
-kedr_module_name="@CORE_MODULE_NAME@"
-kedr_module="@CORE_MODULE@"
-kedr_trace_module_name="@TRACE_MODULE_NAME@"
-kedr_trace_module="@TRACE_MODULE@"
+kedr_module_name="@KEDR_CORE_NAME@"
+kedr_trace_module_name="@KEDR_TRACE_NAME@"
 payload_module_name=kedr_payload
-payload_module="payload/${payload_module_name}.ko"
+payload_module="payload/${KERNEL}/${payload_module_name}.ko"
 target_module_name=kedr_target
-target_module="target/${target_module_name}.ko"
+target_module="target/${KERNEL}/${target_module_name}.ko"
 
 
 tmpdir="@KEDR_TEST_PREFIX_TEMP_SESSION@/capture_trace_block"
@@ -25,7 +22,7 @@ mkdir -p "${debugfs_mount_point}"
 
 capture_trace_program="@CAPTURE_TRACE_PROGRAM@"
 
-#is_process_running pid
+#  is_process_running pid
 is_process_running()
 {
     nlines=`ps -p "$1" | wc -l`
@@ -33,35 +30,35 @@ is_process_running()
 }
 
 # Load KEDR core and payload modules
-insmod "${kedr_module}" "target_name=${target_module_name}"
+@KEDR_CORE_LOAD_COMMAND@ "target_name=${target_module_name}"
 if test $? -ne 0; then
-	printf "Failed to load KEDR core module for tests\n"
-	exit 1
+    printf "Failed to load KEDR core module for tests\n"
+    exit 1
 fi
 
-insmod "${kedr_trace_module}"
+@KEDR_TRACE_LOAD_COMMAND@ "${kedr_trace_module}"
 if test $? -ne 0; then
-	printf "Failed to load kedr tracing module for tests\n"
-    rmmod "${kedr_module_name}"
-	exit 1
+    printf "Failed to load kedr tracing module for tests\n"
+    @RMMOD@ "${kedr_module_name}"
+    exit 1
 fi
 
 
-insmod "${payload_module}"
+@INSMOD@ "${payload_module}"
 if test $? -ne 0; then
-	printf "Failed to load payload module for tests\n"
-    rmmod "${kedr_trace_module_name}"
-    rmmod "${kedr_module_name}"
-	exit 1
+    printf "Failed to load payload module for tests\n"
+    @RMMOD@ "${kedr_trace_module_name}"
+    @RMMOD@ "${kedr_module_name}"
+    exit 1
 fi
 
 mkdir -p "${debugfs_mount_point}"
 mount debugfs -t debugfs "${debugfs_mount_point}"
 if test $? -ne 0; then
     printf "Cannot mount debugfs.\n"
-    rmmod "${payload_module_name}"
-    rmmod "${kedr_trace_module_name}"
-    rmmod "${kedr_module_name}"
+    @RMMOD@ "${payload_module_name}"
+    @RMMOD@ "${kedr_trace_module_name}"
+    @RMMOD@ "${kedr_module_name}"
     exit 1
 fi
 
@@ -73,28 +70,28 @@ capture_pid=$!
 if ! is_process_running "$capture_pid"; then
     printf "Failed to start capturing\n"
     umount "${debugfs_mount_point}"
-    rmmod "${payload_module_name}"
-    rmmod "${kedr_trace_module_name}"
-    rmmod "${kedr_module_name}"
+    @RMMOD@ "${payload_module_name}"
+    @RMMOD@ "${kedr_trace_module_name}"
+    @RMMOD@ "${kedr_module_name}"
     exit 1
 fi
 # Load target module
 
-insmod "${target_module}"
+@INSMOD@ "${target_module}"
 
 if test $? -ne 0; then
-	printf "Failed to load target module\n"
+    printf "Failed to load target module\n"
     kill $capture_pid
     wait $capture_pid
     umount "${debugfs_mount_point}"
-    rmmod "${payload_module_name}"
-    rmmod "${kedr_trace_module_name}"
-    rmmod "${kedr_module_name}"
-	exit 1
+    @RMMOD@ "${payload_module_name}"
+    @RMMOD@ "${kedr_trace_module_name}"
+    @RMMOD@ "${kedr_module_name}"
+    exit 1
 fi
 
 # Unload target module
-rmmod "${target_module}"
+@RMMOD@ "${target_module_name}"
 sleep 0.5
 
 # Stop capturing
@@ -106,9 +103,9 @@ wait "$capture_pid"
 umount "${debugfs_mount_point}"
 
 #Unload payload and KEDR core and other modules
-rmmod "${payload_module}"
-rmmod "${kedr_trace_module_name}"
-rmmod "${kedr_module}"
+@RMMOD@ "${payload_module_name}"
+@RMMOD@ "${kedr_trace_module_name}"
+@RMMOD@ "${kedr_module_name}"
 
 #Verify trace existance
 if ! test -f "${trace_file}"; then

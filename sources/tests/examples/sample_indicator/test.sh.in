@@ -1,11 +1,13 @@
-EXAMPLE_TEST_LOCATION=@EXAMPLE_TEST_LOCATION@
+#!/bin/sh
 
-fault_simulation_module="@KEDR_INSTALL_PREFIX_KMODULE@/kedr_fault_simulation.ko"
+@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
 
-simulation_module="module/kedr_sample_indicator_test_module.ko"
+EXAMPLE_TEST_LOCATION=@EXAMPLE_TEST_LOCATION@/${KERNEL}
+
+simulation_module="module/${KERNEL}/kedr_sample_indicator_test_module.ko"
 point_name="common"
 
-indicator_module="@EXAMPLE_TEST_LOCATION@/kedr_sample_indicator.ko"
+indicator_module="${EXAMPLE_TEST_LOCATION}/kedr_sample_indicator.ko"
 indicator_name="periodic"
 
 debugfs="@KEDR_TEST_DIR@/debugfs"
@@ -22,12 +24,12 @@ commands_file="./commands.txt"
 
 cat > "$commands_file" << eof
 
-on_load insmod "${fault_simulation_module}" || ! printf "Cannot load fault simulation module into kernel.\n"
-on_unload rmmod "${fault_simulation_module}" || ! printf "Cannot unload fault simulation module.\n"
-on_load insmod "${simulation_module}" || ! printf "Cannot load module with simulation point into kernel.\n"
-on_unload rmmod "${simulation_module}" || ! printf "Cannot unload module with simulation point.\n"
-on_load insmod "${indicator_module}" || ! printf "Cannot load indicator module into kernel.\n"
-on_unload rmmod "${indicator_module}" || ! printf "Cannot unload indicator module.\n"
+on_load @KEDR_FAULT_SIMULATION_LOAD_COMMAND@ || ! printf "Cannot load fault simulation module into kernel.\n"
+on_unload @RMMOD@ "@KEDR_FAULT_SIMULATION_NAME@" || ! printf "Cannot unload fault simulation module.\n"
+on_load @INSMOD@ "${simulation_module}" || ! printf "Cannot load module with simulation point into kernel.\n"
+on_unload @RMMOD@ "${simulation_module}" || ! printf "Cannot unload module with simulation point.\n"
+on_load @INSMOD@ "${indicator_module}" || ! printf "Cannot load indicator module into kernel.\n"
+on_unload @RMMOD@ "${indicator_module}" || ! printf "Cannot unload indicator module.\n"
 
 on_load mkdir -p "${debugfs}"
 on_load mount -t debugfs debugfs "${debugfs}"

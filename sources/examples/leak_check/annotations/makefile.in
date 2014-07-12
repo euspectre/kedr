@@ -1,10 +1,12 @@
 module_name := @module_name@
 
+@multi_kernel_KERNEL_VAR_MAKE_DEFINITION@
+
 # The module in this example uses LeakCheck API, so it needs the 
 # .symvers file of LeakCheck.
-kedr_leak_check_symbols := @kedr_leak_check_symbols@
+kedr_leak_check_symbols := @KEDR_LEAK_CHECK_MAKE_SYMVERS@
 
-KBUILD_DIR=@Kbuild_BUILD_DIR@
+KBUILD_DIR=@kbuild_dir_make_installed@
 PWD=`pwd`
 
 all: $(module_name).ko

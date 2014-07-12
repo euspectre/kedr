@@ -1,12 +1,16 @@
 #!/bin/sh
+
+@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
+
 tmpdir="@KEDR_TEST_PREFIX_TEMP_SESSION@/kedr_trace_cross_cpu_ordering"
 debugfs_mount_point="${tmpdir}/debugfs"
+
 control_file="${debugfs_mount_point}/cross_cpu_ordering_module/control"
 trace_file="${debugfs_mount_point}/kedr_tracing/trace"
 trace_file_copy="${tmpdir}/trace.txt"
 
-trace_module="@KEDR_INSTALL_PREFIX_KMODULE@/kedr_trace.ko"
-module="module/cross_cpu_ordering_module.ko"
+trace_module_name="@KEDR_TRACE_NAME@"
+module="module/${KERNEL}/cross_cpu_ordering_module.ko"
 
 mkdir -p "${debugfs_mount_point}"
 
@@ -15,16 +19,16 @@ if ! mount -t debugfs debugfs "${debugfs_mount_point}"; then
 	exit 1
 fi
 
-if ! insmod "${trace_module}"; then
+if ! @KEDR_TRACE_LOAD_COMMAND@; then
 	printf "Cannot load kedr trace module.\n"
 	umount "${debugfs_mount_point}"
 	exit 1
 fi
 
 
-if ! insmod "${module}"; then
+if ! @INSMOD@ "${module}"; then
 	printf "Cannot load module for test.\n"
-	rmmod "${trace_module}"
+	@RMMOD@ "${trace_module_name}"
 	umount "${debugfs_mount_point}"
 	exit 1
 fi
@@ -44,14 +48,14 @@ sleep 0.5
 kill $capture_pid
 wait $capture_pid
 
-if ! rmmod "${module}"; then
+if ! @RMMOD@ "${module}"; then
 	printf "Cannot unload the module for testing.\n"
 	#Unloading of kedr_trace module will definitly fail
 	umount "${debugfs_mount_point}"
 	exit 1
 fi
 
-if ! rmmod "${trace_module}"; then
+if ! @RMMOD@ "${trace_module_name}"; then
 	printf "Cannot unload kedr trace module.\n"
 	umount "${debugfs_mount_point}"
 	exit 1

@@ -5,12 +5,18 @@
 # where
 #	'function' - kernel function, call interception of which should be tested,
 
-kedr_module="<$kedr_module$>"
+KERNEL=`uname -r`
+
+insmod_command=<$insmod_command$>
+rmmod_command=<$rmmod_command$>
+
+kedr_module_load_command="<$kedr_module_load_command$>"
+kedr_module_name="<$kedr_module_name$>"
 
 payload_module_name="trigger_payload_<$trigger_name$>"
-payload_module="<$test_current_install_dir$>/trigger_payload/${payload_module_name}.ko"
+payload_module="<$test_current_install_dir$>/trigger_payload/${KERNEL}/${payload_module_name}.ko"
 target_module_name="trigger_target_<$trigger_name$>"
-target_module="<$test_current_install_dir$>/trigger_target/${target_module_name}.ko"
+target_module="<$test_current_install_dir$>/trigger_target/${KERNEL}/${target_module_name}.ko"
 
 if test $# -ne 1; then
 	printf "Usage:\n\n\t%s function\n" "$0"
@@ -28,21 +34,21 @@ case "${function_name}" in
 ;;
 esac
 
-if ! insmod ${kedr_module} "target_name=${target_module_name}"; then
+if ! ${kedr_module_load_command} "target_name=${target_module_name}"; then
 	printf "Failed to load kedr core module\n"
 	exit 1
 fi
 
-if ! insmod ${payload_module} "function_name=${function_name}"; then
+if ! $insmod_command ${payload_module} "function_name=${function_name}"; then
 	printf "Failed to load payload module for testing call interception\n"
-	rmmod ${kedr_module}
+	$rmmod_command ${kedr_module_name}
 	exit 1
 fi
 
-if ! insmod ${target_module} "function_name=${function_name}"; then
+if ! $insmod_command ${target_module} "function_name=${function_name}"; then
 	printf "Failed to load target module for testing call interception\n"
-	rmmod ${payload_module}
-	rmmod ${kedr_module}
+	$rmmod_command ${payload_module_name}
+	$rmmod_command ${kedr_module_name}
 	exit 1
 fi
 
@@ -55,17 +61,17 @@ fi
 
 is_intercepted=`cat /sys/module/${payload_module_name}/parameters/is_intercepted`
 
-if ! rmmod ${target_module}; then
+if ! $rmmod_command ${target_module_name}; then
 	printf "Failed to unload target module.\n"
 	exit 1
 fi
 
-if ! rmmod ${payload_module}; then
+if ! $rmmod_command ${payload_module_name}; then
 	printf "Failed to unload payload module.\n"
 	exit 1
 fi
 
-if ! rmmod ${kedr_module}; then
+if ! $rmmod_command ${kedr_module_name}; then
 	printf "Failed to unload kedr core module.\n"
 	exit 1
 fi

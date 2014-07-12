@@ -1,20 +1,21 @@
 #!/bin/sh
 
+@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
+
 debugfs_mount_point="@KEDR_TEST_DIR@/debugfs"
 point_name=__kmalloc
 indicator_name=periodic
 
 point_dir=${debugfs_mount_point}/kedr_fault_simulation/points/${point_name}
 
-sample_indicator_test_location=@sample_indicator_test_location@
-sample_fsim_payload_test_location=@sample_fsim_payload_test_location@
+sample_indicator_test_location=@sample_indicator_test_location@/${KERNEL}
+sample_fsim_payload_test_location=@sample_fsim_payload_test_location@/${KERNEL}
 
 fsim_payload_module="$sample_fsim_payload_test_location/kedr_sample_fsim_payload.ko"
 indicator_module="$sample_indicator_test_location/kedr_sample_indicator.ko"
-kedr_fault_simulation_module="@KEDR_INSTALL_PREFIX_KMODULE@/kedr_fault_simulation.ko"
 
 sample_target_module_name=kedr_sample_target
-sample_target_script="sh @TEST_MODULES_DIR@/sample_target/kedr_sample_target"
+sample_target_script="sh @TEST_MODULES_DIR@/sample_target/${KERNEL}/kedr_sample_target"
 sample_target_device="/dev/cfake0"
 
 kedr_conf_file="./kedr.conf"
@@ -24,7 +25,7 @@ kedr_control_script="sh @KEDR_INSTALL_PREFIX_EXEC@/kedr"
 do_commands_script="sh @TEST_SCRIPTS_DIR@/do_commands.sh"
 
 cat > "$kedr_conf_file" << eof
-module ${kedr_fault_simulation_module}
+module @KEDR_FAULT_SIMULATION_REF@
 payload ${fsim_payload_module}
 module ${indicator_module}
 eof
@@ -47,16 +48,16 @@ if ! ./build_payload.sh $sample_fsim_payload_test_location; then
 fi
 
 if ! $do_commands_script "$commands_file" load; then
-	printf "Cannot initialize test.\n"
-	exit 1
+    printf "Cannot initialize test.\n"
+    exit 1
 fi
 # Set indicator with "always simulate fail" scenario
 printf "${indicator_name} 1" > "${point_dir}/current_indicator"
 
 if test $? -ne 0; then
-	printf "Cannot set indicator for the point.\n"
-	$do_commands_script "$commands_file" unload
-	exit 1
+    printf "Cannot set indicator for the point.\n"
+    $do_commands_script "$commands_file" unload
+    exit 1
 fi
 
 #Try to load target module
@@ -68,16 +69,16 @@ if test $? -eq 0; then
     printf "but it was successfully loaded.\n"
     ${sample_target_script} unload
     $do_commands_script "$commands_file" unload
-	exit 1
+    exit 1
 fi
 
 # Set indicator with "simulate fail every second call" scenario
 printf "${indicator_name} 2" > "${point_dir}/current_indicator"
 
 if test $? -ne 0; then
-	printf "Cannot set indicator for the point again.\n"
-	$do_commands_script "$commands_file" unload
-	exit 1
+    printf "Cannot set indicator for the point again.\n"
+    $do_commands_script "$commands_file" unload
+    exit 1
 fi
 
 #Now target module should be successfully loaded
@@ -87,7 +88,7 @@ ${sample_target_script} load
 if test $? -ne 0; then
     printf "Target module should be loaded successfully with \"fail every second call\" fault simulation scenario.\n"
     $do_commands_script "$commands_file" unload
-	exit 1
+    exit 1
 fi
 
 #But writing to the device should fail
@@ -98,12 +99,12 @@ result=$?
 ${sample_target_script} unload
 
 if test "$result" -eq 0; then
-	printf "It was expected that writing to the device created by sample target would fail but it succeeded.\n"
-	$do_commands_script "$commands_file" unload
-	exit 1
+    printf "It was expected that writing to the device created by sample target would fail but it succeeded.\n"
+    $do_commands_script "$commands_file" unload
+    exit 1
 fi
 
 if ! $do_commands_script "$commands_file" unload; then
-	printf "Errors occured while finalizing the test.\n"
-	exit 1
+    printf "Errors occured while finalizing the test.\n"
+    exit 1
 fi

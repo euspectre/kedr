@@ -25,12 +25,12 @@ checkPrereqs()
 ########################################################################
 cleanupAll()
 {
-    lsmod | grep "${TARGET_NAME}" > /dev/null 2>&1
+    @LSMOD@ | grep "${TARGET_NAME}" > /dev/null 2>&1
     if test $? -eq 0; then
-        rmmod ${TARGET_NAME}
+        @RMMOD@ ${TARGET_NAME}
     fi
 
-    lsmod | grep "kedr" > /dev/null 2>&1
+    @LSMOD@ | grep "kedr" > /dev/null 2>&1
     if test $? -eq 0; then
         sh ${CONTROL_SCRIPT} stop
     fi
@@ -139,7 +139,7 @@ doTest()
     # Load KEDR core and the payload module, mount debugfs
     sh ${CONTROL_SCRIPT} start ${TARGET_NAME} -f "${CONF_FILE}" || exit 1
     
-    insmod "${TARGET_MODULE}"
+    @INSMOD@ "${TARGET_MODULE}"
     if test $? -ne 0; then
         printf "Failed to load the target module\n"
         cleanupAll
@@ -194,7 +194,7 @@ doTest()
     checkSummary "${report}" 1 1 0
 
     printf "Unloading the target.\n"
-    rmmod ${TARGET_NAME}
+    @RMMOD@ ${TARGET_NAME}
     if test $? -ne 0; then
         printf "Errors occured while trying to unload the target module\n"
         cleanupAll
@@ -211,7 +211,7 @@ doTest()
     checkSummary "${report}" 0 0 0
 
     printf "Loading the target again.\n"
-    insmod "${TARGET_MODULE}"
+    @INSMOD@ "${TARGET_MODULE}"
     if test $? -ne 0; then
         printf "Failed to load the target module\n"
         cleanupAll
@@ -234,7 +234,7 @@ doTest()
     checkSummary "${report}" 0 0 0
 
     printf "Unloading the target.\n"
-    rmmod ${TARGET_NAME}
+    @RMMOD@ ${TARGET_NAME}
     if test $? -ne 0; then
         printf "Errors occured while trying to unload the target module\n"
         cleanupAll
@@ -251,8 +251,10 @@ doTest()
 ########################################################################
 # main
 ########################################################################
+@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
+
 TARGET_NAME="kedr_sample_target"
-TARGET_MODULE="@TEST_MODULES_DIR@/sample_target/${TARGET_NAME}.ko"
+TARGET_MODULE="@TEST_MODULES_DIR@/sample_target/${KERNEL}/${TARGET_NAME}.ko"
 
 CONTROL_SCRIPT="@KEDR_INSTALL_PREFIX_EXEC@/kedr"
 CONF_FILE="./leak_check_test.conf"

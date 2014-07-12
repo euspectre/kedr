@@ -10,17 +10,14 @@
 #   sh test.sh
 ########################################################################
 
-# Just in case the tools like lsmod are not in their usual location.
-export PATH=$PATH:/sbin:/bin:/usr/bin
-
 ########################################################################
 # A function to check prerequisites: whether the necessary files exist,
 # etc.
 ########################################################################
 checkPrereqs()
 {
-    if test ! -f "${TEST_MODULE}.ko"; then
-        printf "Stack trace module is missing: ${WORK_DIR}/${TEST_MODULE}.ko\n"
+    if test ! -f "${TEST_MODULE}"; then
+        printf "Stack trace module is missing: ${TEST_MODULE}\n"
         exit 1
     fi
 }
@@ -30,7 +27,7 @@ checkPrereqs()
 ########################################################################
 cleanupAll()
 {
-    rmmod "${TEST_MODULE}" || true
+    @RMMOD@ "${TEST_MODULE_NAME}" || true
 }
 
 ########################################################################
@@ -38,14 +35,14 @@ cleanupAll()
 ########################################################################
 doTest()
 {
-    insmod "${TEST_MODULE}.ko"
+    @INSMOD@ "${TEST_MODULE}"
     if test $? -ne 0; then
         printf "Failed to load ${TEST_MODULE}\n"
         cleanupAll
         exit 1
     fi
     
-    OUT_PARAM_FILE="/sys/module/${TEST_MODULE}/parameters/stack_frames"
+    OUT_PARAM_FILE="/sys/module/${TEST_MODULE_NAME}/parameters/stack_frames"
     if test ! -e "${OUT_PARAM_FILE}"; then
         printf "Parameter file does not exist: ${OUT_PARAM_FILE}\n"
         cleanupAll
@@ -82,7 +79,10 @@ if test $# -ne 0; then
     exit 1
 fi
 
-TEST_MODULE=@KMODULE_NAME@
+@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
+
+TEST_MODULE_NAME=@KMODULE_NAME@
+TEST_MODULE=${KERNEL}/${TEST_MODULE_NAME}.ko
 
 checkPrereqs
 doTest

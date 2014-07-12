@@ -1,1 +1,0 @@
-payload <$payload.path$>

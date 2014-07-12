@@ -1,6 +1,16 @@
 # Name of the module to be created
 set(kmodule_name "kedr_cm_mem_util")
 
+if(USER_PART)
+	kedr_conf_callm_add_payload(${kmodule_name})
+endif(USER_PART)
+
+# The rest is for kernel part only.
+if(NOT KERNEL_PART)
+	return()
+endif(NOT KERNEL_PART)
+
+
 # The header of the data file
 configure_file("header.data.in"
 	"${CMAKE_CURRENT_BINARY_DIR}/header.data"
@@ -49,5 +59,3 @@ endif (HAVE_KFREE_RCU)
 create_payload_callm(${kmodule_name} ${functions})
 
 kedr_install_kmodule(${kmodule_name})
-
-kedr_conf_callm_add_payload(${kmodule_name})

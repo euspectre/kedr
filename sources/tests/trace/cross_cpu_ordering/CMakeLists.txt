@@ -1,4 +1,10 @@
-add_subdirectory(module)
+if(KERNEL_PART)
+	add_subdirectory(module)
+endif(KERNEL_PART)
+
+if(NOT USER_PART)
+	return()
+endif(NOT USER_PART)
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/test.sh.in"
 	"${CMAKE_CURRENT_BINARY_DIR}/test.sh"

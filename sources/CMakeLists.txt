@@ -68,47 +68,6 @@ set(KEDR_VERSION
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
 include(CMakeParseArguments)
 
-find_package(Kbuild 2.6.32)
-
-if(NOT Kbuild_ARCH STREQUAL "x86")
-    message("Only x86 architecture is supported (this includes x86_64 machines also).")
-    message(FATAL_ERROR "Unsupported architecture: ${Kbuild_ARCH}")
-endif(NOT Kbuild_ARCH STREQUAL "x86")
-
-include(template_generation)
-include(cmake_useful)
-include(kedr_testing)
-
-#######################################################################
-# Set default compiler flags for Kbuild.
-#
-# Like normal compiler flags, these definitions should come before
-# including corresponded infrustructure.
-set(KBUILD_C_FLAGS_DEBUG "-g -DKEDR_DEBUG"
-    CACHE STRING "Kbuild compiler flags for debug builds."
-)
-set(KBUILD_C_FLAGS_RELWITHDEBINFO "-g"
-    CACHE STRING "Kbuild compiler flags for debug builds."
-)
-
-include(kbuild_system)
-
-include(kmodule)
-
-#######################################################################
-# [NB] Sparse is usually not installed by default. If you are going to
-# use it, make sure it is installed.
-option(KEDR_USE_SPARSE 
-    "Use Sparse analysis tool when building kernel modules." 
-    OFF
-)
-
-if(KEDR_USE_SPARCE)
-    # Do not cache result, so user do not see C=1 flag appended.
-    # Otherwise we need to precheck, whether flag is already set for cache value.
-    set(KBUILD_MAKE_FLAGS "${KBUILD_MAKE_FLAGS} C=1")
-endif(KEDR_USE_SPARCE)
-
 #######################################################################
 include(path_prefixes)
 
@@ -130,109 +89,254 @@ endif(KEDR_INSTALL_TYPE STREQUAL "GLOBAL_OPT")
 # Set additional(KEDR-specific) install prefixes
 set(KEDR_DEFAULT_CONFIG_DIR "${KEDR_INSTALL_PREFIX_GLOBAL_CONF}")
 set(KEDR_INSTALL_PREFIX_TEMPLATES "${KEDR_INSTALL_PREFIX_READONLY}/templates")
-
-# Adjust kernel-related prefixes to concrete kernel.
-kernel_path("${Kbuild_VERSION_STRING}" KEDR_INSTALL_PREFIX_KMODULE
-	"${KEDR_KERNEL_INSTALL_PREFIX_KMODULE}")
-kernel_path("${Kbuild_VERSION_STRING}" KEDR_INSTALL_PREFIX_KSYMVERS
-	"${KEDR_KERNEL_INSTALL_PREFIX_KSYMVERS}")
 #######################################################################
-#  kedr_install_library(library_name)
-function(kedr_install_library library_name)
-	install(TARGETS ${library_name} LIBRARY
-			DESTINATION ${KEDR_INSTALL_PREFIX_LIB})
-endfunction(kedr_install_library library_name)
-#  kedr_install_headers(install_subdir header_file [..])
-function(kedr_install_headers install_subdir)
-	install(FILES ${header_file} ${ARGN}
-			DESTINATION ${KEDR_INSTALL_PREFIX_INCLUDE}/${install_subdir})
-endfunction(kedr_install_headers install_subdir)
-#  kedr_install_kmodule(kmodule_target)
-function(kedr_install_kmodule kmodule_target)
-    kbuild_install(TARGETS ${kmodule_target}
-	MODULE DESTINATION "${KEDR_INSTALL_PREFIX_KMODULE}"
-    )
-endfunction(kedr_install_kmodule kmodule_target)
-#  kedr_install_symvers(kmodule_target)
-function(kedr_install_symvers kmodule_target)
-    kbuild_install(TARGETS ${kmodule_target}
-	SYMVERS DESTINATION "${KEDR_INSTALL_PREFIX_KSYMVERS}"
-    )
-endfunction(kedr_install_symvers kmodule_target)
+# lsmod, rmmod, insmod and modprobe are used in may places.
+# Instead of use guessed paths in every script where them needed,
+# find these programs once.
+set(modules_utils_paths "/sbin" "/bin" "/usr/bin")
 
+find_program(LSMOD lsmod PATHS ${modules_utils_paths})
+find_program(RMMOD rmmod PATHS ${modules_utils_paths})
+find_program(INSMOD insmod PATHS ${modules_utils_paths})
+find_program(MODPROBE modprobe PATHS ${modules_utils_paths})
+
+if(NOT LSMOD OR NOT RMMOD OR NOT INSMOD OR NOT MODPROBE)
+    message(SEND_ERROR "At least one of kernel module control command is not found(see above).")
+    if(CMAKE_CROSSCOMPILING)
+	message("In case of cross-compiling you may want to set CMAKE_FIND_ROOT_PATH to the root directory of the target environment")
+    endif(CMAKE_CROSSCOMPILING)
+endif(NOT LSMOD OR NOT RMMOD OR NOT INSMOD OR NOT MODPROBE)
+#######################################################################
+if(NOT USER_PART_ONLY)
+    find_package(Kbuild 2.6.32)
+
+    if(NOT Kbuild_ARCH STREQUAL "x86")
+	message("Only x86 architecture is supported (this includes x86_64 machines also).")
+	message(FATAL_ERROR "Unsupported architecture: ${Kbuild_ARCH}")
+    endif(NOT Kbuild_ARCH STREQUAL "x86")
+endif(NOT USER_PART_ONLY)
+# TODO: Arhitecture may be checked for USER_PART_ONLY build.
+# This would prevent its building for machine, which not support it
+# (with any kernel).
+
+include (multi_kernel)
+
+if(USER_PART_ONLY OR KERNEL_PART_ONLY)
+    # Check that multi-kernel build is allowed.
+    if(NOT KEDR_INSTALL_TYPE MATCHES "GLOBAL")
+	message(FATAL_ERROR "Multi-kernel build is not allowed for local installation type.")
+    endif(NOT KEDR_INSTALL_TYPE MATCHES "GLOBAL")
+endif(USER_PART_ONLY OR KERNEL_PART_ONLY)
+
+
+include(template_generation)
+include(cmake_useful)
+#######################################################################
+# Set default compiler flags for Kbuild.
+if(KERNEL_PART)
+    # Like normal compiler flags, these definitions should come before
+    # including corresponded infrustructure.
+    set(KBUILD_C_FLAGS_DEBUG "-g -DKEDR_DEBUG"
+	CACHE STRING "Kbuild compiler flags for debug builds."
+    )
+    set(KBUILD_C_FLAGS_RELWITHDEBINFO "-g"
+	CACHE STRING "Kbuild compiler flags for debug builds."
+    )
+
+    include(kbuild_system)
+
+    include(kmodule)
+endif(KERNEL_PART)
+#######################################################################
+if(KERNEL_PART)
+    # [NB] Sparse is usually not installed by default. If you are going to
+    # use it, make sure it is installed.
+    option(KEDR_USE_SPARSE 
+	"Use Sparse analysis tool when building kernel modules." 
+	OFF
+    )
+
+    if(KEDR_USE_SPARCE)
+	# Do not cache result, so user do not see C=1 flag appended.
+	# Otherwise we need to precheck, whether flag is already set for cache value.
+	set(KBUILD_MAKE_FLAGS "${KBUILD_MAKE_FLAGS} C=1")
+    endif(KEDR_USE_SPARCE)
+endif(KERNEL_PART)
+#######################################################################
+if(KERNEL_PART)
+    # Adjust kernel-related prefixes to concrete kernel.
+    kernel_path("${Kbuild_VERSION_STRING}" KEDR_INSTALL_PREFIX_KMODULE
+	    "${KEDR_KERNEL_INSTALL_PREFIX_KMODULE}")
+    kernel_path("${Kbuild_VERSION_STRING}" KEDR_INSTALL_PREFIX_KSYMVERS
+	    "${KEDR_KERNEL_INSTALL_PREFIX_KSYMVERS}")
+endif(KERNEL_PART)
+
+#######################################################################
+if(USER_PART)
+    #  kedr_install_library(library_name)
+    function(kedr_install_library library_name)
+	    install(TARGETS ${library_name} LIBRARY
+			    DESTINATION ${KEDR_INSTALL_PREFIX_LIB})
+    endfunction(kedr_install_library library_name)
+    #  kedr_install_headers(install_subdir header_file [..])
+    function(kedr_install_headers install_subdir)
+	    install(FILES ${header_file} ${ARGN}
+			    DESTINATION ${KEDR_INSTALL_PREFIX_INCLUDE}/${install_subdir})
+    endfunction(kedr_install_headers install_subdir)
+endif(USER_PART)
+if(KERNEL_PART)
+    #  kedr_install_kmodule(kmodule_target)
+    function(kedr_install_kmodule kmodule_target)
+	kbuild_install(TARGETS ${kmodule_target}
+	    MODULE DESTINATION "${KEDR_INSTALL_PREFIX_KMODULE}"
+	)
+    endfunction(kedr_install_kmodule kmodule_target)
+    #  kedr_install_symvers(kmodule_target)
+    function(kedr_install_symvers kmodule_target)
+	kbuild_install(TARGETS ${kmodule_target}
+	    SYMVERS DESTINATION "${KEDR_INSTALL_PREFIX_KSYMVERS}"
+	)
+    endfunction(kedr_install_symvers kmodule_target)
+endif(KERNEL_PART)
+#######################################################################
+#  kedr_module_ref(RESULT_VAR module_name)
+#
+# Return reference to module, installed by kedr_install_kmodule().
+# Used when form content of configuration files for "kedr" script.
+#
+#  kedr_module_load_command(RESULT_VAR module_name)
+#
+# Return string which contains command for load given module.
+#
+# Implementation of these functions depends build type.
+#
+# Note, while these function are intended to be used while configure
+# shell scripts and configuration files, them also can be used for
+# KERNEL_PART, when configured files are kernel-dependent.
+if(KERNEL_PART AND USER_PART)
+    # Single builds use full path to kernel modules and load them using
+    # insmod.
+    function(kedr_module_ref RESULT_VAR module_name)
+	set(${RESULT_VAR} "${KEDR_INSTALL_PREFIX_KMODULE}/${module_name}.ko" PARENT_SCOPE)
+    endfunction(kedr_module_ref)
+    
+    function(kedr_module_load_command RESULT_VAR module_name)
+	set(${RESULT_VAR} "${INSMOD} ${KEDR_INSTALL_PREFIX_KMODULE}/${module_name}.ko" PARENT_SCOPE)
+    endfunction(kedr_module_load_command)
+
+else(KERNEL_PART AND USER_PART)
+    # Multi-kernel builds use modprobe for load KEDR kernel modules.
+    function(kedr_module_ref RESULT_VAR module_name)
+	set(${RESULT_VAR} "${module_name}" PARENT_SCOPE)
+    endfunction(kedr_module_ref)
+    
+    function(kedr_module_load_command RESULT_VAR module_name)
+	# --first-time force modprobe to return nonzero if fails to load
+	# module.
+	set(${RESULT_VAR} "${MODPROBE} --first-time ${module_name}" PARENT_SCOPE)
+    endfunction(kedr_module_load_command)
+endif(KERNEL_PART AND USER_PART)
 #######################################################################
 include(uninstall_target)
 
-# [NB] All the "prefix" directories ending with ${KEDR_PACKAGE_NAME} or
-# ${KEDR_PACKAGE_NAME}/share should be removed when uninstalling the 
-# package.
-add_uninstall_dir(
-	"${KEDR_INSTALL_PREFIX_EXEC_AUX}"
-	"${KEDR_INSTALL_PREFIX_READONLY}"
-	"${KEDR_INSTALL_PREFIX_GLOBAL_CONF}"
-	"${KEDR_INSTALL_PREFIX_LIB_AUX}"
-	"${KEDR_INSTALL_PREFIX_INCLUDE}"
-	"${KEDR_INSTALL_PREFIX_TEMP_SESSION}"
-	"${KEDR_INSTALL_PREFIX_TEMP}"
-	"${KEDR_INSTALL_PREFIX_STATE}"
-	"${KEDR_INSTALL_PREFIX_CACHE}"
-	"${KEDR_INSTALL_PREFIX_VAR}"
-	"${KEDR_INSTALL_PREFIX_DOC}"
-	"${KEDR_TEST_COMMON_PREFIX}"
-)
+if(USER_PART)
+    # [NB] All the "prefix" directories ending with ${KEDR_PACKAGE_NAME} or
+    # ${KEDR_PACKAGE_NAME}/share should be removed when uninstalling the 
+    # package.
+    add_uninstall_dir(
+	    "${KEDR_INSTALL_PREFIX_EXEC_AUX}"
+	    "${KEDR_INSTALL_PREFIX_READONLY}"
+	    "${KEDR_INSTALL_PREFIX_GLOBAL_CONF}"
+	    "${KEDR_INSTALL_PREFIX_LIB_AUX}"
+	    "${KEDR_INSTALL_PREFIX_INCLUDE}"
+	    "${KEDR_INSTALL_PREFIX_TEMP_SESSION}"
+	    "${KEDR_INSTALL_PREFIX_TEMP}"
+	    "${KEDR_INSTALL_PREFIX_STATE}"
+	    "${KEDR_INSTALL_PREFIX_CACHE}"
+	    "${KEDR_INSTALL_PREFIX_VAR}"
+	    "${KEDR_INSTALL_PREFIX_DOC}"
+	    "${KEDR_TEST_COMMON_PREFIX}"
+    )
+endif(USER_PART)
 #######################################################################
-include_directories("${CMAKE_BINARY_DIR}/include")
-kbuild_include_directories("${CMAKE_BINARY_DIR}/include")
-
-# For the configuration file (config.h)
-include_directories("${CMAKE_BINARY_DIR}")
-kbuild_include_directories("${CMAKE_BINARY_DIR}")
+if(KERNEL_PART)
+    # Most include files are here
+    kbuild_include_directories("${CMAKE_SOURCE_DIR}/include")
+    # kedr/defs.h is configured into binary include dir.
+    kbuild_include_directories("${CMAKE_BINARY_DIR}/include")
+    # config.h is configured into top binary dir
+    kbuild_include_directories("${CMAKE_BINARY_DIR}")
+endif(KERNEL_PART)
 #######################################################################
-# Perform basic checks
+if(KERNEL_PART)
+    # Perform basic checks
 
-# Check if kernel modules can be built on this system
-check_module_build()
+    # Check if kernel modules can be built on this system
+    check_module_build()
 
-# Find out which memory allocator is used by the kernel. It is needed
-# because, for example, the order of arguments to kmem_cache_alloc*_trace()
-# may be different depending on the allocator.
-check_allocator()
+    # Find out which memory allocator is used by the kernel. It is needed
+    # because, for example, the order of arguments to kmem_cache_alloc*_trace()
+    # may be different depending on the allocator.
+    check_allocator()
 
-if (${KERNEL_MEMORY_ALLOCATOR} STREQUAL "slab" AND
-	Kbuild_VERSION_STRING_CLASSIC VERSION_LESS "3.7.0")
-	set (KMCA_TRACE_SIZE_FIRST 1)
-else ()
-	set (KMCA_TRACE_KMC_FIRST 1)
-endif ()
+    if (${KERNEL_MEMORY_ALLOCATOR} STREQUAL "slab" AND
+	    Kbuild_VERSION_STRING_CLASSIC VERSION_LESS "3.7.0")
+	    set (KMCA_TRACE_SIZE_FIRST 1)
+    else ()
+	    set (KMCA_TRACE_KMC_FIRST 1)
+    endif ()
 
-# Check if stack trace information is reliable on this system.
-# STACK_TRACE_RELIABLE will hold the result.
-# This only checks relevant configuration parameters of kernel.
-check_stack_trace()
+    # Check if stack trace information is reliable on this system.
+    # STACK_TRACE_RELIABLE will hold the result.
+    # This only checks relevant configuration parameters of kernel.
+    check_stack_trace()
 
-# Check the signatures of hlist_for_each_entry*() macros, they changed 
-# in the kernel 3.9.
-check_hlist_for_each_entry()
+    # Check the signatures of hlist_for_each_entry*() macros, they changed 
+    # in the kernel 3.9.
+    check_hlist_for_each_entry()
 
-# Check if random32() is available.
-check_random32()
+    # Check if random32() is available.
+    check_random32()
+endif(KERNEL_PART)
 #######################################################################
-
+# Both user part and kernel part should be aware about
+# call monitoring and fault simulation-related components.
 option(KEDR_STANDARD_CALLM_PAYLOADS 
 	"Enable the standard plugins (payload modules) for call monitoring." 
 	OFF
 )
 
-check_ring_buffer()
+option(KEDR_TRACE "Whether KEDR trace mechanism is built" ON)
 
-set(KEDR_TRACE ${RING_BUFFER_IMPLEMENTED} CACHE INTERNAL "Whether KEDR trace mechanism is built")
-set(KEDR_CALLM_PAYLOADS ${RING_BUFFER_IMPLEMENTED} CACHE INTERNAL "Whether call monitor payloads is supported")
+if(KEDR_STANDARD_CALLM_PAYLOADS AND NOT KEDR_TRACE)
+    message(FATAL_ERROR "Plagins for call monitoring are enabled without call monitoring mechanism implementation (KEDR_TRACE is OFF).")
+endif(KEDR_STANDARD_CALLM_PAYLOADS AND NOT KEDR_TRACE)
 
-if(KEDR_STANDARD_CALLM_PAYLOADS AND NOT RING_BUFFER_IMPLEMENTED)
-    message("[WARNING] Tracing is not supported, so standard call monitoring functionality will be disabled too.")
-    message("(KEDR_STANDARD_CALLM_PAYLOADS set to OFF)")
-    set(KEDR_STANDARD_CALLM_PAYLOADS OFF)
-endif(KEDR_STANDARD_CALLM_PAYLOADS AND NOT RING_BUFFER_IMPLEMENTED)
+if(KERNEL_PART AND KEDR_TRACE)
+    # Check that KEDR trace mechanism can be implemented on this kernel.
+    check_ring_buffer()
+
+    if(NOT RING_BUFFER_IMPLEMENTED)
+	# NB: We may not reject to configure with these parameters,
+	# because them may be already used for build USER_SPACE_ONLY part.
+	#
+	# So we forcibly change parameters to ones which correct for kernel part.
+	# Of course, disabled functionality cannot be used even it is
+	# enabled in USER_PART.
+	message("[WARNING] Tracing cannot be implemented for this kernel, so it will be disabled.")
+	set(KEDR_TRACE OFF CACHE BOOL
+	    "KEDR trace mechanism cannot be built for this kernel"
+	    FORCE
+	)
+	if(KEDR_STANDARD_CALLM_PAYLOADS)
+	    message("[WARNING] Plugins for call monitoring will be disabled too.")
+	    set(KEDR_STANDARD_CALLM_PAYLOADS OFF CACHE BOOL
+		"Standard plugins (payload modules) for call monitoring cannot be built for this kernel." 
+		FORCE
+	    )
+	endif(KEDR_STANDARD_CALLM_PAYLOADS)
+    endif(NOT RING_BUFFER_IMPLEMENTED)
+endif(KERNEL_PART AND KEDR_TRACE)
 
 option(KEDR_STANDARD_FSIM_PAYLOADS 
 	"Enable the standard plugins (payload modules) for fault simulation." 
@@ -256,6 +360,10 @@ if (KEDR_GEN)
 # will probably not build here, so it should be built separately 
 # in advance in this case. The path to kedr_gen should be passed here 
 # in KEDR_GEN variable.
+
+# Another case when KEDR_GEN normally is set is KERNEL_PART_ONLY build:
+# you can set KEDR_GEN to path where USER_PART_ONLY build has already 
+# installed it, that is <prefix>/lib/kedr/kedr_gen.
 
 # ${KEDR_GEN_TOOL} is the path to "kedr_gen". The path can be used to 
 # execute "kedr_gen" tool during the build of payload modules, etc.
@@ -403,100 +511,120 @@ else (KEDR_GEN)
 	set (KEDR_GEN_TOOL ${KEDR_GEN_INSTALL_PREFIX}/kedr_gen)
 endif (KEDR_GEN)
 
+message (STATUS "Creating \"kedr_gen\" - done")
+
 # Top directory with kedr_gen templates for different purposes.
 set(KEDR_GEN_TEMPLATES_DIR "${CMAKE_SOURCE_DIR}/templates/") 
-	message (STATUS "Creating \"kedr_gen\" - done")
+#######################################################################
+if(KERNEL_PART)
+    # This file will contain #defines that specify whether the particular 
+    # functions are available and used. Keep these statements before 
+    # "functions" subdirectory is processed.
+    set(KEDR_FUNC_DEF_FILE "${CMAKE_BINARY_DIR}/func_def.h")
+
+    # This is needed to generate func_def.h.
+    set(KEDR_FUNC_DEF_FILE_IN "${CMAKE_BINARY_DIR}/func_def.h.in")
+
+    # Clear the file, write the header guard
+    file(WRITE "${KEDR_FUNC_DEF_FILE_IN}" 
+	    "#ifndef KEDR_FUNC_DEF_1538_INCLUDED\n")
+    file(APPEND "${KEDR_FUNC_DEF_FILE_IN}" 
+	    "#define KEDR_FUNC_DEF_1538_INCLUDED\n\n")
+    file(APPEND "${KEDR_FUNC_DEF_FILE_IN}" 
+	    "/* Kernel functions to be processed by payload modules */\n\n")
+endif(KERNEL_PART)
 #######################################################################
 
-# This file will contain #defines that specify whether the particular 
-# functions are available and used. Keep these statements before 
-# "functions" subdirectory is processed.
-set(KEDR_FUNC_DEF_FILE "${CMAKE_BINARY_DIR}/func_def.h")
+if(KERNEL_PART)
+    add_subdirectory(core)
+endif(KERNEL_PART)
 
-# This is needed to generate func_def.h.
-set(KEDR_FUNC_DEF_FILE_IN "${CMAKE_BINARY_DIR}/func_def.h.in")
+# Variables for use kedr core module
+set(KEDR_CORE_NAME "kedr")
+kedr_module_ref(KEDR_CORE_REF ${KEDR_CORE_NAME})
+kedr_module_load_command(KEDR_CORE_LOAD_COMMAND ${KEDR_CORE_NAME})
 
-# Clear the file, write the header guard
-file(WRITE "${KEDR_FUNC_DEF_FILE_IN}" 
-	"#ifndef KEDR_FUNC_DEF_1538_INCLUDED\n")
-file(APPEND "${KEDR_FUNC_DEF_FILE_IN}" 
-	"#define KEDR_FUNC_DEF_1538_INCLUDED\n\n")
-file(APPEND "${KEDR_FUNC_DEF_FILE_IN}" 
-	"/* Kernel functions to be processed by payload modules */\n\n")
-#######################################################################
+if(KERNEL_PART)
+    # Keep this before add_subdirectory() statements for payload modules.
+    add_subdirectory(functions)
+endif(KERNEL_PART)
 
-add_subdirectory(core)
+if(USER_PART)
+    add_subdirectory(templates)
+endif(USER_PART)
 
-# Keep this before add_subdirectory() statements for payload modules.
-add_subdirectory(functions)
-
-add_subdirectory(templates)
-# For tests only
-add_subdirectory(control_file)
-add_subdirectory(calculator)
-add_subdirectory(util)
-# For tests only - end
-
-add_subdirectory(fault_simulation)
+if(KERNEL_PART)
+    add_subdirectory(fault_simulation)
+endif(KERNEL_PART)
+# Variables for use kedr_fault_simulation module
+set(KEDR_FAULT_SIMULATION_NAME "kedr_fault_simulation")
+kedr_module_ref(KEDR_FAULT_SIMULATION_REF ${KEDR_FAULT_SIMULATION_NAME})
+kedr_module_load_command(KEDR_FAULT_SIMULATION_LOAD_COMMAND ${KEDR_FAULT_SIMULATION_NAME})
 
 add_subdirectory(include)
 
 if(KEDR_TRACE)
+    if(KERNEL_PART)
 	add_subdirectory(trace)
+    endif(KERNEL_PART)
+
+    # Variables for use kedr_trace module
+    set(KEDR_TRACE_NAME "kedr_trace")
+    kedr_module_ref(KEDR_TRACE_REF ${KEDR_TRACE_NAME})
+    kedr_module_load_command(KEDR_TRACE_LOAD_COMMAND ${KEDR_TRACE_NAME})
 endif(KEDR_TRACE)
 
-# [NB] Keep this before "add_subdirectory(tools)".
-if(KEDR_STANDARD_CALLM_PAYLOADS)
-	# This file is used to create the configuration file for call 
-	# monitoring plugins
-	set(kedr_conf_file_data_callm 
-		"${CMAKE_BINARY_DIR}/tools/control/kedr_callm.conf.data")
-	# Same but for the variant used for testing
-	set(kedr_test_conf_file_data_callm 
-		"${CMAKE_BINARY_DIR}/tools/control/tests/kedr_callm.conf.data")
-endif(KEDR_STANDARD_CALLM_PAYLOADS)
-
 if(KEDR_STANDARD_FSIM_PAYLOADS)
-	# This file is used to create configuration file for fault 
-	# simulation plugins
-	set(kedr_conf_file_data_fsim 
-		"${CMAKE_BINARY_DIR}/tools/control/kedr_fsim.conf.data")
-endif(KEDR_STANDARD_FSIM_PAYLOADS)
-
-add_subdirectory(tools)
-
-if(KEDR_STANDARD_FSIM_PAYLOADS)
+    # List of fault simulation payload modules is collected
+    # in GLOBAL PROPERTY FSIM_PAYLOADS.
     add_subdirectory(payloads_fsim)
+    # List of fault simulation indicator modules is collected
+    # in GLOBAL PROPERTY FSIM_INDICATORS.
     add_subdirectory(fault_indicators)
 endif(KEDR_STANDARD_FSIM_PAYLOADS)
 
 
 if(KEDR_STANDARD_CALLM_PAYLOADS)
+    # List of call monitoring payload modules is collected
+    # in GLOBAL PROPERTY CALLM_PAYLOADS.
     add_subdirectory(payloads_callm)
 endif(KEDR_STANDARD_CALLM_PAYLOADS)
 
 if(KEDR_LEAK_CHECK)
-	add_subdirectory(leak_check)
+    # List of leak check payload modules is collected
+    # in GLOBAL PROPERTY LC_PAYLOADS.
+    add_subdirectory(leak_check)
+
+    # Variables for use kedr_leak_check module
+    set(KEDR_LEAK_CHECK_NAME "kedr_leak_check")
+    kedr_module_ref(KEDR_LEAK_CHECK_REF ${KEDR_LEAK_CHECK_NAME})
+    kedr_module_load_command(KEDR_LEAK_CHECK_LOAD_COMMAND ${KEDR_LEAK_CHECK_NAME})
 endif(KEDR_LEAK_CHECK)
 
-if (NOT CMAKE_CROSSCOMPILING)
-	# Examples
-	include(example_system) # This will be use in testing also.
-	add_subdirectory(examples)
+if(USER_PART)
+    add_subdirectory(tools)
+endif(USER_PART)
 
-	# Documentation
-	add_subdirectory(doc)
-endif (NOT CMAKE_CROSSCOMPILING)
+
+if (USER_PART AND NOT CMAKE_CROSSCOMPILING)
+    # Examples
+    include(example_system) # This will be use in testing also.
+    add_subdirectory(examples)
+
+    # Documentation
+    add_subdirectory(doc)
+endif (USER_PART AND NOT CMAKE_CROSSCOMPILING)
 #######################################################################
+if(KERNEL_PART)
+    # After all payload modules have been processed, complete generation of
+    # func_def.h
+    file(APPEND "${KEDR_FUNC_DEF_FILE_IN}" 
+	    "\n#endif /* KEDR_FUNC_DEF_1538_INCLUDED */\n")
 
-# After all payload modules have been processed, complete generation of
-# func_def.h
-file(APPEND "${KEDR_FUNC_DEF_FILE_IN}" 
-	"\n#endif /* KEDR_FUNC_DEF_1538_INCLUDED */\n")
-
-configure_file(
-	"${CMAKE_BINARY_DIR}/func_def.h.in"
-	"${CMAKE_BINARY_DIR}/func_def.h")
+    configure_file(
+	    "${CMAKE_BINARY_DIR}/func_def.h.in"
+	    "${CMAKE_BINARY_DIR}/func_def.h")
+endif(KERNEL_PART)
 #######################################################################
 # Tests for package itself.
 #
@@ -509,12 +637,15 @@ if(WITH_TESTING)
     add_subdirectory(tests)
 endif(WITH_TESTING)
 #######################################################################
-kbuild_finalize_linking()
+if(KERNEL_PART)
+    kbuild_finalize_linking()
+endif(KERNEL_PART)
 #######################################################################
-
-configure_file("${CMAKE_SOURCE_DIR}/config.h.in" "${CMAKE_BINARY_DIR}/config.h")
-
-message(STATUS "Creating config.h - done")
+# Configuration file is for kernel only.
+if(KERNEL_PART)
+    configure_file("${CMAKE_SOURCE_DIR}/config.h.in" "${CMAKE_BINARY_DIR}/config.h")
+    message(STATUS "Creating config.h - done")
+endif(KERNEL_PART)
 #######################################################################
 
 message (STATUS "Configured ${KEDR_PACKAGE_NAME} version ${KEDR_VERSION}")

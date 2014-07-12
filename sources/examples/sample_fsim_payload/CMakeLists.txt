@@ -6,10 +6,6 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Kbuild.in"
     @ONLY
 )
 
-set(kedr_symbols "${KEDR_INSTALL_PREFIX_KSYMVERS}/kedr.symvers")
-set(fault_simulation_symbols "${KEDR_INSTALL_PREFIX_KSYMVERS}/kedr_fault_simulation.symvers")
-set(kedr_gen_tool "${KEDR_INSTALL_PREFIX_EXEC_AUX}/kedr_gen")
-set(kedr_gen_templates_dir "${KEDR_INSTALL_PREFIX_TEMPLATES}")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/makefile.in"
     "${CMAKE_CURRENT_BINARY_DIR}/example_makefile"
     @ONLY
