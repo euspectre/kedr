@@ -58,22 +58,24 @@ function(fill_install_prefixes project_name project_prefix)
 	set(fip_BASE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
     endif(NOT fip_BASE_INSTALL_PREFIX)
 
+    # Strip trailing '/' in fip_BASE_INSTALL_PREFIX if it is not the only
+    # symbol in it.
+    string(REGEX REPLACE "(.)/$" "\\1" fip_BASE_INSTALL_PREFIX "${fip_BASE_INSTALL_PREFIX}")
+
     # Follow conventions about paths listed in
     #   devel-docs/general/path_conventions.txt
     # in kedr-devel package.
 
     # Determine type of installation
-    string(REGEX MATCH "(^/opt|^/usr|^/$)" is_global_install ${fip_BASE_INSTALL_PREFIX})
-    if(is_global_install)
-	set(KEDR_COI_INSTALL_TYPE "global")
-	if(CMAKE_MATCH_1 STREQUAL "/opt")
-	    set(fip_INSTALL_TYPE "GLOBAL_OPT")
-	else(CMAKE_MATCH_1 STREQUAL "/opt")
-	    set(fip_INSTALL_TYPE "GLOBAL")
-	endif(CMAKE_MATCH_1 STREQUAL "/opt")
-    else(is_global_install)
+    if(fip_BASE_INSTALL_PREFIX STREQUAL "/opt")
+	set(fip_INSTALL_TYPE "GLOBAL_OPT")
+    elseif(fip_BASE_INSTALL_PREFIX STREQUAL "/usr" OR
+	fip_BASE_INSTALL_PREFIX STREQUAL "/"
+    )
+	set(fip_INSTALL_TYPE "GLOBAL")
+    else()
 	set(fip_INSTALL_TYPE "LOCAL")
-    endif(is_global_install)
+    endif()
 
     # 1
     set(fip_INSTALL_PREFIX_EXEC
