@@ -20,6 +20,7 @@
 #include <linux/module.h> /* 'struct module' definition */
 
 #include <linux/kernel.h>
+#include <linux/version.h>
 #include <linux/slab.h>
 #include <linux/errno.h>
 #include <linux/list.h>
@@ -30,6 +31,9 @@
 
 #include <kedr/core/kedr.h>
 #include <kedr/asm/insn.h>       /* instruction decoder machinery */
+
+#include <asm/cacheflush.h> 	/* set_memory_ro, set_memory_rw */
+#include <linux/pfn.h> 		/* PFN_* macros */
 
 #include "kedr_instrumentor_internal.h"
 #include "config.h"
@@ -428,6 +432,63 @@ do_process_area(void* kbeg, void* kend,
 	return;
 }
 
+/* Starting from commit 4982223e51e8ea9d09bb33c8323b5ec1877b2b51 which went 
+ * into kernel 3.16, the code of a kernel module becomes read only before
+ * the notification about MODULE_STATE_COMING triggers.
+ * 
+ * To be able to instrument the module anyway, we use the approach Ftrace
+ * relies upon: temporarily make the code RW and make in RO again after the
+ * instrumentation. */
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 16, 0)) && \
+    defined(CONFIG_DEBUG_SET_MODULE_RONX)
+
+/* Copied from kernel/module.c */
+static void 
+set_page_attributes(void *start, void *end, 
+		    int (*set)(unsigned long start, int num_pages))
+{
+	unsigned long begin_pfn = PFN_DOWN((unsigned long)start);
+	unsigned long end_pfn = PFN_DOWN((unsigned long)end);
+
+	if (end_pfn > begin_pfn)
+		set(begin_pfn << PAGE_SHIFT, end_pfn - begin_pfn);
+}
+    
+static void
+set_module_text_rw(struct module* mod)
+{
+	if (mod->module_core != NULL && mod->core_text_size) {
+		set_page_attributes(mod->module_core, 
+				    mod->module_core + mod->core_text_size,
+				    set_memory_rw);
+	}
+	if (mod->module_init != NULL && mod->init_text_size) {
+		set_page_attributes(mod->module_init, 
+				    mod->module_init + mod->init_text_size, 
+				    set_memory_rw);
+	}
+}
+
+static void
+set_module_text_ro(struct module* mod)
+{
+	if (mod->module_core != NULL && mod->core_text_size) {
+		set_page_attributes(mod->module_core, 
+				    mod->module_core + mod->core_text_size,
+				    set_memory_ro);
+	}
+	if (mod->module_init != NULL && mod->init_text_size) {
+		set_page_attributes(mod->module_init, 
+				    mod->module_init + mod->init_text_size, 
+				    set_memory_ro);
+	}
+}
+#else
+static inline void set_module_text_rw(struct module* mod) { }
+static inline void set_module_text_ro(struct module* mod) { }
+#endif
+
+
 /* Replace all calls to to the target functions with calls to the 
  * replacement-functions in the module. 
  */
@@ -438,6 +499,8 @@ replace_calls_in_module(struct module* mod,
 	BUG_ON(mod == NULL);
 	BUG_ON(mod->module_core == NULL);
 
+	set_module_text_rw(mod);
+	
 	if (mod->module_init != NULL)
 	{
 		KEDR_MSG(COMPONENT_STRING 
@@ -456,6 +519,8 @@ replace_calls_in_module(struct module* mod,
 	do_process_area(mod->module_core, 
 		mod->module_core + mod->core_text_size,
 		repl_table);
+	
+	set_module_text_ro(mod);
 	return;
 }
 
