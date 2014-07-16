@@ -647,6 +647,27 @@ if(KERNEL_PART)
     message(STATUS "Creating config.h - done")
 endif(KERNEL_PART)
 #######################################################################
+if(KERNEL_PART_ONLY)
+    # For use modprobe on newly installed modules, depmod should be called.
+
+    # Script passed to install(SCRIPT) in current directory will be 
+    # executed BEFORE any file in subdirectory will be installled.
+    #
+    # For make script executed AFTER all files been installed,
+    # we need to call install(SCRIPT) from subdirectory, which is 
+    # included after others.
+    add_subdirectory(last_dir)
+    
+    # Also execute depmod after uninstall.
+    add_custom_target(depmod
+	COMMAND ${CMAKE_COMMAND} -P "${CMAKE_SOURCE_DIR}/depmod.cmake"
+    )
+    add_dependencies(uninstall depmod)
+    # Use internals of 'uninstall' target implementation
+    # for position new target AFTER uninstalling of files.
+    add_dependencies(depmod uninstall_files)
+endif(KERNEL_PART_ONLY)
+#######################################################################
 
 message (STATUS "Configured ${KEDR_PACKAGE_NAME} version ${KEDR_VERSION}")
 #######################################################################
