@@ -1,12 +1,7 @@
-if(KERNEL_PART)
-    kbuild_add_module("kedr_calc_test_var_names" "module.c" "calculator.c")
-    rule_copy_file("${CMAKE_CURRENT_BINARY_DIR}/calculator.c" "${CALCULATOR_SOURCE_DIR}/calculator.c")
+kbuild_add_module("kedr_calc_test_var_names" "module.c" "calculator.c")
+rule_copy_file("${CMAKE_CURRENT_BINARY_DIR}/calculator.c" "${CALCULATOR_SOURCE_DIR}/calculator.c")
 
-    kedr_test_install_module("kedr_calc_test_var_names")
-endif(KERNEL_PART)
-if(NOT USER_PART)
-    return()
-endif(NOT USER_PART)
+kedr_test_install_module("kedr_calc_test_var_names")
 
 configure_file (
   "${CMAKE_CURRENT_SOURCE_DIR}/test.sh.in"

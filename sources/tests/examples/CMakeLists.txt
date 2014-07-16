@@ -1,29 +1,22 @@
-#  example_create_build_script(imported_example_target script_file)
+#  example_create_build_script(script_file example_location)
 #
 # Create shell script, which copy example files to temporary directory
 # and build it there. Directory for copy and build example
 # may be passed to the script itself.
-# By default, 'build/`uname -r`' directory is used as build directory.
+# By default, build/ directory is used as build directory.
 #
-# 'imported_example_target' should be IMPORTED target for example,
-# which contains install locations of the example.
+# 'example_location' should contain path where example is installed.
+# Relative path is interpreted relative to KEDR_INSTALL_PREFIX_EXAMPLES.
 #
-# Created script may be used as simple test for example or be called
+# Created script may be used as simple test for the example or be called
 # from other test script.
-function(example_create_build_script imported_example_target script_file)
-	get_property(is_example TARGET ${imported_example_target} SET PROPERTY EXAMPLE_TYPE)
-	if(NOT is_example)
-		message(FATAL_ERROR "Target is not example target: ${imported_example_target}")
-	endif(NOT is_example)
-
-	get_property(is_imported TARGET ${imported_example_target} PROPERTY EXAMPLE_IMPORTED)
-	if(NOT is_imported)
-		message(FATAL_ERROR "Example target is not imported: ${imported_example_target}")
-	endif(NOT is_imported)
-
-	get_property(example_location TARGET ${imported_example_target} PROPERTY EXAMPLE_IMPORTED_LOCATION)
+function(example_create_build_script script_file example_location)
+	if(NOT IS_ABSOLUTE ${example_location})
+		set(example_location ${KEDR_INSTALL_PREFIX_EXAMPLES}/${example_location})
+	endif(NOT IS_ABSOLUTE ${example_location})
 	configure_file("${CMAKE_SOURCE_DIR}/tests/examples/build_example.sh.in"
-		"${script_file}")
+		"${script_file}"
+	)
 endfunction(example_create_build_script)
 
 

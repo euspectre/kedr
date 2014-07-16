@@ -79,10 +79,8 @@ if test $# -ne 0; then
     exit 1
 fi
 
-@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
-
 TEST_MODULE_NAME=@KMODULE_NAME@
-TEST_MODULE=${KERNEL}/${TEST_MODULE_NAME}.ko
+TEST_MODULE=${TEST_MODULE_NAME}.ko
 
 checkPrereqs
 doTest

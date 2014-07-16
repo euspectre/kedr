@@ -5,10 +5,8 @@
 # Expression may contain reference to variables 'x' and 'y', and use constants TRUE=1, FALSE=0 and big_number=10000
 # 'x' and 'y' may be expressions of same type, as 'expr', but without use varibales(only above constans)
 
-@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
-
 kmodule_name="kedr_calc_test_vars"
-kmodule="${KERNEL}/${kmodule_name}.ko"
+kmodule="${kmodule_name}.ko"
 result_file="/sys/module/${kmodule_name}/parameters/result"
 
 if test $# -ne 4; then
@@ -21,7 +19,7 @@ x="$2"
 y="$3"
 result_expected="$4"
 
-insmod "$kmodule" "expr=\"$expr\"" "x=\"$x\"" "y=\"$y\""
+@INSMOD@ "$kmodule" "expr=\"$expr\"" "x=\"$x\"" "y=\"$y\""
 if test $? -ne 0; then
     printf "Failed to insert module into the kernel\n"
     exit 1
@@ -29,7 +27,7 @@ fi
 
 result=`cat "$result_file"`
 
-rmmod $kmodule
+@RMMOD@ $kmodule
 if test $? -ne 0; then
     printf "Failed to remove module from the kernel\n"
     exit 1

@@ -1,11 +1,9 @@
 #!/bin/sh
 
-@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
-
 target_detector_module_name="@target_detector_module_name@"
-target_detector_module="${KERNEL}/${target_detector_module_name}.ko"
+target_detector_module="${target_detector_module_name}.ko"
 test_module_name="@test_module_name@"
-test_module="test_module/${KERNEL}/${test_module_name}.ko"
+test_module="test_module/${test_module_name}.ko"
 
 target_is_loaded_file="/sys/module/${target_detector_module_name}/parameters/target_is_loaded"
 

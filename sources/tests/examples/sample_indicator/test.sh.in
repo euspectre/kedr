@@ -1,10 +1,8 @@
 #!/bin/sh
 
-@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
+EXAMPLE_TEST_LOCATION=@EXAMPLE_TEST_LOCATION@
 
-EXAMPLE_TEST_LOCATION=@EXAMPLE_TEST_LOCATION@/${KERNEL}
-
-simulation_module="module/${KERNEL}/kedr_sample_indicator_test_module.ko"
+simulation_module="module/kedr_sample_indicator_test_module.ko"
 point_name="common"
 
 indicator_module="${EXAMPLE_TEST_LOCATION}/kedr_sample_indicator.ko"

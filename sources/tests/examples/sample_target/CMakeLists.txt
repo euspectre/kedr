@@ -1,7 +1,3 @@
-if(NOT USER_PART)
-	return()
-endif(NOT USER_PART)
-
 example_create_build_script(test_example_sample_target "build_example.sh")
 kedr_test_install(PROGRAMS "build_example.sh")
 

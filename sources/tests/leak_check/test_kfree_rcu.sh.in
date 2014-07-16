@@ -146,10 +146,8 @@ doTest()
 ########################################################################
 # main
 ########################################################################
-@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
-
 TARGET_NAME="@KEDR_TEST_KFREE_RCU_MODULE@"
-TARGET_MODULE="kfree_rcu_module/${KERNEL}/${TARGET_NAME}.ko"
+TARGET_MODULE="kfree_rcu_module/${TARGET_NAME}.ko"
 
 CONTROL_SCRIPT="@KEDR_INSTALL_PREFIX_EXEC@/kedr"
 CONF_FILE="leak_check_test.conf"

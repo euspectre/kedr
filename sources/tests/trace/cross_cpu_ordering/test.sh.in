@@ -1,7 +1,5 @@
 #!/bin/sh
 
-@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
-
 tmpdir="@KEDR_TEST_PREFIX_TEMP_SESSION@/kedr_trace_cross_cpu_ordering"
 debugfs_mount_point="${tmpdir}/debugfs"
 
@@ -10,7 +8,7 @@ trace_file="${debugfs_mount_point}/kedr_tracing/trace"
 trace_file_copy="${tmpdir}/trace.txt"
 
 trace_module_name="@KEDR_TRACE_NAME@"
-module="module/${KERNEL}/cross_cpu_ordering_module.ko"
+module="module/cross_cpu_ordering_module.ko"
 
 mkdir -p "${debugfs_mount_point}"
 

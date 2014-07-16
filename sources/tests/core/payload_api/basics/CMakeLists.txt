@@ -1,14 +1,8 @@
-if(KERNEL_PART)
-    # The following subdirectories contain the stuff necessary for the testing
-    add_subdirectory (payload)
-    add_subdirectory (target_normal)
-    add_subdirectory (target_init_fail)
-    add_subdirectory (target-with-dashes)
-endif(KERNEL_PART)
-
-if(NOT USER_PART)
-    return()
-endif(NOT USER_PART)
+# The following subdirectories contain the stuff necessary for the testing
+add_subdirectory (payload)
+add_subdirectory (target_normal)
+add_subdirectory (target_init_fail)
+add_subdirectory (target-with-dashes)
 
 # The tests for target load / unload notifications mechanism provided by 
 # KEDR core for payload modules.

@@ -1,10 +1,8 @@
 #!/bin/sh
 
-@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
-
 indicator_name="common"
 
-simulation_module="module/${KERNEL}/kedr_indicator_common_test_module.ko"
+simulation_module="module/kedr_indicator_common_test_module.ko"
 point_name="common"
 
 

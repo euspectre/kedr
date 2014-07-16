@@ -123,17 +123,15 @@ if test $# -ne 2; then
     exit 1
 fi
 
-@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
-
 IN_INIT=$1
 IN_ATOMIC=$2
 printf "Mode: in_init=${IN_INIT}, in_atomic=${IN_ATOMIC}\n"
 
 TARGET_NAME="test_in_init_target"
-TARGET_MODULE="target/${KERNEL}/${TARGET_NAME}.ko"
+TARGET_MODULE="target/${TARGET_NAME}.ko"
 
 PAYLOAD_NAME="test_in_init_payload"
-PAYLOAD_MODULE="payload/${KERNEL}/${PAYLOAD_NAME}.ko"
+PAYLOAD_MODULE="payload/${PAYLOAD_NAME}.ko"
 
 checkPrereqs
 

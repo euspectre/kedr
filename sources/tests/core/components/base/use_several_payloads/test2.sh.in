@@ -1,15 +1,13 @@
 #!/bin/sh
 
-@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
-
 base_module_name=@base_module_name@
-base_module="${KERNEL}/${base_module_name}.ko"
+base_module="${base_module_name}.ko"
 payload_module1_name=@payload_module1_name@
-payload_module1="payload1/${KERNEL}/${payload_module1_name}.ko"
+payload_module1="payload1/${payload_module1_name}.ko"
 payload_module3_name=@payload_module3_name@
-payload_module3="payload3/${KERNEL}/${payload_module3_name}.ko"
+payload_module3="payload3/${payload_module3_name}.ko"
 verificator_module_name=@verificator_module_name@
-verificator_module="interception_info_verificator/${KERNEL}/${verificator_module_name}.ko"
+verificator_module="interception_info_verificator/${verificator_module_name}.ko"
 
 if ! @INSMOD@ "$base_module"; then
     printf "Failed to load base module.\n"

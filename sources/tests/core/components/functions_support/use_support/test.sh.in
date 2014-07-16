@@ -1,9 +1,7 @@
 #! /bin/sh
 
-@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
-
 functions_support_module_name=@functions_support_module_name@
-functions_support_module="${KERNEL}/${functions_support_module_name}.ko"
+functions_support_module="${functions_support_module_name}.ko"
 
 if ! @INSMOD@ "${functions_support_module}"; then
     printf "Loading of functions support module was failed.\n"

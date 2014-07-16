@@ -1,14 +1,9 @@
-if(KERNEL_PART)
-	add_subdirectory(module)
-endif(KERNEL_PART)
-
-if(NOT USER_PART)
-	return()
-endif(NOT USER_PART)
+add_subdirectory(module)
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/test.sh.in"
 	"${CMAKE_CURRENT_BINARY_DIR}/test.sh"
-	@ONLY)
+	@ONLY
+)
 
 kedr_test_add_script("kedr_trace.simple_ordering.01" "test.sh")
 

@@ -158,18 +158,16 @@ if test $# -ne 1; then
     exit 1
 fi
 
-@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
-
 TARGET_DIR=$1
 
 TARGET_NAME="test_${TARGET_DIR}"
 TARGET_NAME_ACTUAL=$(echo "${TARGET_NAME}" | tr '-' '_')
 
-TARGET_MODULE="${TARGET_DIR}/${KERNEL}/${TARGET_NAME}.ko"
+TARGET_MODULE="${TARGET_DIR}/${TARGET_NAME}.ko"
 printf "Target module: ${TARGET_MODULE}\n"
 
 PAYLOAD_NAME="test_basics_payload"
-PAYLOAD_MODULE="payload/${KERNEL}/${PAYLOAD_NAME}.ko"
+PAYLOAD_MODULE="payload/${PAYLOAD_NAME}.ko"
 
 ################################
 checkPrereqs

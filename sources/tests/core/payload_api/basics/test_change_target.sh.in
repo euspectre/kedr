@@ -215,23 +215,21 @@ if test $# -ne 2; then
 	exit 1
 fi
 
-@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
-
 TARGET_DIR1=$1
 TARGET_DIR2=$2
 
 TARGET_NAME1="test_${TARGET_DIR1}"
 TARGET_NAME1_ACTUAL=$(echo "${TARGET_NAME1}" | tr '-' '_')
-TARGET_MODULE1="${TARGET_DIR1}/${KERNEL}/${TARGET_NAME1}.ko"
+TARGET_MODULE1="${TARGET_DIR1}/${TARGET_NAME1}.ko"
 
 TARGET_NAME2="test_${TARGET_DIR2}"
 TARGET_NAME2_ACTUAL=$(echo "${TARGET_NAME2}" | tr '-' '_')
-TARGET_MODULE2="${TARGET_DIR2}/${KERNEL}/${TARGET_NAME2}.ko"
+TARGET_MODULE2="${TARGET_DIR2}/${TARGET_NAME2}.ko"
 
 printf "Target modules: ${TARGET_MODULE1}, ${TARGET_MODULE2}\n"
 
 PAYLOAD_NAME="test_basics_payload"
-PAYLOAD_MODULE="payload/${KERNEL}/${PAYLOAD_NAME}.ko"
+PAYLOAD_MODULE="payload/${PAYLOAD_NAME}.ko"
 
 ################################
 checkPrereqs

@@ -1,21 +1,19 @@
 #!/bin/sh
 
-@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
-
 debugfs_mount_point="@KEDR_TEST_DIR@/debugfs"
 point_name=__kmalloc
 indicator_name=periodic
 
 point_dir=${debugfs_mount_point}/kedr_fault_simulation/points/${point_name}
 
-sample_indicator_test_location=@sample_indicator_test_location@/${KERNEL}
-sample_fsim_payload_test_location=@sample_fsim_payload_test_location@/${KERNEL}
+sample_indicator_test_location=@sample_indicator_test_location@
+sample_fsim_payload_test_location=@sample_fsim_payload_test_location@
 
 fsim_payload_module="$sample_fsim_payload_test_location/kedr_sample_fsim_payload.ko"
 indicator_module="$sample_indicator_test_location/kedr_sample_indicator.ko"
 
 sample_target_module_name=kedr_sample_target
-sample_target_script="sh @TEST_MODULES_DIR@/sample_target/${KERNEL}/kedr_sample_target"
+sample_target_script="sh @TEST_MODULES_DIR@/sample_target/kedr_sample_target"
 sample_target_device="/dev/cfake0"
 
 kedr_conf_file="./kedr.conf"

@@ -1,12 +1,5 @@
-if(KERNEL_PART)
-    add_subdirectory(target)
-    add_subdirectory(payload)
-endif(KERNEL_PART)
-
-if(NOT USER_PART)
-    return()
-endif(NOT USER_PART)
-
+add_subdirectory(target)
+add_subdirectory(payload)
 
 set(CAPTURE_TRACE_PROGRAM "${KEDR_INSTALL_PREFIX_EXEC}/kedr_capture_trace")
 

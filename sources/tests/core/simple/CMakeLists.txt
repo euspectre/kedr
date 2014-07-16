@@ -1,12 +1,5 @@
-if(KERNEL_PART)
-    # The stuff necessary for testing
-    add_subdirectory (simple_payload)
-endif(KERNEL_PART)
-
-if(NOT USER_PART)
-    return()
-endif(NOT USER_PART)
-
+# The stuff necessary for testing
+add_subdirectory (simple_payload)
 
 set (TARGET_NAME "kedr_sample_target")
 
@@ -43,4 +36,3 @@ kedr_test_add_script_shared (core.basics.02
 kedr_test_add_script_shared (core.basics.03
     ins_rm_with_target.sh 1
 )
-

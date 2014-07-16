@@ -174,10 +174,8 @@ doTest()
 ########################################################################
 # main
 ########################################################################
-@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
-
 TARGET_NAME="kedr_sample_target"
-TARGET_DIR="@TEST_MODULES_DIR@/sample_target/${KERNEL}"
+TARGET_DIR="@TEST_MODULES_DIR@/sample_target"
 TARGET_MODULE="${TARGET_DIR}/${TARGET_NAME}.ko"
 TARGET_SCRIPT="${TARGET_DIR}/kedr_sample_target"
 
@@ -201,16 +199,7 @@ EXP_ALLOC_MAX_SIZE=4000
 
 EXAMPLE_TEST_LOCATION=@EXAMPLE_TEST_LOCATION@
 
-# Build example in kernel-dependent directory.
-# So, we may do not remove it after test.
-if ! ./build_example.sh $EXAMPLE_TEST_LOCATION/${KERNEL}; then
-    exit 1
-fi
-
-# But copy kernel module created into kernel-independent directory
-# So, it can be loaded with kernel-independent configuration file.
-if ! cp $EXAMPLE_TEST_LOCATION/${KERNEL}/kedr_counters.ko $EXAMPLE_TEST_LOCATION/kedr_counters.ko; then
-    printf "Failed to copy kernel module built in example\n."
+if ! ./build_example.sh $EXAMPLE_TEST_LOCATION; then
     exit 1
 fi
 

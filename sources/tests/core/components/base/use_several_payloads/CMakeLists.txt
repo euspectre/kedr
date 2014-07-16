@@ -6,27 +6,22 @@ set(verificator_module_name "base_verificator_module")
 
 itesting_path(this_install_dir)
 
-if(KERNEL_PART)
-    rule_copy_file("${CMAKE_CURRENT_BINARY_DIR}/kedr_base.c"
-        "${CORE_SOURCE_DIR}/kedr_base.c"
-    )
 
-    kbuild_add_module(${base_module_name}
-        "base_module.c"
-        "kedr_base.c"
-    )
+rule_copy_file("${CMAKE_CURRENT_BINARY_DIR}/kedr_base.c"
+    "${CORE_SOURCE_DIR}/kedr_base.c"
+)
 
-    kedr_test_install_module(${base_module_name})
+kbuild_add_module(${base_module_name}
+    "base_module.c"
+    "kedr_base.c"
+)
 
-    add_subdirectory(payload1)
-    add_subdirectory(payload2)
-    add_subdirectory(payload3)
-    add_subdirectory(interception_info_verificator)
-endif(KERNEL_PART)
+kedr_test_install_module(${base_module_name})
 
-if(NOT USER_PART)
-    return()
-endif(NOT USER_PART)
+add_subdirectory(payload1)
+add_subdirectory(payload2)
+add_subdirectory(payload3)
+add_subdirectory(interception_info_verificator)
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/test1.sh.in"
     "${CMAKE_CURRENT_BINARY_DIR}/test1.sh"
@@ -43,5 +38,3 @@ kedr_test_add_script("core.components.base.use_several_payloads.01"
 
 kedr_test_add_script("core.components.base.use_several_payloads.02"
     "test2.sh")
-
-

@@ -106,13 +106,11 @@ if test $# -ne 1; then
     exit 1
 fi
 
-@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
-
 SCEN_NO=$1
 printf "Scenario number is ${SCEN_NO}\n"
 
 PAYLOAD_NAME="test_reg_payload"
-PAYLOAD_MODULE="payload/${KERNEL}/${PAYLOAD_NAME}.ko"
+PAYLOAD_MODULE="payload/${PAYLOAD_NAME}.ko"
 
 checkPrereqs
 

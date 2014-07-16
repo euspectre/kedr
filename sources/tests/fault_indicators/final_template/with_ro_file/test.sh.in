@@ -1,8 +1,6 @@
 #!/bin/sh
 
-@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
-
-indicator_module="${KERNEL}/@kmodule_name@.ko"
+indicator_module="@kmodule_name@.ko"
 indicator_name="ro_file"
 
 . ../test_common.sh

@@ -5,8 +5,6 @@
 # where
 #	'function' - kernel function, call interception of which should be tested,
 
-KERNEL=`uname -r`
-
 insmod_command=<$insmod_command$>
 rmmod_command=<$rmmod_command$>
 
@@ -14,9 +12,9 @@ kedr_module_load_command="<$kedr_module_load_command$>"
 kedr_module_name="<$kedr_module_name$>"
 
 payload_module_name="trigger_payload_<$trigger_name$>"
-payload_module="<$test_current_install_dir$>/trigger_payload/${KERNEL}/${payload_module_name}.ko"
+payload_module="<$test_current_install_dir$>/trigger_payload/${payload_module_name}.ko"
 target_module_name="trigger_target_<$trigger_name$>"
-target_module="<$test_current_install_dir$>/trigger_target/${KERNEL}/${target_module_name}.ko"
+target_module="<$test_current_install_dir$>/trigger_target/${target_module_name}.ko"
 
 if test $# -ne 1; then
 	printf "Usage:\n\n\t%s function\n" "$0"

@@ -5,7 +5,7 @@
 #
 # Declare common variables and functions for the tests.
 
-simulation_module="@this_install_dir@/module/${KERNEL}/kedr_indicator_internal_test_module.ko"
+simulation_module="@this_install_dir@/module/kedr_indicator_internal_test_module.ko"
 point_name="common"
 point_with_params_name="size"
 

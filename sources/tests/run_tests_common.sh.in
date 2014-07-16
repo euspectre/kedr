@@ -1,0 +1,3 @@
+#!/bin/sh
+
+@KEDR_INSTALL_TEST_DIR@/`uname -r`/run_tests.sh

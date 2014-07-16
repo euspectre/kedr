@@ -1,18 +1,16 @@
 #!/bin/sh
 
-@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
-
 read_point_name="kedr-read-point"
 write_point_name="kedr-write-point"
 read_indicator_name="indicator_for_read"
 write_indicator_name="indicator_for_write"
 
 module_a_name="fsim_test_module_a"
-module_a="module_a/${KERNEL}/${module_a_name}.ko"
+module_a="module_a/${module_a_name}.ko"
 module_b_name="fsim_test_module_b"
-module_b="module_b/${KERNEL}/${module_b_name}.ko"
+module_b="module_b/${module_b_name}.ko"
 indicators_simple_name=fsim_test_indicators_simple
-indicators_simple="indicators_simple/${KERNEL}/${indicators_simple_name}.ko"
+indicators_simple="indicators_simple/${indicators_simple_name}.ko"
 current_value_file="/sys/module/${module_a_name}/parameters/current_value"
 
 device=kedr_test_device

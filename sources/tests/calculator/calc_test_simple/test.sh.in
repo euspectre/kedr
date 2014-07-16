@@ -2,10 +2,8 @@
 
 #./test.sh expr result_expected
 
-@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
-
 kmodule_name="kedr_calc_test_simple"
-kmodule="${KERNEL}/${kmodule_name}.ko"
+kmodule="${kmodule_name}.ko"
 result_file="/sys/module/${kmodule_name}/parameters/result"
 
 if test $# -ne 2; then
@@ -16,7 +14,7 @@ fi
 expr="$1"
 result_expected="$2"
 
-insmod "$kmodule" "expr=\"$expr\""
+@INSMOD@ "$kmodule" "expr=\"$expr\""
 if test $? -ne 0; then
     printf "Failed to insert module into the kernel\n"
     exit 1
@@ -24,7 +22,7 @@ fi
 
 result=`cat "$result_file"`
 
-rmmod $kmodule
+@RMMOD@ $kmodule
 if test $? -ne 0; then
     printf "Failed to remove module from the kernel\n"
     exit 1

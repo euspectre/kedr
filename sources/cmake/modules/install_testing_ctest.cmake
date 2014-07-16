@@ -24,6 +24,9 @@ include(CMakeParseArguments)
 # If COMPONENT options is given, it will be used in install() commands
 # for tests.
 macro(ictest_enable_testing install_dir)
+    if(NOT IS_ABSOLUTE ${install_dir})
+        message(FATAL_ERROR "ictest_enable: Passed <install_dir> which is not absolute path\n\"${install_dir}\"\n")
+    endif(NOT IS_ABSOLUTE ${install_dir})
     cmake_parse_arguments(ictest_enable_testing "" "COMPONENT" "" ${ARGN})
     set(_ictest_install_defs)
     if(ictest_enable_testing_COMPONENT)

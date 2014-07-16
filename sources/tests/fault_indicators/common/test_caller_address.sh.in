@@ -1,15 +1,13 @@
 #!/bin/sh
 
-@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
-
 indicator_name="common"
 point_name="kmalloc"
 
 get_caller_address_payload_name="get_caller_address"
-get_caller_address_payload="get_caller_address/${KERNEL}/get_caller_address.ko"
+get_caller_address_payload="get_caller_address/get_caller_address.ko"
 
 target_name="target_caller_address"
-target_module="target_caller_address/${KERNEL}/target_caller_address.ko"
+target_module="target_caller_address/target_caller_address.ko"
 
 
 tmpdir="@KEDR_TEST_DIR@/kedr_caller_address"

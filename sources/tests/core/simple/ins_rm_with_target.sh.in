@@ -34,7 +34,7 @@ cleanupAll()
 {
     @LSMOD@ | grep "${TARGET_NAME}" > /dev/null 2>&1
     if test $? -eq 0; then
-        sh @TEST_MODULES_DIR@/sample_target/${KERNEL}/kedr_sample_target unload
+        sh ${TARGET_DIR}/kedr_sample_target unload
     fi
     
     @LSMOD@ | grep "${PAYLOAD_NAME}" > /dev/null 2>&1
@@ -70,7 +70,7 @@ checkCommonScenario()
         exit 1
     fi
 
-    sh @TEST_MODULES_DIR@/sample_target/${KERNEL}/kedr_sample_target load
+    sh ${TARGET_DIR}/kedr_sample_target load
     if test $? -ne 0; then
         printf "Failed to load the target module: ${TARGET_NAME}.ko\n"
         cleanupAll
@@ -94,7 +94,7 @@ checkCommonScenario()
     fi
     printf "This error was expected, continuing.\n"
 
-    sh @TEST_MODULES_DIR@/sample_target/${KERNEL}/kedr_sample_target unload
+    sh ${TARGET_DIR}/kedr_sample_target unload
     if test $? -ne 0; then
         printf "Failed to unload the target module: ${TARGET_NAME}.ko\n"
         cleanupAll
@@ -127,7 +127,7 @@ checkTargetFirstScenario()
 {
     printf "Executing checkTargetFirstScenario()\n"
     
-    sh @TEST_MODULES_DIR@/sample_target/${KERNEL}/kedr_sample_target load
+    sh ${TARGET_DIR}/kedr_sample_target load
     if test $? -ne 0; then
         printf "Failed to load the target module: ${TARGET_NAME}.ko\n"
         cleanupAll
@@ -145,7 +145,7 @@ checkTargetFirstScenario()
     fi
     printf "This error was expected, continuing.\n"
 
-    sh @TEST_MODULES_DIR@/sample_target/${KERNEL}/kedr_sample_target unload
+    sh ${TARGET_DIR}/kedr_sample_target unload
     if test $? -ne 0; then
         printf "Failed to unload the target module: ${TARGET_NAME}.ko\n"
         cleanupAll
@@ -165,17 +165,16 @@ if test $# -ne 1; then
     exit 1
 fi
 
-@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
-
 TARGET_NAME="@TARGET_NAME@"
+TARGET_DIR="@TEST_MODULES_DIR@/sample_target"
 
 PAYLOAD_NAME="simple_payload"
-PAYLOAD_MODULE="${PAYLOAD_NAME}/${KERNEL}/${PAYLOAD_NAME}.ko"
+PAYLOAD_MODULE="${PAYLOAD_NAME}/${PAYLOAD_NAME}.ko"
 
 checkPrereqs
 
 printf "KEDR core module: @KEDR_CORE_NAME@\n"
-printf "Target module: @TEST_MODULES_DIR@/sample_target/${KERNEL}/${TARGET_NAME}.ko\n"
+printf "Target module: ${TARGET_DIR}/${TARGET_NAME}.ko\n"
 printf "Payload module: ${PAYLOAD_MODULE}\n"
 
 # Select the test scenario

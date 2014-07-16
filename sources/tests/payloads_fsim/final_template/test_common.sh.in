@@ -19,8 +19,6 @@ if test $# -eq 0; then
 fi
 
 # Definitions which will be visible for common part of included script.
-@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
-
 indicator_constant_name="constant"
 indicator_greater_than_name="greater_than"
 
@@ -43,11 +41,11 @@ debugfs_mount_point="${tmpdir}/debugfs"
 fault_simulation_points_dir="${debugfs_mount_point}/kedr_fault_simulation/points"
 
 trigger_target_module_name="@trigger_target_module_name@"
-trigger_target="@this_install_dir@/trigger_target/${KERNEL}/${trigger_target_module_name}.ko"
+trigger_target="@this_install_dir@/trigger_target/${trigger_target_module_name}.ko"
 trigger_target_control_dir="${debugfs_mount_point}/function_triggers"
 
 indicators_module_name=@indicators_module_name@
-indicators_module="@this_install_dir@/indicators_module/${KERNEL}/${indicators_module_name}.ko"
+indicators_module="@this_install_dir@/indicators_module/${indicators_module_name}.ko"
 
 
 do_commands_script="sh @TEST_SCRIPTS_DIR@/do_commands.sh"

@@ -2,14 +2,12 @@
 
 # Test kedr_capture_trace functionality in the session mode.
 
-@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
-
 kedr_module_name="@KEDR_CORE_NAME@"
 kedr_trace_module_name="@KEDR_TRACE_NAME@"
 payload_module_name=kedr_payload
-payload_module="payload/${KERNEL}/${payload_module_name}.ko"
+payload_module="payload/${payload_module_name}.ko"
 target_module_name=kedr_target
-target_module="target/${KERNEL}/${target_module_name}.ko"
+target_module="target/${target_module_name}.ko"
 
 
 tmpdir="@KEDR_TEST_PREFIX_TEMP_SESSION@/capture_trace_session"

@@ -1,7 +1,5 @@
 #!/bin/sh
 
-@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
-
 control_script="sh @KEDR_INSTALL_PREFIX_EXEC@/kedr"
 
 capture_trace_script="@KEDR_INSTALL_PREFIX_EXEC@/kedr_capture_trace"
@@ -15,7 +13,7 @@ if ! mkdir -p ${tmpdir}; then
 	exit 1
 fi
 
-target_module_script="sh @TEST_MODULES_DIR@/sample_target/${KERNEL}/kedr_sample_target"
+target_module_script="sh @TEST_MODULES_DIR@/sample_target/kedr_sample_target"
 
 commands_file="${tmpdir}/commands"
 do_commands_script="sh @TEST_SCRIPTS_DIR@/do_commands.sh"

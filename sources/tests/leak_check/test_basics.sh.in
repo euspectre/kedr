@@ -417,13 +417,11 @@ if test "t${TEST_MODE}" != "tboth"; then
     fi
 fi
 
-@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
-
 LEAKER_NAME="@KEDR_TEST_LEAKER_MODULE@"
-LEAKER_MODULE="leaker_module/${KERNEL}/${LEAKER_NAME}.ko"
+LEAKER_MODULE="leaker_module/${LEAKER_NAME}.ko"
 
 CLEANER_NAME="@KEDR_TEST_CLEANER_MODULE@"
-CLEANER_MODULE="cleaner_module/${KERNEL}/${CLEANER_NAME}.ko"
+CLEANER_MODULE="cleaner_module/${CLEANER_NAME}.ko"
 
 CONTROL_SCRIPT="@KEDR_INSTALL_PREFIX_EXEC@/kedr"
 CONF_FILE="./leak_check_test.conf"

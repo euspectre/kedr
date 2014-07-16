@@ -4,12 +4,9 @@ else(KEDR_LEAK_CHECK)
     set(NAME_OF_PAYLOAD_LOADED)
 endif(KEDR_LEAK_CHECK)
 
-if(NOT USER_PART)
-    return()
-endif(NOT USER_PART)
-
 configure_file( "${CMAKE_CURRENT_SOURCE_DIR}/test.sh.in"
-                "${CMAKE_CURRENT_BINARY_DIR}/test.sh"
-                @ONLY)
+    "${CMAKE_CURRENT_BINARY_DIR}/test.sh"
+    @ONLY
+)
 
 kedr_test_add_script("control_service.01" "test.sh")

@@ -1,10 +1,4 @@
-if(KERNEL_PART)
-    add_subdirectory (payload)
-endif(KERNEL_PART)
-
-if(NOT USER_PART)
-    return()
-endif(NOT USER_PART)
+add_subdirectory (payload)
 
 # '@ONLY' is essential when doing substitutions in the shell scripts. 
 # Without it, CMake would replace "${...}" too, which is usually not what 

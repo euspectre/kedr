@@ -1,5 +1,5 @@
 tmpdir="@KEDR_TEST_PREFIX_TEMP_SESSION@/kedr_fsim_final_template_several_functions"
-payload_fsim="${KERNEL}/@kmodule_name@.ko"
+payload_fsim="@kmodule_name@.ko"
 
 test_function()
 {

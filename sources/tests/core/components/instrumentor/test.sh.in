@@ -1,11 +1,9 @@
 #!/bin/sh
 
-@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
-
 instrumentor_module_name=@instrumentor_module_name@
-instrumentor_module="${KERNEL}/${instrumentor_module_name}.ko"
+instrumentor_module="${instrumentor_module_name}.ko"
 test_module_name=@test_module_name@
-test_module="test_module/${KERNEL}/${test_module_name}.ko"
+test_module="test_module/${test_module_name}.ko"
 
 test_value_file="/sys/module/${instrumentor_module_name}/parameters/test_value"
 

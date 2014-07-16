@@ -1,9 +1,7 @@
 #! /bin/sh
 
-@multi_kernel_KERNEL_VAR_SHELL_DEFINITION@
-
 base_module_name=@base_module_name@
-base_module="${KERNEL}/${base_module_name}.ko"
+base_module="${base_module_name}.ko"
 
 if ! @INSMOD@ "${base_module}"; then
     printf "Loading of testing module was failed.\n"
