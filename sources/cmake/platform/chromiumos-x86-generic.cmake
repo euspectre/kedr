@@ -25,10 +25,10 @@ set (KEDR_BOARD "x86-generic")
 
 # These variables are ARCH and CROSS_COMPILE variables used when building 
 # the kernel for your target system. 
-# ARCH defines the target architecture. KEDR_CROSS_COMPILE is actually a 
+# ARCH defines the target architecture. CROSS_COMPILE is actually a 
 # prefix to identify appropriate cross-build tools like gcc, etc.
-set (KEDR_ARCH "i386")
-set (KEDR_CROSS_COMPILE "i686-pc-linux-gnu-")
+set (ARCH "i386")
+set (CROSS_COMPILE "i686-pc-linux-gnu-")
 
 set (KEDR_ROOT_DIR "/build/${KEDR_BOARD}/")
 
@@ -42,6 +42,6 @@ set (KEDR_ROOT_DIR "/build/${KEDR_BOARD}/")
 
 set (CMAKE_SYSTEM_NAME "Linux")
 
-# If you have defined KEDR_CROSS_COMPILE, you would probably want to also
+# If you have defined CROSS_COMPILE, you would probably want to also
 # define C compiler here.
-set (CMAKE_C_COMPILER "${KEDR_CROSS_COMPILE}gcc")
+set (CMAKE_C_COMPILER "${CROSS_COMPILE}gcc")
