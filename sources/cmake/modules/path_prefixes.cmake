@@ -38,7 +38,7 @@
 #  KERNEL_INSTALL_INCLUDE_KERNEL_DIR - include directory with kernel-dependent headers.
 #  KERNEL_INSTALL_PREFIX_INCLUDE_KERNEL - include files, which depends from kernel.
 #
-# If option 'COMMON_INSTALL_PREFIX' is given, all paths above are
+# Iff option 'COMMON_INSTALL_PREFIX' is given, all paths above are
 # calculated using <base_install_prefix> as base prefix.
 # Otherwise, CMAKE_INSTALL_PREFIX is used for that purpose.
 #
@@ -51,11 +51,11 @@
 function(fill_install_prefixes project_name project_prefix)
     cmake_parse_arguments(fip "KERNEL" "BASE_INSTALL_PREFIX" "" ${ARGN})
     if(fip_UNPARSED_ARGUMENTS)
-	list(GET fip_UNPARSED_ARGUMENTS 0 exceeded_arg)
-	message(SEND_ERROR "Exceeded argument: ${exceeded_arg}")
+    list(GET fip_UNPARSED_ARGUMENTS 0 exceeded_arg)
+    message(SEND_ERROR "Exceeded argument: ${exceeded_arg}")
     endif(fip_UNPARSED_ARGUMENTS)
     if(NOT fip_BASE_INSTALL_PREFIX)
-	set(fip_BASE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
+    set(fip_BASE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
     endif(NOT fip_BASE_INSTALL_PREFIX)
 
     # Follow conventions about paths listed in
@@ -74,95 +74,97 @@ function(fill_install_prefixes project_name project_prefix)
     endif()
 
     # 1
-    set(fip_INSTALL_PREFIX_EXEC
-	    "${fip_BASE_INSTALL_PREFIX}/bin")
-    set(fip_INSTALL_PREFIX_EXEC_AUX
-	    "${fip_BASE_INSTALL_PREFIX}/lib/${project_name}")
+    if(fip_INSTALL_TYPE STREQUAL "GLOBAL_OPT")
+	set(fip_INSTALL_PREFIX_EXEC "/opt/${project_name}/bin")
+    else(fip_INSTALL_TYPE STREQUAL "GLOBAL_OPT")
+	set(fip_INSTALL_PREFIX_EXEC "${fip_BASE_INSTALL_PREFIX}/bin")
+    endif(fip_INSTALL_TYPE STREQUAL "GLOBAL_OPT")
     # 2
-    set(fip_INSTALL_PREFIX_READONLY
-	    "${fip_BASE_INSTALL_PREFIX}/share/${project_name}")
-    set(fip_INSTALL_PREFIX_MANPAGE
-	    "${fip_BASE_INSTALL_PREFIX}/share/man")
+    set(fip_INSTALL_PREFIX_EXEC_AUX
+	"${fip_BASE_INSTALL_PREFIX}/lib/${project_name}"
+    )
     # 3
-    if(fip_INSTALL_TYPE MATCHES "global")
-	set(fip_INSTALL_PREFIX_GLOBAL_CONF
-		"/etc/${project_name}")
-    else(fip_INSTALL_TYPE MATCHES "global")
-	set(fip_INSTALL_PREFIX_GLOBAL_CONF
-		"${fip_BASE_INSTALL_PREFIX}/etc/${project_name}")
-    endif(fip_INSTALL_TYPE MATCHES "global")
+    set(fip_INSTALL_PREFIX_READONLY
+        "${fip_BASE_INSTALL_PREFIX}/share/${project_name}"
+    )
     # 4
-    set(fip_INSTALL_PREFIX_LIB
-	    "${fip_BASE_INSTALL_PREFIX}/lib")
-    set(fip_INSTALL_PREFIX_LIB_AUX
-	    "${fip_BASE_INSTALL_PREFIX}/lib/${project_name}")
+    set(fip_INSTALL_PREFIX_MANPAGE
+        "${fip_BASE_INSTALL_PREFIX}/share/man"
+    )
     # 5
+    if(fip_INSTALL_TYPE STREQUAL "GLOBAL_OPT")
+	set(fip_INSTALL_PREFIX_GLOBAL_CONF "/etc/opt/${project_name}")
+    elseif(fip_INSTALL_TYPE STREQUAL "GLOBAL")
+	set(fip_INSTALL_PREFIX_GLOBAL_CONF "/etc/${project_name}")
+    else(fip_INSTALL_TYPE STREQUAL "GLOBAL_OPT")
+	set(fip_INSTALL_PREFIX_GLOBAL_CONF
+	    "${fip_BASE_INSTALL_PREFIX}/etc/${project_name}"
+	)
+    endif(fip_INSTALL_TYPE STREQUAL "GLOBAL_OPT")
+    # 6
+    set(fip_INSTALL_PREFIX_LIB "${fip_BASE_INSTALL_PREFIX}/lib")
+    # 7
+    set(fip_INSTALL_PREFIX_LIB_AUX
+        "${fip_BASE_INSTALL_PREFIX}/lib/${project_name}"
+    )
+    # 8
     set(fip_INSTALL_INCLUDE_DIR "${fip_BASE_INSTALL_PREFIX}/include")
 
     set(fip_INSTALL_PREFIX_INCLUDE
-	    "${fip_INSTALL_INCLUDE_DIR}/${project_name}")
-    # 6
-    set(fip_INSTALL_PREFIX_TEMP_SESSION
-		"/tmp/${project_name}")
-    # 7
-    if(fip_INSTALL_TYPE MATCHES "global")
-	set(fip_INSTALL_PREFIX_TEMP
-		    "/var/tmp/${project_name}")
-    else(fip_INSTALL_TYPE MATCHES "global")
-	set(fip_INSTALL_PREFIX_TEMP
-		    "${fip_BASE_INSTALL_PREFIX}/var/tmp/${project_name}")
-    endif(fip_INSTALL_TYPE MATCHES "global")
-    # 8
-    if(fip_INSTALL_TYPE MATCHES "global")
-	if(fip_INSTALL_TYPE STREQUAL "GLOBAL_OPT")
-	    set(fip_INSTALL_PREFIX_STATE
-		"/var/opt/${project_name}/lib/${project_name}")
-	else(fip_INSTALL_TYPE STREQUAL "GLOBAL_OPT")
-	    set(fip_INSTALL_PREFIX_STATE
-		"/var/lib/${project_name}")
-	endif(fip_INSTALL_TYPE STREQUAL "GLOBAL_OPT")
-    else(fip_INSTALL_TYPE MATCHES "global")
-	set(fip_INSTALL_PREFIX_STATE
-	    "${fip_BASE_INSTALL_PREFIX}/var/lib/${project_name}")
-    endif(fip_INSTALL_TYPE MATCHES "global")
+        "${fip_INSTALL_INCLUDE_DIR}/${project_name}"
+    )
     # 9
-    if(fip_INSTALL_TYPE MATCHES "global")
-	if(fip_INSTALL_TYPE STREQUAL "GLOBAL_OPT")
-	    set(fip_INSTALL_PREFIX_CACHE
-		"/var/opt/${project_name}/cache/${project_name}")
-	else(fip_INSTALL_TYPE STREQUAL "GLOBAL_OPT")
-	    set(fip_INSTALL_PREFIX_CACHE
-		"/var/cache/${project_name}")
-	endif(fip_INSTALL_TYPE STREQUAL "GLOBAL_OPT")
-    else(fip_INSTALL_TYPE MATCHES "global")
-	set(fip_INSTALL_PREFIX_CACHE
-	    "${fip_BASE_INSTALL_PREFIX}/var/cache/${project_name}")
-    endif(fip_INSTALL_TYPE MATCHES "global")
+    set(fip_INSTALL_PREFIX_TEMP_SESSION "/tmp/${project_name}")
     # 10
-    if(fip_INSTALL_TYPE MATCHES "global")
-	if(fip_INSTALL_TYPE STREQUAL "GLOBAL_OPT")
-	    set(fip_INSTALL_PREFIX_VAR
-		"/var/opt/${project_name}")
-	else(fip_INSTALL_TYPE STREQUAL "GLOBAL_OPT")
-	    set(fip_INSTALL_PREFIX_VAR
-		"/var/opt/${project_name}")
-    # Another variant
-    #        set(fip_INSTALL_PREFIX_VAR
-    #            "/var/${project_name}")
-	endif(fip_INSTALL_TYPE STREQUAL "GLOBAL_OPT")
-    else(fip_INSTALL_TYPE MATCHES "global")
-	set(fip_INSTALL_PREFIX_VAR
-	    "${fip_BASE_INSTALL_PREFIX}/var/${project_name}")
-    endif(fip_INSTALL_TYPE MATCHES "global")
+    if(fip_INSTALL_TYPE MATCHES "GLOBAL")
+	set(fip_INSTALL_PREFIX_TEMP "/var/tmp/${project_name}")
+    else(fip_INSTALL_TYPE MATCHES "GLOBAL")
+	set(fip_INSTALL_PREFIX_TEMP
+            "${fip_BASE_INSTALL_PREFIX}/var/tmp/${project_name}"
+	)
+    endif(fip_INSTALL_TYPE MATCHES "GLOBAL")
     # 11
+    if(fip_INSTALL_TYPE STREQUAL "GLOBAL_OPT")
+        set(fip_INSTALL_PREFIX_STATE
+	    "/var/opt/${project_name}/lib/${project_name}"
+	)
+    elseif(fip_INSTALL_TYPE STREQUAL "GLOBAL")
+        set(fip_INSTALL_PREFIX_STATE "/var/lib/${project_name}")
+    else(fip_INSTALL_TYPE STREQUAL "GLOBAL")
+	set(fip_INSTALL_PREFIX_STATE
+	    "${fip_BASE_INSTALL_PREFIX}/var/lib/${project_name}"
+	)
+    endif(fip_INSTALL_TYPE STREQUAL "GLOBAL_OPT")
+    # 12
+    if(fip_INSTALL_TYPE STREQUAL "GLOBAL_OPT")
+        set(fip_INSTALL_PREFIX_CACHE
+	    "/var/opt/${project_name}/cache/${project_name}"
+	)
+    elseif(fip_INSTALL_TYPE STREQUAL "GLOBAL")
+	set(fip_INSTALL_PREFIX_CACHE "/var/cache/${project_name}")
+    else(fip_INSTALL_TYPE STREQUAL "GLOBAL_OPT")
+	set(fip_INSTALL_PREFIX_CACHE
+	    "${fip_BASE_INSTALL_PREFIX}/var/cache/${project_name}"
+	)
+    endif(fip_INSTALL_TYPE STREQUAL "GLOBAL_OPT")
+    # 13
+    if(fip_INSTALL_TYPE MATCHES "GLOBAL")
+        set(fip_INSTALL_PREFIX_VAR "/var/opt/${project_name}")
+    else(fip_INSTALL_TYPE MATCHES "GLOBAL")
+	set(fip_INSTALL_PREFIX_VAR
+	    "${fip_BASE_INSTALL_PREFIX}/var/${project_name}"
+	)
+    endif(fip_INSTALL_TYPE MATCHES "GLOBAL")
+    # 14
     set(fip_INSTALL_PREFIX_DOC
-	"${fip_BASE_INSTALL_PREFIX}/share/doc/${project_name}")
+	"${fip_BASE_INSTALL_PREFIX}/share/doc/${project_name}"
+    )
 
     # Set derivative install path and prefixes
 
     # additional, 4
     set(fip_INSTALL_PREFIX_EXAMPLES
-	"${fip_INSTALL_PREFIX_READONLY}/examples")
+    "${fip_INSTALL_PREFIX_READONLY}/examples")
 
     # Export symbols to the outer scope
     foreach(suffix
@@ -189,32 +191,34 @@ function(fill_install_prefixes project_name project_prefix)
     
     if(fip_KERNEL)
 	# Set derivative install path and prefixes
-	# additional, 1 [!!CHANGED!!]
+	# additional, 1
 	if(fip_INSTALL_TYPE MATCHES GLOBAL)
 	    set(fip_KERNEL_INSTALL_PREFIX_KMODULE
-		"/lib/modules/%kernel%/extra")
+		"/lib/modules/%kernel%/extra"
+	    )
 	else(fip_INSTALL_TYPE MATCHES GLOBAL)
 	    set(fip_KERNEL_INSTALL_PREFIX_KMODULE
-		"${fip_INSTALL_PREFIX_LIB}/modules/%kernel%/extra")
-	    # Another variants:
-	    #"${fip_INSTALL_PREFIX_LIB}/modules/%kernel%/updates")
+		"${fip_INSTALL_PREFIX_LIB}/modules/%kernel%/extra"
+	    )
 	endif(fip_INSTALL_TYPE MATCHES GLOBAL)
 
 	# additional, 2
 	set(fip_KERNEL_INSTALL_PREFIX_KSYMVERS
-	    "${fip_INSTALL_PREFIX_LIB}/modules/%kernel%/symvers")
+	    "${fip_INSTALL_PREFIX_LIB}/modules/%kernel%/symvers"
+	)
 	# additional, 3
-	set(fip_INSTALL_KINCLUDE_DIR
-	    "${fip_INSTALL_INCLUDE_DIR}")
-	set(fip_INSTALL_PREFIX_KINCLUDE
-	    "${fip_INSTALL_PREFIX_INCLUDE}")
+	set(fip_INSTALL_KINCLUDE_DIR "${fip_INSTALL_INCLUDE_DIR}")
+	set(fip_INSTALL_PREFIX_KINCLUDE "${fip_INSTALL_PREFIX_INCLUDE}")
 
 	# Kernel include files, which depends from kernel version.
+	# This prefix is not listed in path conventions.
 	set(fip_KERNEL_INSTALL_INCLUDE_KERNEL_DIR
-	    "${fip_BASE_INSTALL_PREFIX}/include-kernel/%kernel%")
+	    "${fip_BASE_INSTALL_PREFIX}/include-kernel/%kernel%"
+	)
 
 	set(fip_KERNEL_INSTALL_PREFIX_INCLUDE_KERNEL
-	    "${fip_KERNEL_INSTALL_INCLUDE_KERNEL_DIR}/${project_name}-kernel")
+	    "${fip_KERNEL_INSTALL_INCLUDE_KERNEL_DIR}/${project_name}-kernel"
+	)
 
 	# Export symbols to the outer scope
 	foreach(suffix
@@ -246,8 +250,8 @@ endfunction(fill_install_prefixes project_name project_prefix)
 #
 # For define variables represented kernel-dependent directories,
 # we use strings containing "%kernel%" stem.
-#
-# kernel_path(kernel_version RESULT_VARIABLE pattern ...)
+
+#  kernel_path(kernel_version RESULT_VARIABLE pattern ...)
 #
 # Form concrete path representation from kernel-dependent pattern(s).
 # Replace occurence of %kernel% in pattern(s) with given @kernel_version string.
