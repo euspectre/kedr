@@ -377,7 +377,7 @@ static size_t snprintf_trace_filename(char* dest, size_t size,
  * Main.
  */
 
-int main(int argc, char* const argv[], char* const envp[])
+int main(int argc, char* const argv[])
 {
     int fd_trace;
     int result = 0;
@@ -1285,7 +1285,7 @@ target_session_barrier_func(const void* trace_data,
 #endif
 
 #define is_substr(str, len, sub_str) \
-    ((len >= strlen(sub_str)) && (strncmp(str, sub_str, strlen(sub_str)) == 0))
+    (((size_t)(len) >= strlen(sub_str)) && (strncmp(str, sub_str, strlen(sub_str)) == 0))
     
     if(is_substr(marker, trace_line_end - marker, start_marker))
     {
