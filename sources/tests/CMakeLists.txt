@@ -58,7 +58,9 @@ add_subdirectory(calculator)
 
 add_subdirectory(fault_simulation)
 
-add_subdirectory(leak_check)
+if(KEDR_LEAK_CHECK)
+    add_subdirectory(leak_check)
+endif(KEDR_LEAK_CHECK)
 
 if(KEDR_TRACE)
     add_subdirectory(trace)
