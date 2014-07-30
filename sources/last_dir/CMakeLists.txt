@@ -1,1 +1,0 @@
-install(SCRIPT "${CMAKE_SOURCE_DIR}/depmod.cmake")
