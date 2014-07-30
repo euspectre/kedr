@@ -1,0 +1,28 @@
+#!/bin/sh
+
+# Shell script, which implement 'make uninstall' for cmake project.
+#
+# Based on corresponded cmake script in CMake FAQ:
+# http://www.cmake.org/Wiki/CMake_FAQ
+# but work faster and more presize.
+
+# NB: Script returns Success in any case, allowing other uninstall
+# scripts to be processed.
+install_manifest="@CMAKE_CURRENT_BINARY_DIR@/install_manifest.txt"
+
+if ! test -f $install_manifest; then
+    printf "Cannot find install manifest: \"${install_manifest}\"\n"
+    exit
+fi
+
+while read -r f; do
+    filename=${DESTDIR}${f}
+    printf -- "-- Uninstalling ${filename}\n"
+    if test -f ${filename} -o -h ${filename}; then
+        rm -f ${filename}
+    else
+        printf -- "-- File ${filename} does not exists.\n"
+    fi
+done < $install_manifest
+
+exit 0

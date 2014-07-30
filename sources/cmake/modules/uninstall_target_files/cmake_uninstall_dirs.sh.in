@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# Similar to cmake_uninstall.sh, but remove user-provided dirs
+# instead of files in install_manifest.txt
+
+# NB: Script returns Success in any case, allowing other uninstall
+# scripts to be processed.
+install_dirs_manifest="@CMAKE_CURRENT_BINARY_DIR@/install_dirs_manifest.txt"
+
+if ! test -f $install_dirs_manifest; then
+    printf "Cannot find install manifest: \"${install_dirs_manifest}\"\n"
+    exit
+fi
+
+while read -r d; do
+    dirname=${DESTDIR}${d}
+    printf -- "-- Uninstalling ${dirname}\n"
+    if test -d ${dirname}; then
+        rm -rf ${dirname}
+    fi
+done < $install_dirs_manifest
+
+exit 0
