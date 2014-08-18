@@ -3,6 +3,7 @@
 #include <linux/kernel.h>
 #include <linux/slab.h>
 #include <linux/topology.h> /* NUMA-related stuff */
+#include <linux/version.h>
 
 MODULE_AUTHOR("Eugene A. Shatokhin");
 MODULE_LICENSE("GPL"); 
