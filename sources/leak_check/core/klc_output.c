@@ -678,6 +678,10 @@ klc_print_process_info(struct kedr_lc_output *output,
 		return;
 	}
 	
+	/*
+	 * TODO: info->task_comm may be not null-terminated array of bytes.
+	 * "%s" specifier is not sufficient for print that array.
+	 */
 	len = snprintf(NULL, 0, fmt_process_info, info->task_comm,
 		       (int)info->task_pid);
 	buf = kmalloc(len + 1, GFP_KERNEL);

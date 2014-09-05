@@ -177,17 +177,25 @@ resource_info_create(const void *addr, size_t size,
 	struct kedr_lc_resource_info *info;
 	info = kzalloc(sizeof(*info), GFP_ATOMIC);
 	if (info != NULL) {
+		// TODO: It seems that 'current' is valid even in interrupts.
 		if (!kedr_in_interrupt()) {
 			struct task_struct *task = current;
 			info->task_pid = task_pid_nr(task);
 
-			/* An implementation of get_task_comm() is used here
-			 * because get_task_comm() itself was not exported
-			 * until kernel version 3.0. */
-			task_lock(task);
+			/*
+			 * It seems that .comm field for 'current' task may be read
+			 * without locks. At least, dump_stack_print_info() do that.
+			 * 
+			 * In the worst case, content of resulted info->tack_comm
+			 * will be undefined array of characters.
+			 * 
+			 * task_lock() cannot be used there, as any IRQ-unsafe lock
+			 * under IRQ-safe lock, even protected with
+			 * kedr_in_interrupt(). See also comment for task_lock()
+			 * implementation in linux/sched.h.
+			 */
 			strncpy(info->task_comm, task->comm,
 				sizeof(task->comm));
-			task_unlock(task);
 		} else {
 			info->task_pid = -1;
 		}
