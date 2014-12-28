@@ -27,6 +27,8 @@
 
 #include <linux/mutex.h>
 
+#include <linux/version.h> /* KERNEL_VERSION macro */
+
 
 MODULE_AUTHOR("Tsyvarev");
 MODULE_LICENSE("GPL");
@@ -235,7 +237,11 @@ int sample_indicator_instance_init(void** indicator_state,
     }
     else
     {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)
+        int error = kstrtoul(params, 10, &period);
+#else
         int error = strict_strtoul(params, 10, &period);
+#endif
         if(error)
         {
             pr_err("Cannot convert '%s' to unsigned long period.", params);

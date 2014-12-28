@@ -17,6 +17,8 @@
 
 #include <linux/sched.h> /*task_tgid_vnr()*/
 
+#include <linux/version.h> /* KERNEL_VERSION macro */
+
 #define BUFFER_SIZE_DEFAULT 100000
 #define TRACE_DIR_NAME "kedr_tracing"
 
@@ -353,7 +355,11 @@ buffer_size_file_write(struct file *filp,
             return -EFAULT;
         }
         str[count] = '\0';
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)
+        error = kstrtoul(str, 0, &size);
+#else
         error = strict_strtoul(str, 0, &size);
+#endif
         kfree(str);
         if(error) return error;
     }

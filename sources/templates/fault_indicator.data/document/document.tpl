@@ -185,6 +185,7 @@ indicator.state.type = atomic_t
 # Declarations for pid
 global =>>
 #include <linux/sched.h> /* task_pid */
+#include <linux/version.h> /* KERNEL_VERSION macro */
 <<
 
 # Simulate for pid
@@ -246,7 +247,11 @@ indicator.file.get =>>
 indicator.file.set =>>
 	//read pid as long
 	long pid_long;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)
+	int result = kstrtol(str, 10, &pid_long);
+#else
 	int result = strict_strtol(str, 10, &pid_long);
+#endif
 	if(!result)
 		atomic_set(&state(pid), (pid_t)pid_long);
 	return result ? -EINVAL : 0;
