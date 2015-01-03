@@ -16,12 +16,12 @@
  * functions to be called before, after or instead of it. */
 struct kedr_function_call_info
 {
-	/* Return address of the original function. */
-	void *return_address;
+    /* Return address of the original function. */
+    void *return_address;
 
-	/* This field can be used if it is needed to pass some data 
-	 * from a pre handler to the corresponding post handler, etc. */
-	void *data;
+    /* This field can be used if it is needed to pass some data 
+     * from a pre handler to the corresponding post handler, etc. */
+    void *data;
 };
 
 /* Pair of the functions: a function to be replaced and a function to 
@@ -35,11 +35,11 @@ struct kedr_function_call_info
  * ret_type (*)(arg_type1,..., arg_typeN, kedr_function_call_info *).  */
 struct kedr_replace_pair
 {
-	/* Address of the function to be replaced. */
-	void *orig;
-	
-	/* Address of the replacement function. */
-	void *replace;
+    /* Address of the function to be replaced. */
+    void *orig;
+    
+    /* Address of the replacement function. */
+    void *replace;
 };
 
 /* Pair of the functions: the function to be intercepted and the function
@@ -52,10 +52,10 @@ struct kedr_replace_pair
  * void (*)(arg_type1,..., arg_typeN, kedr_function_call_info *).  */
 struct kedr_pre_pair
 {
-	/* Address of the function to be processed. */
-	void *orig;
-	/* Address of the function to be called before 'orig'. */
-	void *pre;
+    /* Address of the function to be processed. */
+    void *orig;
+    /* Address of the function to be called before 'orig'. */
+    void *pre;
 };
 
 /* Pair of the functions: the function to be intercepted and the function
@@ -74,11 +74,11 @@ struct kedr_pre_pair
  * void (*)(arg_type1,..., arg_typeN, kedr_function_call_info *).  */
 struct kedr_post_pair
 {
-	/* Address of the function to be processed. */
-	void *orig;
-	
-	/* Address of the function to be called after 'orig'. */
-	void *post;
+    /* Address of the function to be processed. */
+    void *orig;
+    
+    /* Address of the function to be called after 'orig'. */
+    void *post;
 };
 
 /* This structure contains everything KEDR needs to properly 
@@ -89,38 +89,38 @@ struct kedr_post_pair
  * */
 struct kedr_payload
 {
-	/* payload module itself */
-	struct module *mod; 
-	
-	/* 
-	 * Array of functions for replace.
-	 * 
-	 * Last element in that array should contain NULL
-	 * as the address of the original function.
-	 * 
-	 * May be NULL.
-	 */
-	struct kedr_replace_pair *replace_pairs;
+    /* payload module itself */
+    struct module *mod; 
     
-	/* 
-	 * Array of functions for perform some actions before them.
-	 * 
-	 * Last element in that array should contain NULL
-	 * as the address of the original function.
-	 * 
-	 * May be NULL.
-	 */
-	struct kedr_pre_pair *pre_pairs;
+    /* 
+     * Array of functions for replace.
+     * 
+     * Last element in that array should contain NULL
+     * as the address of the original function.
+     * 
+     * May be NULL.
+     */
+    struct kedr_replace_pair *replace_pairs;
+    
+    /* 
+     * Array of functions for perform some actions before them.
+     * 
+     * Last element in that array should contain NULL
+     * as the address of the original function.
+     * 
+     * May be NULL.
+     */
+    struct kedr_pre_pair *pre_pairs;
 
-	/* 
-	 * Array of functions for perform some actions after them.
-	 * 
-	 * Last element in that array should contain NULL
-	 * as the address of the original function.
-	 * 
-	 * May be NULL.
-	 */
-	struct kedr_post_pair *post_pairs;
+    /* 
+     * Array of functions for perform some actions after them.
+     * 
+     * Last element in that array should contain NULL
+     * as the address of the original function.
+     * 
+     * May be NULL.
+     */
+    struct kedr_post_pair *post_pairs;
 
 
     /* If not NULL, these callbacks are called after the target module is

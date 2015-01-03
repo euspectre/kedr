@@ -39,7 +39,7 @@ struct module;
  * successfully allocated. */
 void
 kedr_lc_handle_alloc(struct module *mod, const void *addr, size_t size, 
-	const void *caller_address);
+    const void *caller_address);
 
 /* Call this function to inform LeakCheck core that the given kernel module 
  * ('mod') has freed (released) the resource that was located at the given 
@@ -59,6 +59,6 @@ kedr_lc_handle_alloc(struct module *mod, const void *addr, size_t size,
  * make a mess. */
 void
 kedr_lc_handle_free(struct module *mod, const void *addr, 
-	const void *caller_address);
+    const void *caller_address);
 
 #endif /* LEAK_CHECK_H_1042_INCLUDED */

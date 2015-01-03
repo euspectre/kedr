@@ -54,7 +54,7 @@ struct kedr_simulation_point;
 
 struct kedr_simulation_point* 
 kedr_fsim_point_register(const char* point_name,
-	const char* format_string);
+    const char* format_string);
 
 /*
  * Unregister point, making its name free for use, and release resources.
@@ -92,7 +92,7 @@ struct kedr_simulation_indicator;
 
 struct kedr_simulation_indicator* 
 kedr_fsim_indicator_register(const char* indicator_name,
-	int (*simulate)(void* indicator_state, void* user_data),
+    int (*simulate)(void* indicator_state, void* user_data),
     const char* format_string,
     int (*create_instance)(void** indicator_state, const char* params, struct dentry* control_directory),
     void (*destroy_instance)(void* indicator_state)
@@ -157,6 +157,6 @@ int kedr_fsim_point_simulate(struct kedr_simulation_point* point,
  */
 
 int kedr_fsim_fault_message(const char* fmt, ...)
-	__attribute__ ((format (printf, 1, 2)));
+    __attribute__ ((format (printf, 1, 2)));
 
 #endif /* KEDR_FAULT_SIMULATION_H */
