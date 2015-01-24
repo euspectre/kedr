@@ -9,7 +9,7 @@
 #include <linux/module.h> /* struct module */
 
 /**********************************************************************
- * Public API                                                        
+ * Public API
  **********************************************************************/
 
 /*
@@ -17,12 +17,12 @@
  */
 struct kedr_intermediate_info
 {
-    //NULL-terminated array of pre-functions
-    void** pre;
-    //NULL-terminated array of post-functions
-    void** post;
-    // replacement function or NULL.
-    void* replace;
+	//NULL-terminated array of pre-functions
+	void** pre;
+	//NULL-terminated array of post-functions
+	void** post;
+	// replacement function or NULL.
+	void* replace;
 };
 
 /*
@@ -36,33 +36,33 @@ struct kedr_intermediate_info
  */
 struct kedr_intermediate_impl
 {
-    void* orig;
-    void* intermediate;
-    /*
-     *  Next field will be filled only before target module is loaded,
-     * and makes a sence only during target session.
-     */
-    struct kedr_intermediate_info* info;
+	void* orig;
+	void* intermediate;
+	/*
+	 *  Next field will be filled only before target module is loaded,
+	 * and makes a sence only during target session.
+	 */
+	struct kedr_intermediate_info* info;
 };
 
 struct kedr_functions_support
 {
-    /*
-     * Module which will be prevented to unload
-     * while this support is used.
-     * 
-     * If module itself use this support(e.g., define payload),
-     * field should be set to NULL.
-     * (otherwise one will unable to unload this module at all).
-     */
-    struct module* mod;
+	/*
+	 * Module which will be prevented to unload
+	 * while this support is used.
+	 * 
+	 * If module itself use this support(e.g., define payload),
+	 * field should be set to NULL.
+	 * (otherwise one will unable to unload this module at all).
+	 */
+	struct module* mod;
 
-    /*
-     * Array of intermediate functions implementations.
-     * 
-     * Last element of the array should hold NULL in 'orig'.
-     */
-    struct kedr_intermediate_impl* intermediate_impl;
+	/*
+	 * Array of intermediate functions implementations.
+	 * 
+	 * Last element of the array should hold NULL in 'orig'.
+	 */
+	struct kedr_intermediate_impl* intermediate_impl;
 };
 /*
  * Register kedr support for some functions set.
