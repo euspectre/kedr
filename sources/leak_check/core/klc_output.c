@@ -153,7 +153,9 @@ static void
 klc_output_buffer_cleanup(struct klc_output_buffer *ob)
 {
 	BUG_ON(ob == NULL);
-	
+
+	mutex_destroy(&ob->lock);
+
 	ob->data_len = 0;
 	ob->size = 0;
 	vfree(ob->buf);

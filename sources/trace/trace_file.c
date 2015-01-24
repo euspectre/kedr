@@ -235,7 +235,6 @@ struct trace_file* trace_file_create(
         pr_err("Cannot allocate 'trace_file' structure.");
         return NULL;
     }
-    mutex_init(&trace_file->m);
     
     trace_file->trace_buffer = trace_buffer_alloc(buffer_size, 1);
     if(trace_file->trace_buffer == NULL)
@@ -243,7 +242,7 @@ struct trace_file* trace_file_create(
         kfree(trace_file);
         return NULL;
     }
-    //
+
     mutex_init(&trace_file->m);
     trace_file->print_message = print_message;
     trace_file->user_data = user_data;
@@ -262,6 +261,7 @@ struct trace_file* trace_file_create(
     if(trace_file->file == NULL)
     {
         pr_err("Cannot create trace file.");
+        mutex_destroy(&trace_file->m);
         trace_buffer_destroy(trace_file->trace_buffer);
         kfree(trace_file);
         return NULL;

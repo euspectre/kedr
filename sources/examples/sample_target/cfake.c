@@ -260,6 +260,7 @@ cfake_destroy_device(struct cfake_dev *dev, int minor,
 	device_destroy(class, MKDEV(cfake_major, minor));
 	cdev_del(&dev->cdev);
 	kfree(dev->data);
+	mutex_destroy(&dev->cfake_mutex);
 	return;
 }
 
