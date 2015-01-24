@@ -18,12 +18,12 @@ some_param_set(const char* val, const struct kernel_param *kp)
     return 0;
 }
 
-static struct kernel_param_ops some_param_ops =
+static const struct kernel_param_ops some_param_ops =
 {
     .set = some_param_set,
     .get = some_param_get,
 };
 module_param_cb(some_param,
-    some_param_ops,
+    &some_param_ops,
     NULL,
     S_IRUGO | S_IWUSR);
