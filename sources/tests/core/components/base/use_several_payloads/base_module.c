@@ -28,13 +28,23 @@ MODULE_LICENSE("GPL");
 EXPORT_SYMBOL(kedr_payload_register);
 EXPORT_SYMBOL(kedr_payload_unregister);
 
-EXPORT_SYMBOL(kedr_base_target_load_callback);
-EXPORT_SYMBOL(kedr_base_target_unload_callback);
+EXPORT_SYMBOL(kedr_base_session_start);
+EXPORT_SYMBOL(kedr_base_session_stop);
+
+/* Define functions corresponded to other components. */
+int kedr_functions_support_function_use(void* function)
+{
+    return 0;
+}
+
+void kedr_functions_support_function_unuse(void* function)
+{
+}
 
 static int __init
 base_module_init(void)
 {
-    return kedr_base_init(NULL);
+    return kedr_base_init();
 }
 
 static void __exit

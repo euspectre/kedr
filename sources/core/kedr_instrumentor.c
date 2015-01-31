@@ -48,23 +48,6 @@
 //MODULE_AUTHOR("Eugene A. Shatokhin");
 //MODULE_LICENSE("GPL");
 
-/* Save target module for implement target_in_init() */
-static struct module* target_module;
-/* ================================================================ */
-
-/* Nonzero if the target module is initializing, 0 if it has completed 
- * initialization or if no target is loaded at the moment. */
-static int target_in_init = 0;
-
-/* A spinlock to protect target_in_init from concurrent access. 
- * A mutex would not do because target_in_init can be accessed from atomic
- * context too (kedr_target_module_in_init() can be called from a replacement
- * function executing in atomic context).
- */
-static DEFINE_SPINLOCK(target_in_init_lock);
-
-/* ================================================================ */
-
 /* Replacement table as a hash table */
 struct repl_elem
 {
@@ -524,17 +507,10 @@ replace_calls_in_module(struct module* mod,
 	return;
 }
 
-/*
- * on_module_load() should do real work when the target module is loaded:
- * instrument it, etc.
- *
- * Note that this function is called with instrumentor_mutex locked.
- */
 int kedr_instrumentor_replace_functions(struct module* m,
 	const struct kedr_instrumentor_replace_pair* replace_pairs)
 {
 	int result;
-	unsigned long flags;
 	
 	struct repl_hash_table repl_hash_table;
 	
@@ -545,11 +521,6 @@ int kedr_instrumentor_replace_functions(struct module* m,
 		return result;
 	}
 	
-	spin_lock_irqsave(&target_in_init_lock, flags);
-	target_in_init = 1;
-	target_module = m;
-	spin_unlock_irqrestore(&target_in_init_lock, flags);
-
 	replace_calls_in_module(m, &repl_hash_table);
 	
 	repl_hash_table_destroy(&repl_hash_table);
@@ -558,66 +529,6 @@ int kedr_instrumentor_replace_functions(struct module* m,
 
 void kedr_instrumentor_replace_clean(struct module* m)
 {
-	unsigned long flags;
-   
-	spin_lock_irqsave(&target_in_init_lock, flags);
-	target_in_init = 0; 
-	target_module = NULL;
-	spin_unlock_irqrestore(&target_in_init_lock, flags);
-	
-	return;
-}
-
-/* ================================================================ */
-
-/* Returns nonzero if a target module is currently loaded and it executes 
- * its init function at the moment, 0 otherwise (0 is returned even if there
- * is no target module loaded at the moment).
- * 
- * In fact, the function just checks whether the target module has already
- * dropped its ".init.*" sections (which the modules do after they have 
- * completed their initialization). Therefore the function will always 
- * return 0 if the init function was not marked as "__init" in the target 
- * module. This should not be a big problem.
- * 
- * This function can be useful to implement particular fault simulation 
- * scenarios (like "fail everything after init"), etc.
- * 
- * Note however that there is a chance that the target module will complete
- * its initialization after kedr_target_module_in_init() has determined that
- * the target is in init but before the return value of 
- * kedr_target_module_in_init() is used. It is up to the user of the target
- * module to ensure that no request is made to the module until its 
- * initialization is properly handled by the tests.
- *
- * It is allowed to call this function from atomic context.
- */
-int
-kedr_target_module_in_init(void)
-{
-/*
- * The target cannot unload before this function exits.
- * Indeed, is_target_module_in_init() is called by kedr_target_module_in_init(),
- * which may only be called from the replacement functions. The replacement 
- * functions are called from the code of the target driver. As long as at
- * least one replacement function is working, the target module is still 
- * there because it is in use by some task.
- */
-	unsigned long flags;
-	int result;
-	
-	spin_lock_irqsave(&target_in_init_lock, flags);
-	if (target_in_init)
-	{
-		BUG_ON(target_module == NULL);
-		target_in_init = (target_module->module_init != NULL);
-	}
-	result = target_in_init;
-	spin_unlock_irqrestore(&target_in_init_lock, flags);
-	
-	/* [NB] When the target is unloaded, on_module_unload() will set 
-	 * target_in_init to 0.*/
-	return result;
 }
 
 /* ================================================================ */

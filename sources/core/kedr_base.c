@@ -1,18 +1,18 @@
 /*
- * The "base" component of KEDR system. 
- * 
- * "kedr-base" keeps a registry of payload modules and provides interface 
+ * The "base" component of KEDR system.
+ *
+ * "kedr-base" keeps a registry of payload modules and provides interface
  * for them to register / unregister themselves.
- * 
+ *
  * When asked, it return all interception information
  * collected from registered payloads.
  */
 
 /* ========================================================================
  * Copyright (C) 2012, KEDR development team
- * Copyright (C) 2010-2012, Institute for System Programming 
+ * Copyright (C) 2010-2012, Institute for System Programming
  *                          of the Russian Academy of Sciences (ISPRAS)
- * Authors: 
+ * Authors:
  *      Eugene A. Shatokhin <spectre@ispras.ru>
  *      Andrey V. Tsyvarev  <tsyvarev@ispras.ru>
  *
@@ -20,7 +20,7 @@
  * under the terms of the GNU General Public License version 2 as published
  * by the Free Software Foundation.
  ======================================================================== */
- 
+
 /*
  * Based on the base/base.c from KEDR package at 21.03.11.
  */
@@ -36,10 +36,13 @@
 #include <kedr/core/kedr.h>
 #include "kedr_base_internal.h"
 
+#include "kedr_functions_support_internal.h"
+#include "kedr_internal.h"
+
 #include "config.h"
 
 /* ================================================================ */
-/* This string will be used in debug output to specify the name of 
+/* This string will be used in debug output to specify the name of
  * the current component of KEDR
  */
 #define COMPONENT_STRING "kedr_base: "
@@ -50,26 +53,19 @@
 /* ================================================================ */
 
 
-/* 
- * All registered payloads organized into list.
- * This is an element of this list.
+/*
+ * All registered payloads are organized into list.
+ * This is an element of that list.
  */
 struct payload_elem
 {
 	struct list_head list;
 	
 	struct kedr_payload *payload;
-	
-	/* 
-	 * Not 0 if functions from this payload are used for target module.
-	 * 
-	 * Payloads with 'is_used' != 0 cannot be unregistered.
-	 */
-	int is_used; 
 };
 
 /* Look for a given element in the list. */
-static struct payload_elem* 
+static struct payload_elem*
 payload_elem_find(struct kedr_payload *payload, struct list_head* payload_list);
 
 static int payload_elem_fix(struct payload_elem* elem);
@@ -78,9 +74,11 @@ static void payload_elem_release(struct payload_elem* elem);
 static int payload_elem_fix_all(struct list_head *elems);
 static void payload_elem_release_all(struct list_head *elems);
 
-/* Call corresponding callbacks for all used payloads in list */
-static void payload_elem_load_callback_all(struct list_head *elems, struct module* m);
-static void payload_elem_unload_callback_all(struct list_head *elems, struct module* m);
+/* Call corresponding callbacks for all used payloads. */
+static void payloads_on_session_start(void);
+static void payloads_on_session_end(void);
+static void payloads_on_target_loaded(struct module* m);
+static void payloads_on_target_about_to_unloaded(struct module* m);
 
 
 /* Mark all functions which intercepted by payload as used*/
@@ -93,7 +91,7 @@ payload_functions_unuse(struct kedr_payload* payload);
 
 /*
  * Map of functions.
- * 
+ *
  * Used for replacement count verification.
  */
 
@@ -121,7 +119,7 @@ functions_map_add(struct functions_map* map, void* function);
 static void
 functions_map_remove(struct functions_map* map, void* function);
 
-/* 
+/*
  * Return error if payload try to replace function which already replaced.
  */
 static int
@@ -134,33 +132,33 @@ function_replacements_remove_payload(struct functions_map* replacement_map,
 
 /* ================= Global data =================== */
 
-/* operations which are passed when component is initialized. */
-static struct kedr_base_operations* kedr_base_ops;
-
 /* List of currently registered payloads */
-static struct list_head payload_list;
+static LIST_HEAD(payload_list);
 
 /*
  * Nonzero if payloads are used now (target module is loaded.).
  */
-static int payloads_are_used;
+static int payloads_are_used = 0;
 
-/* 
+/*
  * Functions which are replaced by one payload.
- * 
+ *
  * Using this table prevents registering payload which replace
  * already replaced function.
  */
 
 static struct functions_map replaced_functions_map;
 
-/* 
+/*
  * Pointer to interception information (collected from all payload modules).
- * 
+ *
  * Need to store for freeing when target module is unloaded.
  */
 
 static struct kedr_base_interception_info* info_array_current;
+
+/* Whether newly registered payloads should support several targets. */
+int should_force_several_targets = 0;
 
 /* A mutex to protect access to the global data of kedr-base */
 static DEFINE_MUTEX(base_mutex);
@@ -169,11 +167,11 @@ static DEFINE_MUTEX(base_mutex);
 /*
  * Intermediate hash table which is used for different counters
  * for some payload set:
- * 
+ *
  * -count of distinct functions, which are used by these payloads,
  * -for every such function, count pre- and post- functions,
  *   registered by payloads, and whether replace function is registered.
- * 
+ *
  * Also, this table supports iterator over its elements.
  */
 
@@ -211,9 +209,9 @@ function_counters_table_destroy(struct function_counters_table* table);
 
 /*
  * Return table element with given key.
- * 
+ *
  * If such element is not exits, allocate it.
- * 
+ *
  * On error, return ERR_PTR(error).
  */
 static struct function_counters_elem*
@@ -237,18 +235,18 @@ struct function_counters_table_iter
 	int i;
 };
 
-/* 
+/*
  * Set iterator to the beginning of the table.
- * 
+ *
  * If table is empty, set 'valid' field of the iterator to 0.
  */
 static void
 function_counters_table_begin(struct function_counters_table* table,
 	struct function_counters_table_iter* iter);
 
-/* 
+/*
  * Advance iterator to the next element in the table.
- * 
+ *
  * If iterator point to the last element in the table,
  * set 'valid' field of the iterator to 0.
  */
@@ -280,9 +278,9 @@ static void
 interception_info_destroy(struct kedr_base_interception_info* info);
 
 
-/* Allocate appropriate amount of memory and combine the interception 
+/* Allocate appropriate amount of memory and combine the interception
  * information from all fixed payload modules into a single array.
- * 
+ *
  * On error return ERR_PTR().
  */
 
@@ -300,21 +298,16 @@ interception_info_array_find(struct kedr_base_interception_info* info_array,
 
 /* ================================================================ */
 int
-kedr_base_init(struct kedr_base_operations* ops)
+kedr_base_init(void)
 {
 	int result;
 	KEDR_MSG(COMPONENT_STRING
 		"initializing\n");
 
-	kedr_base_ops = ops;
-	/* Initialize the list of payloads */
-	INIT_LIST_HEAD(&payload_list);
-	payloads_are_used = 0;
-	
 	result = functions_map_init(&replaced_functions_map, 20);
     if(result) return result;
 	
-	return 0; 
+	return 0;
 }
 
 void
@@ -324,20 +317,70 @@ kedr_base_destroy(void)
 	return;
 }
 
+/*
+ * Both force_several_targets() and unforce_several_targets()
+ * are actually used in module parameter's set callback.
+ *
+ * So check param_set_can_use_lock() when we want to use module's mutex.
+ */
+int force_several_targets(void)
+{
+	int result = 0;
+	struct payload_elem* elem;
+	int can_use_lock = param_set_can_use_lock();
+	
+	if(can_use_lock) mutex_lock(&base_mutex);
+	list_for_each_entry(elem, &payload_list, list)
+	{
+		struct kedr_payload* payload = elem->payload;
+		if(payload->target_load_callback || payload->target_unload_callback)
+		{
+			result = -EINVAL;
+			if(payload->mod)
+			{
+				kedr_err("Payload in module %.*s does not support several targets.",
+					MODULE_NAME_LEN, module_name(payload->mod));
+			}
+			else
+			{
+				kedr_err0("At least on payload does not support several targets.");
+			}
+			break;
+		}
+	}
+	if(!result)
+	{
+		should_force_several_targets = 1;
+	}
+	if(can_use_lock) mutex_unlock(&base_mutex);
+	
+	return result;
+}
+
+void unforce_several_targets(void)
+{
+	int can_use_lock = param_set_can_use_lock();
+	
+	if(can_use_lock) mutex_lock(&base_mutex);
+	should_force_several_targets = 0;
+	if(can_use_lock) mutex_unlock(&base_mutex);
+}
 /* =================Interface implementation================== */
 
-/* 
+/*
  * On success, return 0 and interception info array is
  * info_array_current.
  * On error, return negative error code.
- * 
+ *
  * Should be called with mutex locked.
+ * 
+ * NB: on_session_end() callbacks should be called after it, without mutex locked.
  */
 static int
-kedr_base_target_load_callback_internal(struct module* m)
+kedr_base_session_start_internal(void)
 {
 	int result;
-    
+
     struct kedr_base_interception_info* info_array;
 	
 	BUG_ON(payloads_are_used);
@@ -354,8 +397,6 @@ kedr_base_target_load_callback_internal(struct module* m)
 	
 	payloads_are_used = 1;
 	
-	payload_elem_load_callback_all(&payload_list, m);
-
     info_array_current = info_array;
 
 	return 0;
@@ -364,16 +405,16 @@ kedr_base_target_load_callback_internal(struct module* m)
 /*
  * Fix all payloads and return array of functions with information
  * how them should be intercepted.
- * 
+ *
  * Last element in the array should contain NULL in 'orig' field.
- * 
+ *
  * On error, return ERR_PTR.
- * 
+ *
  * Returning array is freed by the callee
  * at kedr_target_unload_callback() call.
  */
 const struct kedr_base_interception_info*
-kedr_base_target_load_callback(struct module* m)
+kedr_base_session_start(void)
 {
 	/* 0 - return info_array_current, otherwise return ERR_PTR(result)*/
 	int result;
@@ -382,23 +423,28 @@ kedr_base_target_load_callback(struct module* m)
 
 	if(result) return ERR_PTR(result);
 	
-	result = kedr_base_target_load_callback_internal(m);
+	result = kedr_base_session_start_internal();
 
 	mutex_unlock(&base_mutex);
 	
-	return result ? ERR_PTR(result) : info_array_current;
+	if(result) return ERR_PTR(result);
+	
+	payloads_on_session_start();
+	
+	return info_array_current;
 }
 
 /*
  * Make all payloads available to unload.
  */
-void kedr_base_target_unload_callback(struct module* m)
+void kedr_base_session_stop(void)
 {
-	mutex_lock(&base_mutex);
-	
 	BUG_ON(!payloads_are_used);
 	
-	payload_elem_unload_callback_all(&payload_list, m);
+	payloads_on_session_end();
+	
+	mutex_lock(&base_mutex);
+	
 	payloads_are_used = 0;
 	interception_info_array_free(info_array_current);
 	payload_elem_release_all(&payload_list);
@@ -406,12 +452,23 @@ void kedr_base_target_unload_callback(struct module* m)
 	mutex_unlock(&base_mutex);
 }
 
+void kedr_base_target_load(struct module* m)
+{
+	payloads_on_target_loaded(m);
+}
+
+void kedr_base_target_unload(struct module* m)
+{
+	payloads_on_target_about_to_unloaded(m);
+}
+
+
 /* ================================================================ */
 /* Implementation of public API                                     */
 /* ================================================================ */
 
 /* Should be executed with mutex locked */
-static int 
+static int
 kedr_payload_register_internal(struct kedr_payload *payload)
 {
 	int result = 0;
@@ -429,11 +486,19 @@ kedr_payload_register_internal(struct kedr_payload *payload)
 
 	if (payload_elem_find(payload, &payload_list) != NULL)
 	{
-        KEDR_MSG(COMPONENT_STRING
-			"module \"%s\" attempts to register the same payload twice\n",
-			module_name(payload->mod));
+        kedr_err("module \"%.*s\" attempts to register the same payload twice\n",
+			MODULE_NAME_LEN, module_name(payload->mod));
 		return -EINVAL;
 	}
+	
+	if(should_force_several_targets)
+	{
+		if(payload->target_load_callback || payload->target_unload_callback)
+		{
+			kedr_err0("Payload doesn't support several targets, but current KEDR state require that.");
+			return -EINVAL;
+		}
+	}	
 
 	result = function_replacements_add_payload(&replaced_functions_map, payload);
 	if(result)
@@ -462,7 +527,6 @@ kedr_payload_register_internal(struct kedr_payload *payload)
 		
 	INIT_LIST_HEAD(&elem_new->list);
 	elem_new->payload = payload;
-	elem_new->is_used = 0;
 	
 	list_add_tail(&elem_new->list, &payload_list);
 	
@@ -477,7 +541,7 @@ err_replacements:
 	return result;
 }
 
-int 
+int
 kedr_payload_register(struct kedr_payload *payload)
 {
 	int result = 0;
@@ -498,7 +562,7 @@ kedr_payload_register(struct kedr_payload *payload)
 	return result;
 }
 
-void 
+void
 kedr_payload_unregister(struct kedr_payload *payload)
 {
 	struct payload_elem *elem;
@@ -542,7 +606,7 @@ out:
 /* ======Implementation of auxiliary functions======== */
 
 /* Look for a given element in the list. */
-static struct payload_elem* 
+static struct payload_elem*
 payload_elem_find(struct kedr_payload *payload, struct list_head* payload_list)
 {
 	struct payload_elem *elem;
@@ -556,95 +620,127 @@ payload_elem_find(struct kedr_payload *payload, struct list_head* payload_list)
 }
 
 
-static int 
+static int
 payload_elem_fix(struct payload_elem* elem)
 {
 	struct kedr_payload* payload = elem->payload;
-	BUG_ON(elem->is_used);
 	
 	if((payload->mod != NULL) && (try_module_get(payload->mod) == 0))
 	{
 		return -EBUSY;
 	}
 	
-	elem->is_used = 1;
-	
 	return 0;
 }
-static void 
+static void
 payload_elem_release(struct payload_elem* elem)
 {
 	struct kedr_payload* payload = elem->payload;
-	BUG_ON(!elem->is_used);
 	
 	if(payload->mod != NULL)
 	{
 		module_put(payload->mod);
 	}
-	
-	elem->is_used = 0;
 }
 
-static int 
+static int
 payload_elem_fix_all(struct list_head *elems)
 {
 	struct payload_elem* elem;
 	list_for_each_entry(elem, elems, list)
 	{
 		int result = payload_elem_fix(elem);
-		/* 
-		 * Currently failure to fix even one payload is an error.
-		 * 
-		 * This makes 'is_used' field of the struct payload_elem
-		 * unneccesary - it always has same value as global variable
-		 * 'payloads_are_used'.
-		 * 
-		 * But may be in the future failure to fix one payload
-		 * will not lead to the error.
-		 */
+
 		if(result)
 		{
-			struct payload_elem* elem_clear;
-			list_for_each_entry(elem_clear, elems, list)
+			list_for_each_entry_continue_reverse(elem, elems, list)
 			{
-				if(elem_clear == elem) break;
-				payload_elem_release(elem_clear);
+				payload_elem_release(elem);
 			}
 			return result;
 		}
 	}
 	return 0;
 }
-static void 
+static void
 payload_elem_release_all(struct list_head *elems)
 {
 	struct payload_elem* elem;
-	list_for_each_entry(elem, elems, list)
+	list_for_each_entry_reverse(elem, elems, list)
 	{
 		payload_elem_release(elem);
 	}
 }
 
-static void 
-payload_elem_load_callback_all(struct list_head *elems, struct module* m)
+/*
+ * Execute some actions(e.g. call callbacks) for every payload registered.
+ * 
+ * 'elem' should be variable of type 'struct payload_elem*'.
+ */
+#define for_each_payload(elem) list_for_each_entry(elem, &payload_list, list)
+
+/*
+ * Execute some actions(e.g. call callbacks) for every payload registered
+ * in reverse order.
+ * 
+ * 'elem' should be variable of type 'struct payload_elem*'.
+ */
+#define for_each_payload_reverse(elem) list_for_each_entry_reverse(elem, &payload_list, list)
+
+static void
+payloads_on_target_loaded(struct module* m)
 {
 	struct payload_elem* elem;
-	list_for_each_entry(elem, elems, list)
+	struct kedr_payload* payload;
+	for_each_payload(elem)
 	{
-		struct kedr_payload* payload = elem->payload;
-		if(payload->target_load_callback)
+		payload = elem->payload;
+		if(payload->on_target_loaded)
+			payload->on_target_loaded(m);
+		// Single-target mode.
+		else if(payload->target_load_callback)
 			payload->target_load_callback(m);
 	}
 }
-static void 
-payload_elem_unload_callback_all(struct list_head *elems, struct module* m)
+static void
+payloads_on_target_about_to_unloaded(struct module* m)
 {
 	struct payload_elem* elem;
-	list_for_each_entry(elem, elems, list)
+	struct kedr_payload* payload;
+	for_each_payload_reverse(elem)
 	{
-		struct kedr_payload* payload = elem->payload;
-		if(payload->target_unload_callback)
+		payload = elem->payload;
+		if(payload->on_target_about_to_unload)
+			payload->on_target_about_to_unload(m);
+		// Single-target mode.
+		else if(payload->target_unload_callback)
 			payload->target_unload_callback(m);
+	}
+}
+
+static void
+payloads_on_session_start(void)
+{
+	struct payload_elem* elem;
+	struct kedr_payload* payload;
+	for_each_payload(elem)
+	{
+		payload = elem->payload;
+		if(payload->on_session_start)
+			payload->on_session_start();
+	}
+}
+
+static void
+payloads_on_session_end(void)
+{
+	struct payload_elem* elem;
+	struct kedr_payload* payload;
+	for_each_payload_reverse(elem)
+	{
+		payload = elem->payload;
+		if(payload->on_session_end)
+			payload->on_session_end();
 	}
 }
 
@@ -653,28 +749,22 @@ payload_functions_use(struct kedr_payload* payload)
 {
 	int result = 0;
 
-	if(kedr_base_ops == NULL) return 0;
-	if(kedr_base_ops->function_use == NULL)	return 0;
-	
 	if(payload->pre_pairs)
 	{
 		struct kedr_pre_pair* pre_pair;
 		
 		for(pre_pair = payload->pre_pairs; pre_pair->orig != NULL; pre_pair++)
 		{
-			result = kedr_base_ops->function_use(kedr_base_ops,
-                pre_pair->orig);
+			result = kedr_functions_support_function_use(pre_pair->orig);
 			if(result) break;
 		}
 		if(pre_pair->orig != NULL)
 		{
 			//Error
-			if(kedr_base_ops->function_unuse)
-				for(--pre_pair; (pre_pair - payload->pre_pairs) >= 0; pre_pair--)
-				{
-					kedr_base_ops->function_unuse(kedr_base_ops,
-                        pre_pair->orig);
-				}
+			for(--pre_pair; (pre_pair - payload->pre_pairs) >= 0; pre_pair--)
+			{
+				kedr_functions_support_function_unuse(pre_pair->orig);
+			}
 			goto err_pre;
 		}
 	}
@@ -685,19 +775,16 @@ payload_functions_use(struct kedr_payload* payload)
 
 		for(post_pair = payload->post_pairs; post_pair->orig != NULL; post_pair++)
 		{
-			result = kedr_base_ops->function_use(kedr_base_ops,
-                post_pair->orig);
+			result = kedr_functions_support_function_use(post_pair->orig);
 			if(result) break;
 		}
 		if(post_pair->orig != NULL)
 		{
 			//Error
-			if(kedr_base_ops->function_unuse)
-				for(--post_pair; (post_pair - payload->post_pairs) >= 0; post_pair--)
-				{
-					kedr_base_ops->function_unuse(kedr_base_ops,
-                        post_pair->orig);
-				}
+			for(--post_pair; (post_pair - payload->post_pairs) >= 0; post_pair--)
+			{
+				kedr_functions_support_function_unuse(post_pair->orig);
+			}
 			goto err_post;
 		}
 	}
@@ -708,19 +795,16 @@ payload_functions_use(struct kedr_payload* payload)
 
 		for(replace_pair = payload->replace_pairs; replace_pair->orig != NULL; replace_pair++)
 		{
-			result = kedr_base_ops->function_use(kedr_base_ops,
-                replace_pair->orig);
+			result = kedr_functions_support_function_use(replace_pair->orig);
 			if(result) break;
 		}
 		if(replace_pair->orig != NULL)
 		{
 			//Error
-			if(kedr_base_ops->function_unuse)
-				for(--replace_pair; (replace_pair - payload->replace_pairs) >= 0; replace_pair--)
-				{
-					kedr_base_ops->function_unuse(kedr_base_ops,
-                        replace_pair->orig);
-				}
+			for(--replace_pair; (replace_pair - payload->replace_pairs) >= 0; replace_pair--)
+			{
+				kedr_functions_support_function_unuse(replace_pair->orig);
+			}
 			goto err_replace;
 		}
 	}
@@ -728,45 +812,38 @@ payload_functions_use(struct kedr_payload* payload)
 	return 0;
 	
 err_replace:
-	if(payload->post_pairs && kedr_base_ops->function_unuse)
+	if(payload->post_pairs)
 	{
 		struct kedr_post_pair* post_pair;
 
 		for(post_pair = payload->post_pairs; post_pair->orig != NULL; post_pair++)
 		{
-			kedr_base_ops->function_unuse(kedr_base_ops,
-                post_pair->orig);
+			kedr_functions_support_function_unuse(post_pair->orig);
 		}
 	}
 err_post:
-	if(payload->pre_pairs && kedr_base_ops->function_unuse)
+	if(payload->pre_pairs)
 	{
 		struct kedr_pre_pair* pre_pair;
 
 		for(pre_pair = payload->pre_pairs; pre_pair->orig != NULL; pre_pair++)
 		{
-			kedr_base_ops->function_unuse(kedr_base_ops,
-                pre_pair->orig);
+			kedr_functions_support_function_unuse(pre_pair->orig);
 		}
 	}
 err_pre:
-	BUG_ON(result == 0);
 	return result;
 }
 static void
 payload_functions_unuse(struct kedr_payload* payload)
 {
-	if(kedr_base_ops == NULL) return;
-	if(kedr_base_ops->function_unuse == NULL) return;
-
 	if(payload->replace_pairs)
 	{
 		struct kedr_replace_pair* replace_pair;
 
 		for(replace_pair = payload->replace_pairs; replace_pair->orig != NULL; replace_pair++)
 		{
-			kedr_base_ops->function_unuse(kedr_base_ops,
-                replace_pair->orig);
+			kedr_functions_support_function_unuse(replace_pair->orig);
 		}
 	}
 
@@ -776,8 +853,7 @@ payload_functions_unuse(struct kedr_payload* payload)
 
 		for(post_pair = payload->post_pairs; post_pair->orig != NULL; post_pair++)
 		{
-			kedr_base_ops->function_unuse(kedr_base_ops,
-                post_pair->orig);
+			kedr_functions_support_function_unuse(post_pair->orig);
 		}
 	}
 
@@ -786,8 +862,7 @@ payload_functions_unuse(struct kedr_payload* payload)
 		struct kedr_pre_pair* pre_pair;
 		for(pre_pair = payload->pre_pairs; pre_pair->orig != NULL; pre_pair++)
 		{
-			kedr_base_ops->function_unuse(kedr_base_ops,
-                pre_pair->orig);
+			kedr_functions_support_function_unuse(pre_pair->orig);
 		}
 	}
 }
@@ -887,7 +962,7 @@ functions_map_remove(struct functions_map* map, void* function)
 	BUG();
 }
 
-/* 
+/*
  * Return error if payload try to replace function which already replaced.
  */
 int
@@ -1015,9 +1090,9 @@ function_counters_table_get(struct function_counters_table* table,
 	return elem;
 }
 
-/* 
+/*
  * Set iterator to the beginning of the table.
- * 
+ *
  * If table is empty, set 'valid' field of the iterator to 0.
  */
 void
@@ -1041,9 +1116,9 @@ function_counters_table_begin(struct function_counters_table* table,
 	return;
 }
 
-/* 
+/*
  * Advance iterator to the next element in the table.
- * 
+ *
  * If iterator point to the last element in the table,
  * set 'valid' field of the iterator to 0.
  */
@@ -1175,9 +1250,9 @@ interception_info_destroy(struct kedr_base_interception_info* info)
 	kfree(info->post);
 }
 
-/* Allocate appropriate amount of memory and combine the interception 
+/* Allocate appropriate amount of memory and combine the interception
  * information from all fixed payload modules into a single array.
- * 
+ *
  * On error return ERR_PTR().
  */
 
@@ -1185,7 +1260,7 @@ struct kedr_base_interception_info*
 interception_info_array_create(void)
 {
 	int result;
-    
+
 	struct payload_elem *elem;
 	struct kedr_base_interception_info* info_array = NULL;
 	struct function_counters_table function_counters;
@@ -1200,7 +1275,6 @@ interception_info_array_create(void)
 	list_for_each_entry(elem, &payload_list, list)
 	{
 		struct kedr_payload* payload;
-		if(!elem->is_used) continue;
 		
 		payload = elem->payload;
 		if(payload->pre_pairs != NULL)
@@ -1287,7 +1361,6 @@ interception_info_array_create(void)
 	list_for_each_entry(elem, &payload_list, list)
 	{
 		struct kedr_payload* payload;
-		if(!elem->is_used) continue;
 		
 		payload = elem->payload;
 		if(payload->pre_pairs != NULL)

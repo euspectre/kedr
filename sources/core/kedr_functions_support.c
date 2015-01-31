@@ -497,17 +497,12 @@ out:
  * 
  * If kedr_functions_support_function_use was called more than once, than
  * this function should be called same times.
- * 
- * Return 0 on success.
- * On error return negative error code.
  */
-int kedr_functions_support_function_unuse(void* function)
+void kedr_functions_support_function_unuse(void* function)
 {
-    int result;
     struct function_info_elem* info_elem;
     
-    result = mutex_lock_killable(&functions_support_mutex);
-    if(result) return result;
+    mutex_lock(&functions_support_mutex);
 
     if(is_disabled) goto out;
     
@@ -517,7 +512,6 @@ int kedr_functions_support_function_unuse(void* function)
 
 out:
     mutex_unlock(&functions_support_mutex);
-    return 0;
 }
 
 /* 

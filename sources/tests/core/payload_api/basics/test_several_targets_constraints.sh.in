@@ -1,0 +1,103 @@
+#!/bin/sh
+
+# Checks that one can never work with several targets if payload doesn't
+# support them.
+#
+
+# Targets are not loaded in the test, so no needs in module path.
+TARGET1_NAME="test_target_normal"
+TARGET2_NAME="test_target_with_dashes"
+
+# Payload which doesn't support several targets.
+PAYLOAD_NAME="test_basics_payload"
+PAYLOAD_MODULE="payload/${PAYLOAD_NAME}.ko"
+
+# Payload which support several targets.
+PAYLOAD_ST_NAME="test_basics_payload_several_targets"
+PAYLOAD_ST_MODULE="@TEST_MODULES_DIR@/payload_several_targets/${PAYLOAD_ST_NAME}.ko"
+
+# module_unload_if_loaded <module_name>
+#
+# Unload module with given name, if it is loaded.
+module_unload_if_loaded()
+{
+    if @LSMOD@ | grep $1 > /dev/null 2>&1; then
+        @RMMOD@ $1
+    fi
+}
+
+# Cleanup function
+cleanupAll()
+{
+    module_unload_if_loaded "$PAYLOAD_NAME"
+    module_unload_if_loaded "$PAYLOAD_ST_NAME"
+    module_unload_if_loaded "@KEDR_CORE_NAME@"
+}
+
+trap cleanupAll EXIT
+
+if ! @KEDR_CORE_LOAD_COMMAND@; then
+    echo "Failed to load KEDR"
+    exit 1
+fi
+
+# Set several targets.
+if ! echo "${TARGET1_NAME};${TARGET2_NAME}" > /sys/module/@KEDR_CORE_NAME@/parameters/target_name; then
+    echo "Failed to set target modules"
+    exit 1
+fi
+
+# Attempt to load payload which doesn't support them
+if @INSMOD@ "${PAYLOAD_MODULE}" set_load_fn=1; then
+    echo "Loading payload with several targets success, but payload doesn't support several targets(1)."
+    exit 1
+fi
+echo "Failure in the module loading is expected, continue."
+
+if ! @INSMOD@ "${PAYLOAD_ST_MODULE}"; then
+    echo "Failed to load payload which support several targets."
+    exit 1
+fi
+
+# Attempt to load payload which doesn't support them(after another payload is loaded).
+if @INSMOD@ "${PAYLOAD_MODULE}" set_unload_fn=1; then
+    echo "Loading payload with several targets succeed, but payload doesn't support several targets(2)."
+    exit 1
+fi
+echo "Failure in the module loading is expected, continue."
+
+if ! echo "none" > /sys/module/@KEDR_CORE_NAME@/parameters/target_name; then
+    echo "Failed to clear targets"
+    exit 1
+fi
+
+
+if ! @INSMOD@ "${PAYLOAD_MODULE}" set_load_fn=1; then
+    echo "Failed to load payload."
+    exit 1
+fi
+
+# Set several targets for payload which doesn't support them.
+if echo "${TARGET1_NAME};${TARGET2_NAME}" > /sys/module/@KEDR_CORE_NAME@/parameters/target_name; then
+    echo "Setting several targets succeed for payload which doesn't support them."
+    exit 1
+fi
+echo "Failure in the setting targets is expected, continue."
+
+trap - EXIT
+
+if ! @RMMOD@ ${PAYLOAD_NAME}; then
+    echo "Failed to unload payload module."
+    exit 1
+fi
+
+if ! @RMMOD@ ${PAYLOAD_ST_NAME}; then
+    echo "Failed to unload payload module which support several targets."
+    exit 1
+fi
+
+
+if ! @RMMOD@ @KEDR_CORE_NAME@; then
+    echo "Failed to unload KEDR."
+    exit 1
+fi

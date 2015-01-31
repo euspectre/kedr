@@ -36,35 +36,32 @@ module_param(target_name, charp, S_IRUGO);
 static int target_is_loaded = 0;
 module_param(target_is_loaded, int, S_IRUGO);
 
-static int
-on_target_load(struct kedr_target_module_notifier* notifier,
-    struct module* m)
+int on_target_load(struct module* m)
 {
     target_is_loaded = 1;
     return 0;
 }
 
-static void
-on_target_unload(struct kedr_target_module_notifier* notifier,
-        struct module* m)
+void on_target_unload(struct module* m)
 {
     target_is_loaded = 0;
 }
 
-struct kedr_target_module_notifier notifier=
+int force_several_targets(void)
 {
-    .mod = THIS_MODULE,
+    return 0;
+}
 
-    .on_target_load = on_target_load,
-    .on_target_unload = on_target_unload
-};
+void unforce_several_targets(void)
+{
+}
 
 static int __init
 kedr_module_init(void)
 {
     int result;
     
-    result = kedr_target_detector_init(&notifier);
+    result = kedr_target_detector_init();
     if(result) return result;
     
     result = kedr_target_detector_set_target_name(target_name);

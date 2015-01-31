@@ -1,3 +1,5 @@
+set(KEDR_TEST_DIR "${KEDR_TEST_PREFIX_TEMP_SESSION}/core_payloads_basics")
+
 # The following subdirectories contain the stuff necessary for the testing
 add_subdirectory (payload)
 add_subdirectory (target_normal)
@@ -28,7 +30,21 @@ configure_file (
   @ONLY
 )
 
-kedr_test_install(PROGRAMS "test.sh" "test_set_target.sh" "test_change_target.sh")
+configure_file (
+  "${CMAKE_CURRENT_SOURCE_DIR}/test_several_targets.sh.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/test_several_targets.sh"
+  @ONLY
+)
+
+configure_file (
+  "${CMAKE_CURRENT_SOURCE_DIR}/test_several_targets_constraints.sh.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/test_several_targets_constraints.sh"
+  @ONLY
+)
+
+
+# Install shared test scripts
+kedr_test_install(PROGRAMS "test.sh")
 
 # test.sh takes three arguments: 
 #   <target_dir>, <set_load_fn> and <set_unload_fn>. 
@@ -65,11 +81,18 @@ kedr_test_add_script_shared (payload_api.notify.07
     test.sh "target-with-dashes" 1 1
 )
 
-kedr_test_add_script_shared (payload_api.set_target.01 
+kedr_test_add_script (payload_api.set_target.01 
     test_set_target.sh "target-with-dashes"
 )
 
-kedr_test_add_script_shared (payload_api.change_target.01 
+kedr_test_add_script (payload_api.change_target.01 
     test_change_target.sh "target_normal" "target-with-dashes"
 )
 
+kedr_test_add_script (payload_api.several_targets.01 
+    test_several_targets.sh
+)
+
+kedr_test_add_script (payload_api.several_targets.02 
+    test_several_targets_constraints.sh
+)

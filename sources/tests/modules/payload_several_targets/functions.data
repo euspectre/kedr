@@ -1,0 +1,9 @@
+header =>>
+#include <linux/slab.h>
+<<
+
+[group]
+    function.name = kfree
+    
+    arg.type = void *
+    arg.name = p
