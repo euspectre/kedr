@@ -194,13 +194,13 @@ out:
 }
 
 #if defined(MODULE_PARAM_CREATE_USE_OPS_STRUCT)
-static struct kernel_param_ops target_name_param_ops =
+static const struct kernel_param_ops target_name_param_ops =
 {
 	.set = target_name_param_set,
 	.get = target_name_param_get,
 };
 module_param_cb(target_name,
-	target_name_param_ops,
+	&target_name_param_ops,
 	NULL,
 	S_IRUGO | S_IWUSR);
 #elif defined(MODULE_PARAM_CREATE_USE_OPS)

@@ -39,7 +39,7 @@ static struct sim_point_attributes
 	const char* format;
 } sim_points[] = {
 <$if concat(function.name)$><$simPointAttributes : join(\n)$>
-<$endif$>	{NULL}
+<$endif$>	{NULL, NULL, NULL}
 };
 
 static struct kedr_payload payload = {
