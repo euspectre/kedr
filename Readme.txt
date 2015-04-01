@@ -1,24 +1,5 @@
-The goal of the project is to create a set of tools for dynamic (runtime) 
-analysis and verification of Linux kernel-mode drivers. The tools are 
-intended to be used by the driver developers and may be useful for the 
-driver certification systems as well.
+KEDR is a framework for dynamic (runtime and post factum) analysis of Linux kernel modules, including device drivers, file system modules, etc. The components of KEDR operate on a kernel module chosen by the user. They can intercept the function calls made by the module and, based on that, detect memory leaks, simulate resource shortage in the system as well as other uncommon situations, etc.
 
-The tools developed in this project should allow analysing a driver or a 
-group of drivers chosen by the user. This would complement many existing 
-tools for error detection, fault simulation, memory checking, etc., that 
-operate on the Linux kernel as a whole.
+For the present, KEDR is provided for 32- and 64-bit x86 systems.
 
-The analysis should be carried out with as little influence on the rest of 
-the operating system as reasonably achievable without sacrificing other 
-goals mentioned here. 
-
-The idea of the typical usage of the tools is as follows. The user works 
-with the "target" driver as usual or may be runs some specific tests on it. 
-At the same time, our tools are monitoring the operation of the driver, 
-checking if it works correctly, doing fault simulation if requested, 
-dumping the data about the actions made by the driver to some kind of a 
-trace for future analysis, etc.
-
-The driver analysis engine is intended to be extendable to be able to serve 
-as a platform for the development of various custom tools for Linux driver 
-verification and probably for other kinds of analysis.
+KEDR can be used in the development of kernel modules (as a component of QA system) as well as when analyzing the kernel failures on a user's system (technical support). Certification systems and other automated verification systems for kernel-mode software can also benefit from it.
