@@ -121,7 +121,7 @@ ssize_t control_file_write_wrapper(struct file *filp,
      */
     if(str[count - 1] == '\n') str[count - 1] = '\0';
 
-    error = set_str(str, filp->f_dentry->d_inode);
+    error = set_str(str, filp->f_path.dentry->d_inode);
     kfree(str);
     return error ? error : count;
 }

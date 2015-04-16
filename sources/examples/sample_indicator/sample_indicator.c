@@ -237,11 +237,7 @@ int sample_indicator_instance_init(void** indicator_state,
     }
     else
     {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)
         int error = kstrtoul(params, 10, &period);
-#else
-        int error = strict_strtoul(params, 10, &period);
-#endif
         if(error)
         {
             pr_err("Cannot convert '%s' to unsigned long period.", params);
@@ -340,7 +336,7 @@ ssize_t file_period_read(struct file *filp,
     mutex_lock(&indicator_mutex);
     {
         struct sample_indicator_state* sample_indicator_state =
-            filp->f_dentry->d_inode->i_private;
+            filp->f_path.dentry->d_inode->i_private;
         if(sample_indicator_state == NULL)
         {
             mutex_unlock(&indicator_mutex);

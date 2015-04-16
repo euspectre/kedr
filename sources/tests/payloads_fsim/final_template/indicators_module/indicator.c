@@ -67,11 +67,7 @@ static int indicator_constant_instance_init(void** indicator_state,
     }
     else
     {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)
         int error = kstrtoul(params, 10, &indicator_result);
-#else
-        int error = strict_strtoul(params, 10, &indicator_result);
-#endif
         if(error)
         {
             pr_err("Cannot convert '%s' to integer result of the scenario.", params);
@@ -148,11 +144,7 @@ static int indicator_greater_than_instance_init(void** indicator_state,
     }
     else
     {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)
         int error = kstrtoul(params, 10, &indicator_boundary);
-#else
-        int error = strict_strtoul(params, 10, &indicator_boundary);
-#endif
         if(error)
         {
             pr_err("Cannot convert '%s' to integer boundary of the scenario.", params);

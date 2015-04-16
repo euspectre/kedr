@@ -339,7 +339,7 @@ buffer_size_file_write(struct file *filp,
     unsigned long size;
     
     struct trace_file* trace_file =
-        (struct trace_file*)filp->f_dentry->d_inode->i_private;
+        (struct trace_file*)filp->f_path.dentry->d_inode->i_private;
 
     
     if(count == 0) return -EINVAL;
@@ -355,11 +355,7 @@ buffer_size_file_write(struct file *filp,
             return -EFAULT;
         }
         str[count] = '\0';
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)
         error = kstrtoul(str, 0, &size);
-#else
-        error = strict_strtoul(str, 0, &size);
-#endif
         kfree(str);
         if(error) return error;
     }
