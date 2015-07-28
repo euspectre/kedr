@@ -2,8 +2,6 @@
 
 control_script="sh @KEDR_INSTALL_PREFIX_EXEC@/kedr"
 
-capture_trace_script="@KEDR_INSTALL_PREFIX_EXEC@/kedr_capture_trace"
-
 tmpdir="@KEDR_TEST_PREFIX_TEMP_SESSION@/payloads_callm/caller_address"
 trace_file="${tmpdir}/trace"
 debugfs_mount_point="${tmpdir}/debugfs"
@@ -50,7 +48,7 @@ echo 1 > /dev/cfake0
 
 ${target_module_script} unload
 
-${capture_trace_script} -s -d "${debugfs_mount_point}" -f "${trace_file}"
+cat "${debugfs_mount_point}/kedr_tracing/trace_session" > "${trace_file}"
 
 if ! ${do_commands_script} "$commands_file" unload; then
 	printf "Error occured while finalizing the test.\n"
