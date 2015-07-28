@@ -1,0 +1,9 @@
+on_load mkdir -p "@DEBUGFS_MOUNT_POINT@"
+on_load mount -t debugfs none "@DEBUGFS_MOUNT_POINT@" || ! printf "Failed to mount debugfs\n"
+on_unload umount "@DEBUGFS_MOUNT_POINT@"
+on_load @KEDR_CORE_LOAD_COMMAND@ || ! printf "Failed to load KEDR module\n"
+on_unload @RMMOD@ @KEDR_CORE_NAME@
+on_load @KEDR_TRACE_LOAD_COMMAND@ || ! printf "Failed to load KEDR trace module\n"
+on_unload @RMMOD@ @KEDR_TRACE_NAME@
+on_load @INSMOD@ @TRACE_TEST_GENERATOR_MODULE@ || ! printf "Failed to load KEDR trace generator test module\n"
+on_unload @RMMOD@ @TRACE_TEST_GENERATOR_MODULE_NAME@

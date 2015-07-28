@@ -1,0 +1,73 @@
+#ifndef TRACE_CONFIG_H_INCLUDED
+#define TRACE_CONFIG_H_INCLUDED
+
+#include <linux/ring_buffer.h>
+
+/* How many arguments ring_buffer_consume() takes */
+#cmakedefine RING_BUFFER_CONSUME_HAS_3_ARGS
+#cmakedefine RING_BUFFER_CONSUME_HAS_4_ARGS
+
+#if defined RING_BUFFER_CONSUME_HAS_3_ARGS
+static inline struct ring_buffer_event*
+ring_buffer_consume_compat(struct ring_buffer* rb, int cpu, u64* ts)
+{
+    return ring_buffer_consume(rb, cpu, ts);
+}
+static inline struct ring_buffer_event*
+ring_buffer_peek_compat(struct ring_buffer* rb, int cpu, u64* ts)
+{
+    return ring_buffer_peek(rb, cpu, ts);
+}
+
+#elif defined RING_BUFFER_CONSUME_HAS_4_ARGS
+static inline struct ring_buffer_event*
+ring_buffer_consume_compat(struct ring_buffer* rb, int cpu, u64* ts)
+{
+    return ring_buffer_consume(rb, cpu, ts, NULL);
+}
+static inline struct ring_buffer_event*
+ring_buffer_peek_compat(struct ring_buffer* rb, int cpu, u64* ts)
+{
+    return ring_buffer_peek(rb, cpu, ts, NULL);
+}
+#endif
+
+/* The signature of ring_buffer_size() */
+#cmakedefine RING_BUFFER_SIZE_BUF
+#cmakedefine RING_BUFFER_SIZE_BUF_CPU
+
+#if defined(RING_BUFFER_SIZE_BUF)
+static inline unsigned long
+ring_buffer_size_compat(struct ring_buffer* rb)
+{
+	return ring_buffer_size(rb);
+}
+#elif defined(RING_BUFFER_SIZE_BUF_CPU)
+#include <linux/smp.h>
+static inline unsigned long
+ring_buffer_size_compat(struct ring_buffer* rb)
+{
+	return ring_buffer_size(rb, smp_processor_id());
+
+}
+#endif
+
+/* The signature of ring_buffer_resize() */
+#cmakedefine RING_BUFFER_RESIZE_BUF_SIZE
+#cmakedefine RING_BUFFER_RESIZE_BUF_SIZE_CPU
+
+#if defined(RING_BUFFER_RESIZE_BUF_SIZE)
+static inline int
+ring_buffer_resize_compat(struct ring_buffer* rb, unsigned long size)
+{
+	return ring_buffer_resize(rb, size);
+}
+#elif defined(RING_BUFFER_RESIZE_BUF_SIZE_CPU)
+static inline int
+ring_buffer_resize_compat(struct ring_buffer* rb, unsigned long size)
+{
+	return ring_buffer_resize(rb, size, RING_BUFFER_ALL_CPUS);
+}
+#endif
+
+#endif /* TRACE_CONFIG_H_INCLUDED */

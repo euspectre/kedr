@@ -13,7 +13,7 @@ PAYLOAD_NAME="test_basics_payload"
 PAYLOAD_MODULE="payload/${PAYLOAD_NAME}.ko"
 
 # Payload which support several targets.
-PAYLOAD_ST_NAME="test_basics_payload_several_targets"
+PAYLOAD_ST_NAME="test_payload_several_targets"
 PAYLOAD_ST_MODULE="@TEST_MODULES_DIR@/payload_several_targets/${PAYLOAD_ST_NAME}.ko"
 
 # module_unload_if_loaded <module_name>

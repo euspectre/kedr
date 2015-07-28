@@ -25,7 +25,7 @@ struct trace_file;
  * Message is an array of bytes 'msg' with size 'msg_size'.
  */
 
-void trace_file_write_message(struct trace_file* trace_file,
+void trace_file_write_message(struct trace_file* tf,
     const void* msg, size_t msg_size);
 
 /*
@@ -40,7 +40,7 @@ void trace_file_write_message(struct trace_file* trace_file,
  * 
  * May be called in the atomic context.
  */
-void* trace_file_write_lock(struct trace_file* trace_file,
+void* trace_file_write_lock(struct trace_file* tf,
     size_t size, void** msg);
 
 /*
@@ -49,7 +49,7 @@ void* trace_file_write_lock(struct trace_file* trace_file,
  * 
  * May be called in the atomic context.
  */
-void trace_file_write_unlock(struct trace_file* trace_file,
+void trace_file_write_unlock(struct trace_file* tf,
     void* id);
 
 
@@ -79,20 +79,31 @@ typedef int (*snprintf_message)(char* str, size_t size,
 
 struct trace_file* trace_file_create(
     size_t buffer_size, bool mode_overwrite,
-    struct dentry* work_dir, struct module* m,
     snprintf_message print_message, void* user_data);
 
 /*
  * Remove trace buffer and trace file, which represent content of this
  * buffer.
  */
-void trace_file_destroy(struct trace_file* trace_file);
+void trace_file_destroy(struct trace_file* tf);
+
+ssize_t trace_file_read(struct trace_file *tf, char* __user buf,
+    size_t size, bool can_block);
+
+int trace_file_poll(struct trace_file *tf, struct poll_table* p,
+    struct file* filp);
+
+size_t trace_file_read_session(struct trace_file *tf, char* __user buf,
+    size_t size, struct trace_session** s_p, bool can_block);
+
+int trace_file_poll_session(struct trace_file *tf, struct poll_table* p,
+    struct file* filp, struct trace_session* s);
 
 /*
  * Reseting content of the trace file.
  */
 
-void trace_file_reset(struct trace_file* trace_file);
+void trace_file_reset(struct trace_file* tf);
 
 /*
  * Return current size of trace buffer.
@@ -100,20 +111,24 @@ void trace_file_reset(struct trace_file* trace_file);
  * Note: This is not a size of the trace file.
  */
 
-unsigned long trace_file_size(struct trace_file* trace_file);
+unsigned long trace_file_size(struct trace_file* tf);
 
 /*
  * Reset content of the trace file and set new size for its buffer.
  * Return 0 on success, negative error code otherwise.
  */
 
-int trace_file_size_set(struct trace_file* trace_file, unsigned long size);
+int trace_file_size_set(struct trace_file* tf, unsigned long size);
 
 /*
  * Return number of messages lost since the trace file 
  * creation/last reseting.
  */
 
-unsigned long trace_file_lost_messages(struct trace_file* trace_file);
+unsigned long trace_file_lost_messages(struct trace_file* tf);
+
+void trace_file_call_after_read(struct trace_file* tf,
+    kedr_trace_callback_func func,
+    struct kedr_trace_callback_head* callback_head);
 
 #endif /* TRACE_FILE_H */

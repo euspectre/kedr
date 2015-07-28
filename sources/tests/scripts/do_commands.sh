@@ -25,7 +25,7 @@ newline='
 usage_string="./do_commands file 'load'|'unload'"
 
 if test $# -ne 2; then
-    printf "{$usage_string}\n"
+    printf "${usage_string}\n"
     exit 1
 fi
 
@@ -41,7 +41,7 @@ mode="$2"
 # Execute command line, passed to it.
 execute()
 {
-#    printf "%s\n" "execute: $*"
+    # printf "%s\n" "execute: $*"
     eval $*
 }
 

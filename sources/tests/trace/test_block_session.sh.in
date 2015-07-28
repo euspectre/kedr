@@ -1,0 +1,116 @@
+#! /bin/sh
+
+# Test that reading of the 'trace_session' blocks, but is continued
+# when needed.
+
+. @KEDR_TRACE_TEST_COMMON_FILE@
+
+tmpdir="@KEDR_TEST_PREFIX_TEMP_SESSION@/kedr_trace/block_session"
+mkdir -p ${tmpdir}
+
+trace_file_copy="${tmpdir}/trace.txt"
+trace_file_copy1="${tmpdir}/trace1.txt"
+
+if ! kedr_trace_test_load; then
+	exit 1 # Error message is printed by the function itself.
+fi
+
+# Read 'trace_session' file in background .
+cat ${trace_session_file} > ${trace_file_copy} &
+pid=$$
+
+# First session
+if ! @INSMOD@ @TRACE_TEST_TARGET_MODULE@; then
+	printf "Failed to load target module for test.\n"
+    kill -9 $pid
+    wait
+	kedr_trace_test_unload
+	exit 1
+fi
+
+echo "first_session" > ${trace_generator_file}
+
+if ! @RMMOD@ @TRACE_TEST_TARGET_MODULE_NAME@; then
+	printf "Cannot unload target module for testing.\n"
+	# Unloading test infrustructure will definitely fail
+	exit 1
+fi
+
+wait
+
+# Check content which has been read.
+
+# Implementation specific!
+#Verify, that both files contain message about session started/ended.
+if ! grep "session_started" "${trace_file_copy}" > /dev/null; then
+    printf "Beginning mark wasn't saved in file %s\n" "${trace_file_copy}"
+    kedr_trace_test_unload
+    exit 1
+fi
+
+#Verify, that trace contain message about unload of the target
+if ! grep "session_ended" "${trace_file_copy}" > /dev/null; then
+    printf "Ending mark wasn't saved in file %s\n" "${trace_file_copy}"
+    kedr_trace_test_unload
+    exit 1
+fi
+
+if ! grep "first_session" "${trace_file_copy}" > /dev/null; then
+    printf "First file(%s) does not contain message from the first session\n" "${trace_file_copy}"
+    kedr_trace_test_unload
+    exit 1
+fi
+
+
+
+# Second session.
+# Check that re-reading 'trace_session' file extracts next trace session
+# correctly.
+
+cat ${trace_session_file} > ${trace_file_copy1} &
+pid=$$
+
+if ! @INSMOD@ @TRACE_TEST_TARGET_MODULE@; then
+	printf "Failed to load target module for test(2).\n"
+    kill -9 $pid
+    wait
+	kedr_trace_test_unload
+	exit 1
+fi
+
+echo "second_session" > ${trace_generator_file}
+
+if ! @RMMOD@ @TRACE_TEST_TARGET_MODULE_NAME@; then
+	printf "Cannot unload target module for testing(2).\n"
+	# Unloading test infrustructure will definitely fail
+	exit 1
+fi
+
+wait
+
+if ! kedr_trace_test_unload; then
+	exit 1 # Error message is printed by the function itself.
+fi
+
+
+# Check content which has been read.
+
+# Implementation specific!
+#Verify, that both files contain message about session started/ended.
+if ! grep "session_started" "${trace_file_copy1}" > /dev/null; then
+    printf "Beginning mark wasn't saved in file %s\n" "${trace_file_copy1}"
+    exit 1
+fi
+
+#Verify, that trace contain message about unload of the target
+if ! grep "session_ended" "${trace_file_copy1}" > /dev/null; then
+    printf "Ending mark wasn't saved in file %s\n" "${trace_file_copy1}"
+    exit 1
+fi
+
+if ! grep "second_session" "${trace_file_copy1}" > /dev/null; then
+    printf "Second file(%s) does not contain message from the second session\n" "${trace_file_copy1}"
+    exit 1
+fi
+
+

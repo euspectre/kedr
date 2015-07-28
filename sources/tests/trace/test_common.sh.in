@@ -1,0 +1,52 @@
+# Common functions for testing kedr_trace module.
+
+# Directory, where debugfs will be mounted in kedr_trace_test_load().
+debugfs_mount_point="@DEBUGFS_MOUNT_POINT@"
+
+# Trace files, created by kedr_trace module.
+trace_file="${debugfs_mount_point}/kedr_tracing/trace"
+trace_session_file="${debugfs_mount_point}/kedr_tracing/trace_session"
+
+# Control file, created by @TRACE_TEST_TARGET_MODULE_NAME@ module,
+# for generate trace messages.
+#
+# May be used only when this module is loaded.
+trace_generator_file="${debugfs_mount_point}/kedr_trace_test_control"
+
+# kedr_trace_test_load [target_name]
+#
+# Prepare test infrastructure.
+#
+# Load modules 'kedr', 'kedr_trace', '@TRACE_TEST_GENERATOR_MODULE_NAME@'
+# and mount debugfs directory.
+#
+# set 'target_name' parameter for kedr to <target_name>.
+# If not given, <target_name> is assumed to be '@TRACE_TEST_TARGET_MODULE_NAME@'
+kedr_trace_test_load()
+{
+	target_name="@TRACE_TEST_TARGET_MODULE_NAME@"
+	if test $# -ge 1; then
+		target_name=$1
+	fi
+	
+	if ! @TEST_SCRIPTS_DIR@/do_commands.sh "@KEDR_TRACE_TEST_CONF_FILE@" load; then
+		printf "Failed to prepare to the test.\n"
+		return 1
+	fi
+	
+	if ! echo ${target_name} > /sys/module/@KEDR_CORE_NAME@/parameters/target_name; then
+		printf "Failed to set target for KEDR.\n"
+		@TEST_SCRIPTS_DIR@/do_commands.sh "@KEDR_TRACE_TEST_CONF_FILE@" unload
+		return 1
+	fi
+}
+
+# kedr_trace_test_unload
+#
+# Clean after test.
+#
+# Rollback actions, performed in kedr_trace_test_load.
+kedr_trace_test_unload()
+{
+	@TEST_SCRIPTS_DIR@/do_commands.sh "@KEDR_TRACE_TEST_CONF_FILE@" unload
+}

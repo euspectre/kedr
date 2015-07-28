@@ -147,10 +147,23 @@ else(RING_BUFFER_RESIZE_BUF_SIZE_CPU)
 	message(FATAL_ERROR "Unknown signature of ring_buffer_resize().")
 endif(RING_BUFFER_RESIZE_BUF_SIZE_CPU)
 
-kbuild_include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
-kbuild_add_module(${kmodule_name} 
-	"kedr_trace_module.c" "trace_buffer.c" "trace_buffer.h" "trace_file.c" "trace_file.h"
+configure_file("trace_config.h.in" "trace_config.h")
+
+kbuild_include_directories(
+	"${CMAKE_CURRENT_SOURCE_DIR}"
+	"${CMAKE_CURRENT_BUILD_DIR}"
 )
+kbuild_add_module(${kmodule_name} 
+	"kedr_trace_module.c"
+	"trace_buffer.c"
+	"wait_nestable.c"
+
+	"trace_buffer.h"
+	"wait_nestable.h"
+	"trace_config.h"
+)
+
+kbuild_link_module(${kmodule_name} kedr)
 
 kedr_install_kmodule(${kmodule_name})
 kedr_install_symvers(${kmodule_name})

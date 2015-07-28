@@ -1,0 +1,63 @@
+#! /bin/sh
+
+# Test blocking(by default) reading of the trace file.
+. @KEDR_TRACE_TEST_COMMON_FILE@
+
+tmpdir="@KEDR_TEST_PREFIX_TEMP_SESSION@/kedr_trace/block"
+mkdir -p ${tmpdir}
+
+trace_file_copy="${tmpdir}/trace.txt"
+
+if ! kedr_trace_test_load; then
+	exit 1 # Error message is printed by the function itself.
+fi
+
+if ! @INSMOD@ @TRACE_TEST_TARGET_MODULE@; then
+	printf "Failed to load target module for test.\n"
+	kedr_trace_test_unload
+	exit 1
+fi
+
+# Begin reading file in the background.
+cat "${trace_file}" > ${trace_file_copy} &
+pid=$!
+
+# Generate messages in the trace.
+echo "blocking_read" > ${trace_generator_file}
+
+if ! @RMMOD@ @TRACE_TEST_TARGET_MODULE_NAME@; then
+	printf "Cannot unload target module for testing.\n"
+    kill $pid
+	# Unloading test infrustructure will definitely fail
+	exit 1
+fi
+
+# Stop capturing
+sleep 0.5
+kill $pid
+wait
+
+if ! kedr_trace_test_unload; then
+	exit 1 # Error message is printed by the function itself.
+fi
+
+
+#Verify trace existance
+if ! test -f "${trace_file_copy}"; then
+    printf "File with copied trace has not been created, but it should\n"
+    exit 1
+fi
+#Verify that the trace contains string which has been generated.
+if ! grep "blocking_read" "${trace_file_copy}" > /dev/null; then
+    printf "Generated message had not been copied.\n"
+    exit 1
+fi
+
+# Implementation specific!
+#Verify, that trace contain message about session ends
+if ! grep "session_ended" "${trace_file_copy}" > /dev/null; then
+    printf "'session_ended' mark had not been stored.\n"
+    exit 1
+fi
+
+exit 0
