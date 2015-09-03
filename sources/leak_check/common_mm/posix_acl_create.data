@@ -29,7 +29,7 @@
 			size_t size = sizeof(struct posix_acl) + 
 				new_acl->a_count * 
 				sizeof(struct posix_acl_entry);
-			kedr_lc_handle_alloc(target_module, new_acl, size,
+			kedr_lc_handle_alloc(new_acl, size,
 				caller_address); 
 		}
 		
@@ -40,7 +40,7 @@
 		 * The code below is based on the implementation of 
 		 * posix_acl_release(). */
 		if (old_acl && atomic_dec_and_test(&old_acl->a_refcount)) {
-			kedr_lc_handle_free(target_module, old_acl, 
+			kedr_lc_handle_free(old_acl, 
 				caller_address);
  			kfree_rcu(old_acl, a_rcu);
  			/* [NB] posix_acl_{create,chmod} appeared first in

@@ -2,7 +2,7 @@
 	# The body of the replacement function
 	handler.post =>>
 	if (ret_val != NULL)
-		kedr_lc_handle_alloc(target_module, ret_val, 
+		kedr_lc_handle_alloc(ret_val, 
 			(size_t)kmem_cache_size(mc), 
 			caller_address);
 	<<

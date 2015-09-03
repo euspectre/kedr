@@ -7,7 +7,7 @@
 		 */
 		const void *p = (const void *)page_address(page);
 		if (p != NULL) 
-			kedr_lc_handle_free(target_module, p, 
+			kedr_lc_handle_free(p, 
 				caller_address);
 	}
 	<<

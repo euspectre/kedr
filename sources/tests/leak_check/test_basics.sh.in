@@ -112,22 +112,15 @@ readLeakAddresses()
 }
 
 ##########################################################################
-# Save LeakCheck's report files for the given target to the specified
-# directory. The directory is cleaned up first.
+# Save LeakCheck's report files to the specified directory.
+# The directory is cleaned up first.
 # Usage:
-#   saveLeakCheckReport <target_name> <destination_directory>
+#   saveLeakCheckReport <destination_directory>
 ##########################################################################
 saveLeakCheckReport()
 {
-    targetName="$1"
+    destDir="$1"
     if test -z "$1"; then
-        printf "saveLeakCheckReport(): too few arguments.\n"
-        cleanupAll
-        exit 1
-    fi
-    
-    destDir="$2"
-    if test -z "$2"; then
         printf "saveLeakCheckReport(): too few arguments.\n"
         cleanupAll
         exit 1
@@ -143,21 +136,21 @@ saveLeakCheckReport()
     
 # Debugfs is kind of a strange file system. It is probably more reliable 
 # to use 'cat ... > some_file' than copy the file directly from there.
-    cat "${DEBUGFS_LC_DIR}/${targetName}/info" > "${destDir}/info"
+    cat "${DEBUGFS_LC_DIR}/info" > "${destDir}/info"
     if test $? -ne 0; then
         printf "Failed to copy 'info' file to ${destDir}.\n"
         cleanupAll
         exit 1
     fi
     
-    cat "${DEBUGFS_LC_DIR}/${targetName}/possible_leaks" > "${destDir}/possible_leaks"
+    cat "${DEBUGFS_LC_DIR}/possible_leaks" > "${destDir}/possible_leaks"
     if test $? -ne 0; then
         printf "Failed to copy 'possible_leaks' file to ${destDir}.\n"
         cleanupAll
         exit 1
     fi
     
-    cat "${DEBUGFS_LC_DIR}/${targetName}/unallocated_frees" > "${destDir}/unallocated_frees"
+    cat "${DEBUGFS_LC_DIR}/unallocated_frees" > "${destDir}/unallocated_frees"
     if test $? -ne 0; then
         printf "Failed to copy 'unallocated_frees' file to ${destDir}.\n"
         cleanupAll
@@ -193,7 +186,7 @@ checkLeaker()
         exit 1
     fi
 
-    saveLeakCheckReport "${LEAKER_NAME}" "${leakerReportDir}"
+    saveLeakCheckReport "${leakerReportDir}"
     
     # Check the report files
     unallocatedFrees=$(cat "${leakerReportDir}/unallocated_frees")
@@ -297,7 +290,7 @@ checkCleaner()
         exit 1
     fi
     
-    saveLeakCheckReport "${CLEANER_NAME}" "${cleanerReportDir}"
+    saveLeakCheckReport "${cleanerReportDir}"
     
         # Check the report files
     possibleLeaks=$(cat "${cleanerReportDir}/possible_leaks")

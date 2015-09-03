@@ -7,6 +7,7 @@
 #include <linux/list.h>
 #include <linux/spinlock.h>
 #include <linux/sched.h>
+#include <linux/rbtree.h>
 #include <kedr/util/stack_trace.h>
 
 struct module;
@@ -31,25 +32,28 @@ struct kedr_lc_output;
  * KEDR_RI_TABLE_SIZE buckets. */
 #define KEDR_RI_HASH_BITS   10
 #define KEDR_RI_TABLE_SIZE  (1 << KEDR_RI_HASH_BITS)
- 
+
+/* One stack entry, possibly resolved. */
+struct stack_entry
+{
+	unsigned long addr;
+	
+	/* Node of rb-tree, ordered by 'addr'. */
+	struct rb_node node;
+	
+	int refs;
+	
+	/* NULL, if entry hasn't been resolved yet.
+	 * Allocated symbolic description of the entry, if resolved.
+	 * Pointer to preallocated string, if failed to allocate string.
+	 * 
+	 * NOTE: After resolving attempt, this field is final, so can be
+	 * used without any sync. */
+	char* symbolic;
+};
+
 struct kedr_leak_check
 {
-	/* LeakCheck objects are stored in a hash table for faster lookups 
-	 * by 'target'. */
-	struct hlist_node hlist;
-	
-	/* The target module. */
-	struct module *target;
-
-	/* Addresses of "init" and "core" areas of the target. */
-	void *init;
-	void *core;
-	
-	/* The name of the target. It is stored here to enable lookup of the 
-	 * LeakCheck objects after the target us unloaded and then loaded
-	 * again. */
-	char *name;
-	
 	/* The output subsystem for this LeakCheck object */
 	struct kedr_lc_output *output;
 	
@@ -115,7 +119,7 @@ struct kedr_lc_resource_info
 	
 	/* Call stack */
 	unsigned int num_entries;
-	unsigned long stack_entries[KEDR_MAX_FRAMES];
+	struct stack_entry* stack_entries[KEDR_MAX_FRAMES];
 	
 	/* Caller process info.
 	 * Note that if an event happened in an interrupt handler, task_pid
@@ -156,5 +160,10 @@ kedr_lc_flush_results(struct kedr_leak_check *lc);
  * The function cannot be called from atomic context. */
 void
 kedr_lc_clear(struct kedr_leak_check *lc);
+
+/* Resolve stack entries, if them hasn't been resolved before. */
+void
+kedr_lc_resolve_stack_entries(struct stack_entry** entries,
+	unsigned int num_entries);
 
 #endif /* LEAK_CHECK_IMPL_H_1548_INCLUDED */

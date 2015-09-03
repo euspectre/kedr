@@ -6,7 +6,7 @@
 	if (page != NULL) {
 		const void *p = (const void *)page_address(page);
 		if (p != NULL) 
-			kedr_lc_handle_alloc(target_module, p, 
+			kedr_lc_handle_alloc(p, 
 				(size_t)(PAGE_SIZE << order), 
 				caller_address);
 	}

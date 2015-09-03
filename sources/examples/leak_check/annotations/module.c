@@ -52,7 +52,7 @@ MODULE_LICENSE("GPL");
 static noinline void
 annotate_resource_alloc(const void *addr, size_t size)
 {
-	kedr_lc_handle_alloc(THIS_MODULE, addr, size, 
+	kedr_lc_handle_alloc(addr, size, 
 		__builtin_return_address(0));
 }
 
@@ -61,7 +61,7 @@ annotate_resource_alloc(const void *addr, size_t size)
 static noinline void
 annotate_resource_free(const void *addr)
 {
-	kedr_lc_handle_free(THIS_MODULE, addr, 
+	kedr_lc_handle_free(addr, 
 		__builtin_return_address(0));
 }
 /* ================================================================ */

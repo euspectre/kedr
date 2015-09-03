@@ -20,12 +20,6 @@ MODULE_AUTHOR("<$module.author$>");
 MODULE_LICENSE("GPL");
 /* ====================================================================== */
 
-/* For now, only one target module can be processed at a time by this
- * payload. Support for tracking several targets at the same time can be
- * added in the future. */
-static struct module *target_module = NULL;
-/* ====================================================================== */
-
 /* Replacement functions
  * 
  * [NB] Each deallocation should be processed in a replacement function
@@ -59,28 +53,11 @@ static struct kedr_post_pair post_pairs[] =
 	}
 };
 
-static void
-on_target_load(struct module *m)
-{
-	target_module = m;
-}
-
-static void
-on_target_unload(struct module *m)
-{
-	/* just in case; may help debugging */
-	WARN_ON(target_module != m);
-	target_module = NULL;
-}
-
 static struct kedr_payload payload = {
 	.mod                    = THIS_MODULE,
 
 	.pre_pairs              = pre_pairs,
 	.post_pairs             = post_pairs,
-
-	.target_load_callback   = on_target_load,
-	.target_unload_callback = on_target_unload
 };
 /* ====================================================================== */
 
