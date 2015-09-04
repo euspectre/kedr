@@ -324,6 +324,8 @@ resource_info_create(const void *addr, size_t size,
 	const void *caller_address)
 {
 	struct kedr_lc_resource_info *info;
+	unsigned long flags;
+
 	info = kzalloc(sizeof(*info), GFP_ATOMIC);
 	if (info != NULL) {
 		int i;
@@ -357,10 +359,13 @@ resource_info_create(const void *addr, size_t size,
 			stack_depth,
 			&info->num_entries,
 			(unsigned long)caller_address);
+
+		spin_lock_irqsave(&top_half_lock, flags);
 		for(i = 0; i < info->num_entries; i++)
 		{
 			info->stack_entries[i] = stack_entry_create(stack_addrs[i]);
 		}
+		spin_unlock_irqrestore(&top_half_lock, flags);
 
 		INIT_HLIST_NODE(&info->hlist);
 	}
@@ -375,13 +380,16 @@ static void
 resource_info_destroy(struct kedr_lc_resource_info *info)
 {
 	int i;
+	unsigned long flags;
 
 	if(!info) return;
 
+	spin_lock_irqsave(&top_half_lock, flags);
 	for(i = 0; i < info->num_entries; i++)
 	{
 		stack_entry_unref(info->stack_entries[i]);
 	}
+	spin_unlock_irqrestore(&top_half_lock, flags);
 
 	kfree(info);
 }
