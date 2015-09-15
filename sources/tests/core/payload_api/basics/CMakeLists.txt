@@ -2,6 +2,7 @@ set(KEDR_TEST_DIR "${KEDR_TEST_PREFIX_TEMP_SESSION}/core_payloads_basics")
 
 # The following subdirectories contain the stuff necessary for the testing
 add_subdirectory (payload)
+add_subdirectory (payload_event_recorder)
 add_subdirectory (target_normal)
 add_subdirectory (target_init_fail)
 add_subdirectory (target-with-dashes)
@@ -39,6 +40,12 @@ configure_file (
 configure_file (
   "${CMAKE_CURRENT_SOURCE_DIR}/test_several_targets_constraints.sh.in"
   "${CMAKE_CURRENT_BINARY_DIR}/test_several_targets_constraints.sh"
+  @ONLY
+)
+
+configure_file (
+  "${CMAKE_CURRENT_SOURCE_DIR}/test_events.sh.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/test_events.sh"
   @ONLY
 )
 
@@ -95,4 +102,8 @@ kedr_test_add_script (payload_api.several_targets.01
 
 kedr_test_add_script (payload_api.several_targets.02 
     test_several_targets_constraints.sh
+)
+
+kedr_test_add_script (payload_api.events.01
+    test_events.sh
 )

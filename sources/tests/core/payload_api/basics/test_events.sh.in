@@ -1,0 +1,124 @@
+#!/bin/sh
+
+# Checks that session and target events are come in order.
+
+TARGET_NAME="test_target_normal"
+TARGET_MODULE="target_normal/${TARGET_NAME}.ko"
+
+PAYLOAD_NAME="test_payload_event_recorder"
+PAYLOAD_MODULE="payload_event_recorder/${PAYLOAD_NAME}.ko"
+
+debugfs_mount_point="@KEDR_TEST_DIR@/debugfs"
+events_file="$debugfs_mount_point/event_recorder"
+
+# checkEvents <expected>
+checkEvents()
+{
+    events_expected="$1"
+    events=`cat $events_file`
+
+    if test "$events_expected" != "$events"; then
+        echo "Unexpected order of events: $events"
+        echo "(Expected: $events_expected)"
+        return 1
+    fi
+}
+
+# module_unload_if_loaded <module_name>
+#
+# Unload module with given name, if it is loaded.
+module_unload_if_loaded()
+{
+    if @LSMOD@ | grep $1 > /dev/null 2>&1; then
+        @RMMOD@ $1
+    fi
+}
+
+# Cleanup function
+cleanupAll()
+{
+    module_unload_if_loaded "$TARGET_NAME"
+    module_unload_if_loaded "$PAYLOAD_NAME"
+    module_unload_if_loaded "@KEDR_CORE_NAME@"
+    if mount | grep $debugfs_mount_point > /dev/null; then
+        umount $debugfs_mount_point
+    fi
+}
+
+trap cleanupAll EXIT
+
+if ! mkdir -p $debugfs_mount_point; then
+    echo "Failed to create mount point for debugfs."
+    exit 1
+fi
+
+if ! mount -t debugfs debug $debugfs_mount_point; then
+    echo "Failed to mount debugfs."
+    exit 1
+fi
+
+if ! @KEDR_CORE_LOAD_COMMAND@ target_name=$TARGET_NAME; then
+    echo "Failed to load KEDR."
+    exit 1
+fi
+
+@INSMOD@ "${PAYLOAD_MODULE}" \
+    set_load_fn=1 \
+    set_unload_fn=1
+    
+if test $? -ne 0; then
+    echo "Failed to load payload."
+    exit 1
+fi
+
+if ! @INSMOD@ $TARGET_MODULE; then
+    echo "Failed to load target module."
+    exit 1
+fi
+
+if ! checkEvents "load($TARGET_NAME)"; then
+    exit 1
+fi
+
+if ! @RMMOD@ $TARGET_NAME; then
+    echo "Failed to unload target module."
+    exit 1
+fi
+
+if ! checkEvents "load($TARGET_NAME),unload($TARGET_NAME)"; then
+    exit 1
+fi
+
+if ! @RMMOD@ "${PAYLOAD_MODULE}"; then
+    echo "Failed to unload payload"
+    exit 1
+fi
+
+@INSMOD@ "${PAYLOAD_MODULE}" \
+    set_load_fn=1 \
+    set_unload_fn=1 \
+    set_start_fn=1 \
+    set_end_fn=1
+    
+if test $? -ne 0; then
+    echo "Failed to load payload(2)."
+    exit 1
+fi
+
+if ! @INSMOD@ $TARGET_MODULE; then
+    echo "Failed to load target module(2)."
+    exit 1
+fi
+
+if ! checkEvents "start,load($TARGET_NAME)"; then
+    exit 1
+fi
+
+if ! @RMMOD@ $TARGET_NAME; then
+    echo "Failed to unload target module(2)."
+    exit 1
+fi
+
+if ! checkEvents "start,load($TARGET_NAME),unload($TARGET_NAME),end"; then
+    exit 1
+fi
