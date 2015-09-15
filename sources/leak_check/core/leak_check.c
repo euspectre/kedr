@@ -116,21 +116,9 @@ struct klc_work {
 	struct kedr_lc_resource_info *ri;
 };
 
-/* A spinlock that protects the top half of alloc/free handling. 
- * 
- * [NB] It appears that the implementation of save_stack_trace() is not 
- * guaranteed to be thread-safe as of this writing if the kernel uses DWARF2
- * unwinding. save_stack_trace() can be called when LeakCheck creates 
- * kedr_lc_resource_info instances. For the present, I cannot guarantee 
- * though, that serialization of the top halves of alloc/free handling 
- * makes things safe. This problem needs more investigation.
- * 
- * Note that the work queues take care of the bottom half, so it is not 
- * necessary to additionally protect that. Each workqueue is single-threaded
- * and its items access only the data owned by the same LeakCheck object 
- * that owns the work queue. So, the workqueues for different LeakCheck 
- * objects do not need additional synchronization. */
-static DEFINE_SPINLOCK(top_half_lock);
+/* A spinlock that protects stack entries and 'stack_entry_tree'
+ * from concurrent access. */
+static DEFINE_SPINLOCK(stack_entry_lock);
 /* ====================================================================== */
 
 /* Symbolic value of stack entry, when it is failed to be allocated. */
@@ -151,7 +139,7 @@ static struct stack_entry stack_entry_undef =
 };
 
 /* Resolve stack entry.
- * Should be called with 'top_half_lock' locked. */
+ * Should be called with 'stack_entry_lock' locked. */
 void
 stack_entry_resolve(struct stack_entry* entry)
 {
@@ -173,7 +161,7 @@ stack_entry_resolve(struct stack_entry* entry)
 
 /* Decrement reference count on stack entry object.
  * If it becomes 0, destroy obiect.
- * Should be called with 'top_half_lock' locked. */
+ * Should be called with 'stack_entry_lock' locked. */
 static void
 stack_entry_unref(struct stack_entry* entry)
 {
@@ -186,7 +174,7 @@ stack_entry_unref(struct stack_entry* entry)
 }
 
 /* Increment reference of the given stack entry.
- * Should be called with 'top_half_lock' locked. */
+ * Should be called with 'stack_entry_lock' locked. */
 static struct stack_entry*
 stack_entry_ref(struct stack_entry* entry)
 {
@@ -197,7 +185,7 @@ stack_entry_ref(struct stack_entry* entry)
 
 /* Create new or return existed stack entry object for given address.
  * Note: Always return non-NULL. 
- * Should be called with 'top_half_lock' locked. */
+ * Should be called with 'stack_entry_lock' locked. */
 static struct stack_entry*
 stack_entry_create(unsigned long addr)
 {
@@ -238,7 +226,7 @@ stack_entry_create(unsigned long addr)
 }
 
 /* Clear map of stack entries.
- * Should be called with 'top_half_lock' locked. */
+ * Should be called with 'stack_entry_lock' locked. */
 static void
 stack_entries_clear(void)
 {
@@ -256,7 +244,7 @@ stack_entries_clear(void)
 }
 
 /* Resolve and clear stack entries in the map within given range.
- * Should be called with 'top_half_lock' locked. */
+ * Should be called with 'stack_entry_lock' locked. */
 static void
 stack_entries_resolve_and_clear(unsigned long start, unsigned long end)
 {
@@ -300,12 +288,12 @@ kedr_lc_resolve_stack_entries(struct stack_entry** entries,
 {
 	unsigned long flags;
 	int i;
-	spin_lock_irqsave(&top_half_lock, flags);
+	spin_lock_irqsave(&stack_entry_lock, flags);
 
 	for(i = 0; i < (int) num_entries; i++)
 		stack_entry_resolve(entries[i]);
 
-	spin_unlock_irqrestore(&top_half_lock, flags);
+	spin_unlock_irqrestore(&stack_entry_lock, flags);
 }
 
 /* ====================================================================== */
@@ -355,17 +343,24 @@ resource_info_create(const void *addr, size_t size,
 
 		info->addr = addr;
 		info->size  = size;
+
+/* [NB] It appears that the implementation of save_stack_trace() is not 
+ * guaranteed to be thread-safe as of this writing if the kernel uses DWARF2
+ * unwinding. So, serialize its usage by Leak Check(using `stack_entry_lock`).
+ * This problem needs more investigation. */
+
+		spin_lock_irqsave(&stack_entry_lock, flags);
+
 		kedr_save_stack_trace(stack_addrs,
 			stack_depth,
 			&info->num_entries,
 			(unsigned long)caller_address);
 
-		spin_lock_irqsave(&top_half_lock, flags);
 		for(i = 0; i < info->num_entries; i++)
 		{
 			info->stack_entries[i] = stack_entry_create(stack_addrs[i]);
 		}
-		spin_unlock_irqrestore(&top_half_lock, flags);
+		spin_unlock_irqrestore(&stack_entry_lock, flags);
 
 		INIT_HLIST_NODE(&info->hlist);
 	}
@@ -384,12 +379,12 @@ resource_info_destroy(struct kedr_lc_resource_info *info)
 
 	if(!info) return;
 
-	spin_lock_irqsave(&top_half_lock, flags);
+	spin_lock_irqsave(&stack_entry_lock, flags);
 	for(i = 0; i < info->num_entries; i++)
 	{
 		stack_entry_unref(info->stack_entries[i]);
 	}
-	spin_unlock_irqrestore(&top_half_lock, flags);
+	spin_unlock_irqrestore(&stack_entry_lock, flags);
 
 	kfree(info);
 }
@@ -898,9 +893,9 @@ on_session_end(void)
 	/* Clear stack entries tree also.
 	 * New session may involve completely different modules and
 	 * addresses. */
-	spin_lock_irqsave(&top_half_lock, flags);
+	spin_lock_irqsave(&stack_entry_lock, flags);
 	stack_entries_clear();
-	spin_unlock_irqrestore(&top_half_lock, flags);
+	spin_unlock_irqrestore(&stack_entry_lock, flags);
 
 	mutex_unlock(&lc_mutex);
 }
@@ -976,7 +971,7 @@ work_func_free(struct work_struct *work)
 	kfree(klc_work);
 }
 
-/* The top half. Must be called with 'top_half_lock' held. */
+/* The top half. */
 static void 
 klc_handle_event(struct kedr_leak_check *lc, const void *addr, size_t size, 
 	const void *caller_address,
@@ -1011,11 +1006,7 @@ void
 kedr_lc_handle_alloc(const void *addr, size_t size, 
 	const void *caller_address)
 {
-	unsigned long irq_flags;
-	
-	spin_lock_irqsave(&top_half_lock, irq_flags);
 	klc_handle_event(lc_object, addr, size, caller_address, work_func_alloc);
-	spin_unlock_irqrestore(&top_half_lock, irq_flags);
 }
 EXPORT_SYMBOL(kedr_lc_handle_alloc);
 
@@ -1023,12 +1014,8 @@ void
 kedr_lc_handle_free(const void *addr,
 	const void *caller_address)
 {
-	unsigned long irq_flags;
-	
-	spin_lock_irqsave(&top_half_lock, irq_flags);
 	klc_handle_event(lc_object, addr, (size_t)(-1), caller_address,
 		work_func_free);
-	spin_unlock_irqrestore(&top_half_lock, irq_flags);
 }
 EXPORT_SYMBOL(kedr_lc_handle_free);
 /* ====================================================================== */
@@ -1045,25 +1032,24 @@ detector_notifier_call(struct notifier_block *nb,
 
 	switch(mod_state)
 	{
-	break;
 	case MODULE_STATE_LIVE:
-        /* .init section of the module going to be unloaded. */
-        if(mod->module_init)
-        {
+		/* .init section of the module going to be unloaded. */
+		if(mod->module_init)
+		{
 			flush_workqueue(lc_object->wq);
 
-			spin_lock_irqsave(&top_half_lock, flags);
+			spin_lock_irqsave(&stack_entry_lock, flags);
 			stack_entries_resolve_and_clear(
 				(unsigned long)mod->module_init,
 				(unsigned long)mod->module_init + mod->init_size);
-			spin_unlock_irqrestore(&top_half_lock, flags);
+			spin_unlock_irqrestore(&stack_entry_lock, flags);
 		}
-    break;
+	break;
 	case MODULE_STATE_GOING:
 		/* all sections of the module going to be unloaded. */
 		flush_workqueue(lc_object->wq);
 
-		spin_lock_irqsave(&top_half_lock, flags);
+		spin_lock_irqsave(&stack_entry_lock, flags);
 
 		if(mod->module_init)
 		{
@@ -1076,7 +1062,7 @@ detector_notifier_call(struct notifier_block *nb,
 			(unsigned long)mod->module_core,
 			(unsigned long)mod->module_core + mod->core_size);
 
-		spin_unlock_irqrestore(&top_half_lock, flags);
+		spin_unlock_irqrestore(&stack_entry_lock, flags);
 	break;
 	}
 
