@@ -35,6 +35,8 @@
 #include <asm/cacheflush.h> 	/* set_memory_ro, set_memory_rw */
 #include <linux/pfn.h> 		/* PFN_* macros */
 
+#include <linux/kallsyms.h>
+
 #include "kedr_instrumentor_internal.h"
 #include "config.h"
 
@@ -442,6 +444,31 @@ do_process_area(void* kbeg, void* kend,
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 16, 0)) && \
     defined(CONFIG_DEBUG_SET_MODULE_RONX)
 
+static int (*do_set_memory_ro)(unsigned long addr, int numpages) = NULL;
+static int (*do_set_memory_rw)(unsigned long addr, int numpages) = NULL;
+
+/* Since kernel 4.1-rc1, set_memory_rX() functions are no longer exported,
+ * so we need this hack to get them. */
+static int
+prepare_set_memory_rx_funcs(void)
+{
+	do_set_memory_ro = (void *)kallsyms_lookup_name("set_memory_ro");
+	if (do_set_memory_ro == NULL) {
+		pr_warning(COMPONENT_STRING
+		"Symbol not found: 'set_memory_ro'\n");
+		return -EINVAL;
+	}
+
+	do_set_memory_rw = (void *)kallsyms_lookup_name("set_memory_rw");
+	if (do_set_memory_rw == NULL) {
+		pr_warning(COMPONENT_STRING
+		"Symbol not found: 'set_memory_rw'\n");
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
 /* Copied from kernel/module.c */
 static void 
 set_page_attributes(void *start, void *end, 
@@ -460,12 +487,12 @@ set_module_text_rw(struct module* mod)
 	if (mod->module_core != NULL && mod->core_text_size) {
 		set_page_attributes(mod->module_core, 
 				    mod->module_core + mod->core_text_size,
-				    set_memory_rw);
+				    do_set_memory_rw);
 	}
 	if (mod->module_init != NULL && mod->init_text_size) {
 		set_page_attributes(mod->module_init, 
 				    mod->module_init + mod->init_text_size, 
-				    set_memory_rw);
+				    do_set_memory_rw);
 	}
 }
 
@@ -475,17 +502,20 @@ set_module_text_ro(struct module* mod)
 	if (mod->module_core != NULL && mod->core_text_size) {
 		set_page_attributes(mod->module_core, 
 				    mod->module_core + mod->core_text_size,
-				    set_memory_ro);
+				    do_set_memory_ro);
 	}
 	if (mod->module_init != NULL && mod->init_text_size) {
 		set_page_attributes(mod->module_init, 
 				    mod->module_init + mod->init_text_size, 
-				    set_memory_ro);
+				    do_set_memory_ro);
 	}
 }
 #else
 static inline void set_module_text_rw(struct module* mod) { }
 static inline void set_module_text_ro(struct module* mod) { }
+
+/* As if it always succeeds in this case. */
+static inline int prepare_set_memory_rx_funcs(void) { return 0; }
 #endif
 
 
@@ -624,7 +654,7 @@ kedr_target_module_in_init(void)
 int
 kedr_instrumentor_init(void)
 {
-	return 0;
+	return prepare_set_memory_rx_funcs();
 }
 void
 kedr_instrumentor_destroy(void)
