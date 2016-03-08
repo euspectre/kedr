@@ -339,7 +339,7 @@ int force_several_targets(void)
 			if(payload->mod)
 			{
 				kedr_err("Payload in module %.*s does not support several targets.",
-					MODULE_NAME_LEN, module_name(payload->mod));
+					(int)MODULE_NAME_LEN, module_name(payload->mod));
 			}
 			else
 			{
@@ -487,7 +487,7 @@ kedr_payload_register_internal(struct kedr_payload *payload)
 	if (payload_elem_find(payload, &payload_list) != NULL)
 	{
         kedr_err("module \"%.*s\" attempts to register the same payload twice\n",
-			MODULE_NAME_LEN, module_name(payload->mod));
+			(int)MODULE_NAME_LEN, module_name(payload->mod));
 		return -EINVAL;
 	}
 	
