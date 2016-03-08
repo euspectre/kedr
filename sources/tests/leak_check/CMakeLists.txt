@@ -114,3 +114,13 @@ configure_file(
 kedr_test_add_script(leak_check.clear.01
     test_clear.sh
 )
+
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/test_several_targets.sh.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/test_several_targets.sh"
+    @ONLY
+)
+
+kedr_test_add_script(leak_check.several_targets.01
+    test_several_targets.sh
+)

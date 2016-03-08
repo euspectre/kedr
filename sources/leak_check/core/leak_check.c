@@ -65,59 +65,31 @@ module_param(syslog_output, uint, S_IRUGO);
 unsigned int bad_free_groups_stored = 8;
 module_param(bad_free_groups_stored, uint, S_IRUGO);
 /* ====================================================================== */
+/* Global leak check object. */
+static struct kedr_leak_check* lc_object;
 
-/* LeakCheck objects are kept in a hash table for faster lookup, 'target'
- * is the key. 
- * It is expected that more than several modules will rarely be analyzed 
- * simultaneously even in the future. So a table with 32 buckets and
- * a decent hash function would be enough to make lookup reasonably fast. */
-#define KEDR_LC_HASH_BITS 5
-#define KEDR_LC_TABLE_SIZE  (1 << KEDR_LC_HASH_BITS)
-static struct hlist_head lc_objects[KEDR_LC_TABLE_SIZE];
-
-/* Access to 'lc_objects' should be done with 'lc_objects_lock' locked. 
- * 'lc_objects' can be accessed both from the public LeakCheck API 
- * (*handle_alloc, *handle_free) and from target_load/target_unload handlers
- * (adding new objects). The API can be called in atomic context too, so 
- * a mutex cannot be used here. 
+/* Rb-tree of stack entries.
  * 
- * [NB] This spinlock protects only the hash table to serialize lookup and
- * modification of the table. As soon as a pointer to the appropriate 
- * LeakCheck object is found, the object can be accessed without this 
- * spinlock held. */
-static DEFINE_SPINLOCK(lc_objects_lock);
+ * It contains all stack entries which (may) require symbolic resolving.
+ * Whenever someone request new stack entry for some address, the entry
+ * is also inserted into the tree(unless tree already has entry with
+ * given address).
+ * When a section of the module is going to unload from the memory,
+ * all entries corresponded to addresses within this section are
+ * resolved. */
+struct rb_root stack_entry_tree = RB_ROOT;
 /* ====================================================================== */
-
-/* Number of LeakCheck objects that are currently live. Used, for example,
- * to provide unique names for the workqueues used by these objects. 
- * Should be accessed only with 'lc_mutex' locked. */
-static unsigned int obj_count = 0;
 
 /* A mutex to serialize the execution of the target load handler here. KEDR
  * core may have serialized that already but it is not guaranteed and is 
  * subject to change. 
- * 
- * Specifically, 'lc_mutex' serializes the creation of LeakCheck objects.
- * Note that if a function also accesses the table of the objects, it should
- * lock 'lc_objects_lock' even if 'lc_mutex' is already taken.
- *
- * This mutex also guarantees that the results for a given target module are 
- * output "atomically" w.r.t. the results for other target modules. This is
- * especially useful for the output to the system log. Note that other 
- * kernel messages may still go in between the lines output to the system
- * log for the target. The mutex only guarantees that the results for 
- * different targets do not get intermingled. 
  *
  * In particular, klc_print_*() functions must be called with this mutex 
  * locked. */
 static DEFINE_MUTEX(lc_mutex);
 
-/* Maximum length of the name to be given to a workqueue created by 
- * LeakCheck. */
-#define KLC_WQ_NAME_MAX_LEN 20
-
-/* Format of workqueue names. */
-static const char *wq_name_fmt = "kedr_lc%u";
+/* Workqueue name for leak check object. */
+static const char *wq_name = "kedr_lc";
 /* ====================================================================== */
 
 /* Non-zero if we are in IRQ (harqirq or softirq) context, 0 otherwise.
@@ -144,21 +116,186 @@ struct klc_work {
 	struct kedr_lc_resource_info *ri;
 };
 
-/* A spinlock that protects the top half of alloc/free handling. 
- * 
- * [NB] It appears that the implementation of save_stack_trace() is not 
- * guaranteed to be thread-safe as of this writing if the kernel uses DWARF2
- * unwinding. save_stack_trace() can be called when LeakCheck creates 
- * kedr_lc_resource_info instances. For the present, I cannot guarantee 
- * though, that serialization of the top halves of alloc/free handling 
- * makes things safe. This problem needs more investigation.
- * 
- * Note that the work queues take care of the bottom half, so it is not 
- * necessary to additionally protect that. Each workqueue is single-threaded
- * and its items access only the data owned by the same LeakCheck object 
- * that owns the work queue. So, the workqueues for different LeakCheck 
- * objects do not need additional synchronization. */
-static DEFINE_SPINLOCK(top_half_lock);
+/* A spinlock that protects stack entries and 'stack_entry_tree'
+ * from concurrent access. */
+static DEFINE_SPINLOCK(stack_entry_lock);
+/* ====================================================================== */
+
+/* Symbolic value of stack entry, when it is failed to be allocated. */
+static char stack_entry_symbolic_undef[] = "?";
+
+/* Stack entry, when it is failed to be allocated. */
+static struct stack_entry stack_entry_undef =
+{
+	.addr = 0,
+
+	/* .node value needn't to be initialized, as it is not accessed
+	 * via stack entry object. */
+
+	/* Nobody owner this reference, so object cannot be destroyed via unref. */
+	.refs = 1, 
+
+	.symbolic = stack_entry_symbolic_undef
+};
+
+/* Resolve stack entry.
+ * Should be called with 'stack_entry_lock' locked. */
+void
+stack_entry_resolve(struct stack_entry* entry)
+{
+	int len;
+	if(entry->symbolic) return;
+
+	len = snprintf(NULL, 0, "%pS", (void*)entry->addr);
+
+	entry->symbolic = kmalloc(len + 1, GFP_ATOMIC);
+	if(entry->symbolic)
+	{
+		snprintf(entry->symbolic, len + 1, "%pS", (void*)entry->addr);
+	}
+	else
+	{
+		entry->symbolic = stack_entry_symbolic_undef;
+	}
+}
+
+/* Decrement reference count on stack entry object.
+ * If it becomes 0, destroy obiect.
+ * Should be called with 'stack_entry_lock' locked. */
+static void
+stack_entry_unref(struct stack_entry* entry)
+{
+	if(--entry->refs) return;
+
+	if(entry->symbolic != stack_entry_symbolic_undef)
+		kfree(entry->symbolic);
+
+	kfree(entry);
+}
+
+/* Increment reference of the given stack entry.
+ * Should be called with 'stack_entry_lock' locked. */
+static struct stack_entry*
+stack_entry_ref(struct stack_entry* entry)
+{
+	entry->refs++;
+
+	return entry;
+}
+
+/* Create new or return existed stack entry object for given address.
+ * Note: Always return non-NULL. 
+ * Should be called with 'stack_entry_lock' locked. */
+static struct stack_entry*
+stack_entry_create(unsigned long addr)
+{
+	struct stack_entry* entry;
+	struct rb_node ** new = &stack_entry_tree.rb_node, *parent = NULL;
+
+	/* Search existing stack entry.*/
+	while(*new)
+	{
+		entry = container_of(*new, typeof(*entry), node);
+		parent = *new;
+
+		if(entry->addr < addr)
+			new = &((*new)->rb_right);
+		else if(entry->addr > addr)
+			new = &((*new)->rb_left);
+		else
+			return stack_entry_ref(entry);
+	}
+
+	/* If not found, create new one. */
+	entry = kmalloc(sizeof(*entry), GFP_ATOMIC);
+	if(!entry)
+	{
+		stack_entry_undef.refs++;
+		return &stack_entry_undef;
+	}
+
+	entry->addr = addr;
+	entry->refs = 2; /* One 'ref' for the tree, other for the caller. */
+	entry->symbolic = NULL;
+
+	/* And insert it into tree. */
+	rb_link_node(&entry->node, parent, new);
+	rb_insert_color(&entry->node, &stack_entry_tree);
+
+	return entry;
+}
+
+/* Clear map of stack entries.
+ * Should be called with 'stack_entry_lock' locked. */
+static void
+stack_entries_clear(void)
+{
+	struct stack_entry* entry;
+	struct rb_node *node;
+
+	for(node =  stack_entry_tree.rb_node;
+		node;
+		node =  stack_entry_tree.rb_node)
+	{
+		entry = container_of(node, typeof(*entry), node);
+		rb_erase(node, &stack_entry_tree);
+		stack_entry_unref(entry);
+	}
+}
+
+/* Resolve and clear stack entries in the map within given range.
+ * Should be called with 'stack_entry_lock' locked. */
+static void
+stack_entries_resolve_and_clear(unsigned long start, unsigned long end)
+{
+	struct stack_entry* entry;
+	struct rb_node *node = stack_entry_tree.rb_node, *next = NULL;
+
+	/* Search first entry with 'addr' >= start.
+	 * After the loop it will be stored in 'next'.*/
+	while(node)
+	{
+		entry = container_of(node, typeof(*entry), node);
+
+		if(entry->addr >= start)
+			{ next = node; node = node->rb_left; }
+		else
+			node = node->rb_right;
+	}
+
+	/* Do the work. */
+	for(node = next; node; node = next)
+	{
+		entry = container_of(node, typeof(*entry), node);
+		if(entry->addr >= end) break;
+
+		next = rb_next(node);
+
+		/* Resolve entry only if it used elsewhere outside of tree. */
+		if(entry->refs > 1)
+		{
+			stack_entry_resolve(entry);
+		}
+
+		rb_erase(node, &stack_entry_tree);
+		stack_entry_unref(entry);
+	}
+}
+
+void
+kedr_lc_resolve_stack_entries(struct stack_entry** entries,
+	unsigned int num_entries)
+{
+	unsigned long flags;
+	int i;
+	spin_lock_irqsave(&stack_entry_lock, flags);
+
+	for(i = 0; i < (int) num_entries; i++)
+		stack_entry_resolve(entries[i]);
+
+	spin_unlock_irqrestore(&stack_entry_lock, flags);
+}
+
 /* ====================================================================== */
 
 /* Creates and initializes kedr_lc_resource_info structure and returns
@@ -175,8 +312,12 @@ resource_info_create(const void *addr, size_t size,
 	const void *caller_address)
 {
 	struct kedr_lc_resource_info *info;
+	unsigned long flags;
+
 	info = kzalloc(sizeof(*info), GFP_ATOMIC);
 	if (info != NULL) {
+		int i;
+		unsigned long stack_addrs[ARRAY_SIZE(info->stack_entries)];
 		// TODO: It seems that 'current' is valid even in interrupts.
 		if (!kedr_in_interrupt()) {
 			struct task_struct *task = current;
@@ -199,13 +340,28 @@ resource_info_create(const void *addr, size_t size,
 		} else {
 			info->task_pid = -1;
 		}
-		
+
 		info->addr = addr;
 		info->size  = size;
-		kedr_save_stack_trace(&(info->stack_entries[0]),
+
+/* [NB] It appears that the implementation of save_stack_trace() is not 
+ * guaranteed to be thread-safe as of this writing if the kernel uses DWARF2
+ * unwinding. So, serialize its usage by Leak Check(using `stack_entry_lock`).
+ * This problem needs more investigation. */
+
+		spin_lock_irqsave(&stack_entry_lock, flags);
+
+		kedr_save_stack_trace(stack_addrs,
 			stack_depth,
 			&info->num_entries,
 			(unsigned long)caller_address);
+
+		for(i = 0; i < info->num_entries; i++)
+		{
+			info->stack_entries[i] = stack_entry_create(stack_addrs[i]);
+		}
+		spin_unlock_irqrestore(&stack_entry_lock, flags);
+
 		INIT_HLIST_NODE(&info->hlist);
 	}
 	return info;
@@ -218,6 +374,18 @@ resource_info_create(const void *addr, size_t size,
 static void
 resource_info_destroy(struct kedr_lc_resource_info *info)
 {
+	int i;
+	unsigned long flags;
+
+	if(!info) return;
+
+	spin_lock_irqsave(&stack_entry_lock, flags);
+	for(i = 0; i < info->num_entries; i++)
+	{
+		stack_entry_unref(info->stack_entries[i]);
+	}
+	spin_unlock_irqrestore(&stack_entry_lock, flags);
+
 	kfree(info);
 }
 /* ====================================================================== */
@@ -267,19 +435,12 @@ klc_clear_deallocs(struct kedr_leak_check *lc)
 }
 /* ====================================================================== */
 
-/* Creates a LeakCheck object for the specified target module. NULL is 
- * returned in case of failure. 
- * Should be called with 'lc_mutex' locked but not 'lc_objects_lock'
- * because the function may sleep.
- * [NB] This function does not access the hash table of LeakCheck objects.*/
+/* Creates a LeakCheck object. NULL is returned in case of failure. */
 static struct kedr_leak_check *
-lc_object_create(struct module *target)
+lc_object_create(void)
 {
 	struct kedr_leak_check *lc;
-	unsigned int i;
-	char wq_name[KLC_WQ_NAME_MAX_LEN + 1];
-	
-	BUG_ON(target == NULL);
+	int i;
 	
 	lc = kzalloc(sizeof(*lc), GFP_KERNEL);
 	if (lc == NULL) {
@@ -287,26 +448,14 @@ lc_object_create(struct module *target)
 		"Failed to create LeakCheck object: not enough memory\n");
 		return NULL;
 	}
-		
-	INIT_HLIST_NODE(&lc->hlist);
-	lc->target = target;
-	lc->init = target->module_init;
-	lc->core = target->module_core;
 	
-	lc->name = kstrdup(module_name(target), GFP_KERNEL);
-	if (lc->name == NULL) {
-		pr_warning(KEDR_LC_MSG_PREFIX
-		"Not enough memory to create a copy of the target name.\n");
-		goto out;
-	}
-	
-	lc->output = kedr_lc_output_create(target, lc);
+	lc->output = kedr_lc_output_create(lc);
 	BUG_ON(lc->output == NULL);
 	if (IS_ERR(lc->output)) {
 		pr_warning(KEDR_LC_MSG_PREFIX
 		"Failed to create output object, error code: %d\n",
 			(int)PTR_ERR(lc->output));
-		goto out_free_name;
+		goto fail_output;
 	}
 	
 	for (i = 0; i < KEDR_RI_TABLE_SIZE; ++i)
@@ -317,40 +466,30 @@ lc_object_create(struct module *target)
 	if (lc->bad_free_groups == NULL) {
 		pr_warning(KEDR_LC_MSG_PREFIX
 		"Not enough memory to create 'bad_free_groups'.\n");
-		goto out_clean_output;
+		goto fail_bad_free_groups;
 	}
 	/* nr_bad_free_groups is now 0. */
-	
-	snprintf(&wq_name[0], KLC_WQ_NAME_MAX_LEN + 1, wq_name_fmt, 
-		obj_count);
-	++obj_count;
 	lc->wq = create_singlethread_workqueue(wq_name);
 	if (lc->wq == NULL) {
 		pr_warning(KEDR_LC_MSG_PREFIX
 		"Failed to create the workqueue \"%s\"\n",
 			wq_name);
-		goto out_free_bad_frees;
+		goto fail_wq;
 	}
 	
-	kedr_lc_print_target_info(lc->output, target, lc->init, lc->core);
-
 	/* [NB] The totals are already zero due to kzalloc(). */
 	return lc;
 
-out_free_bad_frees:
+fail_wq:
 	kfree(lc->bad_free_groups);
-out_clean_output:
+fail_bad_free_groups:
 	kedr_lc_output_destroy(lc->output);
-out_free_name:
-	kfree(lc->name);
-out:
+fail_output:
 	kfree(lc);
 	return NULL;
 }
 
-/* Destroys the LeakCheck object and releases the memory it occupies. 
- * [NB] Before calling this function, remove the object from the table if 
- * it was there. */
+/* Destroys the LeakCheck object and releases the memory it occupies. */
 static void
 lc_object_destroy(struct kedr_leak_check *lc)
 {
@@ -374,21 +513,16 @@ lc_object_destroy(struct kedr_leak_check *lc)
 	
 	kfree(lc->bad_free_groups);
 	kedr_lc_output_destroy(lc->output);
-	kfree(lc->name);
 	kfree(lc);
 }
 
 /* Reinitializes the specified LeakCheck object: clears the data accumulated
  * from the previous analysis session for the same target module, resets the
- * totals, etc. This is necessary when the target module is unloaded and 
- * then loaded again. */
+ * totals, etc. */
 static void
 lc_object_reset(struct kedr_leak_check *lc)
 {
 	kedr_lc_output_clear(lc->output);
-	if (lc->target != NULL)
-		kedr_lc_print_target_info(lc->output, lc->target, lc->init,
-					  lc->core);
 
 	klc_clear_allocs(lc);
 	klc_clear_deallocs(lc);
@@ -399,112 +533,6 @@ lc_object_reset(struct kedr_leak_check *lc)
 	lc->total_bad_frees = 0;
 }
 
-/* Looks for a LeakCheck object for the specified target in the table. 
- * Returns the pointer to the object if found, NULL otherwise. 
- * May be called from atomic context. 
- *
- * This function may be used in alloc/free handlers and other functions
- * except the target load handler (the old target address is invalid there).
- * The target load handler should use lc_object_for_target() instead. */
-static struct kedr_leak_check *
-lc_object_lookup(struct module *target)
-{
-	unsigned long irq_flags;
-	struct kedr_leak_check *lc = NULL;
-	struct kedr_leak_check *obj = NULL;
-	struct hlist_head *head = NULL;
-	
-	if (target == NULL)
-		return NULL;
-	
-	spin_lock_irqsave(&lc_objects_lock, irq_flags);
-	head = &lc_objects[hash_ptr(target, KEDR_LC_HASH_BITS)];
-	kedr_hlist_for_each_entry(obj, head, hlist) {
-		if (obj->target == target) {
-			lc = obj;
-			break;
-		}
-	}
-	spin_unlock_irqrestore(&lc_objects_lock, irq_flags);
-	return lc;
-}
-
-/* Checks if the table contains an object for the target module but unlike 
- * lc_object_lookup(), target name and the names stored in the objects are
- * compared. If found, the function updates the address of struct module 
- * for the target in the object, moves the object to the appropriate bucket 
- * of the table according to that address. 
- * Returns the pointer to the object if found, NULL otherwise.
- *
- * This function could be slower than lc_object_lookup(). But as the number 
- * of target modules is expected to be not very large (usually, no more than
- * several dozens), it should not be much of a problem.
- * 
- * [NB] If comparing strings is actually a problem, something like strings 
- * with hashes could be used here to speed things up (see full_name_hash()
- * in <linux/dcache.h> for details).
- * 
- * This function should be used in the target load handler only. Other 
- * functions should use lc_object_lookup(). */
-static struct kedr_leak_check *
-lc_object_for_target(struct module *target)
-{
-	unsigned long irq_flags;
-	struct kedr_leak_check *lc = NULL;
-	struct kedr_leak_check *obj = NULL;
-	struct hlist_head *head = NULL;
-	struct hlist_node *tmp = NULL;
-	unsigned int i;
-	unsigned int new_bucket;
-	const char *name = module_name(target);
-	
-	if (target == NULL)
-		return NULL;
-	
-	new_bucket = hash_ptr(target, KEDR_LC_HASH_BITS);
-	
-	spin_lock_irqsave(&lc_objects_lock, irq_flags);
-	for (i = 0; i < KEDR_LC_TABLE_SIZE; ++i) {
-		head = &lc_objects[i];
-		kedr_hlist_for_each_entry_safe(obj, tmp, head, hlist) {
-			if (strcmp(name, obj->name) != 0)
-				continue;
-			
-			lc = obj;
-			lc->target = target;
-			lc->init = target->module_init;
-			lc->core = target->module_core;
-			if (i != new_bucket) {
-				hlist_del(&lc->hlist);
-				hlist_add_head(&lc->hlist, 
-					&lc_objects[new_bucket]);
-			}
-			break;
-		}
-	}
-	spin_unlock_irqrestore(&lc_objects_lock, irq_flags);
-	return lc;
-}
-
-/* Destroys all LeakCheck objects created so far and empties the table. This   
- * function should be called when LeakCheck itself is about to unload, so
- * it is no longer necessary to use 'lc_objects_lock'. */
-static void
-delete_all_lc_objects(void)
-{
-	struct hlist_head *head;
-	struct kedr_leak_check *lc;
-	struct hlist_node *tmp = NULL;
-	unsigned int i;
-	
-	for (i = 0; i < KEDR_LC_TABLE_SIZE; ++i) {
-		head = &lc_objects[i];
-		kedr_hlist_for_each_entry_safe(lc, tmp, head, hlist) {
-			hlist_del(&lc->hlist);
-			lc_object_destroy(lc);
-		}
-	}
-}
 /* ====================================================================== */
 
 /* Non-zero for the addresses that may belong to the user space, 
@@ -531,11 +559,11 @@ call_stacks_equal(const struct kedr_lc_resource_info *lhs,
 		 * may be different for different processes. If the call
 		 * stacks differ in such elements only, we still consider
 		 * them equal. */
-		if (is_user_space_address(lhs->stack_entries[i]) &&
-		    is_user_space_address(rhs->stack_entries[i]))
+		if (is_user_space_address(lhs->stack_entries[i]->addr) &&
+		    is_user_space_address(rhs->stack_entries[i]->addr))
 			break;
 		
-		if (lhs->stack_entries[i] != rhs->stack_entries[i])
+		if (lhs->stack_entries[i]->addr != rhs->stack_entries[i]->addr)
 			return 0;
 	}
 	return 1;
@@ -739,9 +767,6 @@ work_func_flush(struct work_struct *work)
 	struct kedr_leak_check *lc = klc_work->lc;
 
 	kedr_lc_output_clear(lc->output);
-	if (lc->target != NULL)
-		kedr_lc_print_target_info(lc->output, lc->target, lc->init,
-					  lc->core);
 
 	klc_flush_allocs(lc);
 	klc_flush_deallocs(lc);
@@ -766,7 +791,6 @@ klc_do_flush(struct kedr_leak_check *lc)
 	klc_work->lc = lc;
 	INIT_WORK(&klc_work->work, work_func_flush);
 	queue_work(lc->wq, &klc_work->work);
-
 }
 
 void
@@ -778,11 +802,11 @@ kedr_lc_flush_results(struct kedr_leak_check *lc)
 		return;
 	}
 
-	klc_do_flush(lc);
-
 	/* Make sure all pending requests have been processed before
 	 * going on. */
 	flush_workqueue(lc->wq);
+
+	klc_do_flush(lc);
 	mutex_unlock(&lc_mutex);
 }
 /* ====================================================================== */
@@ -835,62 +859,24 @@ kedr_lc_clear(struct kedr_leak_check *lc)
 }
 /* ====================================================================== */
 
-/* The table of the objects can be changed only here. 'lc_mutex' ensures
- * that each time on_target_load() is called, it sees the table in a 
- * consistent state. 
- * 'lc_objects_lock' is used to protect the table. For example, some 
- * replacement function might be looking for an object for another target 
- * module in the table right now. */
 static void
-on_target_load(struct module *m)
+on_session_start(void)
 {
-	struct kedr_leak_check *lc = NULL;
-	unsigned long irq_flags;
-	struct hlist_head *head = NULL;
-	
-	BUG_ON(m == NULL);
-	
 	if (mutex_lock_killable(&lc_mutex) != 0) {
 		pr_warning(KEDR_LC_MSG_PREFIX
 		"on_target_load(): failed to lock mutex\n");
 		return;
 	}
 	
-	lc = lc_object_for_target(m);
-	if (lc != NULL) { 
-		/* There has been an analysis session for this target
-		 * already, reset and reuse the corresponding object. */
-		lc_object_reset(lc);
-		goto out;
-	}
-	
-	/* Create a new LeakCheck object and add it to the table. */
-	lc = lc_object_create(m);
-	if (lc == NULL) {
-		pr_warning(KEDR_LC_MSG_PREFIX "on_target_load(): "
-		"failed to create LeakCheck object for \"%s\"\n",
-			module_name(m));
-		goto out;
-	}
-	
-	spin_lock_irqsave(&lc_objects_lock, irq_flags);
-	head = &lc_objects[hash_ptr(m, KEDR_LC_HASH_BITS)];
-	hlist_add_head(&lc->hlist, head);
-	spin_unlock_irqrestore(&lc_objects_lock, irq_flags);
-
-out:	
+	lc_object_reset(lc_object);
 	mutex_unlock(&lc_mutex);
 	return;
 }
 
 static void
-on_target_unload(struct module *m)
+on_session_end(void)
 {
-	struct kedr_leak_check *lc = lc_object_lookup(m);
-	if (lc == NULL) {
-		WARN_ON_ONCE(1);
-		return;
-	}
+	unsigned long flags;
 
 	if (mutex_lock_killable(&lc_mutex) != 0) {
 		pr_warning(KEDR_LC_MSG_PREFIX
@@ -898,26 +884,49 @@ on_target_unload(struct module *m)
 		return;
 	}
 
-	klc_do_flush(lc);
-
 	/* Make sure all pending requests have been processed before
 	 * going on. */
-	flush_workqueue(lc->wq);
+	flush_workqueue(lc_object->wq);
 
-	lc->target = NULL;
+	klc_do_flush(lc_object);
+
+	/* Clear stack entries tree also.
+	 * New session may involve completely different modules and
+	 * addresses. */
+	spin_lock_irqsave(&stack_entry_lock, flags);
+	stack_entries_clear();
+	spin_unlock_irqrestore(&stack_entry_lock, flags);
+
 	mutex_unlock(&lc_mutex);
 }
 
-/* [NB] Both the LeakCheck core and the payloads need to be notified when
- * the target has loaded or is about to unload. 
+/* Callback just for prints information about target module.
+ * May be this info will be helpful in futher analyze. */
+static void
+on_target_loaded(struct module* target)
+{
+	if (mutex_lock_killable(&lc_mutex) != 0) {
+		pr_warning(KEDR_LC_MSG_PREFIX
+		"on_target_unload(): failed to lock mutex\n");
+		return;
+	}
+
+	kedr_lc_print_target_info(lc_object->output, target,
+		target->module_init, target->module_core);
+
+	mutex_unlock(&lc_mutex);
+}
+
+/* [NB] LeakCheck core need to be notified about session start/end. 
  * The LeakCheck core itself is also a payload module for KEDR, so it will 
  * receive appropriate notifications. */
 static struct kedr_payload payload = {
 	.mod                    = THIS_MODULE,
 	.pre_pairs              = NULL,
 	.post_pairs             = NULL,
-	.target_load_callback   = on_target_load,
-	.target_unload_callback = on_target_unload
+	.on_session_start       = on_session_start,
+	.on_session_end         = on_session_end,
+	.on_target_loaded       = on_target_loaded
 };
 /* ====================================================================== */
 
@@ -962,7 +971,7 @@ work_func_free(struct work_struct *work)
 	kfree(klc_work);
 }
 
-/* The top half. Must be called with 'top_half_lock' held. */
+/* The top half. */
 static void 
 klc_handle_event(struct kedr_leak_check *lc, const void *addr, size_t size, 
 	const void *caller_address,
@@ -994,53 +1003,92 @@ klc_handle_event(struct kedr_leak_check *lc, const void *addr, size_t size,
 /* ====================================================================== */
 
 void
-kedr_lc_handle_alloc(struct module *mod, const void *addr, size_t size, 
+kedr_lc_handle_alloc(const void *addr, size_t size, 
 	const void *caller_address)
 {
-	unsigned long irq_flags;
-	struct kedr_leak_check *lc;
-	
-	lc = lc_object_lookup(mod);
-	if (lc == NULL) {
-		/* An error has probably occured in LeakCheck before. */
-		WARN_ON_ONCE(1);
-		return;
-	}
-	
-	spin_lock_irqsave(&top_half_lock, irq_flags);
-	klc_handle_event(lc, addr, size, caller_address, work_func_alloc);
-	spin_unlock_irqrestore(&top_half_lock, irq_flags);
+	klc_handle_event(lc_object, addr, size, caller_address, work_func_alloc);
 }
 EXPORT_SYMBOL(kedr_lc_handle_alloc);
 
 void
-kedr_lc_handle_free(struct module *mod, const void *addr, 
+kedr_lc_handle_free(const void *addr,
 	const void *caller_address)
 {
-	unsigned long irq_flags;
-	struct kedr_leak_check *lc;
-	
-	lc = lc_object_lookup(mod);
-	if (lc == NULL) {
-		/* An error has probably occured in LeakCheck before. */
-		WARN_ON_ONCE(1);
-		return;
-	}
-	
-	spin_lock_irqsave(&top_half_lock, irq_flags);
-	klc_handle_event(lc, addr, (size_t)(-1), caller_address, 
+	klc_handle_event(lc_object, addr, (size_t)(-1), caller_address,
 		work_func_free);
-	spin_unlock_irqrestore(&top_half_lock, irq_flags);
 }
 EXPORT_SYMBOL(kedr_lc_handle_free);
 /* ====================================================================== */
+/* A callback function to catch loading and unloading of module.
+ * Resolve stack entries in the module's section, whet it is going to
+ * be unloaded. */
+
+static int
+detector_notifier_call(struct notifier_block *nb,
+	unsigned long mod_state, void *vmod)
+{
+	unsigned long flags;
+	struct module* mod = (struct module *)vmod;
+
+	switch(mod_state)
+	{
+	case MODULE_STATE_LIVE:
+		/* .init section of the module going to be unloaded. */
+		if(mod->module_init)
+		{
+			flush_workqueue(lc_object->wq);
+
+			spin_lock_irqsave(&stack_entry_lock, flags);
+			stack_entries_resolve_and_clear(
+				(unsigned long)mod->module_init,
+				(unsigned long)mod->module_init + mod->init_size);
+			spin_unlock_irqrestore(&stack_entry_lock, flags);
+		}
+	break;
+	case MODULE_STATE_GOING:
+		/* all sections of the module going to be unloaded. */
+		flush_workqueue(lc_object->wq);
+
+		spin_lock_irqsave(&stack_entry_lock, flags);
+
+		if(mod->module_init)
+		{
+			stack_entries_resolve_and_clear(
+				(unsigned long)mod->module_init,
+				(unsigned long)mod->module_init + mod->init_size);
+		}
+
+		stack_entries_resolve_and_clear(
+			(unsigned long)mod->module_core,
+			(unsigned long)mod->module_core + mod->core_size);
+
+		spin_unlock_irqrestore(&stack_entry_lock, flags);
+	break;
+	}
+
+	return 0;
+}
+
+/* A struct for watching for loading/unloading of modules.*/
+static struct notifier_block detector_nb = {
+	.notifier_call = detector_notifier_call,
+	.next = NULL,
+
+	/* Let KEDR core do it job first. So, if last target module will
+	 * be unloaded, stack_entries tree become empty when we try to
+	 * resolve entries for that module. */
+	.priority = -2, 
+};
+
 
 static void __exit
 leak_check_cleanup_module(void)
 {
 	/* Unregister from KEDR core first, then clean up the rest. */
 	kedr_payload_unregister(&payload);
-	delete_all_lc_objects();
+	unregister_module_notifier(&detector_nb);
+	lc_object_destroy(lc_object);
+	stack_entries_clear(); // Just for the case.
 	kedr_lc_output_fini();
 }
 
@@ -1048,7 +1096,6 @@ static int __init
 leak_check_init_module(void)
 {
 	int ret = 0;
-	int i;
 	
 	if (stack_depth == 0 || stack_depth > KEDR_MAX_FRAMES) {
 		pr_err(KEDR_LC_MSG_PREFIX
@@ -1067,20 +1114,29 @@ leak_check_init_module(void)
 		return -EINVAL;
 	}
 	
-	for (i = 0; i < KEDR_LC_TABLE_SIZE; ++i)
-		INIT_HLIST_HEAD(&lc_objects[i]);
-	
 	ret = kedr_lc_output_init();
 	if (ret != 0)
 		return ret;
 	
+	lc_object = lc_object_create();
+	if (!lc_object)
+		goto fail_lc_object;
+
+	ret = register_module_notifier(&detector_nb);
+	if (ret)
+		goto fail_notifier;
+
 	ret = kedr_payload_register(&payload);
-	if (ret != 0) 
-		goto fail_reg;
+	if (ret)
+		goto fail_payload;
   
 	return 0;
 
-fail_reg:
+fail_payload:
+	unregister_module_notifier(&detector_nb);
+fail_notifier:
+	lc_object_destroy(lc_object);
+fail_lc_object:
 	kedr_lc_output_fini();
 	return ret;
 }

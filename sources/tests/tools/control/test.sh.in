@@ -10,7 +10,10 @@ is_module_loading()
     @LSMOD@ | grep "^$1[[:blank:]]\{1,\}" > /dev/null
 }
 
-output_file="`dirname $0`/tmp_output"
+# File for store 'kedr status' output.
+status_file="status_file"
+
+. ./common.sh
 
 ${control_script} start target1
 if test $? -ne 0; then
@@ -31,30 +34,42 @@ if test "${payload_name}"; then
     fi
 fi
 
-${control_script} status > ${output_file}
+${control_script} status > ${status_file}
 if test $? -ne 0; then
     printf "Error occured when 'status' command was executed after 'start' command\n"
     ${control_script} stop
     exit 1
 fi
 
-grep "KEDR is running" ${output_file}
-if test $? -ne 0; then
-    printf "'status' command does not output '%s' string but it should\n" "KEDR is running"
+kedr_status=`get_kedr_status ${status_file}`
+if test "$kedr_status" != "loaded"; then
+    if test -z "$kedr_status"; then
+        printf "Failed to extract status of KEDR from 'kedr status' output\n"
+    else
+        printf "Status of KEDR should be 'loaded', but it is '%s'\n" "$kedr_status"
+    fi
     ${control_script} stop
     exit 1
 fi
 
-grep "target1" ${output_file}
-if test $? -ne 0; then
-    printf "'status' command does not output name of target for KEDR ('%s') but it should\n" "target1"
+kedr_target=`get_kedr_target ${status_file}`
+if test "$kedr_target" != "target1"; then
+    if test -z "$kedr_target"; then
+        printf "Failed to extract target name from 'kedr status' output\n"
+    else
+        printf "Target name should be 'target1', but it is '%s'\n" "$kedr_target"
+    fi
     ${control_script} stop
     exit 1
 fi
 
-grep "Target is running" ${output_file}
-if test $? -eq 0; then
-    printf "'status' command outputs '%s' string but it shouldn't\n" "Target is running"
+kedr_target_status=`get_kedr_target_status ${status_file}`
+if test "$kedr_target_status" != "not loaded"; then
+    if test -z "$kedr_target_status"; then
+        printf "Failed to extract target status from 'kedr status' output\n"
+    else
+        printf "Status of target should be 'not loaded', but it is '%s'\n" "$kedr_target_status"
+    fi
     ${control_script} stop
     exit 1
 fi
@@ -65,15 +80,19 @@ if test $? -ne 0; then
     exit 1
 fi
 
-${control_script} status > ${output_file}
+${control_script} status > ${status_file}
 if test $? -ne 0; then
     printf "Error occured when 'status' command was executed after 'stop' command\n"
     exit 1
 fi
 
-grep "KEDR is running" ${output_file}
-if test $? -eq 0; then
-    printf "'status' command outputs '%s' string but it shouldn't\n" "KEDR is running"
+kedr_status=`get_kedr_status ${status_file}`
+if test "$kedr_status" != "not loaded"; then
+    if test -z "$kedr_status"; then
+        printf "Failed to extract status of KEDR from 'kedr status' output\n"
+    else
+        printf "Status of KEDR should be 'not loaded', but it is '%s'\n" "$kedr_status"
+    fi
     exit 1
 fi
 
@@ -96,9 +115,9 @@ fi
 
 if test "${payload_name}"; then
     if ! is_module_loading ${payload_name}; then
-    printf "Payload module is not loaded after 'restart' command\n"
+        printf "Payload module is not loaded after 'restart' command\n"
         ${control_script} stop
-    exit 1
+        exit 1
     fi
 fi
 

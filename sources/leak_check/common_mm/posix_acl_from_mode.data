@@ -6,7 +6,7 @@
 		 * (USER, GROUP, OTHER) */
 		size_t size = sizeof(struct posix_acl) + 
 			3 * sizeof(struct posix_acl_entry);
-		kedr_lc_handle_alloc(target_module, ret_val, size,
+		kedr_lc_handle_alloc(ret_val, size,
 			caller_address);
 	}
 	<<

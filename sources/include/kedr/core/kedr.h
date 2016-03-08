@@ -8,7 +8,7 @@
 #include <linux/module.h> /* struct module */
 
 /**********************************************************************
- * Public API                                                        
+ * Public API
  **********************************************************************/
 
 
@@ -37,7 +37,7 @@ struct kedr_replace_pair
 {
 	/* Address of the function to be replaced. */
 	void *orig;
-	
+
 	/* Address of the replacement function. */
 	void *replace;
 };
@@ -76,7 +76,7 @@ struct kedr_post_pair
 {
 	/* Address of the function to be processed. */
 	void *orig;
-	
+
 	/* Address of the function to be called after 'orig'. */
 	void *post;
 };
@@ -89,9 +89,12 @@ struct kedr_post_pair
  * */
 struct kedr_payload
 {
-	/* payload module itself */
+	/* 
+	 * If not NULL, module will be prevented from unload while payload
+	 * is used for instrument target(s).
+	 */
 	struct module *mod; 
-	
+
 	/* 
 	 * Array of functions for replace.
 	 * 
@@ -101,7 +104,7 @@ struct kedr_payload
 	 * May be NULL.
 	 */
 	struct kedr_replace_pair *replace_pairs;
-    
+
 	/* 
 	 * Array of functions for perform some actions before them.
 	 * 
@@ -123,16 +126,53 @@ struct kedr_payload
 	struct kedr_post_pair *post_pairs;
 
 
-	/* If not NULL, these callbacks are called after the target module is
-	 * loaded (but before it begins its initialization) and, respectively,
-	 * when the target module has done cleaning up and is about to unload.
-	 * The callbacks are passed the pointer to the target module as 
-	 * an argument. 
-	 * 
-	 * If a callback is NULL, it is ignored.
+	/*
+	 * If not NULL, this function will be called when the first target
+	 * module is loaded.
 	 */
-	void (*target_load_callback)(struct module *);
-	void (*target_unload_callback)(struct module *);
+	void (*on_session_start)(void);
+
+	/*
+	 * If not NULL, this function will be called when the last target
+	 * module is unloaded.
+	 */
+	void (*on_session_end)(void);
+
+	/*
+	 * If not NULL, this function will be called every time a target
+	 * module is loaded.
+	 * Descriptor of the module loaded is passed as function's argument.
+	 */
+	void (*on_target_loaded)(struct module *target_module);
+
+	/*
+	 * If not NULL, this function will be called every time a target
+	 * module is unloaded.
+	 * Descriptor of the module unloaded is passed as function's argument.
+	 */
+	void (*on_target_about_to_unload)(struct module *target_module);
+
+	/* 
+	 * If not NULL, this function will be called when target module is
+	 * loaded.
+	 * 
+	 * NOTE: Providing this callback marks payload as worked with single
+	 * target module only.
+	 * 
+	 * Descriptor of the module loaded is passed as function's argument.
+	 */
+	void (*target_load_callback)(struct module *target_module);
+
+	/* 
+	 * If not NULL, this function will be called when target module is
+	 * unloaded.
+	 * 
+	 * NOTE: Providing this callback marks payload as worked with single
+	 * target module only.
+	 * 
+	 * Descriptor of the module loaded is passed as function's argument.
+	 */
+	void (*target_unload_callback)(struct module *target_module);
 };
 
 /* Registers a payload module with the KEDR core. 

@@ -26,7 +26,7 @@
 MODULE_AUTHOR("Tsyvarev Andrey");
 MODULE_LICENSE("GPL");
 
-/* Determine, which result of kedr_base_target_load_callback() is expected. */
+/* Determine, which result of kedr_base_session_start() is expected. */
 int situation = 0;
 module_param(situation, int, S_IRUGO);
 
@@ -366,10 +366,10 @@ verificator_init(void)
 {
     int result;
     const struct kedr_base_interception_info* info =
-        kedr_base_target_load_callback(THIS_MODULE);
+        kedr_base_session_start();
     if(IS_ERR(info))
     {
-        pr_err("kedr_base_target_load_callback() failed.");
+        pr_err("kedr_base_session_start() failed.");
         return PTR_ERR(info);
     }
     switch((enum situations)situation)
@@ -391,7 +391,7 @@ verificator_init(void)
         break;
     }
 
-    kedr_base_target_unload_callback(THIS_MODULE);
+    kedr_base_session_stop();
     return result;
 }
 

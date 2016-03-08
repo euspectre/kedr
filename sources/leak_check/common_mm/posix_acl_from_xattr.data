@@ -4,7 +4,7 @@
 	if (ret_val && !IS_ERR(ret_val)) {
 		size_t acl_size = sizeof(struct posix_acl) + 
 			ret_val->a_count * sizeof(struct posix_acl_entry);
-		kedr_lc_handle_alloc(target_module, ret_val, acl_size,
+		kedr_lc_handle_alloc(ret_val, acl_size,
 			caller_address);
 	}
 	<<

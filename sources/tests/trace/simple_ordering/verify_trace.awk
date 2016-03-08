@@ -4,7 +4,7 @@ BEGIN {
 	next_id = 0
 }
 
-/test_message 0/ {
+/test_message_0/ {
 	if(next_id != 0)
 	{
 		print "Unexpected line '" $0 "' in the trace."
@@ -13,7 +13,7 @@ BEGIN {
 	next_id = next_id + 1;
 }
 
-/test_message 1/ {
+/test_message_1/ {
 	if(next_id != 1)
 	{
 		print "Unexpected line '" $0 "' in the trace."
@@ -22,7 +22,7 @@ BEGIN {
 	next_id = next_id + 1;
 }
 
-/test_message 2/ {
+/test_message_2/ {
 	if(next_id != 2)
 	{
 		print "Unexpected line '" $0 "' in the trace."
@@ -31,7 +31,7 @@ BEGIN {
 	next_id = next_id + 1;
 }
 
-/test_message 3/ {
+/test_message_3/ {
 	if(next_id != 3)
 	{
 		print "Unexpected line '" $0 "' in the trace."
@@ -40,7 +40,7 @@ BEGIN {
 	next_id = next_id + 1;
 }
 
-/test_message 4/ {
+/test_message_4/ {
 	if(next_id != 4)
 	{
 		print "Unexpected line '" $0 "' in the trace."

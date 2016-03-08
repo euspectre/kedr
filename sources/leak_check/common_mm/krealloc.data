@@ -4,7 +4,7 @@
 	if (size == 0 || !ZERO_OR_NULL_PTR(p)) {
 		/* kfree */
 		if (!ZERO_OR_NULL_PTR(p)) 
-			kedr_lc_handle_free(target_module, p, caller_address);
+			kedr_lc_handle_free(p, caller_address);
 /* [NB] If size != 0 and p != NULL and later the allocation fails, we will
  * need to add a fake allocation event for 'p' to the storage because 'p'
  * is not actually freed by krealloc() in this case. */
@@ -15,11 +15,11 @@
 		if (p == NULL) { 
 			/* kmalloc */
 			if (ret_val != NULL)
-				kedr_lc_handle_alloc(target_module, ret_val,
+				kedr_lc_handle_alloc(ret_val,
 					size, caller_address);
 		} else {
 			/* kfree + kmalloc if everything succeeds */
-			kedr_lc_handle_alloc(target_module, 
+			kedr_lc_handle_alloc(
 				((ret_val != NULL) ? ret_val : p), 
 				size, caller_address);
 		/* If the allocation failed, we return information about 'p'

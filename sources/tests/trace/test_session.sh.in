@@ -1,0 +1,87 @@
+#! /bin/sh
+
+# Test that reading from the "trace_session" file extract messages from
+# one trace session.
+
+. @KEDR_TRACE_TEST_COMMON_FILE@
+
+tmpdir="@KEDR_TEST_PREFIX_TEMP_SESSION@/kedr_trace/session"
+mkdir -p ${tmpdir}
+
+trace_file_copy="${tmpdir}/trace.txt"
+trace_file_copy1="${tmpdir}/trace1.txt"
+
+if ! kedr_trace_test_load; then
+    exit 1 # Error message is printed by the function itself.
+fi
+
+# First session
+if ! @INSMOD@ @TRACE_TEST_TARGET_MODULE@; then
+    printf "Failed to load target module for test.\n"
+    kedr_trace_test_unload
+    exit 1
+fi
+
+echo "first_session" > ${trace_generator_file}
+
+if ! @RMMOD@ @TRACE_TEST_TARGET_MODULE_NAME@; then
+    printf "Cannot unload target module for testing.\n"
+    # Unloading test infrustructure will definitely fail
+    exit 1
+fi
+
+# Second session
+if ! @INSMOD@ @TRACE_TEST_TARGET_MODULE@; then
+    printf "Failed to load target module for test(2).\n"
+    kedr_trace_test_unload
+    exit 1
+fi
+
+echo "second_session" > ${trace_generator_file}
+
+if ! @RMMOD@ @TRACE_TEST_TARGET_MODULE_NAME@; then
+    printf "Cannot unload target module for testing(2).\n"
+    # Unloading test infrustructure will definitely fail
+    exit 1
+fi
+
+# Capture trace from two target sessions into different files
+for f in ${trace_file_copy} ${trace_file_copy1}; do
+    dd if=${trace_session_file} of=${f} iflag=nonblock
+done
+
+if ! kedr_trace_test_unload; then
+    exit 1 # Error message is printed by the function itself.
+fi
+
+for f in ${trace_file_copy} ${trace_file_copy1}; do
+    # Implementation specific!
+    #Verify, that both files contain message about session started/ended.
+    if ! grep "session_started" "${f}" > /dev/null; then
+        printf "Beginning mark wasn't saved in file %s\n" "${f}"
+        exit 1
+    fi
+
+    #Verify, that trace contain message about unload of the target
+    if ! grep "session_ended" "${f}" > /dev/null; then
+        printf "Ending mark wasn't saved in file %s\n" "${f}"
+        exit 1
+    fi
+done
+
+#Verify, that first trace contains only corresponded message.
+if ! grep "first_session" "${trace_file_copy}" > /dev/null; then
+    printf "First file(%s) does not contain message from the first session\n" "${trace_file_copy}"
+    exit 1
+fi
+
+if grep "second_session" "${trace_file_copy}" > /dev/null; then
+    printf "First file(%s) contains messages from the second session, but shouldn't\n" "${trace_file_copy}"
+    exit 1
+fi
+
+#Verify, that first trace contains corresponded message.
+if ! grep "second_session" "${trace_file_copy1}" > /dev/null; then
+    printf "Second file(%s) does not contain message from the second session\n" "${trace_file_copy}"
+    exit 1
+fi

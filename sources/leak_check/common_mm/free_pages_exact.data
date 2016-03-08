@@ -2,7 +2,7 @@
 	# The body of the replacement function
 	handler.pre =>>
 	if (!ZERO_OR_NULL_PTR(virt)) 
-		kedr_lc_handle_free(target_module, virt, 
+		kedr_lc_handle_free(virt, 
 			caller_address);
 	<<
 #######################################################################

@@ -67,6 +67,7 @@ kbuild_add_module(${kmodule_name}
     "kedr_functions_support.c"
     "kedr_target_detector.c"
 
+	"kedr_internal.h"
 	"kedr_base_internal.h"
 	"kedr_instrumentor_internal.h"
 	"kedr_functions_support_internal.h"

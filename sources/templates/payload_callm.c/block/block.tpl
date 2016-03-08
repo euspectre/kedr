@@ -1,51 +1,27 @@
 //***** Monitor call of <$function.name$> *****//
 
 //Implementation of tracing point
-struct kedr_trace_data_<$function.name$>
+<$if concat(trace.param.name)$>
+struct kedr_trace_fc_data_<$function.name$>
 {
-	void* abs_addr;
-	int section_id;
-	ptrdiff_t rel_addr;<$if concat(trace.param.name)$>
-	<$entryField : join(\n\t)$><$endif$>
+    <$entryField : join(\n\t)$>
 };
+<$endif$>
 
-static inline int
-kedr_trace_pp_function_<$function.name$>(char* dest, size_t size,
+<$if trace.formatString$>static inline int
+kedr_trace_fc_pp_function_<$function.name$>(char* dest, size_t size,
 	const void* data)
 {
-	struct kedr_trace_data_<$function.name$>* __entry =
-		(struct kedr_trace_data_<$function.name$>*)data;
+<$if concat(trace.param.name)$>	struct kedr_trace_fc_data_<$function.name$>* __entry =
+		(struct kedr_trace_fc_data_<$function.name$>*)data;
 
-	return 	snprintf(dest, size,
-		"%s: ([<%p>] %s+0x%tx)"<$if trace.formatString$>" "<$trace.formatString$><$endif$>,
-		"called_<$function.name$>",
-		__entry->abs_addr,
-		kedr_print_symbolic(__entry->section_id,
-			{module_section_unknown, 	"unknown"},
-			{module_section_init,		"init"},
-			{module_section_core, 		"core"}
-		),
-		__entry->rel_addr<$if concat(trace.param.name)$>,
-		<$entryItem : join(,\n\t\t)$><$endif$>
-	);
-}
+	return snprintf(dest, size, <$trace.formatString$>,
+		<$entryItem : join(,\n\t\t)$>);
+<$else$>
+	return snprintf(dest, size, <$trace.formatString$>);
+<$endif$>}
+<$endif$>
 
-static inline void
-trace_called_<$function.name$>(void* abs_addr,
-	int section_id,
-	ptrdiff_t rel_addr<$if concat(trace.param.name)$>,
-	<$traceArgument : join(, )$><$endif$>)
-{
-	struct kedr_trace_data_<$function.name$> __entry;
-	
-	__entry.abs_addr = abs_addr;
-	__entry.section_id = section_id;
-	__entry.rel_addr = rel_addr;<$if concat(trace.param.name)$>
-	<$entryAssign : join(\n\t\t)$><$endif$>
-
-	kedr_trace(kedr_trace_pp_function_<$function.name$>,
-		&__entry, sizeof(__entry));
-}
 // Interception function itself
 #define KEDR_<$if trace.happensBefore$>PRE<$else$>POST<$endif$>_<$function.name$>
 static void
@@ -53,16 +29,14 @@ kedr_<$if trace.happensBefore$>pre<$else$>post<$endif$>_<$function.name$>(<$argu
 	<$if trace.happensBefore$><$else$><$if returnType$><$returnType$> ret_val,
 	<$endif$><$endif$>struct kedr_function_call_info* call_info)
 {
-	void *abs_addr = call_info->return_address; 
-	int section_id;
-	ptrdiff_t rel_addr;
+<$if concat(trace.param.name)$>	struct kedr_trace_fc_data_<$function.name$> __entry;
+<$endif$><$if concat(prologue)$><$prologue: join(\n)$>
 
-<$if concat(prologue)$><$prologue: join(\n)$>
-
-<$endif$>process_caller_address(abs_addr, &section_id, &rel_addr);
-
-	trace_called_<$function.name$>(abs_addr, section_id, rel_addr<$if concat(trace.param.name)$>,
-		<$traceParamCast : join(, )$><$endif$>);
+<$endif$><$if concat(trace.param.name)$>	<$entryAssign : join(\n\t\t)$>
+<$endif$>	kedr_trace_function_call("<$function.name$>",
+	call_info->return_address,
+	<$if trace.formatString$>&kedr_trace_fc_pp_function_<$function.name$><$else$>NULL<$endif$>,
+	<$if concat(trace.param.name)$>&__entry, sizeof(__entry)<$else$>NULL, 0<$endif$>);
 <$if concat(epilogue)$>
 <$epilogue: join(\n)$>
 <$endif$>}

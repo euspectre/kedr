@@ -1,0 +1,126 @@
+#! /bin/sh
+
+# Check that control script correctly works in case of several targets.
+
+control_script="sh @KEDR_INSTALL_PREFIX_EXEC@/kedr"
+kedr_name="@KEDR_CORE_NAME@"
+
+payload_name="test_payload_several_targets"
+payload_module="@TEST_MODULES_DIR@/payload_several_targets/${payload_name}.ko"
+
+target_control_script=@TEST_MODULES_DIR@/sample_target/kedr_sample_target
+
+. ./common.sh
+
+# Whether module is currently loading
+is_module_loading()
+{
+    @LSMOD@ | grep "^$1[[:blank:]]\{1,\}" > /dev/null
+}
+
+status_file="status_file"
+
+${control_script} start "target1,kedr_sample_target" -c "payload ${payload_module}"
+if test $? -ne 0; then
+    printf "Error occured when 'start' command was executed\n"
+    exit 1
+fi
+
+if ! is_module_loading ${kedr_name}; then
+    printf "KEDR core module is not loaded after 'start' command\n"
+    exit 1
+fi
+
+if ! is_module_loading ${payload_name}; then
+    printf "Payload module is not loaded after 'start' command\n"
+    ${control_script} stop
+    exit 1
+fi
+
+
+${control_script} status > ${status_file}
+if test $? -ne 0; then
+    printf "Error occured when 'status' command was executed after 'start' command\n"
+    ${control_script} stop
+    exit 1
+fi
+
+kedr_status=`get_kedr_status ${status_file}`
+if test "$kedr_status" != "loaded"; then
+    if test -z "$kedr_status"; then
+        printf "Failed to extract status of KEDR from 'kedr status' command\n"
+    else
+        printf "Status of KEDR should be 'loaded' but it is '%s'\n" "$kedr_status"
+    fi
+    ${control_script} stop
+    exit 1
+fi
+
+kedr_target=`get_kedr_target ${status_file}`
+if test "$kedr_target" != "target1,kedr_sample_target"; then
+    if test -z "$kedr_target"; then
+        printf "Failed to extract target name from 'kedr status' output\n"
+    else
+        printf "Target name should be 'target1,kedr_sample_target', but it is '%s'\n" "$kedr_target"
+    fi
+    ${control_script} stop
+    exit 1
+fi
+
+kedr_target_status=`get_kedr_target_status ${status_file}`
+if test "$kedr_target_status" != "not loaded"; then
+    if test -z "$kedr_target_status"; then
+        printf "Failed to extract target status from 'kedr status' output\n"
+    else
+        printf "Status of target should be 'not loaded', but it is '%s'\n" "$kedr_target_status"
+    fi
+    ${control_script} stop
+    exit 1
+fi
+
+# Load one of the targets
+if ! ${target_control_script} load; then
+    printf "Failed to load target module.\n"
+    ${control_script} stop
+    exit 1
+fi
+
+${control_script} status > ${status_file}
+if test $? -ne 0; then
+    printf "Error occured when 'status' command was executed with target loaded\n"
+    ${target_control_script} unload
+    ${control_script} stop
+    exit 1
+fi
+
+kedr_target_status=`get_kedr_target_status ${status_file}`
+if test "$kedr_target_status" != "loaded"; then
+    if test -z "$kedr_target_status"; then
+        printf "Failed to extract target status from 'kedr status' output\n"
+    else
+        printf "Status of target should be 'loaded', but it is '%s'\n" "$kedr_target_status"
+    fi
+    ${control_script} stop
+    exit 1
+fi
+
+# Attempt to stop KEDR with target loaded
+${control_script} stop
+if test $? -eq 0; then
+    printf "'stop' command was executed successfully but target was loaded.\n"
+    ${target_control_script} unload
+    exit 1
+fi
+printf "Failure in stopping KEDR is expected, continue\n"
+
+# Finalize test
+if ! ${target_control_script} unload; then
+    printf "Failed to unload target module.\n"
+    exit 1
+fi
+
+${control_script} stop
+if test $? -ne 0; then
+    printf "Failed to stop KEDR.\n"
+    exit 1
+fi

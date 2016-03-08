@@ -152,7 +152,7 @@ TARGET_MODULE="kfree_rcu_module/${TARGET_NAME}.ko"
 CONTROL_SCRIPT="@KEDR_INSTALL_PREFIX_EXEC@/kedr"
 CONF_FILE="leak_check_test.conf"
 
-DEBUGFS_LC_DIR="@KEDR_TEST_DIR@/debugfs/kedr_leak_check/${TARGET_NAME}"
+DEBUGFS_LC_DIR="@KEDR_TEST_DIR@/debugfs/kedr_leak_check"
 
 # Expected number of memory allocations
 EXP_ALLOCS_TOTAL=2

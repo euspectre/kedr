@@ -21,16 +21,14 @@
  * On error return negative error code.
  */
 int kedr_functions_support_function_use(void* function);
+
 /*
  * Mark given function as unused and allow to unload support for it.
  * 
  * If kedr_functions_support_function_use was called more than once, than
  * this function should be called same times.
- * 
- * Return 0 on success.
- * On error return negative error code.
  */
-int kedr_functions_support_function_unuse(void* function);
+void kedr_functions_support_function_unuse(void* function);
 
 /*
  * Accept array of functions which should be intercepted and

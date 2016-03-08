@@ -21,8 +21,8 @@ struct module;
  * as 'addr'. */
 /* ====================================================================== */
 
-/* Call this function to inform LeakCheck core that the given kernel module
- * ('mod') has allocated a resource (e.g. memory block, some object, etc.) 
+/* Call this function to inform LeakCheck core that a resource
+ * (e.g. memory block, some object, etc.) has been allocated 
  * at the address 'addr' in memory. The size of the resource is 'size'.
  *
  * [NB] If the resource is a memory block, 'size' should be the size of this
@@ -38,12 +38,11 @@ struct module;
  * This function should be called AFTER the resource has actually been 
  * successfully allocated. */
 void
-kedr_lc_handle_alloc(struct module *mod, const void *addr, size_t size, 
+kedr_lc_handle_alloc(const void *addr, size_t size, 
 	const void *caller_address);
 
-/* Call this function to inform LeakCheck core that the given kernel module 
- * ('mod') has freed (released) the resource that was located at the given 
- * address in memory ('addr'). 
+/* Call this function to inform LeakCheck core that the resource located
+ * at the given address in memory ('addr')  has been freed (released). 
  * 
  * This function should be called BEFORE the resource is actually freed.
  * This is because LeakCheck assumes that the calls to its API happen in 
@@ -58,7 +57,6 @@ kedr_lc_handle_alloc(struct module *mod, const void *addr, size_t size,
  * call to kedr_lc_handle_free() with the same 'addr' value, which could
  * make a mess. */
 void
-kedr_lc_handle_free(struct module *mod, const void *addr, 
-	const void *caller_address);
+kedr_lc_handle_free(const void *addr, const void *caller_address);
 
 #endif /* LEAK_CHECK_H_1042_INCLUDED */

@@ -3,6 +3,6 @@
 	handler.pre =>>
 	void *p = (void *)addr;
 	if (!ZERO_OR_NULL_PTR(p)) 
-		kedr_lc_handle_free(target_module, p, caller_address);
+		kedr_lc_handle_free(p, caller_address);
 	<<
 #######################################################################

@@ -93,10 +93,27 @@ get_module_name()
 
 # is_module_running module_name
 #
-# Determine, whether module with given name (not from module file!), is currently running.
+# Determine, whether module with given name, is currently running.
+#
+# module_name may be actuallay a list of names, delimited with commas.
+# In that case function return success if at least on of module with
+# given name is running.
 is_module_running()
 {
-    $LSMOD | grep "^$1[[:blank:]]\{1,\}" > /dev/null
+    # Transform possible list of names into REGEX "or" pattern.
+    #
+    #   foo,bar
+    # will be replaced with
+    #   foo)|(bar
+    #
+    # '-' in module name is replaces with '_'.
+    # All non alphanumeric or '_' characters are replaced with '"'.
+    # Note, that in the last case both original and transformed names
+    # are incorrect for module, so module with given name will never
+    # being found.
+    grep_list=`echo "$1" | sed -e "s/-/_/; s/[^[:alpha:][:digit:]_,]/\"/; s/,/)|(/"`
+    
+    $LSMOD | grep -E "($grep_list)[[:blank:]]" > /dev/null
 }
 
 # resolve_module_alias alias
@@ -353,22 +370,20 @@ stop)
     ;;
 status)
     if is_module_running ${kedr_name}; then
-        printf "KEDR is running, payloads:\n"
+        printf "KEDR status: loaded\n"
         list_loaded_payloads "${start_conf_file}"
         target_name=`cat /sys/module/${kedr_name}/parameters/target_name`
+        printf "Target: %s\n" "${target_name}"
         if test "${target_name}" != "none"; then
-            printf "Target name is '%s'\n" "${target_name}"
             if is_module_running ${target_name}; then
-                printf "Target is running\n"
+                printf "Target status: loaded\n"
             else
-                printf "Target is not running\n"
-            fi;
-        else
-            printf "Target is not set\n"
-        fi;
+                printf "Target status: not loaded\n"
+            fi
+        fi
     else
-        printf "KEDR is not running\n"
-    fi;
+        printf "KEDR status: not loaded\n"
+    fi
     ;;
 restart)
     if ! is_module_running ${kedr_name}; then

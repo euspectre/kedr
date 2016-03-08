@@ -4,6 +4,6 @@ header =>>
 
 [group]
     function.name = kfree
-
-    arg.type = void*
+    
+    arg.type = void *
     arg.name = p

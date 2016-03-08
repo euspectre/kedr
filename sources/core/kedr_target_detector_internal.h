@@ -8,66 +8,60 @@
 
 #include <linux/module.h> /* 'struct module' definition */
 
-struct kedr_target_module_notifier
-{
-    /* 
-     * If set, this module will be preventing from unload while target
-     * module is loaded.
-     */
-    struct module* mod;
-    
-    int (*on_target_load)(struct kedr_target_module_notifier* notifier,
-        struct module* m);
-    void (*on_target_unload)(struct kedr_target_module_notifier* notifier,
-        struct module* m);
-};
+/* 
+ * These two callbacks are called when target module is loading/unloading.
+ * 
+ * Should be implemented elsewhere.
+ */
+extern int on_target_load(struct module* m);
+extern void on_target_unload(struct module* m);
+
+/*
+ * This callback is called when detector should watch for several
+ * targets.
+ * 
+ * On success, should return 0.
+ * If watching for several target is not supported, should return -err.
+ * 
+ * NOTE: Function may be called before any initialization code.
+ */
+int force_several_targets(void);
+
+/* 
+ * This callback is called when detector watch for one or zero targets.
+ * 
+ * NOTE: Function may be called before any initialization code.
+ */
+void unforce_several_targets(void);
+
 
 /*
  * Initialize detector.
- * 
- * For simplification, only one notifier is available.
- * So, it is set at the initialization stage.
- * 
- * Before the call of 'set_target_name' detector does not detect
- * loading and unloading of any module.
  */
-int kedr_target_detector_init(struct kedr_target_module_notifier* notifier);
+int kedr_target_detector_init(void);
 
 /*
  * Destroy detector.
- * 
- * Note: shouldn't be called when target module is loaded.
  */
 void kedr_target_detector_destroy(void);
 
 /*
- * Set the name of the module the loading and unloading of which should be 
- * detected.
+ * Set the name of the target module, that is module which loading and
+ * and unloading should be detected.
+ * Several names may be given, separated with ','.
+ * Empty string means no targets.
  * 
- * Currently one may set name of the module only when module with previous 
- * name is not loaded and module with new name also is not loaded.
+ * If at least one of the current or new targets is loaded, return error.
+ * 
+ * NOTE: Function is allowed to be called before any initialization code.
  */
 int kedr_target_detector_set_target_name(const char* target_name);
 
 /*
- * After this call detector is not detect
- * loading and unloading of any module.
- */
-int kedr_target_detector_clear_target_name(void);
-
-/*
- * Return name of the module we are watching for.
- * Result should be freed when no longer needed.
+ * Fill buffer with names of target modules.
  * 
- * Return NULL if no module is currently being watched for.
- * 
- * Return ERR_PTR(error) on error.
+ * Return number of characters written or negative error code.
  */
-char* kedr_target_detector_get_target_name(void);
-
-/*
- * Return not 0 if target module is currently loaded.
- */
-int kedr_target_detector_is_target_loaded(void);
+int kedr_target_detector_get_target_name(char* buf, size_t size);
 
 #endif /* KEDR_TARGET_DETECTOR_INTERNAL_H */

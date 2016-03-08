@@ -20,23 +20,16 @@ static const char* trace_file_name = "trace";
  */
 struct trace_file
 {
-    //buffer with 'archived' messages
     struct trace_buffer* trace_buffer;
     //last message in 'plain' form
     char* start;//allocated memory
     char* end;//pointer after the end of the buffer
     char* current_pos;//pointer to the first unread symbol
-    //protect the message in 'plain' form from concurrent access.
+    /* Protect the message in 'plain' form from concurrent access. */
     struct mutex m;
-    //Trace file
-    struct dentry* file;
-    //Copy of file operations with module set.
-    struct file_operations trace_file_ops;
     //Trace buffer interpretator
     snprintf_message print_message;
     void* user_data;
-    //Counter of file readers
-    atomic_t readers;
 };
 
 
@@ -135,21 +128,6 @@ trace_file_read(struct file *filp,
     return count;
 }
 
-/*
- * Auxiliary struct for implement file's polling method via trace_buffer_poll_read.
- */
-struct trace_file_poll_table
-{
-    struct file *filp;
-    poll_table *wait;
-};
-
-static void trace_file_wait_function(wait_queue_head_t *q, void* data)
-{
-    struct trace_file_poll_table* table = (struct trace_file_poll_table*)data;
-    poll_wait(table->filp, q, table->wait);
-}
-
 static unsigned int trace_file_poll(struct file *filp, poll_table *wait)
 {
     int can_read = 0;//1 - can read, 0 - cannot read, <0 - error
@@ -160,11 +138,7 @@ static unsigned int trace_file_poll(struct file *filp, poll_table *wait)
 
     if(!can_read)
     {
-        struct trace_file_poll_table table;
-        table.filp = filp;
-        table.wait = wait;
-        can_read = trace_buffer_poll_read(trace_file->trace_buffer, trace_file_wait_function,
-            &table);
+        can_read = trace_buffer_poll_read(trace_file->trace_buffer, filp, wait);
     }
     
     return (can_read < 0) ? POLLERR : (can_read ? (POLLIN | POLLRDNORM) : 0);
@@ -344,7 +318,14 @@ unsigned long trace_file_lost_messages(struct trace_file* trace_file)
 {
     return trace_buffer_lost_messages(trace_file->trace_buffer);
 }
-    
+
+void trace_file_call_after_read(struct trace_file* tf,
+    kedr_trace_callback_func func,
+    struct kedr_trace_callback_head* callback_head)
+{
+    trace_buffer_call_after_read(tf->trace_buffer, func, callback_head);
+}
+
 //////////////
 static int trace_process_data(const void* msg,
     size_t msg_size, int cpu, u64 ts, bool *consume, void* user_data)

@@ -17,20 +17,27 @@
 
 #include <linux/kernel.h>
 #include <linux/errno.h>
+#include <linux/slab.h>
 
 MODULE_AUTHOR("Eugene A. Shatokhin");
 MODULE_LICENSE("GPL");
 
 /* ================================================================ */
+void *p = NULL;
+
 static void
 kedr_test_cleanup_module(void)
 {
+	kfree(p);
 	return;
 }
 
 static int __init
 kedr_test_init_module(void)
 {
+	p = kmalloc(123, GFP_KERNEL);
+	if(!p) return -ENOMEM;
+	
 	return 0; /* success */
 }
 

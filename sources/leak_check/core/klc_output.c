@@ -74,7 +74,7 @@ klc_print_string(struct kedr_lc_output *output,
 void
 klc_print_stack_trace(struct kedr_lc_output *output, 
 	enum klc_output_type output_type, 
-	unsigned long *stack_entries, unsigned int num_entries);
+	struct stack_entry **stack_entries, unsigned int num_entries);
 /* ====================================================================== */
 
 /* An output buffer that accumulates strings sent to it by 
@@ -107,9 +107,6 @@ struct klc_output_buffer
 /* The structure for the output objects. */
 struct kedr_lc_output
 {
-	/* A subdirectory for the output files in debugfs. */
-	struct dentry *dir_klc;
-
 	/* The files in debugfs where the output will go. */
 	struct dentry *file_leaks;
 	struct dentry *file_bad_frees;
@@ -389,48 +386,39 @@ klc_remove_debugfs_files(struct kedr_lc_output *output)
 		debugfs_remove(output->file_clear);
 		output->file_clear = NULL;
 	}
-	if (output->dir_klc != NULL) {
-		debugfs_remove(output->dir_klc);
-		output->dir_klc = NULL;
-	}
 }
 
 /* [NB] We do not check here if debugfs is supported because this is done 
  * when creating the directory for these files ('dir_klc_main'). */
 static int
 klc_create_debugfs_files(struct kedr_lc_output *output, 
-	struct module *target, struct kedr_leak_check *lc)
+	struct kedr_leak_check *lc)
 {
-	BUG_ON(output == NULL || target == NULL);
+	BUG_ON(output == NULL);
 	BUG_ON(dir_klc_main == NULL);
 	
-	output->dir_klc = debugfs_create_dir(module_name(target),
-		dir_klc_main);
-	if (output->dir_klc == NULL)
-		goto fail;
-	
 	output->file_leaks = debugfs_create_file("possible_leaks", 
-		S_IRUGO, output->dir_klc, &output->ob_leaks, &klc_fops);
+		S_IRUGO, dir_klc_main, &output->ob_leaks, &klc_fops);
 	if (output->file_leaks == NULL) 
 		goto fail;
 	
 	output->file_bad_frees = debugfs_create_file("unallocated_frees", 
-		S_IRUGO, output->dir_klc, &output->ob_bad_frees, &klc_fops);
+		S_IRUGO, dir_klc_main, &output->ob_bad_frees, &klc_fops);
 	if (output->file_bad_frees == NULL) 
 		goto fail;
 	
 	output->file_stats = debugfs_create_file("info", 
-		S_IRUGO, output->dir_klc, &output->ob_other, &klc_fops);
+		S_IRUGO, dir_klc_main, &output->ob_other, &klc_fops);
 	if (output->file_stats == NULL) 
 		goto fail;
 
 	output->file_flush = debugfs_create_file("flush",
-		S_IWUSR | S_IWGRP, output->dir_klc, lc, &klc_flush_ops);
+		S_IWUSR | S_IWGRP, dir_klc_main, lc, &klc_flush_ops);
 	if (output->file_flush == NULL)
 		goto fail;
 
 	output->file_clear = debugfs_create_file("clear",
-		S_IWUSR | S_IWGRP, output->dir_klc, lc, &klc_clear_ops);
+		S_IWUSR | S_IWGRP, dir_klc_main, lc, &klc_clear_ops);
 	if (output->file_clear == NULL)
 		goto fail;
 
@@ -438,8 +426,7 @@ klc_create_debugfs_files(struct kedr_lc_output *output,
 
 fail:
 	pr_warning(KEDR_LC_MSG_PREFIX
-	"failed to create output files in debugfs for module \"%s\"\n",
-		module_name(target));
+		"failed to create output files in debugfs\n");
 	klc_remove_debugfs_files(output);
 	return -EINVAL;    
 }
@@ -474,7 +461,7 @@ kedr_lc_output_fini(void)
 /* ====================================================================== */
 
 struct kedr_lc_output *
-kedr_lc_output_create(struct module *target, struct kedr_leak_check *lc)
+kedr_lc_output_create(struct kedr_leak_check *lc)
 {
 	int ret = 0;
 	struct kedr_lc_output *output = NULL;
@@ -494,7 +481,7 @@ kedr_lc_output_create(struct module *target, struct kedr_leak_check *lc)
 	if (ret != 0) 
 		goto out_ob;
 
-	ret = klc_create_debugfs_files(output, target, lc);
+	ret = klc_create_debugfs_files(output, lc);
 	if (ret != 0) 
 		goto out_ob;
 	
@@ -584,9 +571,9 @@ klc_print_string(struct kedr_lc_output *output,
 void
 klc_print_stack_trace(struct kedr_lc_output *output, 
 	enum klc_output_type output_type, 
-	unsigned long *stack_entries, unsigned int num_entries)
+	struct stack_entry **stack_entries, unsigned int num_entries)
 {
-	static const char* fmt = "[<%p>] %pS";
+	static const char* fmt = "[<%p>] %s";
 	char *buf = NULL;
 	int len;
 	unsigned int i;
@@ -596,14 +583,15 @@ klc_print_stack_trace(struct kedr_lc_output *output,
 	if (num_entries == 0)
 		return;
 	
+	kedr_lc_resolve_stack_entries(stack_entries, num_entries);
+
 	for (i = 0; i < num_entries; ++i) {
 		len = snprintf(NULL, 0, fmt, 
-			(void *)stack_entries[i], (void *)stack_entries[i]);
+			(void *)stack_entries[i]->addr, stack_entries[i]->symbolic);
 		buf = kmalloc(len + 1, GFP_KERNEL);
 		if (buf != NULL) {
 			snprintf(buf, len + 1, fmt, 
-				(void *)stack_entries[i], 
-				(void *)stack_entries[i]);
+				(void *)stack_entries[i]->addr, stack_entries[i]->symbolic);
 			klc_print_string(output, output_type, buf);
 			kfree(buf);
 		} else { 
@@ -741,7 +729,7 @@ kedr_lc_print_alloc_info(struct kedr_lc_output *output,
 	kfree(buf);
 	
 	klc_print_stack_trace(output, KLC_UNFREED_ALLOC, 
-		&(info->stack_entries[0]), info->num_entries);
+		info->stack_entries, info->num_entries);
 	
 	if (similar_allocs != 0) {
 		klc_print_u64(output, KLC_UNFREED_ALLOC, similar_allocs, 
@@ -778,7 +766,7 @@ kedr_lc_print_dealloc_info(struct kedr_lc_output *output,
 	kfree(buf);
 	
 	klc_print_stack_trace(output, KLC_BAD_FREE, 
-		&(info->stack_entries[0]), info->num_entries);
+		info->stack_entries, info->num_entries);
 	
 	if (similar_deallocs != 0) {
 		klc_print_u64(output, KLC_BAD_FREE, similar_deallocs, 

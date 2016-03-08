@@ -1,70 +1,51 @@
 #!/bin/sh
 
-tmpdir="@KEDR_TEST_PREFIX_TEMP_SESSION@/kedr_trace_simple_ordering"
-debugfs_mount_point="${tmpdir}/debugfs"
-trace_file="${debugfs_mount_point}/kedr_tracing/trace"
+. @KEDR_TRACE_TEST_COMMON_FILE@
+
+tmpdir="@KEDR_TEST_PREFIX_TEMP_SESSION@/kedr_trace/simple_ordering"
+mkdir -p ${tmpdir}
+
 trace_file_copy="${tmpdir}/trace.txt"
 
-trace_module_name=@KEDR_TRACE_NAME@
-module="module/simple_ordering_module.ko"
+if ! kedr_trace_test_load; then
+	exit 1 # Error message is printed by the function itself.
+fi
 
-mkdir -p "${debugfs_mount_point}"
-
-if ! mount -t debugfs debugfs "${debugfs_mount_point}"; then
-	printf "Cannot mount debugfs filesystem.\n"
+if ! @INSMOD@ @TRACE_TEST_TARGET_MODULE@; then
+	printf "Failed to load target module for test.\n"
+	kedr_trace_test_unload
 	exit 1
 fi
 
-if ! @KEDR_TRACE_LOAD_COMMAND@; then
-	printf "Cannot load kedr trace module.\n"
-	umount "${debugfs_mount_point}"
+# Generate messages in the trace.
+for i in 0 1 2 3 4; do
+	echo "$i" > ${trace_generator_file}
+done
+
+if ! @RMMOD@ @TRACE_TEST_TARGET_MODULE_NAME@; then
+	printf "Cannot unload target module for testing.\n"
+	# Unloading test infrustructure will definitely fail
 	exit 1
 fi
 
+# Use 'dd' for non-blocking read of trace file.
+#
+# This reading will be finished with EAGAIN error code, so
+# 'dd' will return nonzero code.
+dd if=${trace_file} of=${trace_file_copy} iflag=nonblock
 
-if ! @INSMOD@ "${module}"; then
-	printf "Cannot load module for testing.\n"
-	@RMMOD@ "${trace_module_name}"
-	umount "${debugfs_mount_point}"
-	exit 1
-fi
-
-
-# Because standard opening trace file will block read at the end of the trace,
-# use background mode for copiing file.
-cat ${trace_file} > ${trace_file_copy} &
-capture_pid=$!
-sleep 0.5
-kill $capture_pid
-wait $capture_pid
-
-if ! @RMMOD@ "${module}"; then
-	printf "Cannot unload module for testing.\n"
-	# Unloading of kedr_trace module will definitely fail
-	umount "${debugfs_mount_point}"
-	exit 1
-fi
-
-if ! @RMMOD@ "${trace_module_name}"; then
-	printf "Cannot unload kedr trace module.\n"
-	umount "${debugfs_mount_point}"
-	exit 1
-fi
-
-if ! umount "${debugfs_mount_point}"; then
-	printf "Failed to unmount debugfs filesystem."
+if ! kedr_trace_test_unload; then
+	exit 1 # Error message is printed by the function itself.
 fi
 
 # Verify trace
-LC_ALL=C awk -f "../verify_trace_format.awk" \
-    "${trace_file_copy}"
+LC_ALL=C awk -f "../verify_trace_format.awk" "${trace_file_copy}"
 if test $? -ne 0; then
 	printf "Trace file has incorrect format.\n"
 	exit 1
 fi
 
-LC_ALL=C awk -f "verify_trace.awk" \
-    "${trace_file_copy}"
+LC_ALL=C awk -f "verify_trace.awk" "${trace_file_copy}"
 if test $? -ne 0; then
 	printf "Trace file is inconsistent.\n"
 	exit 1

@@ -1,0 +1,149 @@
+#!/bin/sh
+
+# Checks that target detection mechanism works for several targets
+# (corresponded callbacks for payload are called) and that these targets
+# are instrumented correctly.
+#
+
+TARGET1_NAME="test_target_normal"
+TARGET1_MODULE="target_normal/${TARGET1_NAME}.ko"
+
+TARGET2_NAME="test_target_with_dashes"
+TARGET2_MODULE_NAME="test_target-with-dashes"
+TARGET2_MODULE="target-with-dashes/${TARGET2_MODULE_NAME}.ko"
+
+PAYLOAD_NAME="test_payload_several_targets"
+PAYLOAD_MODULE="@TEST_MODULES_DIR@/payload_several_targets/${PAYLOAD_NAME}.ko"
+
+debugfs_mount_point=@KEDR_TEST_DIR@/debugfs
+
+if ! mkdir -p ${debugfs_mount_point}; then
+    echo "Failed to create directory for mount point."
+    exit 1
+fi
+
+
+
+# module_unload_if_loaded <module_name>
+#
+# Unload module with given name, if it is loaded.
+module_unload_if_loaded()
+{
+    if @LSMOD@ | grep $1 > /dev/null 2>&1; then
+        @RMMOD@ $1
+    fi
+}
+
+# Cleanup function
+cleanupAll()
+{
+    module_unload_if_loaded "$TARGET2_NAME"
+    module_unload_if_loaded "$TARGET1_NAME"
+    module_unload_if_loaded "$PAYLOAD_NAME"
+    module_unload_if_loaded "@KEDR_CORE_NAME@"
+    
+    if mount | grep "$debugfs_mount_point" > /dev/null 2>&1; then
+        umount "$debugfs_mount_point"
+    fi
+}
+
+trap cleanupAll EXIT
+
+# check_debugfs_file <path> <value_expected>
+#
+# Check that file which relative path in debugfs is <path> has content
+# equal to <value_expected>.
+#
+# On fail test is terminated.
+check_debugfs_file()
+{
+    value=`cat ${debugfs_mount_point}/$1`
+    if test "$value" != "$2"; then
+        printf "Expected that debugfs file '%s' will contain value '%s', but it contains '%s'\n" "$1" "$2" "$value"
+        exit 1
+    fi
+}
+
+if ! mount -t debugfs none $debugfs_mount_point; then
+    echo "Failed to mount debugfs"
+    exit 1
+fi
+
+if ! @KEDR_CORE_LOAD_COMMAND@; then
+    echo "Failed to load KEDR"
+    exit 1
+fi
+
+
+if ! @INSMOD@ "${PAYLOAD_MODULE}"; then
+    echo "Failed to load payload module"
+    exit 1
+fi
+
+if ! echo "${TARGET1_NAME};${TARGET2_NAME}" > /sys/module/@KEDR_CORE_NAME@/parameters/target_name; then
+    echo "Failed to set target modules"
+    exit 1
+fi
+
+if ! @INSMOD@ "${TARGET1_MODULE}"; then
+    echo "Failed to load target1"
+    exit 1
+fi
+
+check_debugfs_file "kedr_test_targets_list" "${TARGET1_NAME}"
+
+if ! @RMMOD@ "${TARGET1_NAME}"; then
+    echo "Failed to unload target1"
+    exit 1
+fi
+
+check_debugfs_file "kedr_test_targets_list" ""
+check_debugfs_file "kedr_test_kfree_counter" "1"
+
+if ! @INSMOD@ "${TARGET1_MODULE}"; then
+    echo "Failed to load target1 again"
+    exit 1
+fi
+
+check_debugfs_file "kedr_test_targets_list" "${TARGET1_NAME}"
+
+if ! @INSMOD@ "${TARGET2_MODULE}"; then
+    echo "Failed to load target2"
+    exit 1
+fi
+
+check_debugfs_file "kedr_test_targets_list" "${TARGET1_NAME},${TARGET2_NAME}"
+
+if ! @RMMOD@ "${TARGET2_NAME}"; then
+    echo "Failed to unload target2"
+    exit 1
+fi
+
+check_debugfs_file "kedr_test_targets_list" "${TARGET1_NAME}"
+
+if ! @RMMOD@ "${TARGET1_NAME}"; then
+    echo "Failed to unload target1 again"
+    exit 1
+fi
+
+check_debugfs_file "kedr_test_targets_list" ""
+check_debugfs_file "kedr_test_kfree_counter" "3"
+
+check_debugfs_file "kedr_test_error" ""
+
+trap - EXIT
+
+if ! @RMMOD@ ${PAYLOAD_NAME}; then
+    echo "Failed to unload payload module"
+    exit 1
+fi
+
+if ! @RMMOD@ @KEDR_CORE_NAME@; then
+    echo "Failed to unload KEDR"
+    exit 1
+fi
+
+if ! umount ${debugfs_mount_point}; then
+    echo "Failed to umount debugfs"
+    exit 1
+fi

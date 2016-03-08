@@ -37,7 +37,7 @@ kedr_lc_output_fini(void);
  * The function never returns NULL. 
  * Cannot be called from atomic context.*/
 struct kedr_lc_output *
-kedr_lc_output_create(struct module *target, struct kedr_leak_check *lc);
+kedr_lc_output_create(struct kedr_leak_check *lc);
 
 /* Performs cleaning up in the given output object ('output') and destroys 
  * the object. Does nothing if 'output' is NULL.

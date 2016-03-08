@@ -1,1 +1,2 @@
 add_subdirectory(sample_target)
+add_subdirectory(payload_several_targets)

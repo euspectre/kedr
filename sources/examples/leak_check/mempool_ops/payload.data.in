@@ -44,15 +44,15 @@ header =>>
 	# Note that only successful memory allocations should be 
 	# reported to LeakCheck via kedr_lc_handle_alloc().
 	#
-	# 'target_module' and 'caller_address' variables are provided
-	# by KEDR core and LeakCheck, no need to bother about them.
+	# 'caller_address' variable is provided by KEDR core, no need to
+	# bother about it.
 	#
 	# We don't know the size of the allocated object, so 0 is passed
 	# as the value of 'size' here. LeakCheck will interpret it as
 	# "unknown size".
 	handler.post =>>
 	if (ret_val != NULL)
-		kedr_lc_handle_alloc(target_module, ret_val, 0,
+		kedr_lc_handle_alloc(ret_val, 0,
 			caller_address);
 	<< 
 # End of the group of definitions for mempool_alloc().
@@ -72,7 +72,7 @@ header =>>
 	# The body of the replacement function
 	handler.pre =>>
 	if (!ZERO_OR_NULL_PTR(element)) 
-		kedr_lc_handle_free(target_module, element, 
+		kedr_lc_handle_free(element, 
 			caller_address);
 	<< 
 # End of the group of definitions for mempool_free().
