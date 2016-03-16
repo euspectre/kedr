@@ -21,6 +21,7 @@
 
 #include <linux/version.h> /* KERNEL_VERSION macro */
 
+#include "config.h"
 
 #define BUFFER_SIZE_DEFAULT 100000
 
@@ -632,10 +633,10 @@ static void on_target_loaded(struct module* target_module)
         return;
     }
     
-    ti->core_addr = target_module->module_core;
-    ti->init_addr = target_module->module_init;
-    ti->core_size = target_module->core_size;
-    ti->init_size = target_module->init_size;
+    ti->core_addr = module_core_addr(target_module);
+    ti->init_addr = module_init_addr(target_module);
+    ti->core_size = core_size(target_module);
+    ti->init_size = init_size(target_module);
     
     memcpy(ti->name, module_name(target_module), sizeof(ti->name));
     ti->m = target_module;

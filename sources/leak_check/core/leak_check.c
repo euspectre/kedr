@@ -912,7 +912,7 @@ on_target_loaded(struct module* target)
 	}
 
 	kedr_lc_print_target_info(lc_object->output, target,
-		target->module_init, target->module_core);
+		module_init_addr(target), module_core_addr(target));
 
 	mutex_unlock(&lc_mutex);
 }
@@ -1034,14 +1034,14 @@ detector_notifier_call(struct notifier_block *nb,
 	{
 	case MODULE_STATE_LIVE:
 		/* .init section of the module going to be unloaded. */
-		if(mod->module_init)
+		if(module_init_addr(mod))
 		{
 			flush_workqueue(lc_object->wq);
 
 			spin_lock_irqsave(&stack_entry_lock, flags);
 			stack_entries_resolve_and_clear(
-				(unsigned long)mod->module_init,
-				(unsigned long)mod->module_init + mod->init_size);
+				(unsigned long)module_init_addr(mod),
+				(unsigned long)module_init_addr(mod) + init_size(mod));
 			spin_unlock_irqrestore(&stack_entry_lock, flags);
 		}
 	break;
@@ -1051,16 +1051,16 @@ detector_notifier_call(struct notifier_block *nb,
 
 		spin_lock_irqsave(&stack_entry_lock, flags);
 
-		if(mod->module_init)
+		if(module_init_addr(mod))
 		{
 			stack_entries_resolve_and_clear(
-				(unsigned long)mod->module_init,
-				(unsigned long)mod->module_init + mod->init_size);
+				(unsigned long)module_init_addr(mod),
+				(unsigned long)module_init_addr(mod) + init_size(mod));
 		}
 
 		stack_entries_resolve_and_clear(
-			(unsigned long)mod->module_core,
-			(unsigned long)mod->module_core + mod->core_size);
+			(unsigned long)module_core_addr(mod),
+			(unsigned long)module_core_addr(mod) + core_size(mod));
 
 		spin_unlock_irqrestore(&stack_entry_lock, flags);
 	break;

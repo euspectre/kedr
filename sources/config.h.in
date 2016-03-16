@@ -2,7 +2,9 @@
 #define CONFIG_H_1734_INCLUDED
 
 #include <linux/list.h>
-	
+#include <linux/version.h>
+#include <linux/module.h>
+
 /* How to create module parameter with callbacks */
 #cmakedefine MODULE_PARAM_CREATE_USE_OPS_STRUCT
 #cmakedefine MODULE_PARAM_CREATE_USE_OPS
@@ -59,6 +61,73 @@
 # define kedr_random32() random32()
 #else
 # define kedr_random32() prandom_u32()
+#endif
+/* ====================================================================== */
+
+/* Different fields of struct module are used to access the memory of a
+ * module before kernel 4.5 and after. See commit 7523e4dc5057 in the
+ * mainline kernel for details. */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 5, 0)
+static inline void *module_core_addr(struct module *mod)
+{
+	return mod->core_layout.base;
+}
+
+static inline unsigned int core_text_size(struct module *mod)
+{
+	return mod->core_layout.text_size;
+}
+
+static inline unsigned int core_size(struct module *mod)
+{
+	return mod->core_layout.size;
+}
+
+
+static inline void *module_init_addr(struct module *mod)
+{
+	return mod->init_layout.base;
+}
+
+static inline unsigned int init_text_size(struct module *mod)
+{
+	return mod->init_layout.text_size;
+}
+
+static inline unsigned int init_size(struct module *mod)
+{
+	return mod->init_layout.size;
+}
+#else
+static inline void *module_core_addr(struct module *mod)
+{
+	return mod->module_core;
+}
+
+static inline unsigned int core_text_size(struct module *mod)
+{
+	return mod->core_text_size;
+}
+
+static inline unsigned int core_size(struct module *mod)
+{
+	return mod->core_size;
+}
+
+static inline void *module_init_addr(struct module *mod)
+{
+	return mod->module_init;
+}
+
+static inline unsigned int init_text_size(struct module *mod)
+{
+	return mod->init_text_size;
+}
+
+static inline unsigned int init_size(struct module *mod)
+{
+	return mod->init_size;
+}
 #endif
 /* ====================================================================== */
 
