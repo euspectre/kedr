@@ -1,0 +1,12 @@
+module_name := @PROJECT_NAME@
+
+@CONFIG_KEDR_LEAK_CHECKER@
+@CONFIG_KEDR_RACE_DETECTOR@
+
+ccflags-y := -I$(src)
+
+obj-m := ${module_name}.o
+${module_name}-y := core.o
+
+# ${module_name}-${CONFIG_KEDR_LEAK_CHECKER} += ...
+# ${module_name}-${CONFIG_KEDR_RACE_DETECTOR} += ...
