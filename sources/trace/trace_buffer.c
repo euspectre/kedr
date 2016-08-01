@@ -135,7 +135,7 @@ struct trace_buffer
 	struct ring_buffer* buffer;
 
 	//Array of 'last_message' content for corresponding CPUs.
-	struct last_message last_messages[NR_CPUS];
+	struct last_message* last_messages;
 	//List organization of 'last_messages', ordered by .ts in ascended order.
 	struct list_head last_messages_ordered;
 	
@@ -255,14 +255,14 @@ struct trace_buffer* trace_buffer_alloc(size_t size, bool mode_overwrite)
 	
 	if(tb == NULL)
 	{
-		pr_err("trace_buffer_alloc: Cannot allocate trace_buffer structure.");
+		pr_err("%s: Cannot allocate trace_buffer structure.", __func__);
 		return NULL;
 	}
 	
 	tb->buffer = ring_buffer_alloc(size, mode_overwrite? RB_FL_OVERWRITE : 0);
 	if(tb->buffer == NULL)
 	{
-		pr_err("trace_buffer_alloc: Cannot allocate ring buffer.");
+		pr_err("%s: Cannot allocate ring buffer.", __func__);
 		kfree(tb);
 		return NULL;
 	}
@@ -271,8 +271,17 @@ struct trace_buffer* trace_buffer_alloc(size_t size, bool mode_overwrite)
 	tb->clock = kedr_clock;
 	ts = tb->clock();
 
+	tb->last_messages = kmalloc(num_possible_cpus() * sizeof(struct last_message), GFP_KERNEL);
+	if(tb->last_messages == NULL)
+	{
+		pr_err("%s: Cannot allocate array of last messages.", __func__);
+		ring_buffer_free(tb->buffer);
+		kfree(tb);
+		return NULL;
+	}
+
 	INIT_LIST_HEAD(&tb->last_messages_ordered);
-	for(cpu = 0; cpu < ARRAY_SIZE(tb->last_messages); cpu++)
+	for_each_possible_cpu(cpu)
 	{
 		struct last_message* lm = &tb->last_messages[cpu];
 
@@ -283,7 +292,7 @@ struct trace_buffer* trace_buffer_alloc(size_t size, bool mode_overwrite)
 
 	mutex_init(&tb->m);
 	spin_lock_init(&tb->cb_lock);
-	
+
 	init_waitqueue_head(&tb->rq);
 
 	tb->callback_first = NULL;
@@ -301,6 +310,7 @@ void trace_buffer_destroy(struct trace_buffer* tb)
 	mutex_destroy(&tb->m);
 
 	ring_buffer_free(tb->buffer);
+	kfree(tb->last_messages);
 	kfree(tb);
 }
 
