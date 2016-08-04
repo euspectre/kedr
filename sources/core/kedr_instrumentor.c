@@ -424,8 +424,7 @@ do_process_area(void* kbeg, void* kend,
  * To be able to instrument the module anyway, we use the approach Ftrace
  * relies upon: temporarily make the code RW and make in RO again after the
  * instrumentation. */
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 16, 0)) && \
-    defined(CONFIG_DEBUG_SET_MODULE_RONX)
+#if defined(CONFIG_DEBUG_SET_MODULE_RONX)
 
 static int (*do_set_memory_ro)(unsigned long addr, int numpages) = NULL;
 static int (*do_set_memory_rw)(unsigned long addr, int numpages) = NULL;
