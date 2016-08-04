@@ -232,8 +232,8 @@ static void trace_buffer_clear_internal(struct trace_buffer* tb)
 		trace_buffer_clear_last_message(tb, cpu);
 	}
 
-	spin_lock_irqsave(&tb->cb_lock, flags);
 	ring_buffer_reset(tb->buffer);
+	spin_lock_irqsave(&tb->cb_lock, flags);
 	execute_callbacks_all(tb);
 	spin_unlock_irqrestore(&tb->cb_lock, flags);
 }
