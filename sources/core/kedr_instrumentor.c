@@ -424,9 +424,6 @@ do_process_area(void* kbeg, void* kend,
  * To be able to instrument the module anyway, we use the approach Ftrace
  * relies upon: temporarily make the code RW and make in RO again after the
  * instrumentation. */
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 16, 0)) && \
-    defined(CONFIG_DEBUG_SET_MODULE_RONX)
-
 static int (*do_set_memory_ro)(unsigned long addr, int numpages) = NULL;
 static int (*do_set_memory_rw)(unsigned long addr, int numpages) = NULL;
 
@@ -465,42 +462,81 @@ set_page_attributes(void *start, void *end,
 }
     
 static void
-set_module_text_rw(struct module* mod)
+set_module_core_text_rw(struct module* mod)
 {
 	if (module_core_addr(mod) && core_text_size(mod)) {
 		set_page_attributes(module_core_addr(mod),
 				    module_core_addr(mod) + core_text_size(mod),
-				    do_set_memory_rw);
-	}
-	if (module_init_addr(mod) && init_text_size(mod)) {
-		set_page_attributes(module_init_addr(mod),
-				    module_init_addr(mod) + init_text_size(mod),
 				    do_set_memory_rw);
 	}
 }
 
 static void
-set_module_text_ro(struct module* mod)
+set_module_init_text_rw(struct module* mod)
+{
+	if (module_init_addr(mod) && init_text_size(mod)) {
+		set_page_attributes(module_init_addr(mod),
+				    module_init_addr(mod) + init_text_size(mod),
+				    do_set_memory_rw);
+	}
+}
+
+
+
+static void
+set_module_core_text_ro(struct module* mod)
 {
 	if (module_core_addr(mod) && core_text_size(mod)) {
 		set_page_attributes(module_core_addr(mod),
 				    module_core_addr(mod) + core_text_size(mod),
 				    do_set_memory_ro);
 	}
+}
+
+static void
+set_module_init_text_ro(struct module* mod)
+{
 	if (module_init_addr(mod) && init_text_size(mod)) {
 		set_page_attributes(module_init_addr(mod),
 				    module_init_addr(mod) + init_text_size(mod),
 				    do_set_memory_ro);
 	}
 }
-#else
-static inline void set_module_text_rw(struct module* mod) { }
-static inline void set_module_text_ro(struct module* mod) { }
 
-/* As if it always succeeds in this case. */
-static inline int prepare_set_memory_rx_funcs(void) { return 0; }
-#endif
+static bool
+is_module_section_rw(unsigned long begin, unsigned long end)
+{
+	unsigned long tmp = begin & PAGE_MASK;
+	pte_t* pte = NULL;
+	unsigned int level = 0;
 
+	// check if all pages spanning between 'begin' and 'end' are writeable
+	while (tmp < end)
+	{
+		pte = lookup_address(tmp, &level);
+		if (!pte)
+			return false;
+		if (!pte_write(*pte))
+			return false;
+		tmp += PAGE_SIZE;
+	}
+
+	return true;
+}
+
+static bool
+is_module_core_text_rw(struct module* mod)
+{
+	unsigned long core_addr = (unsigned long)module_core_addr(mod);
+	return is_module_section_rw(core_addr, core_addr + core_text_size(mod));
+}
+
+static bool
+is_module_init_text_rw(struct module* mod)
+{
+	unsigned long init_addr = (unsigned long)module_init_addr(mod);
+	return is_module_section_rw(init_addr, init_addr + init_text_size(mod));
+}
 
 /* Replace all calls to to the target functions with calls to the 
  * replacement-functions in the module. 
@@ -509,10 +545,19 @@ static void
 replace_calls_in_module(struct module* mod,
 	struct repl_hash_table* repl_table)
 {
+	bool core_text_rw = false;
+	bool init_text_rw = false;
+
 	BUG_ON(mod == NULL);
 	BUG_ON(!module_core_addr(mod));
 
-	set_module_text_rw(mod);
+	core_text_rw = is_module_core_text_rw(mod);
+	init_text_rw = is_module_init_text_rw(mod);
+
+	if (!core_text_rw)
+		set_module_core_text_rw(mod);
+	if (!init_text_rw)
+		set_module_init_text_rw(mod);
 	
 	if (module_init_addr(mod))
 	{
@@ -533,7 +578,11 @@ replace_calls_in_module(struct module* mod,
 		module_core_addr(mod) + core_text_size(mod),
 		repl_table);
 	
-	set_module_text_ro(mod);
+	if (!core_text_rw)
+		set_module_core_text_ro(mod);
+	if (!init_text_rw)
+		set_module_init_text_ro(mod);
+
 	return;
 }
 
