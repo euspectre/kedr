@@ -802,11 +802,11 @@ kedr_lc_flush_results(struct kedr_leak_check *lc)
 		return;
 	}
 
+	klc_do_flush(lc);
+
 	/* Make sure all pending requests have been processed before
 	 * going on. */
 	flush_workqueue(lc->wq);
-
-	klc_do_flush(lc);
 	mutex_unlock(&lc_mutex);
 }
 /* ====================================================================== */
@@ -884,11 +884,11 @@ on_session_end(void)
 		return;
 	}
 
+	klc_do_flush(lc_object);
+
 	/* Make sure all pending requests have been processed before
 	 * going on. */
 	flush_workqueue(lc_object->wq);
-
-	klc_do_flush(lc_object);
 
 	/* Clear stack entries tree also.
 	 * New session may involve completely different modules and
