@@ -33,7 +33,7 @@ It is recommended to build KEDR from source. This allows to avoid a lot of issue
 </para>
 
 <para>
-The source code of the framework can be downloaded from the project sites <ulink url="&kedr-url-gc;">at Google Code</ulink> (main site) and <ulink url="&kedr-url-berlios;">at BerliOS Developer</ulink> (mirror).
+The source code of the framework can be downloaded from the project site <ulink url="&kedr-url-gc;">at GitHub</ulink>.
 </para>
 
 <itemizedlist>
@@ -42,7 +42,7 @@ To be able to build KEDR, you need the following:
 </para>
 
 <listitem><para>
-Your Linux system should have kernel version 2.6.32 or newer. <command>uname -r</command> command should tell you what kernel version you are currently using. x86 and x86-64 architectures are currently supported.
+Your Linux system should have kernel version 3.2 or newer. <command>uname -r</command> command should tell you what kernel version you are currently using. x86 and x86-64 architectures are currently supported.
 </para></listitem>
 
 <listitem><para>

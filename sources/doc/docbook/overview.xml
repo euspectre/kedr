@@ -106,10 +106,7 @@ Other types of analysis can be implemented with the help of KEDR. See
 <title>System Requirements</title>
 
 <para>
-KEDR system supports Linux kernel versions 2.6.32 or newer. Of all kernel 
-facilities it relies upon, tracing facilities (implementation of ring 
-buffer, etc.) currently have the highest requirements for the version of 
-the kernel.
+KEDR system supports Linux kernel version 3.2 or newer.
 </para>
 
 <para>
