@@ -11,6 +11,16 @@
 #include <linux/init.h>
 #include <linux/kernel.h>
 
+#include <linux/kedr.h>
+
+#ifndef TESTME
+# error TESTME is not defined
+#endif
+
+#ifndef CONFIG_KEDR_LEAK_CHECKER
+# error CONFIG_KEDR_LEAK_CHECKER is not defined
+#endif
+
 MODULE_AUTHOR("Evgenii Shatokhin");
 MODULE_LICENSE("GPL");
 /* ================================================================ */
@@ -18,6 +28,7 @@ MODULE_LICENSE("GPL");
 static int __init
 kedr_init(void)
 {
+	pr_info("[DBG] TESTME is %u.\n", TESTME);
 	return 0;
 }
 
