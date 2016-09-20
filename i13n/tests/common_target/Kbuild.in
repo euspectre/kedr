@@ -1,0 +1,22 @@
+module_name=kedr_common_target
+
+ccflags-y := -g -I$(src)
+
+obj-m := ${module_name}.o
+${module_name}-y := cfake.o
+
+# To analyze the kernel code, one should set "-fplugin=..." for the relevant
+# files only. In this example, cfake.c and the files it #includes will be
+# instrumented. If other object files were used, they would not be affected.
+#
+# -fdump-* options are only useful to debug the plugin and can be removed.
+# The instrumentation takes place somewhere after "ssa" pass, so these
+# GIMPLE dumps will show what the code looked like before our plugin
+# transformed it and after all optimizations were done.
+CFLAGS_cfake.o := \
+	-fplugin=@PLUGIN_PATH@ \
+	-fdump-tree-ssa-raw \
+	-fdump-tree-optimized-raw
+
+${module_name}-y += kedr_stubs.o
+CFLAGS_kedr_stubs.o := -I "@CMAKE_SOURCE_DIR@/kernel/include"
