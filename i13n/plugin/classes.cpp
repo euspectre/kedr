@@ -7,58 +7,58 @@
 #include <cassert>
 /* ====================================================================== */
 
-/* 
+/*
 * kmalloc-like functions
-* Arguments: (size_t size, gfp_t gfp); 
+* Arguments: (size_t size, gfp_t gfp);
 * return value: void *.
 */
 static struct kedr_function_class class_kmalloc = {
-	.arg_pos = {1 /* size */, 2 /* gfp */, 0},
+	.arg_pos = {1 /* size */, 0},
 	.need_ret = true,
-	.name_pre = "kedr_stub_kmalloc_pre",
-	.name_post = "kedr_stub_kmalloc_post",
+	.name_pre = "kedr_thunk_kmalloc_pre",
+	.name_post = "kedr_thunk_kmalloc_post",
 	.decl_pre = NULL_TREE,
 	.decl_post = NULL_TREE
 };
 
-/* 
+/*
  * kfree-like functions
  * Arguments: (void *);
- * return value: none. 
+ * return value: none.
  */
 static kedr_function_class class_kfree = {
 	.arg_pos = {1 /* ptr */, 0},
 	.need_ret = false,
-	.name_pre = "kedr_stub_kfree_pre",
-	.name_post = "kedr_stub_kfree_post",
+	.name_pre = "kedr_thunk_kfree_pre",
+	.name_post = "kedr_thunk_kfree_post",
 	.decl_pre = NULL_TREE,
 	.decl_post = NULL_TREE
 };
 
-/* 
+/*
  * kmem_cache_alloc-like functions
  * Arguments: (struct kmem_cache *, gfp_t);
- * return value: void *. 
+ * return value: void *.
  */
 static kedr_function_class class_kmc_alloc = {
-	.arg_pos = {1 /* kmem_cache */, 2 /* gfp */, 0},
+	.arg_pos = {1 /* kmem_cache */, 0},
 	.need_ret = true,
-	.name_pre = "kedr_stub_kmc_alloc_pre",
-	.name_post = "kedr_stub_kmc_alloc_post",
+	.name_pre = "kedr_thunk_kmc_alloc_pre",
+	.name_post = "kedr_thunk_kmc_alloc_post",
 	.decl_pre = NULL_TREE,
 	.decl_post = NULL_TREE
 };
 
-/* 
+/*
  * kmem_cache_free
  * Arguments: (struct kmem_cache *, void *);
- * return value: none. 
+ * return value: none.
  */
 static kedr_function_class class_kmc_free = {
 	.arg_pos = {1 /* kmem_cache */, 2 /* ptr */, 0},
 	.need_ret = false,
-	.name_pre = "kedr_stub_kmc_free_pre",
-	.name_post = "kedr_stub_kmc_free_post",
+	.name_pre = "kedr_thunk_kmc_free_pre",
+	.name_post = "kedr_thunk_kmc_free_post",
 	.decl_pre = NULL_TREE,
 	.decl_post = NULL_TREE
 };
@@ -111,14 +111,14 @@ function_matcher::populate_map()
 	classes["kmem_cache_alloc_node"] = &class_kmc_alloc;
 	classes["kmem_cache_alloc_trace"] = &class_kmc_alloc;
 	classes["kmem_cache_alloc_node_trace"] = &class_kmc_alloc;
-	
+
 	/* kfree */
 	classes["kfree"] = &class_kfree;
 	classes["kzfree"] = &class_kfree;
 	classes["free_pages_exact"] = &class_kfree;
 	classes["vfree"] = &class_kfree;
 	classes["kvfree"] = &class_kfree;
-	
+
 	/* kmem_cache_free */
 	classes["kmem_cache_free"] = &class_kmc_free;
 }
@@ -126,7 +126,7 @@ function_matcher::populate_map()
 } /* end of anon namespace */
 
 /* This makes sure the matcher is initialized before everything else. */
-static function_matcher fm; 
+static function_matcher fm;
 
 static tree make_decl_pre(const kedr_function_class *fc)
 {

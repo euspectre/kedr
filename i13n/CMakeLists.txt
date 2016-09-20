@@ -8,18 +8,21 @@ if (NOT CMAKE_COMPILER_IS_GNUCC OR
 endif ()
 #######################################################################
 
-# Check if the compiler supports -fvisibility option (necessary to build 
+# Check if the compiler supports -fvisibility option (necessary to build
 # the shared library)
 include(CheckCCompilerFlag)
 check_c_compiler_flag(-fvisibility=hidden GCC_HAS_FVISIBILITY)
 if (NOT GCC_HAS_FVISIBILITY)
-	message(FATAL_ERROR 
+	message(FATAL_ERROR
 "This version of GCC does not support \'-fvisibility=hidden\' option.")
 endif ()
 #######################################################################
 
 # the plugin itself
 add_subdirectory(plugin)
+
+# the common target module - for debugging and testing
+add_subdirectory(tests/common_target)
 #######################################################################
 
 # the sources of the stubs

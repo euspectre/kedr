@@ -57,6 +57,7 @@
 #include "ipa-ref.h"
 #include "cgraph.h"
 #include "tree-cfg.h"
+#include "tree-cfgcleanup.h"
 #include "stringpool.h"
 #include "tree-ssanames.h"
 #include "tree-pass.h"
@@ -67,5 +68,10 @@
 #include "diagnostic.h"
 #include "tree-ssa-propagate.h"
 #include "tree-ssa-loop-ivopts.h"
+#include "tree-into-ssa.h"
+#include "alloc-pool.h"
+#include "symbol-summary.h"
+#include "ipa-prop.h"
+#include "ipa-inline.h"
 
 #endif /*COMMON_INCLUDES_1814_INCLUDED*/

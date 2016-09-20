@@ -88,10 +88,10 @@ instrument_fexit(tree &ls_ptr)
 	}
 
 	/*
-	 * We need to place the call to our exit handler right before the 
+	 * We need to place the call to our exit handler right before the
 	 * last operation in the function (e.g. "return" of some kind).
-	 * Note that this is NOT right before the end node of the function. 
-	 * 
+	 * Note that this is NOT right before the end node of the function.
+	 *
 	 * Let us find the exits from the function similar to how TSan does
 	 * that in GCC).
 	 */
@@ -105,7 +105,7 @@ instrument_fexit(tree &ls_ptr)
 		gsi = gsi_last_bb(e->src);
 		stmt = gsi_stmt(gsi);
 		/* Sanity check, just in case */
-		gcc_assert(gimple_code(stmt) == GIMPLE_RETURN || 
+		gcc_assert(gimple_code(stmt) == GIMPLE_RETURN ||
 			   gimple_call_builtin_p(stmt, BUILT_IN_RETURN));
 
 		loc = gimple_location(stmt);
@@ -115,10 +115,10 @@ instrument_fexit(tree &ls_ptr)
 	}
 }
 
-/* 
+/*
  * Prepare the argument of the handler from the given argument or return
  * value of the target function. Add type conversions where necessary.
- * 
+ *
  * If the value is neither an integer nor a pointer, take its address and
  * use it instead.
  */
@@ -146,10 +146,10 @@ static tree prepare_handler_arg(tree arg, gimple_seq *seq)
 	return arg;
 }
 
-/* 
+/*
  * Add the handlers for the function calls of interest.
  * 'ls' - pointer to the local storage.
- * 
+ *
  * Returns true if it has instrumented the call, false otherwise.
  */
 static bool
@@ -181,7 +181,7 @@ instrument_function_call(gimple_stmt_iterator *gsi, tree &ls_ptr)
 		arg = prepare_handler_arg(arg, &seq);
 		args_pre.safe_push(arg);
 	}
-	
+
 	args_pre.safe_push(ls_ptr);
 	g = gimple_build_call_vec(fc->decl_pre, args_pre);
 	gimple_seq_add_stmt(&seq, g);
@@ -196,7 +196,7 @@ instrument_function_call(gimple_stmt_iterator *gsi, tree &ls_ptr)
 
 		assert(!types_compatible_p(ret_type, void_type_node));
 
-		/* 
+		/*
 		 * If the return value is ignored, store it in a temporary,
 		 * the handler might still need it.
 		 */
@@ -269,7 +269,7 @@ execute_pass(function */*f*/)
 	/*
 	 * Instrument entry and the exit of the function only if we have
 	 * instrumented something in it.
-	 * 
+	 *
 	 * [NB] In the future, it might also be needed to instrument
 	 * entries and exits of the functions if they are the callbacks
 	 * we are interested in.

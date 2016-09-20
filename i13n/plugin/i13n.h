@@ -1,19 +1,19 @@
 #ifndef I13N_H_1230_INCLUDED
 #define I13N_H_1230_INCLUDED
 
-/* 
+/*
  * How many arguments of a called function to pass to the handlers
  * (at most).
  */
 #define KEDR_NR_ARGS 7
 
-/* 
+/*
  * kedr_function_class
  * A group of functions that should be handled the same way and have the
  * needed arguments at the same positions.
- * 
- * For example, 
- *   void *__kmalloc(size_t, gfp_t) and 
+ *
+ * For example,
+ *   void *__kmalloc(size_t, gfp_t) and
  *   void *kmalloc_order(size_t size, gfp_t flags, unsigned int order)
  * may belong to the same class as long as only the size (size_t) and
  * the flags (gfp_t) are needed.
@@ -24,16 +24,16 @@
  */
 struct kedr_function_class
 {
-	/* 
+	/*
 	 * Which arguments of the called function to pass to the handlers.
 	 * Each number is a position of a given argument in the list of
 	 * arguments for that function.
 	 * The positions start from 1.
 	 * 0 marks the end of the list.
-	 * The arguments will be cast to unsigned long if necessary and 
+	 * The arguments will be cast to unsigned long if necessary and
 	 * will be passed to the handlers in the order their positions are
 	 * listed here.
-	 * 
+	 *
 	 * [NB] If an argument of the target function is not an integer or
 	 * a pointer, e.g. a struct passes by value, its address will be
 	 * passed to the handler instead of the value.
@@ -46,9 +46,9 @@ struct kedr_function_class
 	 */
 	bool need_ret;
 
-	/* 
+	/*
 	 * Names of the pre-handler and the post-handler.
-	 * These handlers will be called before and after the function of 
+	 * These handlers will be called before and after the function of
 	 * this class is, respectively.
 	 *
 	 * A pre-handler should have the following signature:
@@ -59,7 +59,7 @@ struct kedr_function_class
 	 *
 	 * A post-handler should have the following signature:
 	 * void <name_post>([unsigned long ret], void *lptr);
-	 * 
+	 *
 	 * Note that the post-handler does not receive the arguments of the
 	 * target function directly. If they are needed there, then it is
 	 * the job of the pre-handler to save them somewhere, e.g. in the
@@ -77,7 +77,7 @@ struct kedr_function_class
 /*
  * Returns a pointer to the kedr_function_class instance for a function with
  * the given name if found, NULL if not.
- * 
+ *
  * If the function returns the instance, the instance will also have
  * 'decl_pre' and 'decl_post' set.
  */

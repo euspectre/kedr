@@ -37,7 +37,7 @@ include_directories(
 )
 
 add_library(${PLUGIN_NAME} MODULE ${PLUGIN_SOURCES})
-set_target_properties(${PLUGIN_NAME} PROPERTIES 
+set_target_properties(${PLUGIN_NAME} PROPERTIES
 	PREFIX ""
 )
 
