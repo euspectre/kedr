@@ -1,3 +1,5 @@
+#include <gcc-plugin.h>
+
 #include "common_includes.h"
 #include "i13n.h"
 
@@ -169,9 +171,9 @@ static tree make_decl_post(const kedr_function_class *fc)
 }
 
 const kedr_function_class *kedr_get_class_by_fname(
-	const std::string & fname)
+	const char *fname)
 {
-	struct kedr_function_class *fc = fm.get_class_by_fname(fname);
+	struct kedr_function_class *fc = fm.get_class_by_fname(std::string(fname));
 
 	if (!fc)
 		return NULL;

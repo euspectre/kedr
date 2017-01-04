@@ -22,6 +22,12 @@
 #define PLUGIN_EXPORT __attribute__ ((visibility("default")))
 /* ====================================================================== */
 
+#if BUILDING_GCC_VERSION >= 6000
+typedef gimple * kedr_stmt;
+#else
+typedef gimple kedr_stmt;
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -52,7 +58,7 @@ instrument_fentry(tree &ls_ptr)
 	static tree fentry_decl = NULL_TREE;
 	basic_block on_entry;
 	gimple_stmt_iterator gsi;
-	gimple g;
+	gcall *g;
 	gimple_seq seq = NULL;
 
 	if (fentry_decl == NULL_TREE) {
@@ -99,8 +105,8 @@ instrument_fexit(tree &ls_ptr)
 	FOR_EACH_EDGE(e, ei, at_exit->preds) {
 		location_t loc;
 		gimple_stmt_iterator gsi;
-		gimple stmt;
-		gimple g;
+		kedr_stmt stmt;
+		gcall *g;
 
 		gsi = gsi_last_bb(e->src);
 		stmt = gsi_stmt(gsi);
@@ -124,7 +130,7 @@ instrument_fexit(tree &ls_ptr)
  */
 static tree prepare_handler_arg(tree arg, gimple_seq *seq)
 {
-	gimple g;
+	kedr_stmt g;
 	tree src_type = TREE_TYPE(arg);
 
 	if (!POINTER_TYPE_P(src_type) && !INTEGRAL_TYPE_P(src_type)) {
@@ -155,9 +161,9 @@ static tree prepare_handler_arg(tree arg, gimple_seq *seq)
 static bool
 instrument_function_call(gimple_stmt_iterator *gsi, tree &ls_ptr)
 {
-	gimple stmt = gsi_stmt(*gsi);
+	kedr_stmt stmt = gsi_stmt(*gsi);
 	gimple_seq seq;
-	gimple g;
+	gcall *g;
 
 	tree fndecl = gimple_call_fndecl(stmt);
 	if (!fndecl)
@@ -221,8 +227,7 @@ instrument_function_call(gimple_stmt_iterator *gsi, tree &ls_ptr)
 static bool
 instrument_gimple(gimple_stmt_iterator *gsi, tree &ls_ptr)
 {
-	gimple stmt;
-	stmt = gsi_stmt(*gsi);
+	kedr_stmt stmt = gsi_stmt(*gsi);
 	bool need_ls = false;
 
 	if (is_gimple_call(stmt))

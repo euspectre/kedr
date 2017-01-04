@@ -82,7 +82,7 @@ struct kedr_function_class
  * 'decl_pre' and 'decl_post' set.
  */
 const kedr_function_class *
-kedr_get_class_by_fname(const std::string & fname);
+kedr_get_class_by_fname(const char *fname);
 
 /* Set the common properties of a function decl. */
 void
