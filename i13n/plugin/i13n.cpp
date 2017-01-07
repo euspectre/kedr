@@ -64,7 +64,7 @@ instrument_fentry(tree &ls_ptr)
 	if (fentry_decl == NULL_TREE) {
 		tree fntype = build_function_type_list(
 			ptr_type_node, void_type_node, NULL_TREE);
-		fentry_decl = build_fn_decl("kedr_stub_fentry", fntype);
+		fentry_decl = build_fn_decl("kedr_thunk_fentry", fntype);
 		kedr_set_fndecl_properties(fentry_decl);
 	}
 
@@ -89,7 +89,7 @@ instrument_fexit(tree &ls_ptr)
 	if (fexit_decl == NULL_TREE) {
 		tree fntype = build_function_type_list(
 			void_type_node, ptr_type_node, NULL_TREE);
-		fexit_decl = build_fn_decl("kedr_stub_fexit", fntype);
+		fexit_decl = build_fn_decl("kedr_thunk_fexit", fntype);
 		kedr_set_fndecl_properties(fexit_decl);
 	}
 

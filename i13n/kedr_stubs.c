@@ -15,28 +15,31 @@
 
 #include <linux/compiler.h>	/* notrace, ... */
 #include <linux/stddef.h>	/* NULL */
-#include <linux/slab.h>
+#include <linux/slab.h>		/* k*alloc(), k*free(), ... */
+#include <linux/bug.h>		/* WARN*() */
 
 #include <linux/kedr_local.h>	/* struct kedr_local */
 /* ====================================================================== */
 
 /*
- * If no real handlers are attached, the data will be stored in this object
- * and will be ignored because the object is not marked as valid.
- * This is just to return something meaningful from kedr_stub_fentry() and
- * to avoid checking lptr for NULL in the thunks.
+ * May return NULL. The pointer returned by this function may only be passed
+ * to other thunks and handlers but should not be dereferenced by the
+ * instrumented code itself.
+ *
+ * [NB] We allocate a kedr_local instance here rather than in a handler to
+ * avoid problems when the handlers are detached in runtime (we would still
+ * need to free that instance somehow then). This is easier to implement.
  */
-static struct kedr_local _local;
-/* ====================================================================== */
-
-void __used *kedr_stub_fentry(void)
+void __used notrace *kedr_thunk_fentry(void)
 {
-	return &_local;
+	struct kedr_local *local = kzalloc(sizeof(*local), GFP_ATOMIC);
+	WARN_ON_ONCE(!local);
+	return local;
 }
 
-void __used kedr_stub_fexit(struct kedr_local *local)
+void __used notrace kedr_thunk_fexit(struct kedr_local *local)
 {
-	(void)local;
+	kfree(local);
 }
 /* ====================================================================== */
 
@@ -49,29 +52,23 @@ void __used kedr_stub_fexit(struct kedr_local *local)
  * What is guaranteed:
  *
  * for all handlers:
- * - local is the address of an existing kedr_local instance, never NULL;
+ * - local is the address of a kedr_local instance, never NULL;
  * - local->pc is meaningful.
  * - If a thunk for a pre-handler sets 'addr', 'size', 'event' or 'pc'
  *   field of kedr_local instance, these fields will not change until
- *   the thunk for a post-handler runs. This also requires that the handlers
- *   do not change these values as well.
+ *   the post-handler runs. That is, unless the pre-handler changes these.
  *
  * alloc_pre:
  * - local->size is the requested size of the memory block (> 0).
  *
  * alloc_post:
  * - called only if the allocation succeeds;
- * - local->size is the requested size of the memory block (unless
- *   alloc_pre() has changed it);
+ * - local->size is the requested size of the memory block;
  * - local->addr is the address of the allocated memory block.
  *
  * free_pre:
  * - local->addr is the address of the memory block to be freed (non-NULL,
  *   not a ZERO_SIZE_PTR either).
- *
- * free_post:
- * - local->addr is the same as for free_pre() unless the latter has changed
- *   it.
  */
 void __used kedr_stub_alloc_pre(struct kedr_local *local)
 {
@@ -97,6 +94,9 @@ void __used kedr_stub_free_post(struct kedr_local *local)
 void notrace kedr_thunk_kmalloc_pre(unsigned long size,
 				    struct kedr_local *local)
 {
+	if (!local)
+		return;
+
 	/*
 	 * Set these fields even if 'size' is 0: the thunk for the post
 	 * handler may need them to decide if that handler should be called.
@@ -113,6 +113,9 @@ void notrace kedr_thunk_kmalloc_pre(unsigned long size,
 void notrace kedr_thunk_kmalloc_post(unsigned long ret,
 				     struct kedr_local *local)
 {
+	if (!local)
+		return;
+
 	if (local->size == 0 || ZERO_OR_NULL_PTR((void *)ret))
 		return;
 
@@ -124,6 +127,9 @@ void notrace kedr_thunk_kmalloc_post(unsigned long ret,
 void notrace kedr_thunk_kfree_pre(unsigned long ptr,
 				  struct kedr_local *local)
 {
+	if (!local)
+		return;
+
 	local->pc = (unsigned long)__builtin_return_address(0);
 	local->addr = ptr;
 
@@ -135,6 +141,9 @@ void notrace kedr_thunk_kfree_pre(unsigned long ptr,
 
 void notrace kedr_thunk_kfree_post(struct kedr_local *local)
 {
+	if (!local)
+		return;
+
 	if (ZERO_OR_NULL_PTR((void *)local->addr))
 		return;
 
@@ -145,6 +154,9 @@ void notrace kedr_thunk_kmc_alloc_pre(unsigned long kmem_cache,
 				      struct kedr_local *local)
 {
 	struct kmem_cache *kmc = (struct kmem_cache *)kmem_cache;
+
+	if (!local)
+		return;
 
 	local->pc = (unsigned long)__builtin_return_address(0);
 	if (kmc)
@@ -161,6 +173,9 @@ void notrace kedr_thunk_kmc_alloc_pre(unsigned long kmem_cache,
 void notrace kedr_thunk_kmc_alloc_post(unsigned long ret,
 				       struct kedr_local *local)
 {
+	if (!local)
+		return;
+
 	if (local->size == 0 || ZERO_OR_NULL_PTR((void *)ret))
 		return;
 
@@ -174,6 +189,9 @@ void notrace kedr_thunk_kmc_free_pre(unsigned long kmem_cache,
 {
 	(void)kmem_cache;
 
+	if (!local)
+		return;
+
 	local->pc = (unsigned long)__builtin_return_address(0);
 	local->addr = ptr;
 
@@ -185,6 +203,9 @@ void notrace kedr_thunk_kmc_free_pre(unsigned long kmem_cache,
 
 void notrace kedr_thunk_kmc_free_post(struct kedr_local *local)
 {
+	if (!local)
+		return;
+
 	if (ZERO_OR_NULL_PTR((void *)local->addr))
 		return;
 
