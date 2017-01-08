@@ -29,6 +29,10 @@
  * [NB] We allocate a kedr_local instance here rather than in a handler to
  * avoid problems when the handlers are detached in runtime (we would still
  * need to free that instance somehow then). This is easier to implement.
+ *
+ * 'notrace' is used for the thunks to make the code a bit smaller. Ftrace
+ * should not be used for these functions anyway, so there is no need to
+ * place Ftrace hooks there either.
  */
 void __used notrace *kedr_thunk_fentry(void)
 {
@@ -69,6 +73,12 @@ void __used notrace kedr_thunk_fexit(struct kedr_local *local)
  * free_pre:
  * - local->addr is the address of the memory block to be freed (non-NULL,
  *   not a ZERO_SIZE_PTR either).
+ * ---------------------
+ *
+ * Note that it is not guaranteed that if a pre-handler for some function
+ * has run, the post-handler will run as well. Likewise, the post-handler
+ * may not assume that if it runs, the pre-handler has run before it.
+ * The handlers may be attached and detached at any moment.
  */
 void __used kedr_stub_alloc_pre(struct kedr_local *local)
 {
