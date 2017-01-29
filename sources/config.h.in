@@ -3,7 +3,19 @@
 
 #include <linux/list.h>
 #include <linux/version.h>
+#include <generated/utsrelease.h>
 #include <linux/module.h>
+
+/* Ubuntu stock kernels have some features backported (unlike their
+ * mainline-based builds) and these features may break the build. Try to
+ * handle that here.
+ * Details: http://www.spinics.net/lists/backports/msg02845.html */
+#ifndef UTS_UBUNTU_RELEASE_ABI
+# define UTS_UBUNTU_RELEASE_ABI 0
+#elif !defined(CONFIG_VERSION_SIGNATURE) /* mainline-based kernel */
+# undef UTS_UBUNTU_RELEASE_ABI
+# define UTS_UBUNTU_RELEASE_ABI 0
+#endif
 
 /* How to create module parameter with callbacks */
 #cmakedefine MODULE_PARAM_CREATE_USE_OPS_STRUCT
@@ -66,8 +78,14 @@
 
 /* Different fields of struct module are used to access the memory of a
  * module before kernel 4.5 and after. See commit 7523e4dc5057 in the
- * mainline kernel for details. */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 5, 0)
+ * mainline kernel for details.
+ *
+ * Ubuntu 16.04 with kernel 4.4.0-21 or newer has these changes backported.
+ */
+#if (( LINUX_VERSION_CODE >= KERNEL_VERSION(4, 5, 0) ) || \
+     ( LINUX_VERSION_CODE >= KERNEL_VERSION(4, 4, 0) && \
+      UTS_UBUNTU_RELEASE_ABI >= 21 ) \
+    )
 static inline void *module_core_addr(struct module *mod)
 {
 	return mod->core_layout.base;
