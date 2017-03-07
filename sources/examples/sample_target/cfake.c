@@ -331,7 +331,7 @@ cfake_init_module(void)
 	for (i = 0; i < cfake_ndevices; ++i) {
 		err = cfake_construct_device(&cfake_devices[i], i, cfake_class);
 		if (err) {
-			devices_to_destroy = i;
+			devices_to_destroy = i + 1;
 			goto fail;
 		}
 	}
