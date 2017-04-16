@@ -49,8 +49,18 @@ void __used notrace kedr_thunk_fexit(struct kedr_local *local)
 
 /*
  * Hander stubs
- *
- * alloc_* - memory allocation event,
+ * 
+ * 'noinline' and 'asm volatile ("")' are here to prevent the compiler from
+ * optimizing away the calls to these functions.
+ */
+#define KEDR_DEFINE_STUB(_name) \
+void __used noinline kedr_stub_ ## _name (struct kedr_local *local) \
+{ \
+	(void)local; \
+	asm volatile (""); \
+}
+
+/* alloc_* - memory allocation event,
  * free_* - memory deallocation event.
  *
  * What is guaranteed:
@@ -80,25 +90,10 @@ void __used notrace kedr_thunk_fexit(struct kedr_local *local)
  * may not assume that if it runs, the pre-handler has run before it.
  * The handlers may be attached and detached at any moment.
  */
-void __used kedr_stub_alloc_pre(struct kedr_local *local)
-{
-	(void)local;
-}
-
-void __used kedr_stub_alloc_post(struct kedr_local *local)
-{
-	(void)local;
-}
-
-void __used kedr_stub_free_pre(struct kedr_local *local)
-{
-	(void)local;
-}
-
-void __used kedr_stub_free_post(struct kedr_local *local)
-{
-	(void)local;
-}
+KEDR_DEFINE_STUB(alloc_pre)
+KEDR_DEFINE_STUB(alloc_post)
+KEDR_DEFINE_STUB(free_pre)
+KEDR_DEFINE_STUB(free_post)
 /* ====================================================================== */
 
 void notrace kedr_thunk_kmalloc_pre(unsigned long size,
