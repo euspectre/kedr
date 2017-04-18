@@ -553,8 +553,8 @@ static void kedr_disable(void)
 {
 	mutex_lock(&kedr_mutex);
 	kedr_enabled = false;
-	unregister_module_notifier(&kedr_module_nb);
 	kedr_detach_handlers(NULL);
+	unregister_module_notifier(&kedr_module_nb);
 	mutex_unlock(&kedr_mutex);
 }
 /* ====================================================================== */
