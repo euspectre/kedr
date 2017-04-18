@@ -86,10 +86,6 @@ static void alloc_pre(struct kedr_local *local)
 {
 	preempt_disable();
 	// TODO
-	//<>
-	//pr_err("[DBG] alloc_pre at %pS: size = %lu\n",
-		(void *)local->pc, local->size);
-	//<>
 	preempt_enable();
 }
 
@@ -97,10 +93,6 @@ static void alloc_post(struct kedr_local *local)
 {
 	preempt_disable();
 	// TODO
-	//<>
-	//pr_err("[DBG] alloc_post at %pS: size = %lu, addr = %p\n",
-		(void *)local->pc, local->size, (void *)local->addr);
-	//<>
 	preempt_enable();
 }
 
@@ -108,10 +100,6 @@ static void free_pre(struct kedr_local *local)
 {
 	preempt_disable();
 	// TODO
-	//<>
-	//pr_err("[DBG] free_pre at %pS: addr = %p\n",
-		(void *)local->pc, (void *)local->addr);
-	//<>
 	preempt_enable();
 }
 
@@ -119,10 +107,6 @@ static void free_post(struct kedr_local *local)
 {
 	preempt_disable();
 	// TODO
-	//<>
-	//pr_err("[DBG] free_post at %pS: addr = %p\n",
-		(void *)local->pc, (void *)local->addr);
-	//<>
 	preempt_enable();
 }
 /* ====================================================================== */
