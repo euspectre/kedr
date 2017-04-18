@@ -452,6 +452,10 @@ static int kedr_module_notify(struct notifier_block *nb, unsigned long action,
 	struct module *mod = data;
 	int ret;
 
+	/* Do not let this code trip over itself. */
+	if (mod == THIS_MODULE)
+		return 0;
+
 	/*
 	 * We check kedr_enabled here just in case this notification came
 	 * right before KEDR was disabled. kedr_mutex is used to serialize
