@@ -278,10 +278,6 @@ static int kedr_func_attach(struct kedr_func *func)
 	}
 
 	func->state = KEDR_FUNC_ENABLED;
-
-	//<>
-	pr_warning("[DBG] Attached handler to the function %s.\n", func->info);
-	//<>
 	return 0;
 }
 
