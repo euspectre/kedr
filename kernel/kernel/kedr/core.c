@@ -590,16 +590,3 @@ static void __exit kedr_exit(void)
 module_init(kedr_init);
 module_exit(kedr_exit);
 /* ====================================================================== */
-
-//<> handler
-/*
-preempt_disable();
-	<do the handler's job>
-preempt_enable();
-------------
-Then you can wait for all currently running handlers to complete by calling
-synchronize_sched().
-
-I assume the handlers do not need to check kedr_enabled.
-*/
-//<>
