@@ -502,32 +502,17 @@ static struct notifier_block kedr_module_nb = {
 /* Set up and enable event handling. */
 static int kedr_enable(void)
 {
-	int ret = 0;
+	int ret;
 
 	ret = mutex_lock_killable(&kedr_mutex);
 	if (ret != 0) {
 		pr_warning(KEDR_PREFIX "Failed to lock kedr_mutex.\n");
 		return ret;
 	}
-
-	ret = register_module_notifier(&kedr_module_nb);
-	if (ret) {
-		pr_warning(KEDR_PREFIX
-			   "Failed to register the module notifier.\n");
-		goto out_unlock;
-	}
-
 	ret = kedr_attach_handlers(NULL);
-	if (ret)
-		goto out_unreg;
+	if (ret == 0)
+		kedr_enabled = true;
 
-	kedr_enabled = true;
-	mutex_unlock(&kedr_mutex);
-	return 0;
-
-out_unreg:
-	unregister_module_notifier(&kedr_module_nb);
-out_unlock:
 	mutex_unlock(&kedr_mutex);
 	return ret;
 }
@@ -538,7 +523,6 @@ static void kedr_disable(void)
 	mutex_lock(&kedr_mutex);
 	kedr_enabled = false;
 	kedr_detach_handlers(NULL);
-	unregister_module_notifier(&kedr_module_nb);
 	mutex_unlock(&kedr_mutex);
 }
 /* ====================================================================== */
@@ -546,15 +530,25 @@ static void kedr_disable(void)
 static int __init kedr_init(void)
 {
 	int ret;
-	// TODO: prepare everything the handlers may use.
+
+	ret = register_module_notifier(&kedr_module_nb);
+	if (ret) {
+		pr_warning(KEDR_PREFIX
+			   "Failed to register the module notifier.\n");
+		return ret;
+	}
+
+	// TODO: other initialization tasks.
 
 	ret = kedr_enable();
 	if (ret)
-		return ret;
+		goto out_unreg;
 
-	// TODO: other initialization not directly related to event handling:
-	// debugfs knobs, etc.
 	return 0;
+
+out_unreg:
+	unregister_module_notifier(&kedr_module_nb);
+	return ret;
 }
 
 static void __exit kedr_exit(void)
@@ -586,6 +580,8 @@ static void __exit kedr_exit(void)
 	 * the handlers are not running and will not start at this point,
 	 * before we cleanup the resources the handlers might use.
 	 */
+
+	unregister_module_notifier(&kedr_module_nb);
 
 	/* TODO: cleanup the resources the handlers were using. No handler runs at this point. */
 	return;
