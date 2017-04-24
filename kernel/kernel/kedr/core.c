@@ -22,6 +22,7 @@
 #include <linux/kallsyms.h>
 #include <linux/rcupdate.h>
 #include <linux/preempt.h>
+#include <linux/kobject.h>
 
 #include <linux/kedr.h>
 
@@ -40,7 +41,8 @@ MODULE_LICENSE("GPL");
 
 enum kedr_func_state {
 	KEDR_FUNC_DISABLED,
-	KEDR_FUNC_ENABLED
+	KEDR_FUNC_ENABLED,
+	KEDR_FUNC_UNREGISTERED
 };
 
 struct kedr_object {
@@ -86,6 +88,9 @@ static void alloc_pre(struct kedr_local *local)
 {
 	preempt_disable();
 	// TODO
+	//<>
+	//pr_info("[DBG] alloc_pre, size=%lu, at %pS\n", local->size, (void *)local->pc);
+	//<>
 	preempt_enable();
 }
 
@@ -93,6 +98,9 @@ static void alloc_post(struct kedr_local *local)
 {
 	preempt_disable();
 	// TODO
+	//<>
+	//pr_info("[DBG] alloc_post, addr=%p, size=%lu, at %pS\n", (void *)local->addr, local->size, (void *)local->pc);
+	//<>
 	preempt_enable();
 }
 
@@ -100,6 +108,9 @@ static void free_pre(struct kedr_local *local)
 {
 	preempt_disable();
 	// TODO
+	//<>
+	//pr_info("[DBG] free_pre, addr=%p, at %pS\n", (void *)local->addr, (void *)local->pc);
+	//<>
 	preempt_enable();
 }
 
@@ -107,6 +118,9 @@ static void free_post(struct kedr_local *local)
 {
 	preempt_disable();
 	// TODO
+	//<>
+	//pr_info("[DBG] free_post, at %pS\n", (void *)local->pc);
+	//<>
 	preempt_enable();
 }
 /* ====================================================================== */
@@ -203,7 +217,7 @@ static unsigned long kedr_get_ftrace_location(unsigned long faddr)
 }
 #endif
 
-static void kedr_func_detach(struct kedr_func *func)
+static int kedr_func_detach(struct kedr_func *func)
 {
 	unsigned long ftrace_loc;
 	int ret;
@@ -212,7 +226,7 @@ static void kedr_func_detach(struct kedr_func *func)
 		pr_info(KEDR_PREFIX
 			"Handler for the function %s is not enabled.\n",
 			func->info);
-		return;
+		return -EINVAL;
 	}
 
 	ftrace_loc = kedr_get_ftrace_location(func->addr);
@@ -220,24 +234,34 @@ static void kedr_func_detach(struct kedr_func *func)
 		pr_err(KEDR_PREFIX
 			"Failed to find ftrace hook for the function %s\n",
 			func->info);
-		return;
+		return -EINVAL;
 	}
 
-	ret = unregister_ftrace_function(&func->ops);
-	if (ret) {
-		pr_err(KEDR_PREFIX
-			"Failed to unregister ftrace handler for function %s (error: %d)\n",
-			func->info, ret);
-		return;
+	/*
+	 * If the previous attempts to detach the function failed in
+	 * ftrace_set_filter_ip(), do not try to unregister the function
+	 * again.
+	 */
+	if (func->state != KEDR_FUNC_UNREGISTERED) {
+		ret = unregister_ftrace_function(&func->ops);
+		if (ret) {
+			pr_warning(KEDR_PREFIX
+				"Failed to unregister ftrace handler for function %s (error: %d)\n",
+				func->info, ret);
+			return ret;
+		}
 	}
+	func->state = KEDR_FUNC_UNREGISTERED;
 
 	ret = ftrace_set_filter_ip(&func->ops, ftrace_loc, 1, 0);
 	if (ret) {
-		pr_err(KEDR_PREFIX
+		pr_warning(KEDR_PREFIX
 			"Failed to remove ftrace filter for function %s (error: %d)\n",
 			func->info, ret);
-		return;
+		return ret;
 	}
+
+	return ret;
 }
 
 static int kedr_func_attach(struct kedr_func *func)
@@ -262,15 +286,16 @@ static int kedr_func_attach(struct kedr_func *func)
 
 	ret = ftrace_set_filter_ip(&func->ops, ftrace_loc, 0, 0);
 	if (ret) {
-		pr_err(KEDR_PREFIX
-			"Failed to set ftrace filter for function %s (error: %d)\n",
-			func->info, ret);
+		pr_warning(KEDR_PREFIX
+			   "Failed to set ftrace filter for function %s (error: %d)\n",
+			   func->info, ret);
 		return -EINVAL;
 	}
 
 	ret = register_ftrace_function(&func->ops);
 	if (ret) {
-		pr_err(KEDR_PREFIX
+		pr_warning(
+			KEDR_PREFIX
 			"Failed to register ftrace handler for function %s (error: %d)\n",
 			func->info, ret);
 		ftrace_set_filter_ip(&func->ops, ftrace_loc, 1, 0);
@@ -286,28 +311,36 @@ static int kedr_func_attach(struct kedr_func *func)
  * memory allocated for the respective kedr_func instances.
  * Does not free the object itself.
  */
-static void kedr_cleanup_object(struct kedr_object *obj)
+static int kedr_cleanup_object(struct kedr_object *obj)
 {
 	struct kedr_func *func;
 	struct kedr_func *tmp;
+	int ret;
 
 	list_for_each_entry_safe(func, tmp, &obj->funcs, list) {
-		kedr_func_detach(func);
+		ret = kedr_func_detach(func);
+		if (ret)
+			return ret;
 		list_del(&func->list);
 		kedr_destroy_func(func);
 	}
+	return 0;
 }
 
-static void kedr_destroy_all_objects(void)
+static int kedr_destroy_all_objects(void)
 {
 	struct kedr_object *obj;
 	struct kedr_object *tmp;
+	int ret;
 
 	list_for_each_entry_safe(obj, tmp, &kedr_objects, list) {
-		kedr_cleanup_object(obj);
+		ret = kedr_cleanup_object(obj);
+		if (ret)
+			return ret;
 		list_del(&obj->list);
 		kfree(obj);
 	}
+	return 0;
 }
 
 static int kedr_kallsyms_callback(void *data, const char *name,
@@ -370,21 +403,23 @@ static int kedr_kallsyms_callback(void *data, const char *name,
  * Detach the handlers from the KEDR stubs in the given module (if mod is
  * not NULL) or everywhere (if mod is NULL).
  */
-static void kedr_detach_handlers(struct module *mod)
+static int kedr_detach_handlers(struct module *mod)
 {
-	if (mod) {
-		struct kedr_object *obj;
+	struct kedr_object *obj;
+	int ret;
 
-		obj = kedr_find_object(mod);
-		if (obj) {
-			kedr_cleanup_object(obj);
-			list_del(&obj->list);
-			kfree(obj);
-		}
+	if (!mod)
+		return kedr_destroy_all_objects();
+
+	obj = kedr_find_object(mod);
+	if (obj) {
+		ret = kedr_cleanup_object(obj);
+		if (ret)
+			return ret;
+		list_del(&obj->list);
+		kfree(obj);
 	}
-	else {
-		kedr_destroy_all_objects();
-	}
+	return 0;
 }
 
 static int kedr_attach_all_for_object(struct kedr_object *obj)
@@ -411,6 +446,18 @@ static int kedr_attach_handlers(struct module *mod)
 {
 	int ret;
 	struct kedr_object *obj;
+
+	/*
+	 * This is unlikely but possible in case KEDR failed to detach from
+	 * a module completely when that module was unloaded, and now it is
+	 * loaded once again.
+	 */
+	if (mod && kedr_find_object(mod)) {
+		pr_err(KEDR_PREFIX
+		       "Unable to attach handlers to the reloaded module %s.\n",
+			module_name(mod));
+		return -EBUSY;
+	}
 
 	ret = mutex_lock_killable(&module_mutex);
 	if (ret)
@@ -459,7 +506,7 @@ static int kedr_module_notify(struct notifier_block *nb, unsigned long action,
 	/*
 	 * We check kedr_enabled here just in case this notification came
 	 * right before KEDR was disabled. kedr_mutex is used to serialize
-	 * the events w.r.t. enabling/disabling of KEDR.
+	 * the events w.r.t. enabling/disabling KEDR.
 	 */
 	switch(action) {
 	case MODULE_STATE_COMING:
@@ -482,8 +529,14 @@ static int kedr_module_notify(struct notifier_block *nb, unsigned long action,
 		break;
 	case MODULE_STATE_GOING:
 		mutex_lock(&kedr_mutex);
-		if (kedr_enabled)
-			kedr_detach_handlers(mod);
+		if (kedr_enabled) {
+			ret = kedr_detach_handlers(mod);
+			if (ret)
+				pr_warning(
+					KEDR_PREFIX
+					"Failed to detach handlers from \"%s\", errno: %d.\n",
+					module_name(mod), ret);
+		}
 		mutex_unlock(&kedr_mutex);
 		break;
 	default:
@@ -505,62 +558,55 @@ static int kedr_enable(void)
 	int ret;
 
 	ret = mutex_lock_killable(&kedr_mutex);
-	if (ret != 0) {
+	if (ret) {
 		pr_warning(KEDR_PREFIX "Failed to lock kedr_mutex.\n");
 		return ret;
 	}
-	ret = kedr_attach_handlers(NULL);
-	if (ret == 0)
-		kedr_enabled = true;
 
+	if (kedr_enabled)
+		goto out;
+
+	/*
+	 * Make sure the core module cannot be unloaded when the events
+	 * are enabled.
+	 */
+	if (!try_module_get(THIS_MODULE)) {
+		ret = -EBUSY;
+		goto out;
+	}
+
+	ret = kedr_attach_handlers(NULL);
+	if (ret) {
+		module_put(THIS_MODULE);
+		goto out;
+	}
+
+	kedr_enabled = true;
+	pr_debug(KEDR_PREFIX "KEDR has been enabled.\n");
+
+out:
 	mutex_unlock(&kedr_mutex);
 	return ret;
 }
 
 /* Disable event handling. */
-static void kedr_disable(void)
+static int kedr_disable(void)
 {
+	int ret = 0;
+
 	mutex_lock(&kedr_mutex);
-	kedr_enabled = false;
-	kedr_detach_handlers(NULL);
-	mutex_unlock(&kedr_mutex);
-}
-/* ====================================================================== */
+	if (!kedr_enabled)
+		goto out;
 
-static int __init kedr_init(void)
-{
-	int ret;
-
-	ret = register_module_notifier(&kedr_module_nb);
-	if (ret) {
-		pr_warning(KEDR_PREFIX
-			   "Failed to register the module notifier.\n");
-		return ret;
-	}
-
-	// TODO: other initialization tasks.
-
-	ret = kedr_enable();
+	ret = kedr_detach_handlers(NULL);
 	if (ret)
-		goto out_unreg;
+		goto out;
 
-	return 0;
-
-out_unreg:
-	unregister_module_notifier(&kedr_module_nb);
-	return ret;
-}
-
-static void __exit kedr_exit(void)
-{
-	/* TODO: cleanup the stuff not directly related to event handling:
-	   debugfs knobs, etc. */
-
-	kedr_disable();
+	kedr_enabled = false;
 
 	/*
-	 * kedr_disable() detached the handlers, they will no longer
-	 * start until re-attached.
+	 * We have detached the handlers, they will no longer start unless
+	 * re-attached.
 	 *
 	 * However, some handlers might have already started before they
 	 * were detached, so let us wait for them to finish.
@@ -581,9 +627,114 @@ static void __exit kedr_exit(void)
 	 * before we cleanup the resources the handlers might use.
 	 */
 
-	unregister_module_notifier(&kedr_module_nb);
+	module_put(THIS_MODULE);
+	pr_debug(KEDR_PREFIX "KEDR has been disabled.\n");
+out:
+	mutex_unlock(&kedr_mutex);
+	return ret;
+}
+/* ====================================================================== */
 
-	/* TODO: cleanup the resources the handlers were using. No handler runs at this point. */
+/* sysfs knobs */
+static struct kobject *kedr_kobj;
+
+static ssize_t kedr_enabled_show(struct kobject *kobj,
+				 struct kobj_attribute *attr, char *buf)
+{
+	ssize_t len;
+	int ret;
+
+	ret = mutex_lock_killable(&kedr_mutex);
+	if (ret)
+		return ret;
+
+	len = sprintf(buf, "%d\n", kedr_enabled);
+	mutex_unlock(&kedr_mutex);
+
+	return len;
+}
+
+static ssize_t kedr_enabled_store(struct kobject *kobj,
+				  struct kobj_attribute *attr, const char *buf,
+				  size_t count)
+{
+	int ret;
+	unsigned long enable;
+
+	ret = kstrtoul(buf, 10, &enable);
+	if (ret)
+		return ret;
+
+	enable = !!enable;
+
+	if (enable)
+		ret = kedr_enable();
+	else
+		ret = kedr_disable();
+
+	if (ret)
+		return ret;
+
+	return count;
+}
+
+static struct kobj_attribute kedr_enabled_attr =
+	__ATTR(enabled, 0644, kedr_enabled_show, kedr_enabled_store);
+
+static struct attribute *kedr_attrs[] = {
+	&kedr_enabled_attr.attr,
+	NULL,
+};
+
+static struct attribute_group kedr_attr_group = {
+	.attrs = kedr_attrs,
+};
+/* ====================================================================== */
+
+static int __init kedr_init(void)
+{
+	int ret;
+
+	ret = register_module_notifier(&kedr_module_nb);
+	if (ret) {
+		pr_warning(KEDR_PREFIX
+			   "Failed to register the module notifier.\n");
+		return ret;
+	}
+
+	kedr_kobj = kobject_create_and_add("kedr", kernel_kobj);
+	if (!kedr_kobj) {
+		ret = -ENOMEM;
+		goto out_unreg;
+	}
+
+	ret = sysfs_create_group(kedr_kobj, &kedr_attr_group);
+	if (ret)
+		goto out_put;
+
+	// TODO: other initialization tasks.
+
+	return 0;
+
+out_put:
+	kobject_put(kedr_kobj);
+out_unreg:
+	unregister_module_notifier(&kedr_module_nb);
+	return ret;
+}
+
+static void __exit kedr_exit(void)
+{
+	sysfs_remove_group(kedr_kobj, &kedr_attr_group);
+	kobject_put(kedr_kobj);
+
+	/*
+	 * Just in case someone has re-enabled it after the core module
+	 * began to unload.
+	 */
+	kedr_disable();
+
+	unregister_module_notifier(&kedr_module_nb);
 	return;
 }
 
