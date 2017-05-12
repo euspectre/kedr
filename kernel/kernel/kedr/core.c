@@ -1,10 +1,12 @@
-/* ========================================================================
+/*
+ * ========================================================================
  * Copyright (C) 2016-2017, Evgenii Shatokhin <eugene.shatokhin@yandex.ru>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as published
  * by the Free Software Foundation.
- ======================================================================== */
+ * ========================================================================
+ */
 
 /*
  * Some parts of this code may be based on the implementation of livepatch
@@ -25,8 +27,6 @@
 #include <linux/kobject.h>
 
 #include <linux/kedr.h>
-
-#define KEDR_PREFIX "kedr: "
 /* ====================================================================== */
 
 //<>
@@ -77,6 +77,11 @@ static DEFINE_MUTEX(kedr_mutex);
 static LIST_HEAD(kedr_objects);
 
 static bool kedr_enabled;
+/* ====================================================================== */
+
+/* Start and end addresses of the kernel code. */
+unsigned long kedr_stext;
+unsigned long kedr_etext;
 /* ====================================================================== */
 
 /*
@@ -497,7 +502,7 @@ static int kedr_module_notify(struct notifier_block *nb, unsigned long action,
 			      void *data)
 {
 	struct module *mod = data;
-	int ret;
+	int ret = 0;
 
 	/* Do not let this code trip over itself. */
 	if (mod == THIS_MODULE)
@@ -508,42 +513,39 @@ static int kedr_module_notify(struct notifier_block *nb, unsigned long action,
 	 * right before KEDR was disabled. kedr_mutex is used to serialize
 	 * the events w.r.t. enabling/disabling KEDR.
 	 */
+	mutex_lock(&kedr_mutex);
+	if (!kedr_enabled) {
+		mutex_unlock(&kedr_mutex);
+		return 0;
+	}
+
 	switch(action) {
 	case MODULE_STATE_COMING:
-		ret = mutex_lock_killable(&kedr_mutex);
-		if (ret) {
-			pr_warning(KEDR_PREFIX "Failed to lock kedr_mutex.\n");
-			break;
-		}
-		if (!kedr_enabled) {
-			mutex_unlock(&kedr_mutex);
-			break;
-		}
+		kedr_modmap_on_coming(mod);
 		ret = kedr_attach_handlers(mod);
 		if (ret)
 			pr_warning(
 				KEDR_PREFIX
 				"Failed to attach handlers to \"%s\", errno: %d.\n",
 				module_name(mod), ret);
-		mutex_unlock(&kedr_mutex);
+		break;
+	case MODULE_STATE_LIVE:
+		/* Handle unloading of the module's init area here, if needed. */
 		break;
 	case MODULE_STATE_GOING:
-		mutex_lock(&kedr_mutex);
-		if (kedr_enabled) {
-			ret = kedr_detach_handlers(mod);
-			if (ret)
-				pr_warning(
-					KEDR_PREFIX
-					"Failed to detach handlers from \"%s\", errno: %d.\n",
-					module_name(mod), ret);
-		}
-		mutex_unlock(&kedr_mutex);
+		ret = kedr_detach_handlers(mod);
+		if (ret)
+			pr_warning(
+				KEDR_PREFIX
+				"Failed to detach handlers from \"%s\", errno: %d.\n",
+				module_name(mod), ret);
 		break;
 	default:
 		break;
 	}
 
-	return 0;
+	mutex_unlock(&kedr_mutex);
+	return ret;
 }
 
 static struct notifier_block kedr_module_nb = {
@@ -567,7 +569,7 @@ static int kedr_enable(void)
 		goto out;
 
 	/*
-	 * Make sure the core module cannot be unloaded when the events
+	 * Make sure the core module cannot be unloaded while the events
 	 * are enabled.
 	 */
 	if (!try_module_get(THIS_MODULE)) {
@@ -580,6 +582,8 @@ static int kedr_enable(void)
 		module_put(THIS_MODULE);
 		goto out;
 	}
+
+	kedr_create_modmap();
 
 	kedr_enabled = true;
 	pr_debug(KEDR_PREFIX "KEDR has been enabled.\n");
@@ -626,6 +630,8 @@ static int kedr_disable(void)
 	 * the handlers are not running and will not start at this point,
 	 * before we cleanup the resources the handlers might use.
 	 */
+
+	kedr_free_modmap();
 
 	module_put(THIS_MODULE);
 	pr_debug(KEDR_PREFIX "KEDR has been disabled.\n");
@@ -691,9 +697,39 @@ static struct attribute_group kedr_attr_group = {
 };
 /* ====================================================================== */
 
+/*
+ * Find the non-exported kernel symbols that KEDR needs. Ugly, but should
+ * be OK for now.
+ */
+static int __init find_kernel_symbols(void)
+{
+	/*
+	 * Note. .text section of the kernel starts from '_text' rather than
+	 * '_stext' (_stext > _text, by the way). This is the case for both
+	 * 32- and 64-bit x86 and might be for arm & arm64 as well.
+	 */
+	kedr_stext = (unsigned long)kallsyms_lookup_name("_text");
+	if (!kedr_stext) {
+		pr_warning(KEDR_PREFIX "Kernel symbol not found: _text\n");
+		return -EINVAL;
+	}
+
+	kedr_etext = (unsigned long)kallsyms_lookup_name("_etext");
+	if (!kedr_etext) {
+		pr_warning(KEDR_PREFIX "Kernel symbol not found: _etext\n");
+		return -EINVAL;
+	}
+	return 0;
+}
+/* ====================================================================== */
+
 static int __init kedr_init(void)
 {
 	int ret;
+
+	ret = find_kernel_symbols();
+	if (ret)
+		return ret;
 
 	ret = register_module_notifier(&kedr_module_nb);
 	if (ret) {
