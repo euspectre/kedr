@@ -36,7 +36,7 @@
 #include <linux/device.h>
 #include <linux/mutex.h>
 
-#include <asm/uaccess.h>
+#include <linux/uaccess.h>
 
 /* LeakCheck API is declared here. */
 #include <kedr/leak_check/leak_check.h>

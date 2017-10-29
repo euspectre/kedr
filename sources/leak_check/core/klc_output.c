@@ -25,7 +25,7 @@
 #include <linux/debugfs.h>
 #include <linux/fs.h>
 #include <linux/vmalloc.h>
-#include <asm/uaccess.h>
+#include <linux/uaccess.h>
 
 #include "leak_check_impl.h"
 #include "klc_output.h"

@@ -29,7 +29,7 @@
 #include <linux/device.h>
 #include <linux/mutex.h>
 
-#include <asm/uaccess.h>
+#include <linux/uaccess.h>
 
 #include "cfake.h"
 
