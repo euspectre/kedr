@@ -4,13 +4,6 @@ set(PLUGIN_SOURCES
 	classes.cpp
 	i13n.h
 	common_includes.h
-	${CMAKE_CURRENT_BINARY_DIR}/config.h
-)
-
-configure_file(
-	"${CMAKE_CURRENT_SOURCE_DIR}/config.h.in"
-	"${CMAKE_CURRENT_BINARY_DIR}/config.h"
-	@ONLY
 )
 
 # -fvisibility=hidden, the CMake way

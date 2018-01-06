@@ -6,7 +6,6 @@
 #include <gcc-plugin.h>
 #include <plugin-version.h>
 
-#include "config.h"
 #include "common_includes.h"
 #include "i13n.h"
 
