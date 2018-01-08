@@ -30,10 +30,7 @@ HDR_ARCH := $(shell echo "$(HDR_ARCH)" | sed \
 				 -e s/sh[234].*/sh/ -e s/aarch64.*/arm64/ )
 
 ARCH_INCLUDE_PATH := $(BUILD_DIR)/arch/$(HDR_ARCH)/include
-# GCC processes "-include <file>" as if #include "<file>" was at the first
-# line of the primary source file. No need to #include it explicitly, which
-# is convenient.
-KCFLAGS += -I$(BUILD_DIR)/include -I$(ARCH_INCLUDE_PATH) -include $(BUILD_DIR)/config.h
+KCFLAGS += -I$(BUILD_DIR)/include -I$(ARCH_INCLUDE_PATH)
 export KCFLAGS
 ############################################################################
 
@@ -52,7 +49,6 @@ clean:
 	$(MAKE)$(ARCH_SPEC)$(CROSS_COMPILE_SPEC) -C $(KBUILD_DIR) M=$(BUILD_DIR)/$(CORE_SUBDIR) clean
 
 # No need to meddle with installation of the built modules here:
-# either CMake (in the local builds) or the package/DKMS/whatever should
-# handle it.
+# the package/DKMS/whatever should handle it.
 
 .PHONY: all clean $(MODULES)

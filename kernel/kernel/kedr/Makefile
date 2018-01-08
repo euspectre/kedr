@@ -3,5 +3,5 @@
 
 ccflags-y := -I$(src)
 
-obj-$(CONFIG_KEDR) += kedr.o
+obj-m += kedr.o
 kedr-objs := core.o modmap.o
