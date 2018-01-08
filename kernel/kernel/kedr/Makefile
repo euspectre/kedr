@@ -5,6 +5,3 @@ ccflags-y := -I$(src)
 
 obj-$(CONFIG_KEDR) += kedr.o
 kedr-objs := core.o modmap.o
-
-# <module_name>-${CONFIG_KEDR_LEAK_CHECKER} += ...
-# <module_name>-${CONFIG_KEDR_RACE_DETECTOR} += ...

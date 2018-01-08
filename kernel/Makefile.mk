@@ -1,21 +1,23 @@
 # Override KBUILD_DIR when calling make with this Makefile to build
 # everything for a different kernel.
 KBUILD_DIR ?= /lib/modules/$(shell uname -r)/build
-############################################################################
-
-# Configuration
-export CONFIG_KEDR=m
-@CONFIG_KEDR_LEAK_CHECKER@
-@CONFIG_KEDR_RACE_DETECTOR@
-############################################################################
 
 TARGET_KERNEL := $(shell $(MAKE) -s -C $(KBUILD_DIR) kernelversion)
 
 BUILD_DIR := $(shell pwd)
 
-HDR_ARCH := @HDR_ARCH@
-ifeq ($(HDR_ARCH),)
+ifeq ($(ARCH),)
 	HDR_ARCH := $(shell uname -m)
+	ARCH_SPEC :=
+else
+	HDR_ARCH := $(ARCH)
+	ARCH_SPEC := "ARCH=$(ARCH)"
+endif
+
+ifeq ($(CROSS_COMPILE),)
+	CROSS_COMPILE_SPEC :=
+else
+	CROSS_COMPILE_SPEC := "CROSS_COMPILE=$(CROSS_COMPILE)"
 endif
 
 # Similar to SUBARCH from the Makefile for the kernel.
@@ -44,10 +46,10 @@ MODULES := \
 all: $(MODULES)
 
 $(CORE_SUBDIR)/kedr.ko:
-	$(MAKE)@ARCH_SPEC@@CROSS_COMPILE_SPEC@ -C $(KBUILD_DIR) M=$(BUILD_DIR)/$(CORE_SUBDIR) modules
+	$(MAKE)$(ARCH_SPEC)$(CROSS_COMPILE_SPEC) -C $(KBUILD_DIR) M=$(BUILD_DIR)/$(CORE_SUBDIR) modules
 
 clean:
-	$(MAKE)@ARCH_SPEC@@CROSS_COMPILE_SPEC@ -C $(KBUILD_DIR) M=$(BUILD_DIR)/$(CORE_SUBDIR) clean
+	$(MAKE)$(ARCH_SPEC)$(CROSS_COMPILE_SPEC) -C $(KBUILD_DIR) M=$(BUILD_DIR)/$(CORE_SUBDIR) clean
 
 # No need to meddle with installation of the built modules here:
 # either CMake (in the local builds) or the package/DKMS/whatever should

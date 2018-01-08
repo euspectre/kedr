@@ -5,19 +5,6 @@
 # That makefile handles the rest of the build process for the kernel
 # modules, CMake is not involved there. The makefiles in the subdirectories
 # are used as is.
-#
-# Same for the sources: only config.h is configured, other files are kept
-# intact.
-
-configure_file(
-	"${CMAKE_CURRENT_SOURCE_DIR}/config.h.in"
-	"${CMAKE_CURRENT_BINARY_DIR}/config.h"
-	@ONLY)
-
-configure_file(
-	"${CMAKE_CURRENT_SOURCE_DIR}/Makefile.mk.in"
-	"${CMAKE_CURRENT_BINARY_DIR}/Makefile.mk"
-	@ONLY)
 ############################################################################
 
 set(KERNEL_MODULES

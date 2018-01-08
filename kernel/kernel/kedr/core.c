@@ -29,12 +29,6 @@
 #include <linux/kedr.h>
 /* ====================================================================== */
 
-//<>
-#ifndef CONFIG_KEDR_LEAK_CHECKER
-# error CONFIG_KEDR_LEAK_CHECKER is not defined
-#endif
-//<>
-
 MODULE_AUTHOR("Evgenii Shatokhin");
 MODULE_LICENSE("GPL");
 /* ====================================================================== */
