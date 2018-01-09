@@ -17,7 +17,7 @@ project('kedr',
 	['c', 'cpp'],
 	version : '1.0',
 	license : 'GPL-2.0',
-	meson_version : '>= 0.41',
+	meson_version : '>= 0.44',
 	default_options : ['buildtype=debugoptimized',	# -g -O2
 			   'warning_level=2' # -Wextra
 			   ])
