@@ -30,10 +30,11 @@ plugin_src = ['i13n.cpp',
 	      'i13n.h',
 	      'common_includes.h']
 
-shared_module(plugin_name,
-	       sources : plugin_src,
-	       name_prefix : '',
-	       include_directories : plugin_inc,
-	       cpp_args : cpp_args,
-	       install : true,
-	       install_dir : kedr_libdir)
+plugin_so = shared_module(
+	plugin_name,
+	sources : plugin_src,
+	name_prefix : '',
+	include_directories : plugin_inc,
+	cpp_args : cpp_args,
+	install : true,
+	install_dir : kedr_libdir)

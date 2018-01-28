@@ -27,6 +27,13 @@ kedr_libdir = join_paths(get_option('libdir'), 'kedr')
 kedr_datadir = join_paths(get_option('datadir'), 'kedr')
 kedr_kmod_srcdir = 'src/kedr'
 
+# Stubs
+kedr_stubs_src = files('i13n/kedr_stubs.c')
+kedr_stubs_inc = join_paths(meson.source_root(), 'kernel/include')
+
 subdir('i13n')
 subdir('kernel')
+
+# Keep the tests subdir last: it may use variables defined in meson.build
+# files from the subdirectories processed above.
 subdir('tests')
