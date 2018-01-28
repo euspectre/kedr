@@ -24,7 +24,7 @@
  *  block_size - maximum number of bytes that can be read or written
  *    in one call;
  *  cfake_mutex - a mutex to protect the fields of this structure;
- *  cdev - ñharacter device structure.
+ *  cdev - character device structure.
  */
 struct cfake_dev {
 	unsigned char *data;
