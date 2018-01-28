@@ -1,7 +1,7 @@
-module_name=kedr_common_target
+module_name = kedr_common_target
 
-KBUILD_DIR=/lib/modules/$(shell uname -r)/build
-PWD=$(shell pwd)
+KBUILD_DIR ?= /lib/modules/$(shell uname -r)/build
+PWD = $(shell pwd)
 
 all: ${module_name}.ko
 
