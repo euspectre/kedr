@@ -10,6 +10,8 @@ TBD
 * development files and build prerequisites for the target kernel
 * ...
 
+If you plan to run the self-tests for KEDR, Python 3.5 is also needed.
+
 It is assumed in each of the subsections here that the top source directory of KEDR is the current directory and building is done in `build` subdirectory there.
 
 # Build
