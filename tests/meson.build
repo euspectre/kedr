@@ -7,7 +7,8 @@ testenv.set('MESON_BUILD_ROOT', meson.build_root())
 testenv.set('TEST_BUILD_ROOT', meson.current_build_dir())
 
 test_basics = find_program('test_basics.py')
-test('basic operations', test_basics, env : testenv, is_parallel : false)
+test('basic operations', test_basics, env : testenv, is_parallel : false,
+     timeout : 300)
 
 subdir('common_target')
 
