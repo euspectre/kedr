@@ -4,6 +4,11 @@
 #include <linux/version.h>
 #include <linux/wait.h>
 
+/* for signal_pending() */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 11, 0)
+#include <linux/sched/signal.h>
+#endif
+
 /* Workaround for mainline commit
  * ac6424b981bc ("sched/wait: Rename wait_queue_t => wait_queue_entry_t") */
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 13, 0)
