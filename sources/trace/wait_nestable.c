@@ -23,7 +23,7 @@ void add_wait_queue_nestable(wait_queue_head_t* wq, struct wait_queue_nestable* 
 {
     unsigned long flags;
     spin_lock_irqsave(&wq->lock, flags);
-    if(list_empty(&wqn->wait.task_list))
+    if (wqn_task_list_empty(wqn))
         __add_wait_queue(wq, &wqn->wait);
     spin_unlock_irqrestore(&wq->lock, flags);
     /*

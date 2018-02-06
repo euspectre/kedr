@@ -1,7 +1,14 @@
 #ifndef WAIT_NESTABLE_H
 #define WAIT_NESTABLE_H
 
+#include <linux/version.h>
 #include <linux/wait.h>
+
+/* Workaround for mainline commit
+ * ac6424b981bc ("sched/wait: Rename wait_queue_t => wait_queue_entry_t") */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 13, 0)
+# define wait_queue_t wait_queue_entry_t
+#endif
 
 struct wait_queue_nestable
 {
@@ -16,11 +23,34 @@ struct wait_queue_nestable
  */
 int wake_flag_function(wait_queue_t* wait, unsigned mode, int sync, void* key);
 
-#define DEFINE_WAIT_NESTED(name, woken_flag) struct wait_queue_nestable name = \
+/* Workaround for mainline commit
+ * 2055da97389a ("sched/wait: Disambiguate wq_entry->task_list and
+ * wq_head->task_list naming") */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 13, 0)
+# define DEFINE_WAIT_NESTED(name, woken_flag) struct wait_queue_nestable name = \
+{ \
+    .wait = {.private = current, .func = wake_flag_function, .entry = LIST_HEAD_INIT((name).wait.entry)}, \
+    .woken_flag_p = &(woken_flag) \
+}
+
+static inline int wqn_task_list_empty(struct wait_queue_nestable* wqn)
+{
+	return list_empty(&wqn->wait.entry);
+}
+
+#else
+
+# define DEFINE_WAIT_NESTED(name, woken_flag) struct wait_queue_nestable name = \
 { \
     .wait = {.private = current, .func = wake_flag_function, .task_list = LIST_HEAD_INIT((name).wait.task_list)}, \
     .woken_flag_p = &(woken_flag) \
 }
+
+static inline int wqn_task_list_empty(struct wait_queue_nestable* wqn)
+{
+	return list_empty(&wqn->wait.task_list);
+}
+#endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(4, 13, 0) */
 
 /* 
  * Add nestable wait into given queue if it is not already added.

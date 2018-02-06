@@ -3,10 +3,17 @@
  *********************************************************************/
 #include <linux/module.h>
 #include <linux/init.h>
+#include <linux/version.h>
 
 MODULE_AUTHOR("<$module.author$>");
 MODULE_LICENSE("<$module.license$>");
 /*********************************************************************/
+
+/* Workaround for mainline commit
+ * ac6424b981bc ("sched/wait: Rename wait_queue_t => wait_queue_entry_t") */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 13, 0)
+# define wait_queue_t wait_queue_entry_t
+#endif
 
 #include <kedr/core/kedr.h>
 #include <kedr/trace/trace.h>
