@@ -393,7 +393,7 @@ static int trace_buffer_update_internal(struct trace_buffer* tb)
 {
 	unsigned long flags;
 	/* Timestamp for empty per-cpu buffers. */
-	u64 ts_empty;
+	u64 ts_empty = 0;
 	/* Whether ts_empty is set. */
 	bool ts_empty_set = 0;
 	/* Whether non-empty per-cpu buffer is found. */
