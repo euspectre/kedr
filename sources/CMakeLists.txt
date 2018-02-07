@@ -286,6 +286,13 @@ if(KERNEL_PART)
 	    set (KMCA_TRACE_KMC_FIRST 1)
     endif ()
 
+    # handle changes in __alloc_pages_nodemask in kernel 4.13
+    if (Kbuild_VERSION_STRING_CLASSIC VERSION_LESS "4.13.0")
+        set(APNM_VER "4_12")
+    else ()
+	set(APNM_VER "4_13")
+    endif ()
+
     # Check if stack trace information is reliable on this system.
     # STACK_TRACE_RELIABLE will hold the result.
     # This only checks relevant configuration parameters of kernel.

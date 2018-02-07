@@ -19,6 +19,13 @@ configure_file(
 	COPYONLY
 )
 
+configure_file(
+	"${CMAKE_CURRENT_SOURCE_DIR}/__alloc_pages_nodemask.data.${APNM_VER}"
+	"${CMAKE_CURRENT_BINARY_DIR}/__alloc_pages_nodemask.data"
+	COPYONLY
+)
+
+
 # Make the information about the functions listed here available to
 # other components of KEDR.
 func_db_configure_functions (
@@ -37,7 +44,6 @@ func_db_configure_functions (
 	"__get_free_pages"
 	"get_zeroed_page"
 	"free_pages"
-	"__alloc_pages_nodemask"
 	"alloc_pages_current"
 	"__free_pages"
 	"alloc_pages_exact"
@@ -47,4 +53,5 @@ func_db_configure_functions (
 	GENERATED
 	"kmem_cache_alloc_trace"
 	"kmem_cache_alloc_node_trace"
+	"__alloc_pages_nodemask"
 )
