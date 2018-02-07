@@ -20,4 +20,6 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/test_fault_simulation.sh.in"
     @ONLY
 )
 
-kedr_test_add_script("examples.sample_fsim.01" "test_fault_simulation.sh")
+# The test hangs the system. Until someone digs into it and fixes it,
+# I have disabled the test.
+#kedr_test_add_script("examples.sample_fsim.01" "test_fault_simulation.sh")

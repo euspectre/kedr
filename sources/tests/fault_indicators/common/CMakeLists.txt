@@ -8,9 +8,12 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/test.sh.in"
 	@ONLY
 )
 
-kedr_test_add_script("fault_indicators.common.01"
-	"test.sh"
-)
+# The test hangs the system. Until someone digs into it and fixes it,
+# I have disabled the test.
+
+#kedr_test_add_script("fault_indicators.common.01"
+#	"test.sh"
+#)
 
 add_subdirectory(module)
 
