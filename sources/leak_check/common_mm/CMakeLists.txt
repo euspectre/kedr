@@ -67,6 +67,14 @@ kmodule_configure_kernel_functions(functions
 	
 	OPTIONAL "kasprintf"
 	"kvasprintf"
+
+	"ioremap_nocache"
+	"ioremap_uc"
+	"ioremap_wc"
+	"ioremap_wt"
+	"ioremap_cache"
+	"ioremap_prot"
+	"iounmap"
 )
 
 # TODO: see the notes and TODO in sources/functions/mem_util/CMakelists.txt

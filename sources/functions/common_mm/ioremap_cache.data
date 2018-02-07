@@ -1,0 +1,12 @@
+[group]
+	# Name and return type of the target function
+	function.name = ioremap_cache
+	returnType = void *
+
+	# Names and types of the arguments of the target function
+	arg.type = resource_size_t
+	arg.name = phys_addr
+
+	arg.type = unsigned long
+	arg.name = size
+#######################################################################

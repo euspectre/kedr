@@ -49,6 +49,13 @@ func_db_configure_functions (
 	"alloc_pages_exact"
 	"free_pages_exact"
 	"alloc_pages_exact_nid"
+	"ioremap_nocache"
+	"ioremap_uc"
+	"ioremap_wc"
+	"ioremap_wt"
+	"ioremap_cache"
+	"ioremap_prot"
+	"iounmap"
 	
 	GENERATED
 	"kmem_cache_alloc_trace"
