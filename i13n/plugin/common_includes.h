@@ -9,6 +9,12 @@
 #include "config.h"
 #include "system.h"
 #include "coretypes.h"
+
+#if BUILDING_GCC_VERSION >= 7000
+#include <tree-vrp.h>
+#include <memmodel.h>
+#endif
+
 #include "hash-set.h"
 #include "machmode.h"
 #include "vec.h"
