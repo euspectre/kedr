@@ -313,10 +313,13 @@ option(KEDR_STANDARD_CALLM_PAYLOADS
 	OFF
 )
 
-option(KEDR_TRACE "Whether KEDR trace mechanism is built" ON)
+option(KEDR_TRACE "Whether KEDR trace mechanism is built" OFF)
 
 if(KEDR_STANDARD_CALLM_PAYLOADS AND NOT KEDR_TRACE)
-    message(FATAL_ERROR "Plagins for call monitoring are enabled without call monitoring mechanism implementation (KEDR_TRACE is OFF).")
+    set(KEDR_TRACE ON CACHE BOOL
+	    "KEDR trace mechanism is needed for function call monitoring."
+	    FORCE
+	)
 endif(KEDR_STANDARD_CALLM_PAYLOADS AND NOT KEDR_TRACE)
 
 if(KERNEL_PART AND KEDR_TRACE)
