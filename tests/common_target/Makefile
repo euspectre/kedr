@@ -5,7 +5,7 @@ PWD = $(shell pwd)
 
 all: ${module_name}.ko
 
-${module_name}.ko: cfake.c cfake.h kedr_stubs.c
+${module_name}.ko: cfake.c cfake.h kedr_helpers.c
 	$(MAKE) -C ${KBUILD_DIR} M=${PWD} modules
 
 clean:

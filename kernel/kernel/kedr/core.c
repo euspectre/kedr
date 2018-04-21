@@ -1,6 +1,6 @@
 /*
  * ========================================================================
- * Copyright (C) 2016-2017, Evgenii Shatokhin <eugene.shatokhin@yandex.ru>
+ * Copyright (C) 2016-2018, Evgenii Shatokhin <eugene.shatokhin@yandex.ru>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as published
@@ -50,7 +50,7 @@ struct kedr_func {
 	struct ftrace_ops ops;
 
 	/* This handler will be called instead of the stub. */
-	void (*handler)(struct kedr_local *local);
+	void *handler;
 
 	/* Address of the stub the handler is attached to. */
 	unsigned long addr;
@@ -79,47 +79,101 @@ unsigned long kedr_etext;
 /* ====================================================================== */
 
 /*
- * The handlers.
+ * Mark the event handlers with '__kedr_handler' (place it before the return
+ * type). This way the definitions of the appropriate stubs will be
+ * automatically generated in kedr_helpers.*.
+ */
+#define __kedr_handler
+
+/*
+ * Event handlers.
  * Preemption is disabled there, that allows us to use synchronize_sched()
  * later to wait for all running handlers to complete.
  */
-static void alloc_pre(struct kedr_local *local)
+
+/*
+ * Called after the memory area has been allocated, gets the address and
+ * size of the area as arguments. If the allocation has failed, 'addr'
+ * will be 0.
+ */
+static __kedr_handler void kedr_handle_alloc(
+	unsigned long addr, unsigned long size, void *loc)
 {
+	//struct kedr_local *local = loc;
+	unsigned long pc;
+
 	preempt_disable();
+	// ??? is it needed to save pc in kedr_local? Each handler must get PC
+	// on its own because KEDR core can attach to the kernel at any moment - 
+	// no guarantee that a pre-handler has run if the post-handler is now running,
+	// for example.
+	pc = (unsigned long)__builtin_return_address(0);
 	// TODO
+
 	//<>
-	//pr_info("[DBG] alloc_pre, size=%lu, at %pS\n", local->size, (void *)local->pc);
+	pr_info("[DBG] alloc at %lx (%pS) for size %lu => addr %lx\n", pc, (void *)pc, size, addr);
 	//<>
 	preempt_enable();
 }
 
-static void alloc_post(struct kedr_local *local)
+/*
+ * Memory deallocation handler.
+ * Called before deallocation starts. 'addr' - the address of the memory
+ * area to be freed. May be 0.
+ */
+static __kedr_handler void kedr_handle_free(unsigned long addr, void *loc)
 {
+	//struct kedr_local *local = loc;
+	unsigned long pc;
+
 	preempt_disable();
+	pc = (unsigned long)__builtin_return_address(0);
 	// TODO
+
 	//<>
-	//pr_info("[DBG] alloc_post, addr=%p, size=%lu, at %pS\n", (void *)local->addr, local->size, (void *)local->pc);
+	pr_info("[DBG] free at %lx (%pS) for addr %lx\n", pc, (void *)pc, addr);
 	//<>
 	preempt_enable();
 }
 
-static void free_pre(struct kedr_local *local)
+/*
+ * The handlers for krealloc and __krealloc can be rather complex. Let
+ * the KEDR core implement them for now.
+ */
+static __kedr_handler void kedr_handle_krealloc_pre(
+	const void *p, unsigned long new_size, void *loc)
 {
+	//struct kedr_local *local = loc;
+	unsigned long pc;
+
 	preempt_disable();
+	pc = (unsigned long)__builtin_return_address(0);
 	// TODO
-	//<>
-	//pr_info("[DBG] free_pre, addr=%p, at %pS\n", (void *)local->addr, (void *)local->pc);
-	//<>
 	preempt_enable();
 }
 
-static void free_post(struct kedr_local *local)
+static __kedr_handler void kedr_handle_krealloc_post(
+	const void *ret, const void *p, unsigned long new_size, void *loc)
 {
+	//struct kedr_local *local = loc;
+	unsigned long pc;
+
 	preempt_disable();
+	pc = (unsigned long)__builtin_return_address(0);
 	// TODO
-	//<>
-	//pr_info("[DBG] free_post, at %pS\n", (void *)local->pc);
-	//<>
+	preempt_enable();
+}
+
+/* This one is called after __krealloc() returns. */
+static __kedr_handler void kedr_handle___krealloc(
+	const void *ret, const void *p, unsigned long new_size, void *loc)
+{
+	//struct kedr_local *local = loc;
+	unsigned long pc;
+
+	preempt_disable();
+	pc = (unsigned long)__builtin_return_address(0);
+	// TODO
 	preempt_enable();
 }
 /* ====================================================================== */
@@ -342,15 +396,56 @@ static int kedr_destroy_all_objects(void)
 	return 0;
 }
 
+struct kedr_handler_table_item
+{
+	const char *event_name;
+	void *handler;
+};
+
+static struct kedr_handler_table_item handler_table[] = {
+	{
+		.event_name	= "alloc",
+		.handler	= kedr_handle_alloc,
+	},
+	{
+		.event_name	= "free",
+		.handler	= kedr_handle_free,
+	},
+	{
+		.event_name	= "krealloc_pre",
+		.handler	= kedr_handle_krealloc_pre,
+	},
+	{
+		.event_name	= "krealloc_post",
+		.handler	= kedr_handle_krealloc_post,
+	},
+	{
+		.event_name	= "__krealloc",
+		.handler	= kedr_handle___krealloc,
+	},
+};
+
+static void *find_handler(const char *event_name)
+{
+	size_t i;
+
+	/* TODO: may be optimize the lookup somehow? */
+	for (i = 0; i < ARRAY_SIZE(handler_table); ++i) {
+		if (strcmp(event_name, handler_table[i].event_name) == 0)
+			return handler_table[i].handler;
+	}
+
+	return NULL;
+}
+
 static int kedr_kallsyms_callback(void *data, const char *name,
 				  struct module *mod, unsigned long addr)
 {
-	static const char stub_prefix[] = "kedr_stub_";
+	static const char stub_prefix[] = "kedr_stub_handle_";
 	static size_t prefix_len = ARRAY_SIZE(stub_prefix) - 1;
 	struct module *target = data;
-	const char *part;
 	struct kedr_object *obj;
-	void (*handler)(struct kedr_local *local);
+	void *handler;
 	struct kedr_func *func;
 
 	/*
@@ -364,20 +459,8 @@ static int kedr_kallsyms_callback(void *data, const char *name,
 	if (strncmp(name, stub_prefix, prefix_len) != 0)
 		return 0;
 
-	part = name + prefix_len;
-	if (strcmp(part, "alloc_pre") == 0) {
-		handler = alloc_pre;
-	}
-	else if (strcmp(part, "alloc_post") == 0) {
-		handler = alloc_post;
-	}
-	else if (strcmp(part, "free_pre") == 0) {
-		handler = free_pre;
-	}
-	else if (strcmp(part, "free_post") == 0) {
-		handler = free_post;
-	}
-	else {
+	handler = find_handler(name + prefix_len);
+	if (!handler) {
 		pr_info(KEDR_PREFIX "Unknown KEDR stub \"%s\" in %s.\n",
 			name, module_name(mod));
 		return 0;
@@ -770,4 +853,21 @@ static void __exit kedr_exit(void)
 
 module_init(kedr_init);
 module_exit(kedr_exit);
+/* ====================================================================== */
+
+
+/*void notrace kedr_thunk_kmalloc_pre(unsigned long size,
+				    struct kedr_local *local)
+{
+	if (!local)
+		return;
+
+	local->pc = (unsigned long)__builtin_return_address(0);
+	local->size = size;
+
+	if (size == 0)
+		return;
+
+	kedr_stub_alloc_pre(local);
+}*/
 /* ====================================================================== */

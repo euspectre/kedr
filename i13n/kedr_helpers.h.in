@@ -1,0 +1,18 @@
+/*
+ * The helper functions and handler stubs are declared here, so that
+ * the instrumentation system could generate appropriate calls.
+ *
+ * Avoid using non-standard types here because this header may be included
+ * before they are defined.
+ *
+ * Note. 'void *local' is the address of 'struct kedr_local' instance.
+ * The structure is opaque for the instrumented code.
+ */
+
+void *kedr_fentry(void);
+void kedr_fexit(void *local);
+
+unsigned long kedr_kmem_cache_size(void *s);
+unsigned long kedr_page_address(const void *page);
+unsigned long kedr_size_from_order(unsigned long order);
+unsigned long kedr_str_buffer_len(const char *s, unsigned long count);

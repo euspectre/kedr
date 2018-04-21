@@ -1,0 +1,99 @@
+/*
+ * This file defines some helper functions to be called from the
+ * instrumented code. It also provides the stubs of the event handlers.
+ * The stubs do nothing by themselves: KEDR core will "replace" them with
+ * the real handlers in runtime. Actually, it will redirect the code
+ * execution from the stubs to the relevant handlers via Ftrace, similar to
+ * how Livepatch does its job.
+ * 
+ * Compile this file and link to each binary (vmlinux or kernel modules)
+ * you instrument with KEDR.
+ * Do not forget to add the path to the KEDR header files to the compiler
+ * options.
+ */
+
+#include <linux/compiler.h>	/* notrace, ... */
+#include <linux/stddef.h>	/* NULL */
+#include <linux/slab.h>		/* k*alloc(), k*free(), ... */
+#include <linux/bug.h>		/* WARN*() */
+#include <linux/mm.h>		/* page_address() */
+#include <linux/string.h>	/* strnlen(), ... */
+
+#include <linux/kedr_local.h>	/* struct kedr_local */
+/* ====================================================================== */
+
+/*
+ * 'noinline' and 'asm volatile ("")' are used for the handler stubs to
+ * prevent the compiler from optimizing away the calls to them.
+ *
+ * The helpers are 'notrace' to make the code a bit smaller. Ftrace
+ * should not be used for these functions anyway, so there is no need to
+ * place Ftrace hooks there either.
+ *
+ * '__used' tells the compiler that the functions are actually used, even if
+ * it thinks otherwise, so it should not try to remove their definitions.
+ */
+#define __kedr_helper __used notrace
+#define __kedr_stub __used noinline
+/* ====================================================================== */
+
+/*
+ * kedr_fentry, kedr_fexit - processing of the entry and exits of a function.
+ * 
+ * kedr_fentry may return NULL.
+ * The pointer returned by this function may only be passed to the handlers
+ * and helpers. It should not be dereferenced by the instrumented code
+ * itself.
+ */
+__kedr_helper void *kedr_fentry(void)
+{
+	struct kedr_local *local = kzalloc(sizeof(*local), GFP_ATOMIC);
+	WARN_ON_ONCE(!local);
+
+	// ?? May be, save the stack trace in 'local' here or call some stub
+	// to attach a function from KEDR core to?
+	// TODO: think this through
+	return local;
+}
+
+__kedr_helper void kedr_fexit(void *local)
+{
+	kfree(local);
+}
+/* ====================================================================== */
+
+/*
+ * Other helpers
+ */
+
+__kedr_helper unsigned long kedr_kmem_cache_size(void *s)
+{
+	return kmem_cache_size((struct kmem_cache *)s);
+}
+
+__kedr_helper unsigned long kedr_page_address(const void *page)
+{
+	if (!page)
+		return 0;
+	return (unsigned long)page_address((const struct page *)page);
+}
+
+__kedr_helper unsigned long kedr_size_from_order(unsigned long order)
+{
+	return (PAGE_SIZE << order);
+}
+
+/*
+ * Length of the memory buffer for a part of the given 0-terminated string
+ * no longer than 'count' chars.
+ */
+__kedr_helper unsigned long kedr_str_buffer_len(const char *s,
+						unsigned long count)
+{
+	return strnlen(s, count) + 1;
+}
+/* ====================================================================== */
+
+/*
+ * Hander stubs
+ */

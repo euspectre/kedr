@@ -1,0 +1,227 @@
+# The instrumentation subsystem of KEDR will use the rules specified in
+# this file to handle function calls.
+#
+# At the top level, this is a YAML file with a record for each function
+# to be handled:
+#
+#{function_name}:
+#  pre: |
+#    statement1
+#    statement2
+#    ...
+#    statementN
+#  post: |
+#    statement1
+#    statement2
+#    ...
+#    statementM
+#
+# Either "pre" block, or "post" block, or both should be present.
+#
+# The statements define what to do before the call to the target function
+# and after it, respectively.
+# 
+# Each statement is a function call. The arguments can be the arguments of
+# the target function ("argN"), its return value ("ret", available in
+# "post" only), temporaries and integer constants (decimal or hexadecimal,
+# prefixed with "0x"). The result can be assigned to a temporary.
+#
+# All temporaries and constants are assumed to have type 'unsigned long'.
+# Type conversions will be made atomatically, as needed.
+#
+# The temporary variables from a block are only available there. That is,
+# the temporaries with the same names from "pre" and "post" are unrelated.
+#
+# Arguments of the target functions are numbered starting from 1.
+#
+# The line comments (# ... ) can also be used in the rules. Note that they
+# should have the same indentation as the statements.
+#
+# Examples:
+#
+#__kmalloc:
+#  post: |
+#    # arg1 - size
+#    kedr_handle_alloc(ret, arg1)
+# 
+#kmem_cache_alloc:
+#  pre: |
+#    size = kedr_kmem_cache_size(arg1)
+#    tmp2 = kedr_my_func(size, 0x11, 0)
+#    kedr_handle_some_event(size, tmp2)
+#  post: |
+#    size = kedr_kmem_cache_size(arg1)
+#    kedr_handle_alloc(ret, size)
+# 
+# For each call to kedr_handle_<something>(arglist) in a rule,
+# the instrumentation system will generate a call to
+# kedr_stub_handle_<something>(arglist, local).
+# 'local' is a pointer to the relevant instance of 'struct kedr_local'.
+# The KEDR core will attach the real event handlers to these stubs
+# in runtime.
+#
+# If a function name does not start with "kedr_handle_", a call to it
+# will be generated as is, without changing the name or arguments.
+# These functions are expected to have "kedr_" prefix. They should be
+# declared in kedr_helpers.h and implemented in kedr_helpers.c. It probably
+# makes no sense to make them inline because the instrumentation may be
+# performed after all inlining has been made.
+############################################################################
+
+__kmalloc:
+  post: |
+    # arg1 - size
+    kedr_handle_alloc(ret, arg1)
+
+__kmalloc_node:
+  post: |
+    # arg1 - size
+    kedr_handle_alloc(ret, arg1)
+
+kvmalloc_node:
+  post: |
+    # arg1 - size
+    kedr_handle_alloc(ret, arg1)
+
+kmem_cache_alloc:
+  post: |
+    # arg1 - s
+    size = kedr_kmem_cache_size(arg1)
+    kedr_handle_alloc(ret, size)
+
+kmem_cache_alloc_node:
+  post: |
+    # arg1 - s
+    size = kedr_kmem_cache_size(arg1)
+    kedr_handle_alloc(ret, size)
+
+kmem_cache_alloc_trace:
+  post: |
+    # arg1 - s
+    size = kedr_kmem_cache_size(arg1)
+    kedr_handle_alloc(ret, size)
+
+kmem_cache_alloc_node_trace:
+  post: |
+    # arg1 - s
+    size = kedr_kmem_cache_size(arg1)
+    kedr_handle_alloc(ret, size)
+############################################################################
+
+kfree:
+  pre: |
+    # arg1 - x
+    kedr_handle_free(arg1)
+
+kzfree:
+  pre: |
+    # arg1 - p
+    kedr_handle_free(arg1)
+
+kvfree:
+  pre: |
+    # arg1 - addr
+    kedr_handle_free(arg1)
+
+# void kmem_cache_free(struct kmem_cache *s, void *x)
+kmem_cache_free:
+  pre: |
+    # arg1 - x
+    kedr_handle_free(arg2)
+############################################################################
+
+# It is too difficult to write the handlers right here. Let the KEDR core
+# handle them instead.
+# Using helpers that call kedr_handle_* when needed may be an option but
+# it seems more difficult to implement properly (e.g. where to get the
+# return address, so that it was the location of the call in the
+# instrumented code, etc.).
+krealloc:
+  # arg1 - p, arg2 - new_size
+  pre: |
+    kedr_handle_krealloc_pre(arg1, arg2)
+  post: |
+    kedr_handle_krealloc_post(ret, arg1, arg2)
+
+__krealloc:
+  post: |
+    # arg1 - p, arg2 - new_size
+    kedr_handle___krealloc(ret, arg1, arg2)
+############################################################################
+
+# Note that page_address() can be inline, so we cannot call it here
+# directly. Let us use a helper again.
+__alloc_pages_nodemask:
+  post: |
+    # ret - struct page *, arg2 - order
+    addr = kedr_page_address(ret)
+    size = kedr_size_from_order(arg2)
+    kedr_handle_alloc(addr, size)
+
+__get_free_pages:
+  post: |
+    # ret - address, arg2 - order
+    size = kedr_size_from_order(arg2)
+    kedr_handle_alloc(ret, size)
+
+get_zeroed_page:
+  post: |
+    size = kedr_size_from_order(0)
+    kedr_handle_alloc(ret, size)
+
+free_pages:
+  pre: |
+    # arg1 - addr
+    kedr_handle_free(arg1)
+
+__free_pages:
+  pre: |
+    # arg1 - struct page *
+    addr = kedr_page_address(arg1)
+    kedr_handle_free(addr)
+############################################################################
+
+# void *kmemdup(const void *src, size_t len, gfp_t gfp)
+kmemdup:
+  post: |
+    kedr_handle_alloc(ret, arg2)
+
+kstrdup:
+  post: |
+    # arg1 - s
+    # -1 is for unlimited length
+    size = kedr_str_buffer_len(arg1, -1)
+    kedr_handle_alloc(ret, size)
+
+kstrndup:
+  post: |
+    # arg1 - s, arg2 - max
+    size = kedr_str_buffer_len(arg1, arg2)
+    kedr_handle_alloc(ret, size)
+############################################################################
+
+vmalloc:
+  post: |
+    # arg1 - size
+    kedr_handle_alloc(ret, arg1)
+
+vzalloc:
+  post: |
+    # arg1 - size
+    kedr_handle_alloc(ret, arg1)
+
+vmalloc_node:
+  post: |
+    # arg1 - size
+    kedr_handle_alloc(ret, arg1)
+
+vzalloc_node:
+  post: |
+    # arg1 - size
+    kedr_handle_alloc(ret, arg1)
+
+vfree:
+  pre: |
+    # arg1 - addr
+    kedr_handle_free(arg1)
+############################################################################

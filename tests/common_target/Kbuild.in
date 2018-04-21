@@ -9,12 +9,21 @@ ${module_name}-y := cfake.o
 # files only. In this example, cfake.c and the files it #includes will be
 # instrumented. If other object files were used, they would not be affected.
 #
+# The plugin reads the rules (which function calls to process and how) from
+# the file specified in KEDR_RULES_FILE environment variable. The file is
+# usually /usr/share/kedr/rules.yml.
+# Do not forget to export KEDR_RULES_FILE=path/to/rules.yml before trying to
+# build the code to be analyzed.
+#
+# Notes
+#
 # -fdump-tree-ssa-raw and -fdump-tree-optimized-raw options could be useful
 # to debug the plugin.
 # The instrumentation takes place somewhere after "ssa" pass, so these
 # GIMPLE dumps will show what the code looked like before our plugin
 # transformed it and after all optimizations were done.
-CFLAGS_cfake.o := -fplugin=@PLUGIN_PATH@
 
-${module_name}-y += kedr_stubs.o
-CFLAGS_kedr_stubs.o := -I "@STUBS_INC_DIR@"
+CFLAGS_cfake.o := -fplugin="@PLUGIN_PATH@" -include "@HELPERS_INC@" -I "@KEDR_INC_DIR@"
+
+${module_name}-y += kedr_helpers.o
+CFLAGS_kedr_helpers.o := -I "@KEDR_INC_DIR@"

@@ -3,5 +3,3 @@ install_subdir('arch', install_dir : kedr_kmod_srcdir)
 install_subdir('include', install_dir : kedr_kmod_srcdir)
 install_subdir('kernel', install_dir : kedr_kmod_srcdir)
 install_data('Makefile', install_dir : kedr_kmod_srcdir)
-
-# TODO: ? build for testing on the current kernel?

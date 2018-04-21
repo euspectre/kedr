@@ -23,13 +23,20 @@ project('kedr',
 			   ])
 
 # Common installation paths, relative to the prefix.
-kedr_libdir = join_paths(get_option('libdir'), 'kedr')
-kedr_datadir = join_paths(get_option('datadir'), 'kedr')
+kedr_libdir = join_paths(get_option('libdir'), meson.project_name())
+kedr_datadir = join_paths(get_option('datadir'), meson.project_name())
 kedr_kmod_srcdir = 'src/kedr'
 
-# Stubs
-kedr_stubs_src = files('i13n/kedr_stubs.c')
-kedr_stubs_inc = join_paths(meson.source_root(), 'kernel/include')
+# Location of the files which may be needed for testing.
+kedr_helpers_hdr = join_paths(meson.build_root(), 'i13n/kedr_helpers.h')
+kedr_helpers_src = join_paths(meson.build_root(), 'i13n/kedr_helpers.c')
+# The helpers may need the header files from here:
+kedr_helpers_inc_dir = join_paths(meson.source_root(), 'kernel/include')
+# The rules of instrumentation:
+kedr_i13n_rules = join_paths(meson.source_root(), 'i13n/rules.yml')
+
+# Main source file of the KEDR core module.
+kedr_core_src = files('kernel/kernel/kedr/core.c')
 
 subdir('i13n')
 subdir('kernel')
