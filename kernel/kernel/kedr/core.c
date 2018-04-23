@@ -663,7 +663,7 @@ static int kedr_enable(void)
 	kedr_create_modmap();
 
 	kedr_enabled = true;
-	pr_debug(KEDR_PREFIX "KEDR has been enabled.\n");
+	pr_info(KEDR_PREFIX "KEDR has been enabled.\n");
 
 out:
 	mutex_unlock(&kedr_mutex);
@@ -711,7 +711,7 @@ static int kedr_disable(void)
 	kedr_free_modmap();
 
 	module_put(THIS_MODULE);
-	pr_debug(KEDR_PREFIX "KEDR has been disabled.\n");
+	pr_info(KEDR_PREFIX "KEDR has been disabled.\n");
 out:
 	mutex_unlock(&kedr_mutex);
 	return ret;
