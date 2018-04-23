@@ -2,14 +2,7 @@ plugin_name = meson.project_name() + '-i13n'
 
 cpp = meson.get_compiler('cpp')
 
-# The compiler object cannot be used in run_command() yet (meson 0.44)
-# but we need to run it to get the location of the header files for GCC
-# plugins.
-# For now, let us get 'gcc' directly. This is better than nothing but may
-# cause problems though, if the user chooses a different GCC when building.
-gcc = find_program('gcc')
-
-plugin_dir_result = run_command(gcc, '-print-file-name=plugin')
+plugin_dir_result = run_command(cpp, '-print-file-name=plugin')
 plugin_dir = plugin_dir_result.stdout().strip()
 if plugin_dir_result.returncode() != 0 or plugin_dir == ''
 	error('Failed to find the development files for the GCC plugins.')

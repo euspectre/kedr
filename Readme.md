@@ -6,7 +6,7 @@ KEDR tools collect data about the behaviour of the Linux kernel in runtime to re
 
 # Prerequisites
 
-* meson 0.45 or newer
+* meson 0.46 or newer
 * ninja
 * GCC version 5.4 or newer with plugin support
 * development files and build prerequisites for the target kernel (kernel version 4.14 and newer are supported)
