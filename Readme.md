@@ -24,6 +24,14 @@ mkdir build
 meson --prefix=/usr ./build
 ```
 
+Note that if you system has `ccache` installed and enabled, you will probably have to specify C and C++ compilers explicitly. Example:
+
+```console
+CC=/usr/bin/gcc CXX=/usr/bin/g++ meson --prefix=/usr ./build
+```
+
+Otherwise the configuration may fail.
+
 ## Building and installing the user-mode components
 
 ```console
