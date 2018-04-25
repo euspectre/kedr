@@ -42,9 +42,9 @@ ninja install
 
 Among other things, the following components will be installed:
 
-* <prefix>/(lib64|lib)/kedr/kedr-i13n.so - a GCC plugin that will instrument the kernel code;
-* <prefix>/share/kedr/rules.yml - the rules the GCC plugin will use during instrumentation;
-* <prefix>/src/kedr/kedr_helpers.{c,h} - the helper components, to be built into each kernel object (vmlinux or a module) to be analyzed.
+* {prefix}/(lib64|lib)/kedr/kedr-i13n.so - a GCC plugin that will instrument the kernel code;
+* {prefix}/share/kedr/rules.yml - the rules the GCC plugin will use during instrumentation;
+* {prefix}/src/kedr/kedr_helpers.{c,h} - the helper components, to be built into each kernel object (vmlinux or a module) to be analyzed.
 
 ## Building the kernel-mode components
 
