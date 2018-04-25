@@ -33,6 +33,11 @@ MODULE_AUTHOR("Evgenii Shatokhin");
 MODULE_LICENSE("GPL");
 /* ====================================================================== */
 
+static bool debug;
+module_param(debug, bool, 0444);
+MODULE_PARM_DESC(debug, "Print debug information: 0 - disabled (default), 1 - enabled.");
+/* ====================================================================== */
+
 enum kedr_func_state {
 	KEDR_FUNC_DISABLED,
 	KEDR_FUNC_ENABLED,
@@ -110,9 +115,10 @@ static __kedr_handler void kedr_handle_alloc(
 	pc = (unsigned long)__builtin_return_address(0);
 	// TODO
 
-	//<>
-	pr_info("[DBG] alloc at %lx (%pS) for size %lu => addr %lx\n", pc, (void *)pc, size, addr);
-	//<>
+	if (debug) {
+		pr_info(KEDR_PREFIX "alloc at %lx: size == %lu, addr == %lx\n",
+			pc, size, addr);
+	}
 	preempt_enable();
 }
 
@@ -130,9 +136,8 @@ static __kedr_handler void kedr_handle_free(unsigned long addr, void *loc)
 	pc = (unsigned long)__builtin_return_address(0);
 	// TODO
 
-	//<>
-	pr_info("[DBG] free at %lx (%pS) for addr %lx\n", pc, (void *)pc, addr);
-	//<>
+	if (debug)
+		pr_info(KEDR_PREFIX "free at %lx: addr == %lx\n", pc, addr);
 	preempt_enable();
 }
 

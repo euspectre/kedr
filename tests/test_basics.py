@@ -68,9 +68,12 @@ TARGET_LOOP_CMD = ' '.join(['while true; do',
                             TARGET_READ_CMD, '2>/dev/null;',
                             'done'])
 
-def _load_module(mod):
+def _load_module(mod, debug=False):
     print('Loading %s.' % mod)
-    subprocess.run(['insmod', mod], check=True)
+    cmd = ['insmod', mod]
+    if debug:
+	    cmd.append('debug=1')
+    subprocess.run(cmd, check=True)
 
 def _unload_module(mod):
     modname, _, _ = os.path.basename(mod).rpartition('.')
@@ -158,7 +161,7 @@ class KedrTestBasics(unittest.TestCase):
 
     def setUp(self):
         self._save_dmesg_before()
-        _load_module(KEDR_CORE)
+        _load_module(KEDR_CORE, debug=True)
 
     def tearDown(self):
         # Disable KEDR, just in case it remains enabled for some reason.
