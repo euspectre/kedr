@@ -32,8 +32,6 @@ kedr_helpers_hdr = join_paths(meson.build_root(), 'i13n/kedr_helpers.h')
 kedr_helpers_src = join_paths(meson.build_root(), 'i13n/kedr_helpers.c')
 # The helpers may need the header files from here:
 kedr_helpers_inc_dir = join_paths(meson.source_root(), 'kernel/include')
-# The rules of instrumentation:
-kedr_i13n_rules = join_paths(meson.source_root(), 'i13n/rules.yml')
 
 # Main source file of the KEDR core module.
 kedr_core_src = files('kernel/kernel/kedr/core.c')
