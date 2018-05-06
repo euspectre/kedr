@@ -1,0 +1,15 @@
+# Expected events for rules_custom.yml.
+# See events_basics.txt for the format.
+
+# There should be a series of such "fake" events for each memory allocation
+# but it is enough for now to match at least one such series. 
+# Let us pick the allocation of the data buffer in kedr_common_target.ko:
+# its size is known in advance.
+
+# Events from the pre-handler:
+alloc 4000 0x10
+alloc 4096 0x11
+alloc 8192 0x12
+
+# Event from the post-handler:
+alloc 4000 addr_any

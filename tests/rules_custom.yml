@@ -1,0 +1,21 @@
+# These instrumentation rules can be used to check if such rules are
+# processed correctly. They may have no meaning otherwise. This can be
+# important when testing rarely used constructs in the rules, some corner
+# cases, etc.
+############################################################################
+
+__kmalloc:
+  pre: |
+    # passing constant as an argument
+    kedr_handle_alloc(0x10, arg1)
+
+    # assigning to the same variable twice
+    size = kedr_size_from_order(0)
+    kedr_handle_alloc(0x11, size)
+    size = kedr_size_from_order(1)
+    kedr_handle_alloc(0x12, size)
+
+  post: |
+    # both pre- and post-handlers are present at the same time
+    kedr_handle_alloc(ret, arg1)
+############################################################################

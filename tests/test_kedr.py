@@ -144,6 +144,21 @@ class KedrTest(unittest.TestCase):
                 line = ke.readline().strip()
                 self.assertEqual(int(line), 0)
 
+    @staticmethod
+    def sym_addresses_match(expected_addr, found_addr):
+        '''Check if the found address matches what is expected.
+
+        If 'expected_addr' is a symbolic name (i.e. does not start with
+        '0x'), any 'found_addr' is a match.
+        Otherwise 'expected_addr' should be an hex value and we check if
+        'found_addr' is the same.
+        '''
+        if not expected_addr.startswith('0x'):
+            return True
+        exp = expected_addr.replace('0x', '', 1).lower()
+        found = found_addr.replace('0x', '', 1).lower()
+        return exp == found
+
     def match_alloc_event(self, line, min_size, sym_addr):
         '''Check if the given line of dmesg contains the "alloc" event.'''
         mobj = re.search(self.re_event_alloc, line)
@@ -153,13 +168,13 @@ class KedrTest(unittest.TestCase):
             if size < min_size:
                 return False
             self.addrs[sym_addr] = addr
-            return True
+            return self.sym_addresses_match(sym_addr, addr)
         return False
 
     def match_free_event(self, line, sym_addr):
         '''Check if the given line of dmesg contains the "free" event.'''
         if sym_addr not in self.addrs:
-            raise RuntimeError('Unknown symbolic name for an address: %s' % sym_addr)
+            raise RuntimeError('Unknown address or a symbolic name for an address: %s' % sym_addr)
         addr = self.addrs[sym_addr]
         mobj = re.search(self.re_event_free, line)
         if mobj:
@@ -404,8 +419,67 @@ class KedrTestBasics(KedrTest):
         self.disable_kedr()
 
 
+class KedrTestCustomRules(KedrTest):
+    '''Test the instrumentation with the custom rules.
+
+    The test checks if the instrumentation with particular constructs in
+    the rules is performed correctly. See rules_custom.yml for details on
+    which kinds of rules are tested here.
+    '''
+    target_subdir = 'target'
+    target_mod = target_subdir + '/kedr_common_target.ko'
+
+    def __init__(self, methodName='runTest'):
+        KedrTest.__init__(self, methodName)
+
+        rules = os.path.join(self.topsrcdir, 'tests/rules_custom.yml')
+        if not os.path.exists(rules):
+            raise RuntimeError('File not found: %s.\n' % rules)
+
+        shutil.copytree(os.path.join(self.topbuilddir, 'tests/common_target'),
+                        os.path.join(self.testdir, self.target_subdir))
+        built_ok = self.build_target_module(
+            self.target_subdir, self.target_mod, self.kernel, rules)
+        if not built_ok:
+            raise RuntimeError('Failed to build target module')
+
+        self.events_file = os.path.join(
+            self.topsrcdir, 'tests/events_custom.txt')
+
+    def _target_do_write(self):
+        print('Trying to write to /dev/cfake0.')
+        proc = subprocess.run(['sh', '-c', 'echo 1234567890 > /dev/cfake0'])
+        self.assertEqual(proc.returncode, 0)
+
+    def setUp(self):
+        self.save_dmesg_before()
+        self.load_module(KEDR_CORE, debug=True)
+
+    def tearDown(self):
+        # Disable KEDR, just in case it remains enabled for some reason.
+        self.disable_kedr(check=False)
+        self.unload_module(KEDR_CORE)
+
+        # Just in case the test failed somehow and did not unload the target
+        # module itself, unload it here.
+        self.unload_module(self.target_mod)
+
+        print('Waiting a bit before checking dmesg...')
+        time.sleep(5)
+        self.check_dmesg_after(events_file=self.events_file)
+
+    def test_custom_rules(self):
+        '''Check the instrumentation with special constructs in the rules.'''
+        self.enable_kedr()
+        self.load_module(self.target_mod)
+        self._target_do_write()
+        self.unload_module(self.target_mod)
+        self.disable_kedr()
+
+
 if __name__ == '__main__':
-    tests = {'basics' : KedrTestBasics}
+    tests = {'basics' : KedrTestBasics,
+             'custom_rules' : KedrTestCustomRules}
 
     parser = argparse.ArgumentParser(description='The tests for KEDR.')
     parser.add_argument(
