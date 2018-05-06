@@ -14,6 +14,7 @@ import subprocess
 import unittest
 import time
 import argparse
+import re
 
 
 CORE_SUBDIR = 'core'
@@ -44,9 +45,23 @@ class KedrTest(unittest.TestCase):
     topsrcdir = '.'
     topbuilddir = '.'
 
+    # Regexps to match events in dmesg.
+    re_event_alloc = re.compile(
+        r'kedr: alloc at .*size == ([0-9]+), addr == ([0-9a-f]+)')
+    re_event_free = re.compile(
+        r'kedr: free at .*: addr == ([0-9a-f]+)')
+
     def __init__(self, methodName='runTest'):
         unittest.TestCase.__init__(self, methodName)
         self.last_dmesg_line = None
+
+        # The events to look for in dmesg after the test.
+        self.events = []
+        self.event_no = 0
+
+        # The mapping {symbolic_name => address} for the addresses referred
+        # to by the events.
+        self.addrs = {}
 
     @staticmethod
     def build_target_module(target_dir, target_mod, kernel, rules):
@@ -114,7 +129,6 @@ class KedrTest(unittest.TestCase):
         else:
             print('Module "%s" is not loaded, nothing to unload.' % modname)
 
-
     def enable_kedr(self):
         '''Enable KEDR core.'''
         subprocess.run(['sh', '-c', 'echo 1 > ' + KEDR_ENABLED], check=True)
@@ -130,6 +144,28 @@ class KedrTest(unittest.TestCase):
                 line = ke.readline().strip()
                 self.assertEqual(int(line), 0)
 
+    def match_alloc_event(self, line, min_size, sym_addr):
+        '''Check if the given line of dmesg contains the "alloc" event.'''
+        mobj = re.search(self.re_event_alloc, line)
+        if mobj:
+            size = int(mobj.group(1))
+            addr = mobj.group(2)
+            if size < min_size:
+                return False
+            self.addrs[sym_addr] = addr
+            return True
+        return False
+
+    def match_free_event(self, line, sym_addr):
+        '''Check if the given line of dmesg contains the "free" event.'''
+        if sym_addr not in self.addrs:
+            raise RuntimeError('Unknown symbolic name for an address: %s' % sym_addr)
+        addr = self.addrs[sym_addr]
+        mobj = re.search(self.re_event_free, line)
+        if mobj:
+            return addr == mobj.group(1)
+        return False
+
     def check_dmesg_line(self, line, dmesg_file):
         '''Look for kernel problems reported in the given line of dmesg.'''
         if line.find(' BUG: ') != -1 or line.find(' general protection fault: ') != -1:
@@ -142,6 +178,19 @@ class KedrTest(unittest.TestCase):
             print('See %s for details.' % os.path.join(os.getcwd(), dmesg_file))
             raise RuntimeError('Kernel WARNING was found.')
 
+        if self.events and self.event_no < len(self.events):
+            event = self.events[self.event_no]
+            matched = False
+            if event[0] == 'alloc':
+                matched = self.match_alloc_event(line, int(event[1]), event[2])
+            elif event[0] == 'free':
+                matched = self.match_free_event(line, event[1])
+            else:
+                raise RuntimeError(
+                    'Expected event #%d: unknown event type \"%s\".' % (self.event_no, event[0]))
+            if matched:
+                self.event_no = self.event_no + 1
+
     def save_dmesg_before(self):
         '''Save dmesg in a file before the test.'''
         dmesg_file = './dmesg-before.log'
@@ -151,9 +200,38 @@ class KedrTest(unittest.TestCase):
                 line = ln
         self.last_dmesg_line = line
 
-    def check_dmesg_after(self):
-        '''Check the new messages from dmesg after the test.'''
+    def _read_events(self, events_file):
+        if not os.path.exists(events_file):
+            raise RuntimeError('File not found: %s.\n' % events_file)
+
+        self.events = []
+        self.event_no = 0
+        self.addrs = {}
+
+        with open(events_file, 'r') as evf:
+            for ev_line in evf:
+                ev_line = ev_line.strip()
+                if not ev_line or ev_line.startswith('#'):
+                    continue
+                self.events.append(ev_line.split())
+        if not self.events:
+            raise RuntimeError(
+                'File %s lists no expected events.\n' % events_file)
+
+    def check_dmesg_after(self, events_file=None):
+        '''Check the new messages from dmesg after the test.
+
+        events_file (if set) - the file with the list of expected events
+        to look for in dmesg. The events are expected to appear in dmesg
+        in the order they are listed. If there are additional events in
+        dmesg, it is OK, but if an expected event is not found there, it is
+        an error.
+        '''
         print('Checking dmesg after the test.')
+
+        if events_file:
+            self._read_events(events_file)
+
         dmesg_file = './dmesg-after.log'
         subprocess.run(['sh', '-c', 'dmesg > ' + dmesg_file], check=True)
         check = False
@@ -171,6 +249,14 @@ class KedrTest(unittest.TestCase):
             with open(dmesg_file, 'r') as dmesg:
                 for ln in dmesg:
                     self.check_dmesg_line(ln.strip(), dmesg_file)
+
+        if events_file:
+            if self.event_no == len(self.events):
+                print('Found all expected events in dmesg.')
+            else:
+                str_event = ' '.join(self.events[self.event_no])
+                raise RuntimeError(
+                    'Failed to find the event \"%s\" in dmesg.' % str_event)
 
         print('Found no problems in dmesg.')
 
@@ -202,6 +288,9 @@ class KedrTestBasics(KedrTest):
                 self.target_subdir, self.target_mod, self.kernel, rules)
             if not built_ok:
                 raise RuntimeError('Failed to build target module')
+
+        self.events_file = os.path.join(
+            self.topsrcdir, 'tests/events_basics.txt')
 
     def target_do_read(self):
         '''Read something from the file managed by the target module.'''
@@ -237,7 +326,7 @@ class KedrTestBasics(KedrTest):
 
         print('Waiting a bit before checking dmesg...')
         time.sleep(5)
-        self.check_dmesg_after()
+        self.check_dmesg_after(events_file=self.events_file)
 
     def test_enable_disable(self):
         '''Check enable/disable operations.'''
@@ -261,6 +350,10 @@ class KedrTestBasics(KedrTest):
 
     def test_enable_disable_under_load(self):
         '''Check enable/disable operations when the target is working.'''
+
+        # Enable KEDR to capture allocation events.
+        self.enable_kedr()
+
         self.load_module(self.target_mod)
         proc = self.target_start_rw_loop()
 
@@ -268,7 +361,10 @@ class KedrTestBasics(KedrTest):
         time.sleep(5)
         self.assertTrue(proc.poll() is None)
 
-        # Now enable KEDR, let it monitor the target a little, then disable.
+        # Now disable and then re-enable KEDR, let it monitor the target
+        # a little, then disable.
+        self.disable_kedr()
+        time.sleep(5)
         self.enable_kedr()
         time.sleep(5)
         self.disable_kedr()
@@ -301,7 +397,11 @@ class KedrTestBasics(KedrTest):
                 print('Process %d did not stop (may be hung?).' % proc.pid)
 
         self.assertTrue(stopped)
+
+        # Enable KEDR to capture 'free' events.
+        self.enable_kedr()
         self.unload_module(self.target_mod)
+        self.disable_kedr()
 
 
 if __name__ == '__main__':

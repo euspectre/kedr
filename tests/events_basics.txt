@@ -1,0 +1,17 @@
+# Expected events.
+#
+# Format:
+#   alloc <min_size> <addrN>
+#   free <addrN>
+# <min_size> - the size of the allocated memory block should be equal to or
+# greater than this.
+# <addrN> - a symbolic name for an address, returned or used.
+# We cannot know the addresses of the memory blocks in advance, so we use
+# symbolic names for that instead, e.g. "addr1", "addr5", etc. This way, we
+# can check that the same address is used in the events corresponding to
+# "alloc 320 addr1" and "free addr1".
+
+alloc 320 addr1
+alloc 4000 addr2
+free addr2
+free addr1
