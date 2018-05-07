@@ -477,9 +477,103 @@ class KedrTestCustomRules(KedrTest):
         self.disable_kedr()
 
 
+class KedrTestBadRules(KedrTest):
+    '''Test the instrumentation with the incorrect rules.'''
+    def _try_build(self, testname, rules_relpath, error):
+        target_subdir = 'target_' + testname
+        target_dir = os.path.join(self.testdir, target_subdir)
+
+        rules = os.path.join(self.topsrcdir, rules_relpath)
+        if not os.path.exists(rules):
+            raise RuntimeError('File not found: %s.\n' % rules)
+
+        shutil.copytree(os.path.join(self.topbuilddir, 'tests/common_target'),
+                        target_dir)
+
+        env = os.environ
+        env['KEDR_RULES_FILE'] = rules
+        proc = subprocess.Popen(
+            ['make',
+             'KBUILD_DIR=/lib/modules/%s/build/' % kernel,
+             '-C', target_dir],
+            stderr=subprocess.PIPE,
+            env=env,
+            universal_newlines=True)
+        _, stderr = proc.communicate(timeout=300)
+
+        # The build should fail and report the correct error.
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertTrue(error in stderr)
+
+    def test_00_syntax_error(self):
+        '''Bad rule: syntax error.'''
+        self._try_build('00_syntax_error',
+                        'tests/rules_bad_00_syntax_error.yml',
+                        'incomplete statement')
+
+    def test_01_less_args(self):
+        '''Bad rule: less arguments than expected are passed to the function.'''
+        self._try_build('01_less_args',
+                        'tests/rules_bad_01_less_args.yml',
+                        'too few (1) arguments')
+
+    def test_02_more_args(self):
+        '''Bad rule: more arguments than expected are passed to the helper.'''
+        self._try_build('02_more_args',
+                        'tests/rules_bad_02_more_args.yml',
+                        'is declared with 1 argument(s) but the rule uses its argument #2')
+
+    def test_03_more_args_for_handler(self):
+        '''Bad rule: more arguments than expected are passed to the handler.
+
+        Exactly one more argument is passed, leaving no place for
+        'kedr_local *'.
+        '''
+        self._try_build('03_more_args_for_handler',
+                        'tests/rules_bad_03_more_args_for_handler.yml',
+                        'rule must not set argument #3')
+
+    def test_04_unknown_func(self):
+        '''Bad rule: it refers to an unknown function.'''
+        self._try_build('04_unknown_func',
+                        'tests/rules_bad_04_unknown_func.yml',
+                        'unable to find declaration of \"kedr_handl_alloc\"')
+
+    def test_05_unknown_var(self):
+        '''Bad rule: it refers to an unknown local temporary variable.'''
+        self._try_build('05_unknown_var',
+                        'tests/rules_bad_05_unknown_var.yml',
+                        'local variable \'sze\' is not initialized')
+
+    def test_06_arg_out_of_range(self):
+        '''Bad rule: it uses an argument that the function does not have.'''
+        self._try_build('06_arg_out_of_range',
+                        'tests/rules_bad_06_arg_out_of_range.yml',
+                        'has 2 argument(s) but the rule wants its argument #5')
+
+    def test_07_ret_of_void(self):
+        '''Bad rule: it uses a return value of a function that returns void.'''
+        self._try_build('07_ret_of_void',
+                        'tests/rules_bad_07_ret_of_void.yml',
+                        'wants its return value but the function returns void')
+
+    def test_08_no_handlers(self):
+        '''Bad rule: it is not empty but has no handler calls.'''
+        self._try_build('08_no_handlers',
+                        'tests/rules_bad_08_no_handlers.yml',
+                        'found no handler calls in the rule')
+
+    def test_09_ret_in_pre(self):
+        '''Bad rule: it refers to a return value in the pre-handler.'''
+        self._try_build('09_ret_in_pre',
+                        'tests/rules_bad_09_ret_in_pre.yml',
+                        '\"ret\" may only be used in \"post\" and \"exit\"')
+
+
 if __name__ == '__main__':
     tests = {'basics' : KedrTestBasics,
-             'custom_rules' : KedrTestCustomRules}
+             'custom_rules' : KedrTestCustomRules,
+             'bad_rules' : KedrTestBadRules}
 
     parser = argparse.ArgumentParser(description='The tests for KEDR.')
     parser.add_argument(

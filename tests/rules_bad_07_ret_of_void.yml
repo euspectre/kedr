@@ -1,0 +1,10 @@
+# Bad rule: it refers to a return value of a function that returns void.
+############################################################################
+
+kfree:
+# arg1 - the pointer to the memory area to be freed
+  pre: |
+    kedr_handle_free(arg1)
+  post: |
+    kedr_handle_free(ret)
+############################################################################

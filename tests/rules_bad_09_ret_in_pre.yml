@@ -1,0 +1,7 @@
+# Bad rule: it refers to a return value of a function in the pre-handler.
+############################################################################
+
+__kmalloc:
+  pre: |
+    kedr_handle_alloc(ret, arg1)
+############################################################################

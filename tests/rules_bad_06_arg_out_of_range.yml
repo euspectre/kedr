@@ -1,0 +1,7 @@
+# Bad rule: it refers to an argument that the target function does not have.
+############################################################################
+
+__kmalloc:
+  post: |
+    kedr_handle_alloc(ret, arg5)
+############################################################################

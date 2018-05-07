@@ -18,6 +18,15 @@ test('custom instrumentation rules',
      is_parallel : false,
      timeout : 600)
 
+test('bad instrumentation rules',
+     test_kedr,
+     args : ['--topsrcdir=' + meson.source_root(),
+             '--topbuilddir=' + meson.build_root(),
+             '--testdir=' + meson.current_build_dir(),
+             'bad_rules'],
+     is_parallel : false,
+     timeout : 600)
+
 subdir('common_target')
 
 # TODO: more tests

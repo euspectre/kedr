@@ -1,0 +1,9 @@
+# Bad rule: less arguments than expected are passed to the function.
+############################################################################
+
+# kedr_handle_alloc() has 3 parameters: 2 are available to the rules +
+# kedr_local* is passed automatically.
+__kmalloc:
+  post: |
+    kedr_handle_alloc(ret)
+############################################################################

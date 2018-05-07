@@ -1,0 +1,9 @@
+# Bad rule: more arguments than expected are passed to the helper.
+############################################################################
+
+# kedr_size_from_order() has a single parameter.
+__kmalloc:
+  post: |
+    size = kedr_size_from_order(1, 2)
+    kedr_handle_alloc(ret, size)
+############################################################################

@@ -1,0 +1,8 @@
+# Bad rule: it refers to an unknown local temporary variable.
+############################################################################
+
+__kmalloc:
+  post: |
+    size = kedr_size_from_order(1)
+    kedr_handle_alloc(ret, sze)
+############################################################################
