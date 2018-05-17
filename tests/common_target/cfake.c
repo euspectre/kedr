@@ -33,7 +33,7 @@
 
 #include "cfake.h"
 
-MODULE_AUTHOR("Eugene A. Shatokhin");
+MODULE_AUTHOR("Evgenii Shatokhin");
 MODULE_LICENSE("GPL");
 
 #define CFAKE_DEVICE_NAME "cfake"
