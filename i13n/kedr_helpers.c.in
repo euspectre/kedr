@@ -20,7 +20,6 @@
 #include <linux/string.h>	/* strnlen(), ... */
 
 #include <linux/kedr_local.h>	/* struct kedr_local */
-/* ====================================================================== */
 
 /*
  * 'noinline' and 'asm volatile ("")' are used for the handler stubs to
@@ -35,7 +34,6 @@
  */
 #define __kedr_helper __used notrace
 #define __kedr_stub __used noinline
-/* ====================================================================== */
 
 /*
  * kedr_fentry, kedr_fexit - processing of the entry and exits of a function.
@@ -60,7 +58,6 @@ __kedr_helper void kedr_fexit(void *local)
 {
 	kfree(local);
 }
-/* ====================================================================== */
 
 /*
  * Other helpers
@@ -92,7 +89,6 @@ __kedr_helper unsigned long kedr_str_buffer_len(const char *s,
 {
 	return strnlen(s, count) + 1;
 }
-/* ====================================================================== */
 
 /*
  * Hander stubs

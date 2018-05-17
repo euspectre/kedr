@@ -28,7 +28,6 @@ using namespace std;
  */
 typedef map<string, kedr_i13n_ruleset> kedr_rule_map;
 static kedr_rule_map rules;
-/* ====================================================================== */
 
 static string str_strip(const string &str)
 {
@@ -66,7 +65,6 @@ static bool get_argno(const string &argname, unsigned int &argno)
 	argno = num;
 	return true;
 }
-/* ====================================================================== */
 
 /* Name of the .yml file being processed - mostly, for error reporting. */
 static string yml_file;
@@ -125,7 +123,6 @@ static void get_next_event(yaml_parser_t &parser, kedr_yaml_event &yevent)
 
 	yevent.valid = true;
 }
-/* ====================================================================== */
 
 /* We only need one such object. */
 kedr_stmt_parser stmt_parser;
@@ -333,7 +330,6 @@ void kedr_stmt_parser::parse(const char *text, kedr_i13n_rule &rule,
 		throw kedr_stmt_parse_error(string(
 			"incomplete statement, perhaps, ')' is missing?"));
 }
-/* ====================================================================== */
 
 static void parse_code(const string &code, kedr_i13n_rule &rule /* out */,
 		       const kedr_yaml_event &yevent)

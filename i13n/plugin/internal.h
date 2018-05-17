@@ -68,6 +68,5 @@ public:
 extern kedr_stmt_parser stmt_parser;
 
 int kedr_do_parse_stmt(const char *text);
-/* ====================================================================== */
 
 #endif /* _KEDR_RULE_PARSER_INTERNAL_H */

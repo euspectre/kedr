@@ -22,14 +22,12 @@
 #define KEDR_PLUGIN_NAME "kedr-i13n"
 
 using namespace std;
-/* ====================================================================== */
 
 /* Use this to mark the symbols to be exported from this plugin. The
  * remaining symbols will not be visible from outside of this plugin even
  * if they are not static (-fvisibility=hidden GCC option is used to achieve
  * this). */
 #define PLUGIN_EXPORT __attribute__ ((visibility("default")))
-/* ====================================================================== */
 
 #if BUILDING_GCC_VERSION >= 6000
 typedef gimple * kedr_stmt;
@@ -52,7 +50,6 @@ plugin_init(struct plugin_name_args *plugin_info,
 #ifdef __cplusplus
 }
 #endif
-/* ====================================================================== */
 
 /* yml file with the rules. */
 static char *rfile;
@@ -67,7 +64,6 @@ string error_prefix(unsigned int lineno = 0)
 	}
 	return pfx.str();
 }
-/* ====================================================================== */
 
 /* FNDECLs for KEDR helper functions, stubs, etc. */
 typedef map<string, tree> kedr_fndecl_map;
@@ -95,7 +91,6 @@ static tree kedr_get_fndecl(const string &fname, unsigned int rule_lineno = 0)
 	}
 	return it->second;
 }
-/* ====================================================================== */
 
 static void
 instrument_fentry(tree &ls_ptr)
@@ -548,7 +543,6 @@ execute_pass(function */*f*/)
 	}
 	return 0;
 }
-/* ====================================================================== */
 
 /* This pass should run after GIMPLE optimization passes. */
 static const struct pass_data kedr_i13n_pass_data = {
@@ -579,7 +573,6 @@ namespace {
 		}
 	}; /* class kedr_i13n_pass */
 }  /* anon namespace */
-/* ====================================================================== */
 
 /*
  * Save the function decl trees we need, for future use.
@@ -600,7 +593,6 @@ static void on_finish_decl(void *event_data, void * /* data */)
 
 	kedr_add_fndecl(fname, decl);
 }
-/* ====================================================================== */
 
 int
 plugin_init(struct plugin_name_args *plugin_info,
@@ -655,4 +647,3 @@ plugin_init(struct plugin_name_args *plugin_info,
 	fprintf(stderr, "Using GCC plugin \"%s\".\n", KEDR_PLUGIN_NAME);
 	return 0;
 }
-/* ====================================================================== */

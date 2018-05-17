@@ -1,11 +1,9 @@
 /*
- * ========================================================================
  * Copyright (C) 2017, Evgenii Shatokhin <eugene.shatokhin@yandex.ru>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as published
  * by the Free Software Foundation.
- * ========================================================================
  */
 
 /*
@@ -75,7 +73,6 @@ struct kedr_module_map *current_modmap;
 /* Limit the number of layers the module map can have. */
 #define KEDR_MAX_MODMAP_LAYERS 8192
 int avail_modmap_layers;
-/* ====================================================================== */
 
 static int compare_addr(const void *key, const void *elt)
 {
@@ -178,7 +175,6 @@ char *kedr_resolve_address(unsigned long addr,
 		snprintf(str, len, fmt_raw, addr, addr);
 	return str;
 }
-/* ====================================================================== */
 
 static int has_init(struct module *mod)
 {
@@ -426,4 +422,3 @@ void kedr_modmap_on_coming(struct module *mod)
 		fill_module_area(area, &mod->core_layout);
 	}
 }
-/* ====================================================================== */

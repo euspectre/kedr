@@ -1,11 +1,9 @@
 /*
- * ========================================================================
  * Copyright (C) 2016-2018, Evgenii Shatokhin <eugene.shatokhin@yandex.ru>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as published
  * by the Free Software Foundation.
- * ========================================================================
  */
 
 /*
@@ -27,16 +25,13 @@
 #include <linux/kobject.h>
 
 #include <linux/kedr.h>
-/* ====================================================================== */
 
 MODULE_AUTHOR("Evgenii Shatokhin");
 MODULE_LICENSE("GPL");
-/* ====================================================================== */
 
 static bool debug;
 module_param(debug, bool, 0444);
 MODULE_PARM_DESC(debug, "Print debug information: 0 - disabled (default), 1 - enabled.");
-/* ====================================================================== */
 
 enum kedr_func_state {
 	KEDR_FUNC_DISABLED,
@@ -65,7 +60,6 @@ struct kedr_func {
 
 	enum kedr_func_state state;
 };
-/* ====================================================================== */
 
 /*
  * This mutex protects the global lists defined here with all the data they
@@ -76,12 +70,10 @@ static DEFINE_MUTEX(kedr_mutex);
 static LIST_HEAD(kedr_objects);
 
 static bool kedr_enabled;
-/* ====================================================================== */
 
 /* Start and end addresses of the kernel code. */
 unsigned long kedr_stext;
 unsigned long kedr_etext;
-/* ====================================================================== */
 
 /*
  * Mark the event handlers with '__kedr_handler' (place it before the return
@@ -181,7 +173,6 @@ static __kedr_handler void kedr_handle___krealloc(
 	// TODO
 	preempt_enable();
 }
-/* ====================================================================== */
 
 static void notrace kedr_ftrace_handler(unsigned long ip,
 				       unsigned long parent_ip,
@@ -194,7 +185,6 @@ static void notrace kedr_ftrace_handler(unsigned long ip,
 	kedr_arch_set_pc(regs, (unsigned long)func->handler);
 }
 
-/* ====================================================================== */
 
 /* Note. mod == NULL corresponds to the kernel proper here. */
 static struct kedr_object *kedr_find_object(struct module *mod)
@@ -578,7 +568,6 @@ static int kedr_attach_handlers(struct module *mod)
 
 	return ret;
 }
-/* ====================================================================== */
 
 static int kedr_module_notify(struct notifier_block *nb, unsigned long action,
 			      void *data)
@@ -634,7 +623,6 @@ static struct notifier_block kedr_module_nb = {
 	.notifier_call = kedr_module_notify,
 	.priority = -1, /* let others do their work first */
 };
-/* ====================================================================== */
 
 /* Set up and enable event handling. */
 static int kedr_enable(void)
@@ -721,7 +709,6 @@ out:
 	mutex_unlock(&kedr_mutex);
 	return ret;
 }
-/* ====================================================================== */
 
 /* sysfs knobs */
 static struct kobject *kedr_kobj;
@@ -777,7 +764,6 @@ static struct attribute *kedr_attrs[] = {
 static struct attribute_group kedr_attr_group = {
 	.attrs = kedr_attrs,
 };
-/* ====================================================================== */
 
 /*
  * Find the non-exported kernel symbols that KEDR needs. Ugly, but should
@@ -803,7 +789,6 @@ static int __init find_kernel_symbols(void)
 	}
 	return 0;
 }
-/* ====================================================================== */
 
 static int __init kedr_init(void)
 {
@@ -858,7 +843,6 @@ static void __exit kedr_exit(void)
 
 module_init(kedr_init);
 module_exit(kedr_exit);
-/* ====================================================================== */
 
 
 /*void notrace kedr_thunk_kmalloc_pre(unsigned long size,
@@ -875,4 +859,3 @@ module_exit(kedr_exit);
 
 	kedr_stub_alloc_pre(local);
 }*/
-/* ====================================================================== */
