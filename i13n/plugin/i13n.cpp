@@ -651,6 +651,8 @@ plugin_init(struct plugin_name_args *plugin_info,
 	 */
 	register_callback(plugin_info->base_name, PLUGIN_FINISH_DECL,
 			  on_finish_decl, NULL);
+
+	fprintf(stderr, "Using GCC plugin \"%s\".\n", KEDR_PLUGIN_NAME);
 	return 0;
 }
 /* ====================================================================== */
