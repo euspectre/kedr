@@ -480,9 +480,6 @@ instrument_function_call(gimple_stmt_iterator *gsi, tree &ls_ptr)
 	const kedr_i13n_ruleset *rs = kedr_get_ruleset(name);
 	if (!rs)
 		return false;
-	//<>
-	fprintf(stderr, "[DBG] Direct call to %s\n", name);
-	//<>
 
 	/* pre */
 	process_one_rule(rs->pre, seq_pre, stmt, ls_ptr);
@@ -531,11 +528,6 @@ execute_pass(function */*f*/)
 {
 	tree ls_ptr; /* Pointer to the local storage (struct kedr_local). */
 	bool need_ls; /* whether the local storage is needed */
-
-	//<>
-	fprintf(stderr, "[DBG, calls] Processing function \"%s\".\n",
-		current_function_name());
-	//<>
 
 	ls_ptr = create_tmp_var(ptr_type_node);
 	mark_addressable(ls_ptr);
