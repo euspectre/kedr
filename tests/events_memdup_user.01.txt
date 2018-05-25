@@ -1,0 +1,3 @@
+# The expected sequence of events for the function interception tests.
+alloc 14 addr1
+free addr1

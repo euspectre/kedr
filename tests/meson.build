@@ -27,6 +27,14 @@ test('bad instrumentation rules',
      is_parallel : false,
      timeout : 600)
 
-subdir('common_target')
+test('event detection',
+     test_kedr,
+     args : ['--topsrcdir=' + meson.source_root(),
+             '--topbuilddir=' + meson.build_root(),
+             '--testdir=' + meson.current_build_dir(),
+             'events'],
+     is_parallel : false,
+     timeout : 600)
 
-# TODO: more tests
+subdir('common_target')
+subdir('events')

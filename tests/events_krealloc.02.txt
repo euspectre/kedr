@@ -1,0 +1,9 @@
+# The expected sequence of events for the function interception tests.
+alloc 264 addr1
+
+# "free" + "alloc", where "free" event should be generated before
+# krealloc(), "alloc" - after it.
+free addr1
+alloc 66 addr2
+
+free addr2

@@ -1,0 +1,6 @@
+# The expected sequence of events for the function interception tests.
+# The actual size of 'struct my_test_struct' is sizeof(void *) +
+# sizeof(struct rcu_head), which should always be greater than 8 bytes,
+# at least.
+alloc 8 addr1
+free addr1

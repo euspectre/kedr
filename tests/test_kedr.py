@@ -302,7 +302,7 @@ class KedrTestBasics(KedrTest):
             built_ok = self.build_target_module(
                 self.target_subdir, self.target_mod, self.kernel, rules)
             if not built_ok:
-                raise RuntimeError('Failed to build target module')
+                raise RuntimeError('Failed to build target module.')
 
         self.events_file = os.path.join(
             self.topsrcdir, 'tests/events_basics.txt')
@@ -570,10 +570,151 @@ class KedrTestBadRules(KedrTest):
                         '\"ret\" may only be used in \"post\" and \"exit\"')
 
 
+class KedrTestEvents(KedrTest):
+    '''Test if the events in the target code are detected properly.'''
+    target_subdir = 'events'
+    target_mod = target_subdir + '/kedr_test_events.ko'
+    trigger_cmd = 'echo %s > /sys/kernel/debug/kedr_test_events/test_id'
+
+    # mapping {test ID => file with expected events}
+    event_map = {
+        'kmalloc.01' : 'events_kmalloc.01.txt',
+        'kmalloc.02' : 'events_kmalloc.02.txt',
+        'kmalloc.03' : 'events_common.txt',
+        'kmalloc.04' : 'events_kmalloc.02.txt',
+        'kmalloc_node.01' : 'events_kmalloc.01.txt',
+        'kmalloc_node.02' : 'events_kmalloc.02.txt',
+        'kmalloc_node.03' : 'events_common.txt',
+        'kmalloc_node.04' : 'events_kmalloc.02.txt',
+        'kvmalloc.01' : 'events_common.txt',
+        'kvmalloc.02' : 'events_common.txt',
+        'kzfree.01' : 'events_common.txt',
+        'kmem_cache_alloc.01' : 'events_kmem_cache_alloc.01.txt',
+        'vmalloc.01' : 'events_common.txt',
+        'vzalloc.01' : 'events_common.txt',
+        'vmalloc_node.01' : 'events_common.txt',
+        'vzalloc_node.01' : 'events_common.txt',
+        'vmalloc_32.01' : 'events_common.txt',
+        'vmalloc_user.01' : 'events_common.txt',
+        'krealloc.01' : 'events_krealloc.01.txt',
+        'krealloc.02' : 'events_krealloc.02.txt',
+        'krealloc.03' : 'events_common.txt',
+        'krealloc.04' : 'events_common.txt',
+        '__krealloc.01' : 'events___krealloc.01.txt',
+        '__krealloc.02' : 'events___krealloc.02.txt',
+        '__krealloc.03' : 'events_common.txt',
+        'alloc_pages.01' : 'events_alloc_pages.01.txt',
+        '__get_free_pages.01' : 'events_alloc_pages.01.txt',
+        'get_zeroed_page.01' : 'events_get_zeroed_page.01.txt',
+        'kmemdup.01' : 'events_kmemdup.01.txt',
+        'kstrdup.01' : 'events_kstrdup.01.txt',
+        'kstrndup.01' : 'events_kstrndup.01.txt',
+        'memdup_user.01' : 'events_memdup_user.01.txt',
+        'vmemdup_user.01' : 'events_vmemdup_user.01.txt',
+        'strndup_user.01' : 'events_strndup_user.01.txt',
+        'memdup_user_nul.01' : 'events_memdup_user_nul.01.txt',
+        'kasprintf.01' : 'events_kasprintf.01.txt',
+        'kvasprintf.01' : 'events_kasprintf.01.txt',
+        'kfree_rcu.01' : 'events_kfree_rcu.01.txt'}
+
+    # Some of the tests may not be applicable to all kernel versions.
+    # Map {test_id => (min_kernel_version, max_kernel_version)}
+    # The test is applicable to the kernel versions between the given
+    # minimum and maximum, inclusive.
+    # If None is specified here as a minimum or a maximum kernel version,
+    # this means "no limit".
+    version_specific = {'vmemdup_user.01' : ([4, 16], None)}
+
+    def __init__(self, methodName='runTest'):
+        KedrTest.__init__(self, methodName)
+
+        rules = os.path.join(self.topsrcdir, 'i13n/rules.yml')
+        if not os.path.exists(rules):
+            raise RuntimeError('File not found: %s.\n' % rules)
+
+        if os.path.exists(self.target_mod):
+            print('%s already exists, will not rebuild it.' % self.target_mod)
+        else:
+            shutil.copytree(os.path.join(self.topbuilddir, 'tests/events'),
+                            os.path.join(self.testdir, self.target_subdir))
+            built_ok = self.build_target_module(
+                self.target_subdir, self.target_mod, self.kernel, rules)
+            if not built_ok:
+                raise RuntimeError('Failed to build target module.')
+
+        kmajor, kminor, _ = self.kernel.split('.', maxsplit=2)
+        self.kversion = [int(kmajor), int(kminor)]
+
+    def target_do_test(self, test_id):
+        '''Make the target generate events and check if they are detected.
+
+        Returns True if this "subtest" passes, False otherwise.
+        '''
+        print('Checking %s' % test_id)
+        msg = 'Checking %s ........ \t' % test_id
+        self.save_dmesg_before()
+        proc = subprocess.run(['sh', '-c', self.trigger_cmd % test_id])
+        if proc.returncode != 0:
+            print(msg + 'FAIL')
+            return False
+        try:
+            expected = os.path.join(self.topsrcdir, 'tests',
+                                    self.event_map[test_id])
+            self.check_dmesg_after(events_file=expected)
+        except RuntimeError as err:
+            print('Error: %s' % err)
+            print(msg + 'FAIL')
+            return False
+        print(msg + 'PASS')
+        return True
+
+    def setUp(self):
+        self.load_module(KEDR_CORE, debug=True)
+        self.load_module(self.target_mod)
+        self.enable_kedr()
+
+    def tearDown(self):
+        self.disable_kedr(check=False)
+        self.unload_module(self.target_mod)
+        self.unload_module(KEDR_CORE)
+
+    def test_events(self):
+        '''Run each subtest and check the result.'''
+        nr_passed = 0
+        nr_skipped = 0
+        failed = []
+
+        for test_id in self.event_map:
+            if test_id in self.version_specific:
+                vmin, vmax = self.version_specific[test_id]
+                skip = False
+                if vmin and self.kversion < vmin:
+                    skip = True
+                if vmax and self.kversion > vmax:
+                    skip = True
+                if skip:
+                    print('Skipped test %s: not applicable to this kernel.' % test_id)
+                    nr_skipped = nr_skipped + 1
+                    continue
+            res = self.target_do_test(test_id)
+            if res:
+                nr_passed = nr_passed + 1
+            else:
+                failed.append(test_id)
+
+        print('%d test(s) passed, %d failed, %d skipped.' % (nr_passed,
+                                                             len(failed),
+                                                             nr_skipped))
+        if failed:
+            print('Failed tests:\n\t%s' % '\n\t'.join(failed))
+        self.assertFalse(failed)
+
+
 if __name__ == '__main__':
     tests = {'basics' : KedrTestBasics,
              'custom_rules' : KedrTestCustomRules,
-             'bad_rules' : KedrTestBadRules}
+             'bad_rules' : KedrTestBadRules,
+             'events' : KedrTestEvents}
 
     parser = argparse.ArgumentParser(description='The tests for KEDR.')
     parser.add_argument(

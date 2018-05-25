@@ -1,0 +1,11 @@
+module_name=kedr_test_events
+
+ccflags-y := -g
+
+obj-m := ${module_name}.o
+${module_name}-y := test_events.o
+
+CFLAGS_test_events.o := -fplugin="@PLUGIN_PATH@" -include "@HELPERS_INC@" -I "@KEDR_INC_DIR@"
+
+${module_name}-y += kedr_helpers.o
+CFLAGS_kedr_helpers.o := -I "@KEDR_INC_DIR@"
