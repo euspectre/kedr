@@ -140,4 +140,4 @@ As a result of this split into compile-time and runtime operations, KEDR can now
 
 Ftrace allows to "attach" KEDR to the analyzed code at any moment. Custom facilities to replace function calls are no longer needed because Ftrace offers a reliable way to do that, which is supported by the mainline kernels.
 
-Although KEDR 1.x has been tested on x86_64 so far, it might be much easier to port it to other architectures supported by Livepatch than KEDR 0.x.
+Although KEDR 1.x has only been tested on x86_64 so far, it might be much easier to port it to other architectures supported by Livepatch, compared to KEDR 0.x.
