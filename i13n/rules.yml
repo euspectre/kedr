@@ -158,6 +158,13 @@ __alloc_pages_nodemask:
     size = kedr_size_from_order(arg2)
     kedr_handle_alloc(addr, size)
 
+alloc_pages_current:
+  post: |
+    # ret - struct page *, arg2 - order
+    addr = kedr_page_address(ret)
+    size = kedr_size_from_order(arg2)
+    kedr_handle_alloc(addr, size)
+
 __get_free_pages:
   post: |
     # ret - address, arg2 - order
@@ -220,8 +227,26 @@ vzalloc_node:
     # arg1 - size
     kedr_handle_alloc(ret, arg1)
 
+vmalloc_user:
+  post: |
+    # arg1 - size
+    kedr_handle_alloc(ret, arg1)
+
+vmalloc_32:
+  post: |
+    # arg1 - size
+    kedr_handle_alloc(ret, arg1)
+
 vfree:
   pre: |
     # arg1 - addr
     kedr_handle_free(arg1)
 ############################################################################
+
+# TODO
+# void *memdup_user(const void __user *src, size_t len)
+# void *vmemdup_user(const void __user *src, size_t len)
+# char *strndup_user(const char __user *s, long n)
+# void *memdup_user_nul(const void __user *src, size_t len)
+# kasprintf
+# kvasprintf
