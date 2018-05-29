@@ -574,7 +574,7 @@ class KedrTestEvents(KedrTest):
     '''Test if the events in the target code are detected properly.'''
     target_subdir = 'events'
     target_mod = target_subdir + '/kedr_test_events.ko'
-    trigger_cmd = 'echo %s > /sys/kernel/debug/kedr_test_events/test_id'
+    trigger = '/sys/kernel/debug/kedr_test_events/test_id'
 
     # mapping {test ID => file with expected events}
     event_map = {
@@ -653,10 +653,21 @@ class KedrTestEvents(KedrTest):
         print('Checking %s' % test_id)
         msg = 'Checking %s ........ \t' % test_id
         self.save_dmesg_before()
-        proc = subprocess.run(['sh', '-c', self.trigger_cmd % test_id])
-        if proc.returncode != 0:
+
+        try:
+            # Some tests (e.g. 'strndup_user*') need a nul-terminated string
+            # from the user space. Let us use the test id for that, just for
+            # convenience.
+            with open(self.trigger, 'wb') as trg:
+                b_id = bytes(test_id, 'UTF-8')
+                if test_id.startswith('strndup_user'):
+                    b_id = b_id + b'\0'
+                trg.write(b_id)
+        except OSError as oerr:
+            print('Error: %s' % str(oerr))
             print(msg + 'FAIL')
             return False
+
         try:
             expected = os.path.join(self.topsrcdir, 'tests',
                                     self.event_map[test_id])
