@@ -463,6 +463,8 @@ process_one_rule(const kedr_i13n_rule &rule, gimple_seq &seq,
 static bool
 instrument_function_call(gimple_stmt_iterator *gsi, tree &ls_ptr)
 {
+	static const string pfx = "__real_";
+
 	kedr_stmt stmt = gsi_stmt(*gsi);
 	gimple_seq seq_pre = NULL;
 	gimple_seq seq_post = NULL;
@@ -472,7 +474,29 @@ instrument_function_call(gimple_stmt_iterator *gsi, tree &ls_ptr)
 		return false; /* Indirect call, nothing to do. */
 
 	const char *name = IDENTIFIER_POINTER(DECL_NAME(fndecl));
-	const kedr_i13n_ruleset *rs = kedr_get_ruleset(name);
+	const kedr_i13n_ruleset *rs;
+
+	/*
+	 * If CONFIG_FORTIFY_SOURCE is set in the kernel, additional checks
+	 * are made in the string functions. For example, kmemdup() becomes
+	 * inline, checks for potential overflows and the calls
+	 * __real_kmemdup() - it is this call that the plugin may see here.
+	 * __real_kmemdup() is then renamed into kmemdup() again, but it
+	 * seems to be done at a later stage.
+	 *
+	 * See the mainline commit 6974f0c4555e "include/linux/string.h:
+	 * add the option of fortified string.h functions".
+	 *
+	 * As a workaround, let us check if the function has "__real_"
+	 * prefix and if so, lookup the rule set for the name without that
+	 * prefix.
+	 */
+	if (strncmp(name, pfx.c_str(), pfx.length()) == 0) {
+		rs = kedr_get_ruleset(&name[pfx.length()]);
+	}
+	else {
+		rs = kedr_get_ruleset(name);
+	}
 	if (!rs)
 		return false;
 
