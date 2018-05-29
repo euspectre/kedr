@@ -670,8 +670,12 @@ class KedrTestEvents(KedrTest):
 
     def setUp(self):
         self.load_module(KEDR_CORE, debug=True)
-        self.load_module(self.target_mod)
-        self.enable_kedr()
+        try:
+            self.load_module(self.target_mod)
+            self.enable_kedr()
+        except:
+            self.tearDown()
+            raise
 
     def tearDown(self):
         self.disable_kedr(check=False)
