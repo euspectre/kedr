@@ -86,7 +86,29 @@ unsigned long kedr_etext;
  * Event handlers.
  * Preemption is disabled there, that allows us to use synchronize_sched()
  * later to wait for all running handlers to complete.
+ *
+ * Common parameters:
+ * pc - address of the instruction in the binary code that generated the
+ *       event (or of some other instruction nearby).
+ * addr - start address of the allocated/freed/accessed/etc. memory area.
+ * size - size of that memory area.
  */
+static void __handle_alloc(unsigned long addr, unsigned long size,
+			   unsigned long pc)
+{
+	// TODO: report the event to the KEDR analyzers/tracers/whatever
+	if (debug) {
+		pr_info(KEDR_PREFIX "alloc at %lx: size == %lu, addr == %lx\n",
+			pc, size, addr);
+	}
+}
+
+static void __handle_free(unsigned long addr, unsigned long pc)
+{
+	// TODO: report the event to the KEDR analyzers/tracers/whatever
+	if (debug)
+		pr_info(KEDR_PREFIX "free at %lx: addr == %lx\n", pc, addr);
+}
 
 /*
  * Called after the memory area has been allocated, gets the address and
@@ -105,12 +127,7 @@ static __kedr_handler void kedr_handle_alloc(
 	// no guarantee that a pre-handler has run if the post-handler is now running,
 	// for example.
 	pc = (unsigned long)__builtin_return_address(0);
-	// TODO
-
-	if (debug) {
-		pr_info(KEDR_PREFIX "alloc at %lx: size == %lu, addr == %lx\n",
-			pc, size, addr);
-	}
+	__handle_alloc(addr, size, pc);
 	preempt_enable();
 }
 
@@ -126,10 +143,7 @@ static __kedr_handler void kedr_handle_free(unsigned long addr, void *loc)
 
 	preempt_disable();
 	pc = (unsigned long)__builtin_return_address(0);
-	// TODO
-
-	if (debug)
-		pr_info(KEDR_PREFIX "free at %lx: addr == %lx\n", pc, addr);
+	__handle_free(addr, pc);
 	preempt_enable();
 }
 
