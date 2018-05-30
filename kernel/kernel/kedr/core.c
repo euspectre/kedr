@@ -127,7 +127,8 @@ static __kedr_handler void kedr_handle_alloc(
 	// no guarantee that a pre-handler has run if the post-handler is now running,
 	// for example.
 	pc = (unsigned long)__builtin_return_address(0);
-	__handle_alloc(addr, size, pc);
+	if (!ZERO_OR_NULL_PTR(addr))
+		__handle_alloc(addr, size, pc);
 	preempt_enable();
 }
 
@@ -143,7 +144,8 @@ static __kedr_handler void kedr_handle_free(unsigned long addr, void *loc)
 
 	preempt_disable();
 	pc = (unsigned long)__builtin_return_address(0);
-	__handle_free(addr, pc);
+	if (!ZERO_OR_NULL_PTR(addr))
+		__handle_free(addr, pc);
 	preempt_enable();
 }
 
@@ -165,7 +167,7 @@ static __kedr_handler void kedr_handle_krealloc_pre(
 	 * post-handler, because 'p' is not actually freed by krealloc()
 	 * in this case.
 	 */
-	if (p)
+	if (!ZERO_OR_NULL_PTR(p))
 		__handle_free((unsigned long)p, pc);
 	preempt_enable();
 }
@@ -197,7 +199,8 @@ static __kedr_handler void kedr_handle_krealloc_post(
 		 * look like the old memory area got reallocated here -
 		 * should not be much of a problem though.
 		 */
-		__handle_alloc((unsigned long)addr, new_size, pc);
+		if (!ZERO_OR_NULL_PTR(addr))
+			__handle_alloc((unsigned long)addr, new_size, pc);
 	}
 out:
 	preempt_enable();

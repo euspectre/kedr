@@ -7,13 +7,13 @@
 __kmalloc:
   pre: |
     # passing constant as an argument
-    kedr_handle_alloc(0x10, arg1)
+    kedr_handle_alloc(0x5010, arg1)
 
     # assigning to the same variable twice
     size = kedr_size_from_order(0)
-    kedr_handle_alloc(0x11, size)
+    kedr_handle_alloc(0x5011, size)
     size = kedr_size_from_order(1)
-    kedr_handle_alloc(0x12, size)
+    kedr_handle_alloc(0x5012, size)
 
   post: |
     # both pre- and post-handlers are present at the same time
