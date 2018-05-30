@@ -159,7 +159,14 @@ static __kedr_handler void kedr_handle_krealloc_pre(
 
 	preempt_disable();
 	pc = (unsigned long)__builtin_return_address(0);
-	// TODO
+	/*
+	 * Note: if p != NULL and the allocation fails later, it will
+	 * be needed to add a fake allocation event for 'p' in the
+	 * post-handler, because 'p' is not actually freed by krealloc()
+	 * in this case.
+	 */
+	if (p)
+		__handle_free((unsigned long)p, pc);
 	preempt_enable();
 }
 
@@ -170,8 +177,29 @@ static __kedr_handler void kedr_handle_krealloc_post(
 	unsigned long pc;
 
 	preempt_disable();
+	if (!new_size)
+		goto out;
+
 	pc = (unsigned long)__builtin_return_address(0);
-	// TODO
+	if (!p) {
+		/* same as kmalloc() */
+		if (ret)
+			__handle_alloc((unsigned long)ret, new_size, pc);
+	}
+	else {
+		const void *addr = (ret) ? ret : p;
+
+		/*
+		 * If the allocation has been successful, report it here.
+		 * If it failed, report a fake allocation of the old
+		 * memory area, because the pre-handler has already reported
+		 * "free" for it. For the consumers of the events, it will
+		 * look like the old memory area got reallocated here -
+		 * should not be much of a problem though.
+		 */
+		__handle_alloc((unsigned long)addr, new_size, pc);
+	}
+out:
 	preempt_enable();
 }
 
@@ -183,8 +211,24 @@ static __kedr_handler void kedr_handle___krealloc(
 	unsigned long pc;
 
 	preempt_disable();
+	if (!new_size)
+		goto out;
+
 	pc = (unsigned long)__builtin_return_address(0);
-	// TODO
+	if (!p) {
+		/* same as kmalloc() */
+		if (ret)
+			__handle_alloc((unsigned long)ret, new_size, pc);
+	}
+	else {
+		/*
+		 * __krealloc() does not free the old memory area. It is
+		 * needed to check if it has allocated anything.
+		 */
+		if (ret && ret != p)
+			__handle_alloc((unsigned long)ret, new_size, pc);
+	}
+out:
 	preempt_enable();
 }
 
