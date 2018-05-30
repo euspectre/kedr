@@ -3,7 +3,7 @@ alloc 264 addr1
 
 # To check of __krealloc() has really reallocated memory, one should
 # compare its return value and the original pointer. We cannot do it here,
-# so we only check that the original memory block has been allcoated and
+# so we only check that the original memory block has been allocated and
 # freed by the test.
 
 free addr1
