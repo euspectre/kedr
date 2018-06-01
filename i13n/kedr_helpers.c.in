@@ -91,5 +91,34 @@ __kedr_helper unsigned long kedr_str_buffer_len(const char *s,
 }
 
 /*
+ * Returns 0 for ERR_PTR, otherwise returns the pointer unchanged.
+ *
+ * Some functions that allocate memory and/or create objects (e.g.
+ * memdup_user()) return ERR_PTR() on failure, rather than NULL.
+ * KEDR core already filters out alloc events with NULL pointers and this
+ * helper makes it easy to filter out the events with ERR_PTR() as well.
+ */
+__kedr_helper unsigned long kedr_err_ptr_to_null(const void *ptr)
+{
+	return (IS_ERR(ptr) ? 0 : (unsigned long)ptr);
+}
+
+/*
+ * Yes, I am too lazy to implement this in the parser right now.
+ */
+__kedr_helper unsigned long kedr_add(unsigned long num, unsigned long what)
+{
+	return num + what;
+}
+
+__kedr_helper unsigned long kedr_ksize(unsigned long objp)
+{
+	if (!objp)
+		return 0;
+
+	return (unsigned long)ksize((const void *)objp);
+}
+
+/*
  * Hander stubs
  */

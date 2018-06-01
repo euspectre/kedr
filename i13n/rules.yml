@@ -243,10 +243,44 @@ vfree:
     kedr_handle_free(arg1)
 ############################################################################
 
-# TODO
 # void *memdup_user(const void __user *src, size_t len)
+# Note: returns ERR_PTR() on failure.
+memdup_user:
+  post: |
+    addr = kedr_err_ptr_to_null(ret)
+    kedr_handle_alloc(addr, arg2)
+
 # void *vmemdup_user(const void __user *src, size_t len)
-# char *strndup_user(const char __user *s, long n)
+# Note: returns ERR_PTR() on failure.
+vmemdup_user:
+  post: |
+    addr = kedr_err_ptr_to_null(ret)
+    kedr_handle_alloc(addr, arg2)
+
 # void *memdup_user_nul(const void __user *src, size_t len)
+# Note: returns ERR_PTR() on failure.
+memdup_user_nul:
+  post: |
+    addr = kedr_err_ptr_to_null(ret)
+    size = kedr_add(arg2, 1)
+    kedr_handle_alloc(addr, size)
+
+# char *strndup_user(const char __user *s, long n)
+# Note: returns ERR_PTR() on failure.
+strndup_user:
+  post: |
+    addr = kedr_err_ptr_to_null(ret)
+
+    # Another option would be to use strnlen_user() via a helper here.
+    # However, the userspace string could change before that, which is
+    # unlikely but possible.
+    # Let us use ksize() on the returned pointer instead. May be less
+    # accurate but safer.
+    size = kedr_ksize(addr)
+    kedr_handle_alloc(addr, size)
+############################################################################
+
+# TODO
 # kasprintf
 # kvasprintf
+# kfree*rcu
