@@ -305,6 +305,16 @@ kfree_call_rcu:
     kedr_handle_free(addr)
 ############################################################################
 
-# TODO
-# kasprintf
-# kvasprintf
+# kedr_str_buffer_len() expects a non-NULL pointer to a string, so it cannot
+# be used here. One could add one more helper but let us just use ksize()
+# here, for simplicity.
+kasprintf:
+  post: |
+    size = kedr_ksize(ret)
+    kedr_handle_alloc(ret, size)
+
+kvasprintf:
+  post: |
+    size = kedr_ksize(ret)
+    kedr_handle_alloc(ret, size)
+############################################################################
