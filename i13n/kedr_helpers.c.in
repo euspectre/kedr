@@ -120,5 +120,15 @@ __kedr_helper unsigned long kedr_ksize(unsigned long objp)
 }
 
 /*
+ * Returns the address of an object based on the address of its field and
+ * the offset of that field in the object.
+ */
+__kedr_helper unsigned long kedr_addr_from_field_addr(const void *field,
+						      unsigned long offset)
+{
+	return (unsigned long)field - offset;
+}
+
+/*
  * Hander stubs
  */

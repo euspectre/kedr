@@ -19,3 +19,5 @@ unsigned long kedr_str_buffer_len(const char *s, unsigned long count);
 unsigned long kedr_err_ptr_to_null(const void *ptr);
 unsigned long kedr_add(unsigned long num, unsigned long what);
 unsigned long kedr_ksize(unsigned long objp);
+unsigned long kedr_addr_from_field_addr(const void *field,
+					unsigned long offset);

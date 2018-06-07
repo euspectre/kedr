@@ -280,7 +280,31 @@ strndup_user:
     kedr_handle_alloc(addr, size)
 ############################################################################
 
+# void kfree_call_rcu(struct rcu_head *head, rcu_callback_t func)
+#
+# kfree_call_rcu() is what kfree_rcu() expands to eventually. The kernel
+# will kfree() the object containing that rcu_head after the grace period.
+# 'func' is actually the offset of rcu_head field in the object rather than
+# a function address.
+#
+# One cannot predict when exactly kfree() will be called, so let us report
+# 'free' event immediately, for simplicity. Some code from RCU read-side
+# sections may still legitimately access the object after kfree_rcu() has
+# been called though. As a result, the race detectors, for example, will see
+# memory accesses to the recently "freed" or to an unknown memory block.
+# It is needed to handle such things there somehow.
+#
+# One of the alternatives would be to schedule our own RCU callback and
+# report the "free" event from there. However, it is not guaranteed that our
+# RCU callback will run right before the original one. If it runs after that
+# and the memory block is allocated again before that, it would make a mess
+# in the sequence of the reported events.
+kfree_call_rcu:
+  pre: |
+    addr = kedr_addr_from_field_addr(arg1, arg2)
+    kedr_handle_free(addr)
+############################################################################
+
 # TODO
 # kasprintf
 # kvasprintf
-# kfree*rcu
