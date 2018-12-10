@@ -304,6 +304,9 @@ if(KERNEL_PART)
 
     # Check if random32() is available.
     check_random32()
+
+    # Check if posix_acl uses refcount_t
+    check_posix_acl_refcount()
 endif(KERNEL_PART)
 #######################################################################
 # Both user part and kernel part should be aware about

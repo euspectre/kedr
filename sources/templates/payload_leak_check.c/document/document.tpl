@@ -16,6 +16,17 @@
 #include <kedr/core/kedr.h>
 #include <kedr/leak_check/leak_check.h>
 
+#include "config.h"
+
+#if defined(KEDR_HAVE_POSIX_ACL_REFCOUNT)
+# include <linux/refcount.h>
+# define kedr_refcount_inc refcount_inc
+# define kedr_refcount_dec_and_test refcount_dec_and_test
+#else
+# define kedr_refcount_inc atomic_inc
+# define kedr_refcount_dec_and_test atomic_dec_and_test
+#endif /* defined(KEDR_HAVE_POSIX_ACL_REFCOUNT) */
+
 MODULE_AUTHOR("<$module.author$>");
 MODULE_LICENSE("GPL");
 /* ====================================================================== */

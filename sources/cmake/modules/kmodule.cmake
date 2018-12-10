@@ -338,6 +338,25 @@ macro(check_xattr_user_ns)
 endmacro(check_xattr_user_ns)
 ############################################################################
 
+# Check if posix_acl uses refcount_t.
+# The macro sets variable 'KEDR_HAVE_POSIX_ACL_REFCOUNT'.
+macro(check_posix_acl_refcount)
+	check_begin("Checking if posix_acl uses refcount_t")
+	if (NOT DEFINED KEDR_HAVE_POSIX_ACL_REFCOUNT)
+		check_try()
+		kbuild_try_compile(have_check_posix_acl_refcount_impl
+			"${CMAKE_BINARY_DIR}/check_posix_acl_refcount"
+			"${kmodule_test_sources_dir}/check_posix_acl_refcount/module.c"
+		)
+
+		set_bool_string(KEDR_HAVE_POSIX_ACL_REFCOUNT "yes" "no" ${have_check_posix_acl_refcount_impl}
+			CACHE INTERNAL "Does posix_acl use refcount_t?"
+			)
+	endif ()
+	check_end("${KEDR_HAVE_POSIX_ACL_REFCOUNT}")
+endmacro(check_posix_acl_refcount)
+############################################################################
+
 # Check if hlist_for_each_entry*() macros accept only 'type *pos' argument
 # rather than both 'type *tpos' and 'hlist_node *pos' as the loop cursors.
 # The macro sets variable 'HLIST_FOR_EACH_ENTRY_POS_ONLY'.

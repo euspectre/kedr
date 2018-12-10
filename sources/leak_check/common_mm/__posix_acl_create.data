@@ -16,7 +16,7 @@
 			 * with the execution of the target function. If that
 			 * was possible, the target function could end up 
 			 * using the already freed ACL structure. */
-			atomic_inc(&(*acl)->a_refcount);
+			kedr_refcount_inc(&(*acl)->a_refcount);
 		}
 		(void)caller_address;
 	<<
@@ -39,7 +39,7 @@
 		 * accordingly and free the ACL if needed.
 		 * The code below is based on the implementation of 
 		 * posix_acl_release(). */
-		if (old_acl && atomic_dec_and_test(&old_acl->a_refcount)) {
+		if (old_acl && kedr_refcount_dec_and_test(&old_acl->a_refcount)) {
 			kedr_lc_handle_free(old_acl, 
 				caller_address);
  			kfree_rcu(old_acl, a_rcu);

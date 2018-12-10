@@ -28,6 +28,9 @@
 /* Specifies whether kmem_cache_alloc*_trace() functions get 'kmem_cache *'
  * pointer as their first argument. */
 #cmakedefine KMCA_TRACE_KMC_FIRST
+
+/* Whether struct posix_acl uses refcount_t */
+#cmakedefine KEDR_HAVE_POSIX_ACL_REFCOUNT
 /* ====================================================================== */
 
 /* If hlist_for_each_entry*() macros accept only 'type *pos' as a loop 
