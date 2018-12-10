@@ -573,7 +573,7 @@ klc_print_stack_trace(struct kedr_lc_output *output,
 	enum klc_output_type output_type, 
 	struct stack_entry **stack_entries, unsigned int num_entries)
 {
-	static const char* fmt = "[<%p>] %s";
+	static const char* fmt = "[<%lx>] %s";
 	char *buf = NULL;
 	int len;
 	unsigned int i;
@@ -587,11 +587,11 @@ klc_print_stack_trace(struct kedr_lc_output *output,
 
 	for (i = 0; i < num_entries; ++i) {
 		len = snprintf(NULL, 0, fmt, 
-			(void *)stack_entries[i]->addr, stack_entries[i]->symbolic);
+			(unsigned long)stack_entries[i]->addr, stack_entries[i]->symbolic);
 		buf = kmalloc(len + 1, GFP_KERNEL);
 		if (buf != NULL) {
 			snprintf(buf, len + 1, fmt, 
-				(void *)stack_entries[i]->addr, stack_entries[i]->symbolic);
+				(unsigned long)stack_entries[i]->addr, stack_entries[i]->symbolic);
 			klc_print_string(output, output_type, buf);
 			kfree(buf);
 		} else { 
@@ -692,10 +692,10 @@ kedr_lc_print_alloc_info(struct kedr_lc_output *output,
 	struct kedr_lc_resource_info *info, u64 similar_allocs)
 {
 	static const char* fmt_common = 
-	"Address: 0x%p, size: %zu; stack trace of the allocation:";
+	"Address: 0x%lx, size: %zu; stack trace of the allocation:";
 	
 	static const char* fmt_unknown = 
-	"Address: 0x%p, size: unknown; stack trace of the allocation:";
+	"Address: 0x%lx, size: unknown; stack trace of the allocation:";
 	
 	char *buf = NULL;
 	int len;
@@ -705,11 +705,11 @@ kedr_lc_print_alloc_info(struct kedr_lc_output *output,
 	klc_print_process_info(output, info, KLC_UNFREED_ALLOC);
 	
 	if (info->size != 0) {
-		len = snprintf(NULL, 0, fmt_common, info->addr, 
+		len = snprintf(NULL, 0, fmt_common, (unsigned long)info->addr,
 			info->size);
 	}
 	else {
-		len = snprintf(NULL, 0, fmt_unknown, info->addr);
+		len = snprintf(NULL, 0, fmt_unknown, (unsigned long)info->addr);
 	}
 	buf = kmalloc(len + 1, GFP_KERNEL);
 	if (buf == NULL) {
@@ -720,10 +720,10 @@ kedr_lc_print_alloc_info(struct kedr_lc_output *output,
 	}
 	
 	if (info->size != 0) {
-		snprintf(buf, len + 1, fmt_common, info->addr, info->size);
+		snprintf(buf, len + 1, fmt_common, (unsigned long)info->addr, info->size);
 	}
 	else {
-		snprintf(buf, len + 1, fmt_unknown, info->addr);
+		snprintf(buf, len + 1, fmt_unknown, (unsigned long)info->addr);
 	}
 	klc_print_string(output, KLC_UNFREED_ALLOC, buf);
 	kfree(buf);
@@ -744,7 +744,7 @@ kedr_lc_print_dealloc_info(struct kedr_lc_output *output,
 	struct kedr_lc_resource_info *info, u64 similar_deallocs)
 {
 	static const char* fmt = 
-		"Address: 0x%p; stack trace of the deallocation:";
+		"Address: 0x%lx; stack trace of the deallocation:";
 	char *buf = NULL;
 	int len;
  
@@ -752,7 +752,7 @@ kedr_lc_print_dealloc_info(struct kedr_lc_output *output,
 	
 	klc_print_process_info(output, info, KLC_BAD_FREE);
 	
-	len = snprintf(NULL, 0, fmt, info->addr);
+	len = snprintf(NULL, 0, fmt, (unsigned long)info->addr);
 	buf = kmalloc(len + 1, GFP_KERNEL);
 	if (buf == NULL) {
 		pr_warning(KEDR_LC_MSG_PREFIX 
@@ -761,7 +761,7 @@ kedr_lc_print_dealloc_info(struct kedr_lc_output *output,
 			len);
 		return;
 	}
-	snprintf(buf, len + 1, fmt, info->addr);
+	snprintf(buf, len + 1, fmt, (unsigned long)info->addr);
 	klc_print_string(output, KLC_BAD_FREE, buf);
 	kfree(buf);
 	
