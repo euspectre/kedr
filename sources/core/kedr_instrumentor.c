@@ -262,9 +262,9 @@ do_process_insn(struct insn* c_insn, void* kaddr, void* end_kaddr,
 	"instruction decoder stopped past the end of the section.\n");
 		insn_get_opcode(c_insn);
 		printk(KERN_ALERT COMPONENT_STRING 
-	"kaddr=%p, end_kaddr=%p, c_insn->length=%d, opcode=0x%x\n",
-			(void*)kaddr,
-			(void*)end_kaddr,
+	"kaddr=%lx, end_kaddr=%lx, c_insn->length=%d, opcode=0x%x\n",
+			(unsigned long)kaddr,
+			(unsigned long)end_kaddr,
 			(int)c_insn->length,
 			(unsigned int)c_insn->opcode.value
 		);
@@ -296,11 +296,11 @@ do_process_insn(struct insn* c_insn, void* kaddr, void* end_kaddr,
 	if (c_insn->immediate.nbytes != 4)
 	{
 		KEDR_MSG(COMPONENT_STRING 
-	"at 0x%p: "
+	"at 0x%lx: "
 	"opcode: 0x%x, "
 	"immediate field is %u rather than 32 bits in size; "
 	"insn.length = %u, insn.imm = %u, off_immed = %d\n",
-			kaddr,
+			(unsigned long)kaddr,
 			(unsigned int)c_insn->opcode.value,
 			8 * (unsigned int)c_insn->immediate.nbytes,
 			c_insn->length,

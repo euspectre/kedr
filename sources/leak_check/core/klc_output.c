@@ -608,13 +608,13 @@ kedr_lc_print_target_info(struct kedr_lc_output *output,
 	struct module *target, void *init_area, void *core_area)
 {
 	static const char* fmt = 
-"Target module: \"%s\", init area at %p, core area at %p";
+"Target module: \"%s\", init area at %lx, core area at %lx";
 	char *buf = NULL;
 	int len;
 	const char *name;
 	
 	name = module_name(target);
-	len = snprintf(NULL, 0, fmt, name, init_area, core_area);
+	len = snprintf(NULL, 0, fmt, name, (unsigned long)init_area, (unsigned long)core_area);
 	buf = kmalloc(len + 1, GFP_KERNEL);
 	if (buf == NULL) {
 		pr_warning(KEDR_LC_MSG_PREFIX 
@@ -623,7 +623,7 @@ kedr_lc_print_target_info(struct kedr_lc_output *output,
 			len);
 		return;
 	}
-	snprintf(buf, len + 1, fmt, name, init_area, core_area);
+	snprintf(buf, len + 1, fmt, name, (unsigned long)init_area, (unsigned long)core_area);
 	klc_print_string(output, KLC_OTHER, buf);
 	kfree(buf);
 }
