@@ -15,6 +15,10 @@ MODULE_LICENSE("GPL");
 #error Stack trace data can be unreliable on this system.
 #endif
 
+#if !defined(CONFIG_STACKTRACE)
+#error CONFIG_STACKTRACE is required but is not set in the kernel configuration.
+#endif
+
 /* 
  * The rest of the code does not really matter as long as it is correct 
  * from the compiler's point of view.

@@ -203,13 +203,11 @@ macro(check_stack_trace)
 	check_end("${STACK_TRACE_RELIABLE}")
 
 	if (NOT STACK_TRACE_RELIABLE)
-		message ("\n[WARNING]\n"
-		"It looks like reliable stack traces cannot be obtained on this system.\n"
-		"The output of KEDR-based tools like LeakCheck will be less detailed\n"
-		"(each stack trace shown will contain only one frame).\n"
-		"If this is not acceptable, you could rebuild the kernel with\n"
-		"CONFIG_FRAME_POINTER or CONFIG_STACK_UNWIND (if available) set to \"y\"\n"
-		"and then reconfigure and rebuild KEDR.\n")
+		message (FATAL_ERROR
+		"It looks like reliable stack traces cannot be obtained on this system. "
+		"Please rebuild the kernel with CONFIG_STACKTRACE=y and "
+		"CONFIG_FRAME_POINTER=y or CONFIG_STACK_UNWIND=y (if available) "
+		"and then reconfigure and rebuild KEDR.")
 	endif (NOT STACK_TRACE_RELIABLE)
 endmacro(check_stack_trace)
 
