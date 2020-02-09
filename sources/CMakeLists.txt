@@ -112,7 +112,7 @@ if(NOT LSMOD OR NOT RMMOD OR NOT INSMOD OR NOT MODPROBE)
 endif(NOT LSMOD OR NOT RMMOD OR NOT INSMOD OR NOT MODPROBE)
 #######################################################################
 if(NOT USER_PART_ONLY)
-    find_package(Kbuild 3.2.0)
+    find_package(Kbuild 3.10.0)
 
     if(NOT Kbuild_ARCH STREQUAL "x86")
 	message("Only x86 architecture is supported (this includes x86_64 machines also).")
