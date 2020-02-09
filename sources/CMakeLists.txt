@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 2.6)
 
+# Silence the warnings like
+# "Only interpret if() arguments as variables or keywords when unquoted."
+cmake_policy(SET CMP0054 OLD)
+
 # Make "Release" the default build type
 if (NOT CMAKE_BUILD_TYPE)
     set (CMAKE_BUILD_TYPE "Release" CACHE STRING
