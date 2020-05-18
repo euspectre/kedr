@@ -206,7 +206,7 @@ macro(check_stack_trace)
 		message (FATAL_ERROR
 		"It looks like reliable stack traces cannot be obtained on this system. "
 		"Please rebuild the kernel with CONFIG_STACKTRACE=y and "
-		"CONFIG_FRAME_POINTER=y or CONFIG_STACK_UNWIND=y (if available) "
+		"CONFIG_UNWINDER_FRAME_POINTER=y or CONFIG_UNWINDER_ORC=y "
 		"and then reconfigure and rebuild KEDR.")
 	endif (NOT STACK_TRACE_RELIABLE)
 endmacro(check_stack_trace)

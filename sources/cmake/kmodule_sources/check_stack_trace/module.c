@@ -10,9 +10,12 @@ MODULE_LICENSE("GPL");
  * CONFIG_STACKTRACE). If stack traces are reliable but save_stack_trace()
  * cannot be used, there are alternatives but this is another story. */
 
-#if !defined(CONFIG_FRAME_POINTER) && !defined(CONFIG_UNWIND_INFO) && \
-    !defined(CONFIG_STACK_UNWIND)
-#error Stack trace data can be unreliable on this system.
+#if !defined(CONFIG_FRAME_POINTER) && \
+    !defined(CONFIG_UNWIND_INFO) && \
+    !defined(CONFIG_STACK_UNWIND) && \
+    !defined(CONFIG_UNWINDER_FRAME_POINTER) && \
+    !defined(CONFIG_UNWINDER_ORC)
+#error Stack traces might be unreliable.
 #endif
 
 #if !defined(CONFIG_STACKTRACE)
