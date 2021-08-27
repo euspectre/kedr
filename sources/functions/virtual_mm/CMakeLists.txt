@@ -1,6 +1,11 @@
+configure_file(
+	"${CMAKE_CURRENT_SOURCE_DIR}/__vmalloc.data.${__VM_VER}"
+	"${CMAKE_CURRENT_BINARY_DIR}/__vmalloc.data"
+	COPYONLY
+)
+
 func_db_configure_functions (
 	"vmalloc"
-	"__vmalloc"
 	"vmalloc_user"
 	"vmalloc_node"
 	"vmalloc_32"
@@ -8,4 +13,7 @@ func_db_configure_functions (
 	"vfree"
 	"vzalloc"
 	"vzalloc_node"
+
+	GENERATED
+	"__vmalloc"
 )

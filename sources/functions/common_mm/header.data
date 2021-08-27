@@ -3,4 +3,5 @@ header =>>
 #include <linux/gfp.h>
 #include <linux/mm.h>
 #include <linux/topology.h> /* NUMA-related stuff */
+#include <linux/io.h>
 <<

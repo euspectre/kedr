@@ -34,6 +34,7 @@ func_db_configure_functions (
 	"__krealloc"
 	"kfree"
 	"kzfree"
+	"kfree_sensitive"
 	"kmem_cache_alloc"
 	"kmem_cache_alloc_notrace" 
 	"__kmalloc_node"

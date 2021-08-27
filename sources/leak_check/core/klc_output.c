@@ -182,7 +182,7 @@ klc_output_buffer_resize(struct klc_output_buffer *ob, size_t new_size)
 	
 	p = vmalloc((size_t)size);
 	if (p == NULL) {
-		pr_warning(KEDR_LC_MSG_PREFIX 
+		pr_warn(KEDR_LC_MSG_PREFIX 
 	"klc_output_buffer_resize(): "
 	"not enough memory to resize the output buffer to %zu bytes\n",
 			size);
@@ -256,7 +256,7 @@ klc_read_common(struct file *filp, char __user *buf, size_t count,
 	
 	if (mutex_lock_killable(&ob->lock) != 0)
 	{
-		pr_warning(KEDR_LC_MSG_PREFIX "klc_read_common(): "
+		pr_warn(KEDR_LC_MSG_PREFIX "klc_read_common(): "
 			"got a signal while trying to acquire a mutex.\n");
 		return -EINTR;
 	}
@@ -425,7 +425,7 @@ klc_create_debugfs_files(struct kedr_lc_output *output,
 	return 0;
 
 fail:
-	pr_warning(KEDR_LC_MSG_PREFIX
+	pr_warn(KEDR_LC_MSG_PREFIX
 		"failed to create output files in debugfs\n");
 	klc_remove_debugfs_files(output);
 	return -EINVAL;    
@@ -438,14 +438,14 @@ kedr_lc_output_init(void)
 	/* Create the main directory for LeakCheck in debugfs */
 	dir_klc_main = debugfs_create_dir("kedr_leak_check", NULL);
 	if (IS_ERR(dir_klc_main)) {
-		pr_warning(KEDR_LC_MSG_PREFIX
+		pr_warn(KEDR_LC_MSG_PREFIX
 			"debugfs is not supported\n");
 		dir_klc_main = NULL;
 		return -ENODEV;
 	}
 	
 	if (dir_klc_main == NULL) {
-		pr_warning(KEDR_LC_MSG_PREFIX
+		pr_warn(KEDR_LC_MSG_PREFIX
 			"failed to create a directory in debugfs\n");
 		return -EINVAL;
 	}
@@ -545,7 +545,7 @@ klc_print_string(struct kedr_lc_output *output,
 		ob = &output->ob_other;
 		break;
 	default:
-		pr_warning(KEDR_LC_MSG_PREFIX 
+		pr_warn(KEDR_LC_MSG_PREFIX 
 			"unknown output type: %d\n", 
 			(int)output_type);
 		return;
@@ -554,7 +554,7 @@ klc_print_string(struct kedr_lc_output *output,
 	
 	if (mutex_lock_killable(&ob->lock) != 0)
 	{
-		pr_warning(KEDR_LC_MSG_PREFIX "klc_print_string(): "
+		pr_warn(KEDR_LC_MSG_PREFIX "klc_print_string(): "
 			"got a signal while trying to acquire a mutex.\n");
 		return;
 	}
@@ -563,7 +563,7 @@ klc_print_string(struct kedr_lc_output *output,
 	klc_output_buffer_append(ob, "\n");
 	
 	if (syslog_output)
-		pr_warning(KEDR_LC_MSG_PREFIX "%s\n", s);
+		pr_warn(KEDR_LC_MSG_PREFIX "%s\n", s);
 	
 	mutex_unlock(&ob->lock);
 }
@@ -595,7 +595,7 @@ klc_print_stack_trace(struct kedr_lc_output *output,
 			klc_print_string(output, output_type, buf);
 			kfree(buf);
 		} else { 
-			pr_warning(KEDR_LC_MSG_PREFIX
+			pr_warn(KEDR_LC_MSG_PREFIX
 			"klc_print_stack_trace(): not enough memory "
 			"to prepare a message of size %d\n",
 				len);
@@ -617,7 +617,7 @@ kedr_lc_print_target_info(struct kedr_lc_output *output,
 	len = snprintf(NULL, 0, fmt, name, (unsigned long)init_area, (unsigned long)core_area);
 	buf = kmalloc(len + 1, GFP_KERNEL);
 	if (buf == NULL) {
-		pr_warning(KEDR_LC_MSG_PREFIX 
+		pr_warn(KEDR_LC_MSG_PREFIX 
 		"klc_print_target_info(): "
 		"not enough memory to prepare a message of size %d\n",
 			len);
@@ -642,7 +642,7 @@ klc_print_u64(struct kedr_lc_output *output,
 	len = snprintf(NULL, 0, fmt, data);
 	buf = kmalloc(len + 1, GFP_KERNEL);
 	if (buf == NULL) {
-		pr_warning(KEDR_LC_MSG_PREFIX "klc_print_u64(): "
+		pr_warn(KEDR_LC_MSG_PREFIX "klc_print_u64(): "
 		"not enough memory to prepare a message of size %d\n",
 			len);
 		return;
@@ -676,7 +676,7 @@ klc_print_process_info(struct kedr_lc_output *output,
 		       (int)info->task_pid);
 	buf = kmalloc(len + 1, GFP_KERNEL);
 	if (buf == NULL) {
-		pr_warning(KEDR_LC_MSG_PREFIX "klc_print_process_info(): "
+		pr_warn(KEDR_LC_MSG_PREFIX "klc_print_process_info(): "
 		"not enough memory to prepare a message of size %d\n",
 			len);
 		return;
@@ -713,7 +713,7 @@ kedr_lc_print_alloc_info(struct kedr_lc_output *output,
 	}
 	buf = kmalloc(len + 1, GFP_KERNEL);
 	if (buf == NULL) {
-		pr_warning(KEDR_LC_MSG_PREFIX "klc_print_alloc_info(): "
+		pr_warn(KEDR_LC_MSG_PREFIX "klc_print_alloc_info(): "
 		"not enough memory to prepare a message of size %d\n",
 			len);
 		return;
@@ -755,7 +755,7 @@ kedr_lc_print_dealloc_info(struct kedr_lc_output *output,
 	len = snprintf(NULL, 0, fmt, (unsigned long)info->addr);
 	buf = kmalloc(len + 1, GFP_KERNEL);
 	if (buf == NULL) {
-		pr_warning(KEDR_LC_MSG_PREFIX 
+		pr_warn(KEDR_LC_MSG_PREFIX 
 		"klc_print_dealloc_info(): "
 		"not enough memory to prepare a message of size %d\n",
 			len);
@@ -781,7 +781,7 @@ kedr_lc_print_totals(struct kedr_lc_output *output,
 	u64 total_allocs, u64 total_leaks, u64 total_bad_frees)
 {
 	if (syslog_output != 0)
-		pr_warning(KEDR_LC_MSG_PREFIX "Totals:\n");
+		pr_warn(KEDR_LC_MSG_PREFIX "Totals:\n");
 	
 	klc_print_u64(output, KLC_OTHER, total_allocs, 
 		"Allocations: %llu");
