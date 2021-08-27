@@ -36,6 +36,9 @@
 #include <linux/pfn.h> 		/* PFN_* macros */
 
 #include <linux/kallsyms.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 7, 0)
+#include <linux/kprobes.h>
+#endif
 
 #include "kedr_instrumentor_internal.h"
 #include "config.h"
@@ -417,6 +420,31 @@ do_process_area(void* kbeg, void* kend,
 	return;
 }
 
+/* Kernel versions >= 5.7.0 no longer export kallsyms_lookup_name. Here, we
+ * resort to using kprobe to extract the function address */
+typedef unsigned long (*kallsyms_lookup_name_t)(const char *name);
+kallsyms_lookup_name_t get_kallsyms_lookup_name(void)
+{
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 7, 0)
+	int ret;
+	kallsyms_lookup_name_t func;
+	struct kprobe kp = {
+		.symbol_name = "kallsyms_lookup_name"
+	};
+
+	ret = register_kprobe(&kp);
+	if (ret)
+		return ERR_PTR(ret);
+
+	func = (kallsyms_lookup_name_t) kp.addr;
+	unregister_kprobe(&kp);
+
+	return func;
+#else
+	return &kallsyms_lookup_name;
+#endif
+}
+
 /* Starting from commit 4982223e51e8ea9d09bb33c8323b5ec1877b2b51 which went 
  * into kernel 3.16, the code of a kernel module becomes read only before
  * the notification about MODULE_STATE_COMING triggers.
@@ -432,17 +460,23 @@ static int (*do_set_memory_rw)(unsigned long addr, int numpages) = NULL;
 static int
 prepare_set_memory_rx_funcs(void)
 {
-	do_set_memory_ro = (void *)kallsyms_lookup_name("set_memory_ro");
-	if (do_set_memory_ro == NULL) {
-		pr_warning(COMPONENT_STRING
-		"Symbol not found: 'set_memory_ro'\n");
+	kallsyms_lookup_name_t kallsyms_lookup_name_func
+						= get_kallsyms_lookup_name();
+	if (IS_ERR(kallsyms_lookup_name_func)) {
+		pr_warn(COMPONENT_STRING
+			"Symbol not found: 'kallsyms_lookup_name'");
 		return -EINVAL;
 	}
 
-	do_set_memory_rw = (void *)kallsyms_lookup_name("set_memory_rw");
+	do_set_memory_ro = (void *)kallsyms_lookup_name_func("set_memory_ro");
+	if (do_set_memory_ro == NULL) {
+		pr_warn(COMPONENT_STRING "Symbol not found: 'set_memory_ro'\n");
+		return -EINVAL;
+	}
+
+	do_set_memory_rw = (void *)kallsyms_lookup_name_func("set_memory_rw");
 	if (do_set_memory_rw == NULL) {
-		pr_warning(COMPONENT_STRING
-		"Symbol not found: 'set_memory_rw'\n");
+		pr_warn(COMPONENT_STRING "Symbol not found: 'set_memory_rw'\n");
 		return -EINVAL;
 	}
 
