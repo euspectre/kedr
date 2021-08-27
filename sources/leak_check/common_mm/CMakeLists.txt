@@ -10,7 +10,6 @@ configure_file(
 kmodule_configure_kernel_functions(functions 
 	REQUIRED "__kmalloc"
 	"krealloc"
-	"__krealloc"
 	"kfree"
 	"kzfree"
 	"kmem_cache_alloc"
@@ -21,6 +20,7 @@ kmodule_configure_kernel_functions(functions
 	OPTIONAL "kmem_cache_alloc_notrace"
 	"kmem_cache_alloc_trace"
 	"__kmalloc_node"
+	"__krealloc"
 	"kmem_cache_alloc_node"
 	"kmem_cache_alloc_node_notrace"
 	"kmem_cache_alloc_node_trace"
