@@ -123,11 +123,6 @@ static struct dentry* root_directory;
 static struct dentry* points_root_directory;
 static struct dentry* indicators_root_directory;
 
-// File for access last fault.
-static struct dentry* last_fault_file;
-// File for access 'verbose' property.
-static struct dentry* verbose_file;
-
 static char kedr_fsim_fault_message_buf[KEDR_FSIM_FAULT_MESSAGE_LEN + 1] = "none";
 static DEFINE_SPINLOCK(kedr_fsim_fault_message_lock);
 
@@ -696,23 +691,25 @@ delete_indicator_files(struct kedr_simulation_indicator* indicator)
 static int __init
 kedr_fault_simulation_init(void)
 {
+	struct dentry* last_fault_file;
+
 	root_directory = debugfs_create_dir("kedr_fault_simulation", NULL);
 	if(root_directory == NULL)
 	{
 		print_error0("Cannot create root directory in debugfs for service.");
-		goto err_root_dir;
+		goto err_ret;
 	}
 	points_root_directory = debugfs_create_dir("points", root_directory);
 	if(points_root_directory == NULL)
 	{
 		print_error0("Cannot create directory in debugfs for points.");
-		goto err_points_dir;
+		goto err;
 	}
 	indicators_root_directory = debugfs_create_dir("indicators", root_directory);
 	if(indicators_root_directory == NULL)
 	{
 		print_error0("Cannot create directory in debugfs for indicators.");
-		goto err_indicators_dir;
+		goto err;
 	}
 	
 	last_fault_file = debugfs_create_file("last_fault", 
@@ -722,29 +719,17 @@ kedr_fault_simulation_init(void)
 	if(last_fault_file == NULL)
 	{
 		print_error0("Cannot create 'last_fault' file in debugfs.");
-		goto err_last_fault_file;
+		goto err;
 	}
 	
-    verbose_file = debugfs_create_u8("verbose", S_IRUGO | S_IWUSR | S_IWGRP,
-        root_directory, &verbose);
-	if(verbose_file == NULL)
-	{
-		print_error0("Cannot create 'verbose' file in debugfs.");
-		goto err_verbose_file;
-	}
-
+        debugfs_create_u8("verbose", S_IRUGO | S_IWUSR | S_IWGRP,
+                          root_directory, &verbose);
     
 	return 0;
 
-err_verbose_file:
-    debugfs_remove(last_fault_file);
-err_last_fault_file:
-	debugfs_remove(indicators_root_directory);
-err_indicators_dir:
-	debugfs_remove(points_root_directory);
-err_points_dir:
-	debugfs_remove(root_directory);
-err_root_dir:
+err:
+	debugfs_remove_recursive(root_directory);
+err_ret:
 	return -EINVAL;
 }
 
@@ -754,11 +739,7 @@ kedr_fault_simulation_exit(void)
 	BUG_ON(!list_empty(&points));
 	BUG_ON(!list_empty(&indicators));
 
-    debugfs_remove(verbose_file);
-    debugfs_remove(last_fault_file);
-    debugfs_remove(points_root_directory);
-    debugfs_remove(indicators_root_directory);
-    debugfs_remove(root_directory);
+    debugfs_remove_recursive(root_directory);
 }
 module_init(kedr_fault_simulation_init);
 module_exit(kedr_fault_simulation_exit);
