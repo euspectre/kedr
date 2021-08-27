@@ -11,7 +11,6 @@ kmodule_configure_kernel_functions(functions
 	REQUIRED "__kmalloc"
 	"krealloc"
 	"kfree"
-	"kzfree"
 	"kmem_cache_alloc"
 	"kmem_cache_free"
 	"__get_free_pages"
@@ -31,6 +30,8 @@ kmodule_configure_kernel_functions(functions
 	"alloc_pages_exact"
 	"free_pages_exact" 
 	"alloc_pages_exact_nid"
+	"kzfree"
+	"kfree_sensitive"
 	
 	REQUIRED "kstrdup"
 	"kstrndup"

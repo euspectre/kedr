@@ -1,0 +1,7 @@
+[group]
+	# The body of the replacement function
+	handler.pre =>>
+	if (!ZERO_OR_NULL_PTR(p)) 
+		kedr_lc_handle_free(p, caller_address);
+	<<
+#######################################################################
