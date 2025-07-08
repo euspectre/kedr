@@ -444,7 +444,7 @@ lc_object_create(void)
 	
 	lc = kzalloc(sizeof(*lc), GFP_KERNEL);
 	if (lc == NULL) {
-		pr_warning(KEDR_LC_MSG_PREFIX
+		pr_warn(KEDR_LC_MSG_PREFIX
 		"Failed to create LeakCheck object: not enough memory\n");
 		return NULL;
 	}
@@ -452,7 +452,7 @@ lc_object_create(void)
 	lc->output = kedr_lc_output_create(lc);
 	BUG_ON(lc->output == NULL);
 	if (IS_ERR(lc->output)) {
-		pr_warning(KEDR_LC_MSG_PREFIX
+		pr_warn(KEDR_LC_MSG_PREFIX
 		"Failed to create output object, error code: %d\n",
 			(int)PTR_ERR(lc->output));
 		goto fail_output;
@@ -464,14 +464,14 @@ lc_object_create(void)
 	lc->bad_free_groups = kzalloc(bad_free_groups_stored * 
 		sizeof(struct kedr_lc_bad_free_group), GFP_KERNEL);
 	if (lc->bad_free_groups == NULL) {
-		pr_warning(KEDR_LC_MSG_PREFIX
+		pr_warn(KEDR_LC_MSG_PREFIX
 		"Not enough memory to create 'bad_free_groups'.\n");
 		goto fail_bad_free_groups;
 	}
 	/* nr_bad_free_groups is now 0. */
 	lc->wq = create_singlethread_workqueue(wq_name);
 	if (lc->wq == NULL) {
-		pr_warning(KEDR_LC_MSG_PREFIX
+		pr_warn(KEDR_LC_MSG_PREFIX
 		"Failed to create the workqueue \"%s\"\n",
 			wq_name);
 		goto fail_wq;
@@ -692,7 +692,7 @@ klc_flush_allocs(struct kedr_leak_check *lc)
 	unsigned int i;
 	
 	if (syslog_output != 0 && lc->total_leaks != 0)
-		pr_warning(KEDR_LC_MSG_PREFIX 
+		pr_warn(KEDR_LC_MSG_PREFIX 
 			"LeakCheck has detected possible memory leaks: \n");
 
 	for (i = 0; i < KEDR_RI_TABLE_SIZE; ++i) {
@@ -732,7 +732,7 @@ klc_flush_deallocs(struct kedr_leak_check *lc)
 	}
 		
 	if (syslog_output != 0) {
-		pr_warning(KEDR_LC_MSG_PREFIX 
+		pr_warn(KEDR_LC_MSG_PREFIX 
 "LeakCheck has detected deallocations without matching allocations.\n");
 	}
 	
@@ -755,7 +755,7 @@ klc_flush_stats(struct kedr_leak_check *lc)
 	/* If needed, the counters will be reset by lc_object_reset(). */
 	
 	if (syslog_output != 0)
-		pr_warning(KEDR_LC_MSG_PREFIX
+		pr_warn(KEDR_LC_MSG_PREFIX
 			"======== end of LeakCheck report ========\n");
 }
 
@@ -783,7 +783,7 @@ klc_do_flush(struct kedr_leak_check *lc)
 
 	klc_work = kzalloc(sizeof(*klc_work), GFP_ATOMIC);
 	if (klc_work == NULL) {
-		pr_warning(KEDR_LC_MSG_PREFIX "klc_do_flush: "
+		pr_warn(KEDR_LC_MSG_PREFIX "klc_do_flush: "
 	"not enough memory to create 'struct klc_work'\n");
 		return;
 	}
@@ -797,7 +797,7 @@ void
 kedr_lc_flush_results(struct kedr_leak_check *lc)
 {
 	if (mutex_lock_killable(&lc_mutex) != 0) {
-		pr_warning(KEDR_LC_MSG_PREFIX
+		pr_warn(KEDR_LC_MSG_PREFIX
 		"kedr_lc_flush_results(): failed to lock mutex\n");
 		return;
 	}
@@ -830,7 +830,7 @@ klc_do_clear(struct kedr_leak_check *lc)
 
 	klc_work = kzalloc(sizeof(*klc_work), GFP_ATOMIC);
 	if (klc_work == NULL) {
-		pr_warning(KEDR_LC_MSG_PREFIX "klc_do_clear: "
+		pr_warn(KEDR_LC_MSG_PREFIX "klc_do_clear: "
 	"not enough memory to create 'struct klc_work'\n");
 		return;
 	}
@@ -845,7 +845,7 @@ void
 kedr_lc_clear(struct kedr_leak_check *lc)
 {
 	if (mutex_lock_killable(&lc_mutex) != 0) {
-		pr_warning(KEDR_LC_MSG_PREFIX
+		pr_warn(KEDR_LC_MSG_PREFIX
 		"kedr_lc_clear(): failed to lock mutex\n");
 		return;
 	}
@@ -863,7 +863,7 @@ static void
 on_session_start(void)
 {
 	if (mutex_lock_killable(&lc_mutex) != 0) {
-		pr_warning(KEDR_LC_MSG_PREFIX
+		pr_warn(KEDR_LC_MSG_PREFIX
 		"on_target_load(): failed to lock mutex\n");
 		return;
 	}
@@ -879,7 +879,7 @@ on_session_end(void)
 	unsigned long flags;
 
 	if (mutex_lock_killable(&lc_mutex) != 0) {
-		pr_warning(KEDR_LC_MSG_PREFIX
+		pr_warn(KEDR_LC_MSG_PREFIX
 		"on_target_unload(): failed to lock mutex\n");
 		return;
 	}
@@ -906,7 +906,7 @@ static void
 on_target_loaded(struct module* target)
 {
 	if (mutex_lock_killable(&lc_mutex) != 0) {
-		pr_warning(KEDR_LC_MSG_PREFIX
+		pr_warn(KEDR_LC_MSG_PREFIX
 		"on_target_unload(): failed to lock mutex\n");
 		return;
 	}
@@ -982,14 +982,14 @@ klc_handle_event(struct kedr_leak_check *lc, const void *addr, size_t size,
 	
 	ri = resource_info_create(addr, size, caller_address);
 	if (ri == NULL) {
-		pr_warning(KEDR_LC_MSG_PREFIX "klc_handle_event: "
+		pr_warn(KEDR_LC_MSG_PREFIX "klc_handle_event: "
 	"not enough memory to create 'struct kedr_lc_resource_info'\n");
 		return;
 	}
 	
 	klc_work = kzalloc(sizeof(*klc_work), GFP_ATOMIC);
 	if (klc_work == NULL) {
-		pr_warning(KEDR_LC_MSG_PREFIX "klc_handle_event: "
+		pr_warn(KEDR_LC_MSG_PREFIX "klc_handle_event: "
 	"not enough memory to create 'struct klc_work'\n");
 		resource_info_destroy(ri);
 		return;

@@ -10,9 +10,7 @@ configure_file(
 kmodule_configure_kernel_functions(functions 
 	REQUIRED "__kmalloc"
 	"krealloc"
-	"__krealloc"
 	"kfree"
-	"kzfree"
 	"kmem_cache_alloc"
 	"kmem_cache_free"
 	"__get_free_pages"
@@ -21,6 +19,7 @@ kmodule_configure_kernel_functions(functions
 	OPTIONAL "kmem_cache_alloc_notrace"
 	"kmem_cache_alloc_trace"
 	"__kmalloc_node"
+	"__krealloc"
 	"kmem_cache_alloc_node"
 	"kmem_cache_alloc_node_notrace"
 	"kmem_cache_alloc_node_trace"
@@ -31,6 +30,8 @@ kmodule_configure_kernel_functions(functions
 	"alloc_pages_exact"
 	"free_pages_exact" 
 	"alloc_pages_exact_nid"
+	"kzfree"
+	"kfree_sensitive"
 	
 	REQUIRED "kstrdup"
 	"kstrndup"
